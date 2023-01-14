@@ -31,3 +31,4 @@ build/
 ### VS Code ###
 .vscode/
 /mvn_test_sonar.sh
+/front/node_modules/
