@@ -1,0 +1,25 @@
+logging:
+  level:
+    ROOT: ERROR
+    com.corn: DEBUG
+    org.springframework: WARN
+    org.hibernate: WARN
+    org.hibernate.SQL: error
+    com.hazelcast: DEBUG
+  pattern:
+    console: "%-5d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level): %cyan(%logger{25}).%yellow(%M) %m%n"
+spring:
+  datasource:
+    url: jdbc:mariadb://localhost:3306/db
+    username: root
+    password: password
+    driver-class-name: org.mariadb.jdbc.Driver
+  jpa:
+    database: MYSQL
+    show-sql: false
+  liquibase:
+    change-log: classpath:db/changelog/changelog-master.xml
+
+server:
+  port: 8080
+
