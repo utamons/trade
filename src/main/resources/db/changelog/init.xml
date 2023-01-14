@@ -11,5 +11,94 @@
             </column>
             <column name="text" type="varchar(50)"/>
         </createTable>
+        <createTable tableName="broker">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="short_name" type="varchar(50)"/>
+        </createTable>
+        <createTable tableName="market">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="short_name" type="varchar(50)"/>
+        </createTable>
+        <createTable tableName="ticker">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="short_name" type="varchar(50)"/>
+        </createTable>
+        <createTable tableName="country">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="currency">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="short_name" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="trade_log">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="utc_date" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="local_date" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="broker_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="market_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ticker_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="item_number" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price_open" type="number">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price_close" type="number">
+                <constraints nullable="false"/>
+            </column>
+            <column name="stop_loss" type="number">
+                <constraints nullable="false"/>
+            </column>
+            <column name="take_profit" type="number">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fees" type="number">
+                <constraints nullable="false"/>
+            </column>
+            <column name="note" type="text"/>
+            <column name="chart" type="blob"/>
+        </createTable>
     </changeSet>
 </databaseChangeLog>
