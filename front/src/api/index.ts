@@ -4,7 +4,7 @@ const fetchTest = async () => {
         method: 'get'
     }).then((res) => {
         return res.json()
-    }).then()
+    })
 }
 
 export { fetchTest }
