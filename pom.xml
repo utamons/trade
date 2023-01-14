@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.corn</groupId>
-	<artifactId>planner</artifactId>
+	<artifactId>trade</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>planner</name>
-	<description>planner backend</description>
+	<name>Trade</name>
+	<description>Trade backend</description>
 	<properties>
 		<java.version>11</java.version>
 		<properties-maven-plugin.version>1.1.0</properties-maven-plugin.version>
