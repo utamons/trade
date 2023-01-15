@@ -14,35 +14,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.corn.trade.entity;
+package com.corn.trade.service;
 
-import javax.persistence.*;
+import org.springframework.stereotype.Component;
 
-@SuppressWarnings("unused")
-@Entity
-@Table(name = "test")
-public class TestItem {
+@Component
+public class TradeLogService {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+	/*private final TradeLogRepository repo;
 
-	@Column(name = "text", length = 50)
-	private String text;
-
-	public Long getId() {
-		return id;
+	public TradeLogService(TradeLogRepository repo) {
+		this.repo = repo;
 	}
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+	public void deleteItem(Long id) {
+		repo.deleteById(id);
+	}*/
 
-	public String getText() {
-		return text;
-	}
-
-	public void setText(String text) {
-		this.text = text;
-	}
 }
