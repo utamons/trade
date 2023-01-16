@@ -54,10 +54,10 @@
             <column name="date" type="datetime">
                 <constraints nullable="false"/>
             </column>
-            <column name="sum" type="number">
+            <column name="sum" type="decimal(10.2)">
                 <constraints nullable="false"/>
             </column>
-            <column name="total" type="number" remarks="in the base currency">
+            <column name="total" type="decimal(10.2)" remarks="in the base currency">
                 <constraints nullable="false"/>
             </column>
             <column name="type" type="varchar(25)" remarks="refill, withdraw, fee, profit, loss">
@@ -67,6 +67,9 @@
         <createTable tableName="trade_log">
             <column name="id" type="bigint" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="position" type="varchar(5)" remarks="short or long">
+                <constraints nullable="false"/>
             </column>
             <column name="date_open" type="datetime">
                 <constraints nullable="false"/>
@@ -84,29 +87,29 @@
             <column name="currency_id" type="bigint">
                 <constraints nullable="false"/>
             </column>
-            <column name="item_number" type="bigint">
+            <column name="item_decimal(10.2)" type="bigint">
                 <constraints nullable="false"/>
             </column>
-            <column name="price_open" type="number">
+            <column name="price_open" type="decimal(10.2)">
                 <constraints nullable="false"/>
             </column>
-            <column name="price_close" type="number"/>
-            <column name="volume" type="number">
+            <column name="price_close" type="decimal(10.2)"/>
+            <column name="volume" type="decimal(10.2)">
                 <constraints nullable="false"/>
             </column>
-            <column name="volume_to_deposit" type="number" remarks="% volume to the deposit total at open">
+            <column name="volume_to_deposit" type="decimal(10.2)" remarks="% volume to the deposit total at open">
                 <constraints nullable="false"/>
             </column>
-            <column name="stop_loss" type="number"/>
-            <column name="take_profit" type="number"/>
-            <column name="outcome_expected" type="number"/>
-            <column name="risk" type="number"/>
-            <column name="fees" type="number">
+            <column name="stop_loss" type="decimal(10.2)"/>
+            <column name="take_profit" type="decimal(10.2)"/>
+            <column name="outcome_expected" type="decimal(10.2)"/>
+            <column name="risk" type="decimal(10.2)"/>
+            <column name="fees" type="decimal(10.2)">
                 <constraints nullable="false"/>
             </column>
-            <column name="outcome" type="number" remarks="profit (positive) or loss (negative)"/>
-            <column name="outcome_percent" type="number" remarks="profit (positive) or loss (negative)"/>
-            <column name="profit" type="number" remarks="% profit to the deposit total at close"/>
+            <column name="outcome" type="decimal(10.2)" remarks="profit (positive) or loss (negative)"/>
+            <column name="outcome_percent" type="decimal(10.2)" remarks="profit (positive) or loss (negative)"/>
+            <column name="profit" type="decimal(10.2)" remarks="% profit to the deposit total at close"/>
             <column name="note" type="text"/>
             <column name="chart" type="blob"/>
         </createTable>

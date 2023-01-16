@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+@SuppressWarnings("unused")
 @Entity
 @Table(name = "trade_log")
 public class TradeLog implements Serializable {
@@ -15,6 +16,9 @@ public class TradeLog implements Serializable {
 	@Column(name = "id", nullable = false)
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+
+	@Column(name = "position", nullable = false)
+	private String position;
 
 	@Column(name = "date_open", nullable = false)
 	private LocalDateTime dateOpen;
@@ -81,7 +85,9 @@ public class TradeLog implements Serializable {
 
 	public TradeLog() {}
 
-	public TradeLog(LocalDateTime dateOpen,
+	public TradeLog(
+					String position,
+			        LocalDateTime dateOpen,
 	                LocalDateTime dateClose,
 	                Broker broker,
 	                Market market,
@@ -102,6 +108,7 @@ public class TradeLog implements Serializable {
 	                BigDecimal profit,
 	                String note,
 	                byte[] chart) {
+		this.position = position;
 		this.dateOpen = dateOpen;
 		this.dateClose = dateClose;
 		this.broker = broker;
@@ -131,6 +138,14 @@ public class TradeLog implements Serializable {
 
 	public void setId(Long id) {
 		this.id = id;
+	}
+
+	public String getPosition() {
+		return position;
+	}
+
+	public void setPosition(String position) {
+		this.position = position;
 	}
 
 	public LocalDateTime getDateOpen() {

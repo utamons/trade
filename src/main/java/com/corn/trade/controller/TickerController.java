@@ -2,45 +2,25 @@ package com.corn.trade.controller;
 
 import com.corn.trade.dto.TickerDTO;
 import com.corn.trade.service.TickerService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
+import java.util.List;
 
-@Validated
 @RestController
-@RequestMapping("/ticker")
+@RequestMapping("/api/ticker")
 public class TickerController {
 
-	@Autowired
-	private TickerService tickerService;
+	private final TickerService service;
 
-	@PostMapping
-	public String save(@Valid @RequestBody TickerDTO dto) {
-		return tickerService.save(dto).toString();
+	public TickerController(TickerService service) {
+		this.service = service;
 	}
 
-	@DeleteMapping("/{id}")
-	public void delete(@Valid @NotNull @PathVariable("id") Long id) {
-		tickerService.delete(id);
+	@GetMapping("/all")
+	public List<TickerDTO> getAll() {
+		return service.getAll();
 	}
 
-	@PutMapping("/{id}")
-	public void update(@Valid @NotNull @PathVariable("id") Long id,
-	                   @Valid @RequestBody TickerDTO dto) {
-		tickerService.update(id, dto);
-	}
-
-	@GetMapping("/{id}")
-	public TickerDTO getById(@Valid @NotNull @PathVariable("id") Long id) {
-		return tickerService.getById(id);
-	}
-
-	@GetMapping
-	public Page<TickerDTO> query(@Valid TickerDTO dto) {
-		return tickerService.query(dto);
-	}
 }

@@ -1,7 +1,5 @@
 package com.corn.trade.entity;
 
-import com.corn.trade.dto.TickerDTO;
-
 import javax.persistence.*;
 import java.io.Serializable;
 
