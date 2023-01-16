@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+@SuppressWarnings("unused")
 @Entity
 @Table(name = "deposit")
 public class Deposit implements Serializable {

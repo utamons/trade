@@ -2,45 +2,25 @@ package com.corn.trade.controller;
 
 import com.corn.trade.dto.CurrencyDTO;
 import com.corn.trade.service.CurrencyService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
+import java.util.List;
 
-@Validated
 @RestController
-@RequestMapping("/currency")
+@RequestMapping("/api/currency")
 public class CurrencyController {
 
-	@Autowired
-	private CurrencyService currencyService;
+	private final CurrencyService service;
 
-	@PostMapping
-	public String save(@Valid @RequestBody CurrencyDTO dto) {
-		return currencyService.save(dto).toString();
+	public CurrencyController(CurrencyService service) {
+		this.service = service;
 	}
 
-	@DeleteMapping("/{id}")
-	public void delete(@Valid @NotNull @PathVariable("id") Long id) {
-		currencyService.delete(id);
+	@GetMapping("/all")
+	public List<CurrencyDTO> getAll() {
+		return service.getAll();
 	}
 
-	@PutMapping("/{id}")
-	public void update(@Valid @NotNull @PathVariable("id") Long id,
-	                   @Valid @RequestBody CurrencyDTO dto) {
-		currencyService.update(id, dto);
-	}
-
-	@GetMapping("/{id}")
-	public CurrencyDTO getById(@Valid @NotNull @PathVariable("id") Long id) {
-		return currencyService.getById(id);
-	}
-
-	@GetMapping
-	public Page<CurrencyDTO> query(@Valid CurrencyDTO dto) {
-		return currencyService.query(dto);
-	}
 }

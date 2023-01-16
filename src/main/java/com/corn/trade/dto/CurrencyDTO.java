@@ -13,18 +13,14 @@ public class CurrencyDTO implements Serializable {
 	@JsonCreator
 	public CurrencyDTO(
 			@JsonProperty("id") Long id,
-			@JsonProperty("name") String name,
-			@JsonProperty("shortName") String shortName) {
+			@JsonProperty("name") String name) {
 		this.id = id;
 		this.name = name;
-		this.shortName = shortName;
 	}
 
 	private final Long id;
 
 	private final String name;
-
-	private final String shortName;
 
 	public Long getId() {
 		return id;
@@ -32,9 +28,5 @@ public class CurrencyDTO implements Serializable {
 
 	public String getName() {
 		return name;
-	}
-
-	public String getShortName() {
-		return shortName;
 	}
 }
