@@ -12,12 +12,16 @@ public class MarketDTO implements Serializable {
 	private final        Long id;
 	private final String name;
 
+	private final Integer timezone;
+
 	@JsonCreator
 	public MarketDTO(
 			@JsonProperty("id") Long id,
-			@JsonProperty("name") String name) {
+			@JsonProperty("name") String name,
+			@JsonProperty("timezone") Integer timezone) {
 		this.id = id;
 		this.name = name;
+		this.timezone = timezone;
 	}
 
 	public Long getId() {
@@ -26,5 +30,9 @@ public class MarketDTO implements Serializable {
 
 	public String getName() {
 		return name;
+	}
+
+	public Integer getTimezone() {
+		return timezone;
 	}
 }
