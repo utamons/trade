@@ -18,6 +18,9 @@ public class Market implements Serializable {
 	@Column(name = "name", nullable = false)
 	private String name;
 
+	@Column(name = "timezone", nullable = false)
+	private Integer timezone;
+
 	public Market() {}
 
 	public Market(String name) {
@@ -38,5 +41,13 @@ public class Market implements Serializable {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public Integer getTimezone() {
+		return timezone;
+	}
+
+	public void setTimezone(Integer timezone) {
+		this.timezone = timezone;
 	}
 }
