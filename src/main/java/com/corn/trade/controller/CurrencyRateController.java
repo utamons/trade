@@ -2,6 +2,7 @@ package com.corn.trade.controller;
 
 import com.corn.trade.dto.CurrencyRateDTO;
 import com.corn.trade.service.CurrencyRateService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,7 +24,7 @@ public class CurrencyRateController {
 	@GetMapping("/find")
 	public CurrencyRateDTO find (
 			@RequestParam("currencyId") Long currencyId,
-			@RequestParam("date")  @DateTimeFormat(pattern="yyyy-MM-dd") LocalDate date) {
+			@RequestParam("date")  @DateTimeFormat(pattern="yyyy-MM-dd") LocalDate date) throws JsonProcessingException {
 		return service.findByDate(currencyId, date);
 	}
 
