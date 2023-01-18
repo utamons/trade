@@ -9,6 +9,15 @@ import java.time.LocalDateTime;
 @Table(name = "currency_rate")
 public class CurrencyRate {
 
+	public CurrencyRate() {
+	}
+
+	public CurrencyRate(LocalDate date, Currency currency, BigDecimal rate) {
+		this.date = date;
+		this.currency = currency;
+		this.rate = rate;
+	}
+
 	@Id
 	@Column(name = "id", nullable = false)
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
