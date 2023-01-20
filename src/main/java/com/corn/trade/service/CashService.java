@@ -138,4 +138,17 @@ public class CashService {
 		logger.debug("finish");
 		return CashAccountMapper.toDTO(fee);
 	}
+
+	public CashAccountDTO buy(TransferDTO transferDTO) {
+		logger.debug("start");
+		Broker broker = brokerRepo.getReferenceById(transferDTO.getBrokerId());
+		Currency currency = currencyRepo.getReferenceById(transferDTO.getCurrencyId());
+		CashAccountType fromType = accountTypeRepo.findCashAccountTypeByName("trade");
+		CashAccountType openType = accountTypeRepo.findCashAccountTypeByName("open");
+
+		transfer(transferDTO, broker, currency, fromType, openType);
+		CashAccount trade = getAccount(broker, currency, fromType);
+		logger.debug("finish");
+		return CashAccountMapper.toDTO(trade);
+	}
 }
