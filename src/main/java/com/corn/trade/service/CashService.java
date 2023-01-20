@@ -1,6 +1,7 @@
 package com.corn.trade.service;
 
 import com.corn.trade.dto.CashAccountDTO;
+import com.corn.trade.dto.ExchangeDTO;
 import com.corn.trade.dto.RefillDTO;
 import com.corn.trade.entity.*;
 import com.corn.trade.mapper.CashAccountMapper;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Service
 public class CashService {
@@ -80,5 +82,39 @@ public class CashService {
 
 		logger.debug("finish");
 		return CashAccountMapper.toDTO(trade);
+	}
+
+	public CashAccountDTO exchange(ExchangeDTO exchangeDTO) {
+		logger.debug("start");
+		Broker broker = brokerRepo.getReferenceById(exchangeDTO.getBrokerId());
+		Currency currencyFrom = currencyRepo.getReferenceById(exchangeDTO.getCurrencyFromId());
+		Currency currencyTo = currencyRepo.getReferenceById(exchangeDTO.getCurrencyToId());
+		CashAccountType tradeType = accountTypeRepo.findCashAccountTypeByName("trade");
+
+		CashAccount tradeFrom = getAccount(broker, currencyFrom, tradeType);
+		CashAccount tradeTo = getAccount(broker, currencyTo, tradeType);
+		BigDecimal transferFrom = exchangeDTO.getAmountFrom();
+		BigDecimal transferTo = exchangeDTO.getAmountTo();
+		BigDecimal tradeFromSum = tradeFrom.getAmount();
+		BigDecimal tradeToSum = tradeTo.getAmount();
+		BigDecimal rate = transferFrom.divide(transferTo, RoundingMode.HALF_DOWN);
+
+		CashFlow record = new CashFlow(tradeFrom, tradeTo, transferFrom, transferTo, rate);
+		cashFlowRepo.save(record);
+		tradeFrom.setAmount(tradeFromSum.subtract(transferFrom));
+		tradeTo.setAmount(tradeToSum.add(transferTo));
+
+		tradeTo = accountRepo.save(tradeTo);
+		accountRepo.save(tradeFrom);
+
+		cashFlowRepo.flush();
+		accountRepo.flush();
+
+		logger.debug("Exchange for amount from {}, to {}, broker {} and currency from {}, to {} is finished",
+		             transferFrom, transferTo, broker.getName(), currencyFrom.getName(),
+		             currencyTo.getName());
+
+		logger.debug("finish");
+		return CashAccountMapper.toDTO(tradeTo);
 	}
 }
