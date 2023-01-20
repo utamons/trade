@@ -26,7 +26,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="broker_id" type="bigint"/>
-            <column name="amount" type="decimal(12.2)" defaultValue="0.00">
+            <column name="amount" type="decimal(12,2)" defaultValue="0.00">
                 <constraints nullable="false"/>
             </column>
             <column name="updated_at" type="datetime" >
@@ -43,13 +43,13 @@
             <column name="account_to_id" type="bigint">
                 <constraints nullable="false"/>
             </column>
-            <column name="sum_from" type="decimal(12.2)">
+            <column name="sum_from" type="decimal(12,2)">
                 <constraints nullable="false"/>
             </column>
-            <column name="sum_to" type="decimal(12.2)">
+            <column name="sum_to" type="decimal(12,2)">
                 <constraints nullable="false"/>
             </column>
-            <column name="exchange_rate" type="decimal(12.2)"/>
+            <column name="exchange_rate" type="decimal(12,2)"/>
             <column name="committed_at" type="datetime" >
                 <constraints nullable="false"/>
             </column>

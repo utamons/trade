@@ -5,13 +5,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
 
-public class RefillDTO {
+public class TransferDTO {
 	private final Long brokerId;
 	private final Long currencyId;
 	private final BigDecimal amount;
 
 	@JsonCreator
-	public RefillDTO(
+	public TransferDTO(
 			@JsonProperty ("brokerId") Long brokerId,
 			@JsonProperty("currencyId") Long currencyId,
 			@JsonProperty("amount") BigDecimal amount) {
