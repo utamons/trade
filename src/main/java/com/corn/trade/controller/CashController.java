@@ -34,4 +34,9 @@ public class CashController {
 	public CashAccountDTO fee(@RequestBody TransferDTO transferDTO) {
 		return service.fee(transferDTO);
 	}
+
+	@PostMapping("/buy")
+	public CashAccountDTO buy(@RequestBody TransferDTO transferDTO) {
+		return service.buy(transferDTO);
+	}
 }
