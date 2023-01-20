@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+    <changeSet id="00000000000004" author="oleg">
+        <createTable tableName="cash_account_type">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(25)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="varchar(255)"/>
+        </createTable>
+        <createTable tableName="cash_account">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(100)"/>
+            <column name="currency_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="broker_id" type="bigint"/>
+            <column name="amount" type="decimal(12.2)" defaultValue="0.00">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="datetime" >
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="cash_flow">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="account_from_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="account_to_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sum_from" type="decimal(12.2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sum_to" type="decimal(12.2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="exchange_rate" type="decimal(12.2)"/>
+            <column name="committed_at" type="datetime" >
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+       <addForeignKeyConstraint
+                baseTableName="cash_account"
+                baseColumnNames="currency_id"
+                constraintName="cash_account_currency_fk"
+                referencedTableName="currency"
+                referencedColumnNames="id" />
+        <addForeignKeyConstraint
+                baseTableName="cash_account"
+                baseColumnNames="broker_id"
+                constraintName="cash_account_broker_fk"
+                referencedTableName="broker"
+                referencedColumnNames="id" />
+        <addForeignKeyConstraint
+                baseTableName="cash_account"
+                baseColumnNames="type_id"
+                constraintName="cash_account_type_fk"
+                referencedTableName="cash_account_type"
+                referencedColumnNames="id" />
+        <addForeignKeyConstraint
+                baseTableName="cash_flow"
+                baseColumnNames="account_from_id"
+                constraintName="cash_flow_account_from_fk"
+                referencedTableName="cash_account"
+                referencedColumnNames="id" />
+        <addForeignKeyConstraint
+                baseTableName="cash_flow"
+                baseColumnNames="account_to_id"
+                constraintName="cash_flow_account_to_fk"
+                referencedTableName="cash_account"
+                referencedColumnNames="id" />
+        <loadData tableName="cash_account_type" file="db/data/cash_account_type.csv" separator=";" />
+    </changeSet>
+</databaseChangeLog>
