@@ -109,7 +109,7 @@
             </column>
             <column name="outcome" type="decimal(10.2)" remarks="profit (positive) or loss (negative)"/>
             <column name="outcome_percent" type="decimal(10.2)" remarks="profit (positive) or loss (negative)"/>
-            <column name="profit" type="decimal(10.2)" remarks="% profit to the capital total at close"/>
+            <column name="profit" type="decimal(10.4)" remarks="% profit to the capital total at close"/>
             <column name="note" type="text"/>
             <column name="chart" type="blob"/>
         </createTable>

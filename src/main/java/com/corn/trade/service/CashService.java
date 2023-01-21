@@ -181,7 +181,7 @@ public class CashService {
 		return trade.getAmount();
 	}
 
-	public BigDecimal percentToCapital(BigDecimal outcome, Currency currency) throws JsonProcessingException {
+	public BigDecimal percentToCapital(BigDecimal outcome, BigDecimal openAmount, Currency currency) throws JsonProcessingException {
 		CashAccountType tradeType = accountTypeRepo.findCashAccountTypeByName("trade");
 		List<CashAccount> accounts = accountRepo.findAllByType(tradeType);
 		Currency baseCurrency = currencyRepo.findCurrencyByName("USD");
@@ -197,10 +197,13 @@ public class CashService {
 			}
 		}
 
+		CurrencyRateDTO currencyRateDTO = currencyRateService.findByDate(currency.getId(), LocalDate.now());
+		BigDecimal convertedOpenPrice = openAmount.divide(currencyRateDTO.getRate(),12,RoundingMode.HALF_EVEN);
+		sum = sum.add(convertedOpenPrice);
+
 		if (currency.getId().equals(baseCurrency.getId())) {
 			return outcome.divide(sum,12,RoundingMode.HALF_EVEN);
 		} else {
-			CurrencyRateDTO currencyRateDTO = currencyRateService.findByDate(currency.getId(), LocalDate.now());
 			BigDecimal convertedOutcome = outcome.divide(currencyRateDTO.getRate(),12,RoundingMode.HALF_EVEN);
 			return convertedOutcome.divide(sum,12,RoundingMode.HALF_EVEN);
 		}
