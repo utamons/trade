@@ -75,6 +75,8 @@ public class TradeLogService {
 		open.setOutcomePercent(outcomePercent);
 		open.setProfit(percentToCapital);
 		open.setFees(open.getFees().add(closeDTO.getFees()));
+		if (closeDTO.getNote() != null)
+			open.setNote(closeDTO.getNote());
 
 		BigDecimal closeAmount = open.getPriceClose().multiply(BigDecimal.valueOf(open.getItemNumber()));
 
