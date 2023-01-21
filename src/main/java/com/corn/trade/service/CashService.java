@@ -1,11 +1,13 @@
 package com.corn.trade.service;
 
 import com.corn.trade.dto.CashAccountDTO;
+import com.corn.trade.dto.CurrencyRateDTO;
 import com.corn.trade.dto.ExchangeDTO;
 import com.corn.trade.dto.TransferDTO;
 import com.corn.trade.entity.*;
 import com.corn.trade.mapper.CashAccountMapper;
 import com.corn.trade.repository.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.util.List;
 
 @SuppressWarnings("DuplicatedCode")
 @Service
@@ -27,15 +31,18 @@ public class CashService {
 	private final CurrencyRepository currencyRepo;
 	private final CashAccountTypeRepository accountTypeRepo;
 
+	private final CurrencyRateService currencyRateService;
+
 	public CashService(CashAccountRepository accountRepo, CashFlowRepository cashFlowRepo,
 	                   BrokerRepository brokerRepo,
 	                   CurrencyRepository currencyRepo,
-	                   CashAccountTypeRepository accountTypeRepo) {
+	                   CashAccountTypeRepository accountTypeRepo, CurrencyRateService currencyRateService) {
 		this.accountRepo = accountRepo;
 		this.cashFlowRepo = cashFlowRepo;
 		this.brokerRepo = brokerRepo;
 		this.currencyRepo = currencyRepo;
 		this.accountTypeRepo = accountTypeRepo;
+		this.currencyRateService = currencyRateService;
 	}
 
 	private CashAccount getAccount(Broker broker, Currency currency, CashAccountType type) {
@@ -172,5 +179,30 @@ public class CashService {
 		CashAccountType tradeType = accountTypeRepo.findCashAccountTypeByName("trade");
 		CashAccount trade = getAccount(broker, currency, tradeType);
 		return trade.getAmount();
+	}
+
+	public BigDecimal percentToCapital(BigDecimal outcome, Currency currency) throws JsonProcessingException {
+		CashAccountType tradeType = accountTypeRepo.findCashAccountTypeByName("trade");
+		List<CashAccount> accounts = accountRepo.findAllByType(tradeType);
+		Currency baseCurrency = currencyRepo.findCurrencyByName("USD");
+		BigDecimal sum = BigDecimal.ZERO;
+		for (CashAccount account: accounts) {
+			Currency accCurrency = account.getCurrency();
+			if (!accCurrency.getId().equals(baseCurrency.getId())) {
+				CurrencyRateDTO currencyRateDTO = currencyRateService.findByDate(accCurrency.getId(), LocalDate.now());
+				BigDecimal convertedSum = account.getAmount().divide(currencyRateDTO.getRate(),12,RoundingMode.HALF_EVEN);
+				sum = sum.add(convertedSum);
+			} else {
+				sum = sum.add(account.getAmount());
+			}
+		}
+
+		if (currency.getId().equals(baseCurrency.getId())) {
+			return outcome.divide(sum,12,RoundingMode.HALF_EVEN);
+		} else {
+			CurrencyRateDTO currencyRateDTO = currencyRateService.findByDate(currency.getId(), LocalDate.now());
+			BigDecimal convertedOutcome = outcome.divide(currencyRateDTO.getRate(),12,RoundingMode.HALF_EVEN);
+			return convertedOutcome.divide(sum,12,RoundingMode.HALF_EVEN);
+		}
 	}
 }

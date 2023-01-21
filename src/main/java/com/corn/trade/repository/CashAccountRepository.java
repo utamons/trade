@@ -7,6 +7,10 @@ import com.corn.trade.entity.Currency;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import java.util.List;
+
 public interface CashAccountRepository extends JpaRepository<CashAccount, Long>, JpaSpecificationExecutor<CashAccount> {
 	CashAccount findCashAccountByBrokerAndCurrencyAndType(Broker broker, Currency currency, CashAccountType type);
+
+	List<CashAccount> findAllByType(CashAccountType type);
 }
