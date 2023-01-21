@@ -58,11 +58,18 @@ public class TradeLogService {
 		open.setDateClose(closeDTO.getDateClose());
 		open.setPriceClose(closeDTO.getPriceClose());
 
-		BigDecimal outcome = open.getPriceClose().subtract(open.getPriceClose());
+		BigDecimal outcome = open.getPriceClose()
+		                         .subtract(open.getPriceOpen())
+				.multiply(BigDecimal.valueOf(open.getItemNumber()));
 		BigDecimal outcomePercent = outcome.divide(open.getPriceOpen(), 12, RoundingMode.HALF_EVEN)
 				                                   .multiply(BigDecimal.valueOf(100.00));
 
-		BigDecimal percentToCapital = cashService.percentToCapital(outcome, open.getCurrency());
+		if (!closeDTO.getFees().equals(BigDecimal.ZERO))
+			cashService.fee(closeDTO.getFees(),  open.getBroker(), open);
+
+		BigDecimal openAmount = open.getPriceOpen().multiply(BigDecimal.valueOf(open.getItemNumber()));
+
+		BigDecimal percentToCapital = cashService.percentToCapital(outcome, openAmount, open.getCurrency());
 
 		open.setOutcome(outcome);
 		open.setOutcomePercent(outcomePercent);
@@ -72,9 +79,8 @@ public class TradeLogService {
 		BigDecimal closeAmount = open.getPriceClose().multiply(BigDecimal.valueOf(open.getItemNumber()));
 
 		open = tradeLogRepo.save(open);
+
 		cashService.sell(open.getVolume(), closeAmount, open.getBroker(), open.getCurrency(), open);
-		if (!open.getFees().equals(BigDecimal.ZERO))
-			cashService.fee(open.getFees(),  open.getBroker(), open);
 	}
 
 	public TradeLogPageDTO page(TradeLogPageReqDTO pageReqDTO) {
