@@ -2,6 +2,7 @@ package com.corn.trade.controller;
 
 import com.corn.trade.dto.CashAccountDTO;
 import com.corn.trade.dto.ExchangeDTO;
+import com.corn.trade.dto.SellDTO;
 import com.corn.trade.dto.TransferDTO;
 import com.corn.trade.service.CashService;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,5 +39,10 @@ public class CashController {
 	@PostMapping("/buy")
 	public CashAccountDTO buy(@RequestBody TransferDTO transferDTO) {
 		return service.buy(transferDTO);
+	}
+
+	@PostMapping("/sell")
+	public CashAccountDTO sell(@RequestBody SellDTO sellDTO) {
+		return service.sell(sellDTO);
 	}
 }
