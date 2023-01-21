@@ -27,22 +27,7 @@ public class CashController {
 	}
 
 	@PostMapping("/exchange")
-	public CashAccountDTO refill(@RequestBody ExchangeDTO exchangeDTO) {
+	public CashAccountDTO exchange(@RequestBody ExchangeDTO exchangeDTO) {
 		return service.exchange(exchangeDTO);
-	}
-
-	@PostMapping("/fee")
-	public CashAccountDTO fee(@RequestBody TransferDTO transferDTO) {
-		return service.fee(transferDTO);
-	}
-
-	@PostMapping("/buy")
-	public CashAccountDTO buy(@RequestBody TransferDTO transferDTO) {
-		return service.buy(transferDTO);
-	}
-
-	@PostMapping("/sell")
-	public CashAccountDTO sell(@RequestBody SellDTO sellDTO) {
-		return service.sell(sellDTO);
 	}
 }

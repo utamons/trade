@@ -14,11 +14,13 @@ public class CashFlow {
 
 	public CashFlow(CashAccount accountFrom,
 	                CashAccount accountTo,
+					TradeLog tradeLog,
 	                BigDecimal sumFrom,
 	                BigDecimal sumTo,
 	                BigDecimal exchangeRate) {
 		this.accountFrom = accountFrom;
 		this.accountTo = accountTo;
+		this.tradeLog = tradeLog;
 		this.sumFrom = sumFrom;
 		this.sumTo = sumTo;
 		this.exchangeRate = exchangeRate;
@@ -35,6 +37,9 @@ public class CashFlow {
 
 	@ManyToOne
 	private CashAccount accountTo;
+
+	@ManyToOne
+	private TradeLog tradeLog;
 
 	@Column(name = "sum_from", nullable = false)
 	private BigDecimal sumFrom;
@@ -102,5 +107,9 @@ public class CashFlow {
 
 	public void setAccountTo(CashAccount accountTo) {
 		this.accountTo = accountTo;
+	}
+
+	public TradeLog getTradeLog() {
+		return tradeLog;
 	}
 }

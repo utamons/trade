@@ -2,7 +2,6 @@ package com.corn.trade.service;
 
 import com.corn.trade.dto.CashAccountDTO;
 import com.corn.trade.dto.ExchangeDTO;
-import com.corn.trade.dto.SellDTO;
 import com.corn.trade.dto.TransferDTO;
 import com.corn.trade.entity.*;
 import com.corn.trade.mapper.CashAccountMapper;
@@ -62,12 +61,13 @@ public class CashService {
 		CashAccountType toTrade = accountTypeRepo.findCashAccountTypeByName("trade");
 		CashAccountType fromIncome = accountTypeRepo.findCashAccountTypeByName("income");
 
-		CashAccount trade = transfer(transferDTO, broker, currency, fromIncome, toTrade);
+		CashAccount trade = transfer(transferDTO.getAmount(), null, broker, currency, fromIncome, toTrade);
 		logger.debug("finish");
 		return CashAccountMapper.toDTO(trade);
 	}
 
-	private CashAccount transfer(TransferDTO transferDTO,
+	private CashAccount transfer(BigDecimal transfer,
+									   TradeLog tradeLog,
 	                                   Broker broker,
 	                                   Currency currency,
 	                                   CashAccountType fromType,
@@ -76,9 +76,8 @@ public class CashService {
 		CashAccount to = getAccount(broker, currency, toType);
 		BigDecimal fromSum = from.getAmount();
 		BigDecimal toSum = to.getAmount();
-		BigDecimal transfer = transferDTO.getAmount();
 
-		CashFlow record = new CashFlow(from, to, transfer, transfer, null);
+		CashFlow record = new CashFlow(from, to, tradeLog, transfer, transfer, null);
 		cashFlowRepo.save(record);
 		from.setAmount(fromSum.subtract(transfer));
 		to.setAmount(toSum.add(transfer));
@@ -89,7 +88,7 @@ public class CashService {
 		cashFlowRepo.flush();
 		accountRepo.flush();
 
-		logger.debug("Refill for amount {}, broker {} and currency {} is finished",
+		logger.debug("Transfer for amount {}, broker {} and currency {} is finished",
 		             transfer, broker.getName(), currency.getName() );
 		return to;
 	}
@@ -107,9 +106,9 @@ public class CashService {
 		BigDecimal transferTo = exchangeDTO.getAmountTo();
 		BigDecimal tradeFromSum = tradeFrom.getAmount();
 		BigDecimal tradeToSum = tradeTo.getAmount();
-		BigDecimal rate = transferFrom.divide(transferTo, RoundingMode.HALF_DOWN);
+		BigDecimal rate = transferFrom.divide(transferTo, 12, RoundingMode.HALF_DOWN);
 
-		CashFlow record = new CashFlow(tradeFrom, tradeTo, transferFrom, transferTo, rate);
+		CashFlow record = new CashFlow(tradeFrom, tradeTo, null, transferFrom, transferTo, rate);
 		cashFlowRepo.save(record);
 		tradeFrom.setAmount(tradeFromSum.subtract(transferFrom));
 		tradeTo.setAmount(tradeToSum.add(transferTo));
@@ -128,57 +127,50 @@ public class CashService {
 		return CashAccountMapper.toDTO(tradeTo);
 	}
 
-	public CashAccountDTO fee(TransferDTO transferDTO) {
+	public void fee(BigDecimal amount, Broker broker, TradeLog tradeLog) {
 		logger.debug("start");
-		Broker broker = brokerRepo.getReferenceById(transferDTO.getBrokerId());
-		Currency currency = currencyRepo.getReferenceById(transferDTO.getCurrencyId());
 		CashAccountType fromTrade = accountTypeRepo.findCashAccountTypeByName("trade");
 		CashAccountType toFee = accountTypeRepo.findCashAccountTypeByName("fee");
+		Currency currency = currencyRepo.findCurrencyByName("USD");
 
-		CashAccount fee = transfer(transferDTO, broker, currency, fromTrade, toFee);
+		transfer(amount, tradeLog, broker, currency, fromTrade, toFee);
 		logger.debug("finish");
-		return CashAccountMapper.toDTO(fee);
 	}
 
-	public CashAccountDTO buy(TransferDTO transferDTO) {
+	public void buy(BigDecimal amount, Broker broker, Currency currency, TradeLog tradeLog) {
 		logger.debug("start");
-		Broker broker = brokerRepo.getReferenceById(transferDTO.getBrokerId());
-		Currency currency = currencyRepo.getReferenceById(transferDTO.getCurrencyId());
 		CashAccountType fromTrade = accountTypeRepo.findCashAccountTypeByName("trade");
 		CashAccountType toOpen = accountTypeRepo.findCashAccountTypeByName("open");
 
-		transfer(transferDTO, broker, currency, fromTrade, toOpen);
-		CashAccount trade = getAccount(broker, currency, fromTrade);
+		transfer(amount, tradeLog, broker, currency, fromTrade, toOpen);
 		logger.debug("finish");
-		return CashAccountMapper.toDTO(trade);
 	}
 
-	public CashAccountDTO sell(SellDTO sellDTO) {
+	public void sell(BigDecimal openAmount, BigDecimal closeAmount, Broker broker, Currency currency, TradeLog tradeLog) {
 		logger.debug("start");
-		Broker broker = brokerRepo.getReferenceById(sellDTO.getBrokerId());
-		Currency currency = currencyRepo.getReferenceById(sellDTO.getCurrencyId());
 		CashAccountType tradeType = accountTypeRepo.findCashAccountTypeByName("trade");
 		CashAccountType openType = accountTypeRepo.findCashAccountTypeByName("open");
 		CashAccountType profitType = accountTypeRepo.findCashAccountTypeByName("profit");
 		CashAccountType lossType = accountTypeRepo.findCashAccountTypeByName("loss");
 
-		TransferDTO openDTO = new TransferDTO(null, null, sellDTO.getOpenAmount());
-		transfer(openDTO, broker, currency, openType, tradeType);
+		transfer(openAmount, tradeLog, broker, currency, openType, tradeType);
 
-		if (sellDTO.getCloseAmount().compareTo(sellDTO.getOpenAmount()) > 0) {
-			BigDecimal profit = sellDTO.getCloseAmount().subtract(sellDTO.getOpenAmount());
-			TransferDTO profitDTO = new TransferDTO(null, null, profit);
-			transfer(profitDTO, broker, currency, profitType, tradeType);
+		if (closeAmount.compareTo(openAmount) > 0) {
+			BigDecimal profit = closeAmount.subtract(openAmount);
+			transfer(profit, tradeLog, broker, currency, profitType, tradeType);
 		}
 
-		if (sellDTO.getCloseAmount().compareTo(sellDTO.getOpenAmount()) < 0) {
-			BigDecimal loss = sellDTO.getOpenAmount().subtract(sellDTO.getCloseAmount());
-			TransferDTO lossDTO = new TransferDTO(null, null, loss);
-			transfer(lossDTO, broker, currency, tradeType, lossType);
+		if (closeAmount.compareTo(openAmount) < 0) {
+			BigDecimal loss = openAmount.subtract(closeAmount);;
+			transfer(loss, tradeLog, broker, currency, tradeType, lossType);
 		}
 
-		CashAccount trade = getAccount(broker, currency, tradeType);
 		logger.debug("finish");
-		return CashAccountMapper.toDTO(trade);
+	}
+
+	public BigDecimal lastDepositAmount(Broker broker, Currency currency) {
+		CashAccountType tradeType = accountTypeRepo.findCashAccountTypeByName("trade");
+		CashAccount trade = getAccount(broker, currency, tradeType);
+		return trade.getAmount();
 	}
 }
