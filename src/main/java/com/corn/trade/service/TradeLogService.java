@@ -10,10 +10,12 @@ import com.corn.trade.repository.BrokerRepository;
 import com.corn.trade.repository.MarketRepository;
 import com.corn.trade.repository.TickerRepository;
 import com.corn.trade.repository.TradeLogRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Service
 @Transactional
@@ -51,8 +53,28 @@ public class TradeLogService {
 			cashService.fee(tradeLog.getFees(), broker, tradeLog);
 	}
 
-	public void close(TradeLogCloseDTO closeDTO) {
+	public void close(TradeLogCloseDTO closeDTO) throws JsonProcessingException {
+		TradeLog open = tradeLogRepo.getReferenceById(closeDTO.getId());
+		open.setDateClose(closeDTO.getDateClose());
+		open.setPriceClose(closeDTO.getPriceClose());
 
+		BigDecimal outcome = open.getPriceClose().subtract(open.getPriceClose());
+		BigDecimal outcomePercent = outcome.divide(open.getPriceOpen(), 12, RoundingMode.HALF_EVEN)
+				                                   .multiply(BigDecimal.valueOf(100.00));
+
+		BigDecimal percentToCapital = cashService.percentToCapital(outcome, open.getCurrency());
+
+		open.setOutcome(outcome);
+		open.setOutcomePercent(outcomePercent);
+		open.setProfit(percentToCapital);
+		open.setFees(open.getFees().add(closeDTO.getFees()));
+
+		BigDecimal closeAmount = open.getPriceClose().multiply(BigDecimal.valueOf(open.getItemNumber()));
+
+		open = tradeLogRepo.save(open);
+		cashService.sell(open.getVolume(), closeAmount, open.getBroker(), open.getCurrency(), open);
+		if (!open.getFees().equals(BigDecimal.ZERO))
+			cashService.fee(open.getFees(),  open.getBroker(), open);
 	}
 
 	public TradeLogPageDTO page(TradeLogPageReqDTO pageReqDTO) {

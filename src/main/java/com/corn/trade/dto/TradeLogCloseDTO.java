@@ -18,8 +18,6 @@ public class TradeLogCloseDTO implements Serializable {
 
 	private final BigDecimal fees;
 
-	private final BigDecimal outcome;
-
 	private final String note;
 
 
@@ -28,13 +26,11 @@ public class TradeLogCloseDTO implements Serializable {
 	                        @JsonProperty("dateClose") LocalDateTime dateClose,
 	                        @JsonProperty("priceClose") BigDecimal priceClose,
 	                        @JsonProperty("fees") BigDecimal fees,
-	                        @JsonProperty("outcome") BigDecimal outcome,
 	                        @JsonProperty("note") String note) {
 		this.id = id;
 		this.dateClose = dateClose;
 		this.priceClose = priceClose;
 		this.fees = fees;
-		this.outcome = outcome;
 		this.note = note;
 	}
 
@@ -52,10 +48,6 @@ public class TradeLogCloseDTO implements Serializable {
 
 	public BigDecimal getFees() {
 		return fees;
-	}
-
-	public BigDecimal getOutcome() {
-		return outcome;
 	}
 
 	public String getNote() {
