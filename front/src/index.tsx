@@ -6,12 +6,15 @@ import Main from './main'
 import theme from './styles/theme'
 import { ThemeProvider } from '@mui/material/styles'
 import { QueryClient, QueryClientProvider } from 'react-query'
+import { TradeProvider } from './utils/trade-context'
 
 const Outer = () => {
     const queryClient = new QueryClient()
     return <ThemeProvider theme={theme}>
         <QueryClientProvider client={queryClient}>
-            <Main/>
+            <TradeProvider>
+                <Main/>
+            </TradeProvider>
         </QueryClientProvider>
     </ThemeProvider>
 }
