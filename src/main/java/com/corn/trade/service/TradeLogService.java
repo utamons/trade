@@ -1,9 +1,6 @@
 package com.corn.trade.service;
 
-import com.corn.trade.dto.TradeLogCloseDTO;
-import com.corn.trade.dto.TradeLogOpenDTO;
-import com.corn.trade.dto.TradeLogPageDTO;
-import com.corn.trade.dto.TradeLogPageReqDTO;
+import com.corn.trade.dto.*;
 import com.corn.trade.entity.*;
 import com.corn.trade.mapper.TradeLogMapper;
 import com.corn.trade.repository.BrokerRepository;
@@ -11,6 +8,7 @@ import com.corn.trade.repository.MarketRepository;
 import com.corn.trade.repository.TickerRepository;
 import com.corn.trade.repository.TradeLogRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -85,7 +83,10 @@ public class TradeLogService {
 		cashService.sell(open.getVolume(), closeAmount, open.getBroker(), open.getCurrency(), open);
 	}
 
-	public TradeLogPageDTO page(TradeLogPageReqDTO pageReqDTO) {
-		return null;
+	public Page<TradeLogDTO> getPage(TradeLogPageReqDTO pageReqDTO) {
+		Pageable pageable = PageRequest.of(pageReqDTO.getPageNumber(), pageReqDTO.getPageSize(),
+		                                   Sort.by("dateOpen").descending());
+		Page<TradeLog> page = tradeLogRepo.findAll(pageable);
+		return page.map(TradeLogMapper::toDTO);
 	}
 }

@@ -6,21 +6,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @SuppressWarnings("unused")
 public class TradeLogPageReqDTO {
 	private final int pageSize;
-	private final int skip;
+	private final int pageNumber;
 
 	@JsonCreator
 	public TradeLogPageReqDTO(
 			@JsonProperty("pageSize") int pageSize,
-			@JsonProperty("skip") int skip) {
+			@JsonProperty("pageNumber") int pageNumber) {
 		this.pageSize = pageSize;
-		this.skip = skip;
+		this.pageNumber = pageNumber;
 	}
 
 	public int getPageSize() {
 		return pageSize;
 	}
 
-	public int getSkip() {
-		return skip;
+	public int getPageNumber() {
+		return pageNumber;
 	}
 }

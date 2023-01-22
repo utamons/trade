@@ -1,5 +1,6 @@
 package com.corn.trade.mapper;
 
+import com.corn.trade.dto.TradeLogDTO;
 import com.corn.trade.dto.TradeLogOpenDTO;
 import com.corn.trade.entity.*;
 
@@ -37,5 +38,33 @@ public class TradeLogMapper {
 		e.setNote(open.getNote());
 
 		return e;
+	}
+
+	public static TradeLogDTO toDTO(TradeLog entity) {
+		return new TradeLogDTO(
+				entity.getId(),
+				entity.getPosition(),
+				entity.getDateOpen(),
+				entity.getDateClose(),
+				BrokerMapper.toDTO(entity.getBroker()),
+				MarketMapper.toDTO(entity.getMarket()),
+				TickerMapper.toDTO(entity.getTicker()),
+				CurrencyMapper.toDTO(entity.getCurrency()),
+				entity.getItemNumber(),
+				entity.getPriceOpen(),
+				entity.getPriceClose(),
+				entity.getVolume(),
+				entity.getVolumeToDeposit(),
+				entity.getStopLoss(),
+				entity.getTakeProfit(),
+				entity.getOutcomeExpected(),
+				entity.getRisk(),
+				entity.getFees(),
+				entity.getOutcome(),
+				entity.getOutcomePercent(),
+				entity.getProfit(),
+				entity.getNote(),
+				null
+		);
 	}
 }

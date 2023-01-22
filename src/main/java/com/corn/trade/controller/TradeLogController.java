@@ -4,6 +4,7 @@ import com.corn.trade.dto.*;
 import com.corn.trade.service.CashService;
 import com.corn.trade.service.TradeLogService;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,7 +32,7 @@ public class TradeLogController {
 	}
 
 	@PostMapping("/page")
-	public TradeLogPageDTO page(@RequestBody TradeLogPageReqDTO pageReqDTO) {
-		return service.page(pageReqDTO);
+	public Page<TradeLogDTO> page(@RequestBody TradeLogPageReqDTO pageReqDTO) {
+		return service.getPage(pageReqDTO);
 	}
 }
