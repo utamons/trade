@@ -1,6 +1,6 @@
 import React from 'react'
 import { Box, Container, Grid, styled } from '@mui/material'
-import { fetchTest } from './api'
+import { fetchBrokers } from './api'
 import { useQuery } from 'react-query'
 
 
@@ -16,7 +16,7 @@ const MainStyled = styled(Box)(() => ({
 }))
 export default () => {
 
-    const { data, isLoading } = useQuery('fetchTest', fetchTest, {
+    const { data, isLoading } = useQuery('fetchBrokers', fetchBrokers, {
             refetchOnMount: false,
             refetchOnWindowFocus: false,
             refetchOnReconnect: false,
@@ -24,11 +24,12 @@ export default () => {
             retry: 0
         }
     )
+
     return (
         <MainStyled>
             <Container>
                 <Grid id="mainContainer" container spacing={0} className="content">
-                    Test: {isLoading ? 'Loading' : data[0].text}
+                    Test: {isLoading ? 'Loading' : data[0].name}
                 </Grid>
             </Container>
         </MainStyled>

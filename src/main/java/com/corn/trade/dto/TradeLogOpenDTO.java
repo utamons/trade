@@ -18,9 +18,6 @@ public class TradeLogOpenDTO implements Serializable {
 	private static final long serialVersionUID = -4135659016328220866L;
 	private final String position;
 
-	@JsonSerialize(using = LocalDateTimeSerializer.class)
-	@JsonDeserialize(using = LocalDateTimeDeserializer.class)
-	@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
 	private final LocalDateTime dateOpen;
 
 	private final Long brokerId;

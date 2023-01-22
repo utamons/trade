@@ -1,5 +1,5 @@
-const fetchTest = async () => {
-    const url = 'http://localhost:8080/api/test/all'
+const fetchBrokers = async () => {
+    const url = 'http://localhost:8080/api/broker/all'
     return fetch(url, {
         method: 'get'
     }).then((res) => {
@@ -7,4 +7,4 @@ const fetchTest = async () => {
     })
 }
 
-export { fetchTest }
+export { fetchBrokers }
