@@ -22,6 +22,7 @@ type TradeContextType = {
 }
 
 export {
+    MarketType,
     ItemType,
     TradeContextType
 }

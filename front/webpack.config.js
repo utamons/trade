@@ -55,6 +55,7 @@ module.exports = {
                 {},
                 {
                     inject: true,
+                    favicon: 'src/styles/assets/favicon.ico',
                     templateContent: `
                         <html lang="en">                       
                              <head>
