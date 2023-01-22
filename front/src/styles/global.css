@@ -19,9 +19,3 @@ body {
   -webkit-line-clamp: 1;
   line-clamp: 1;
 }
-
-.tooltip {
-  max-width: 350px;
-  background: red;
-  color: #cccccc;
-}
