@@ -1,7 +1,6 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { Box, Container, Grid, styled } from '@mui/material'
-import { fetchBrokers } from './api'
-import { useQuery } from 'react-query'
+import { TradeContext } from './utils/trade-context'
 
 
 const MainStyled = styled(Box)(() => ({
@@ -16,20 +15,14 @@ const MainStyled = styled(Box)(() => ({
 }))
 export default () => {
 
-    const { data, isLoading } = useQuery('fetchBrokers', fetchBrokers, {
-            refetchOnMount: false,
-            refetchOnWindowFocus: false,
-            refetchOnReconnect: false,
-            refetchInterval: false as false,
-            retry: 0
-        }
-    )
+    const { all } = useContext(TradeContext)
+    const { isLoading, brokers, currencies, tickers, markets } = all
 
     return (
         <MainStyled>
             <Container>
                 <Grid id="mainContainer" container spacing={0} className="content">
-                    Test: {isLoading ? 'Loading' : data[0].name}
+                    Test: {isLoading ? 'Loading' : `${brokers[0].name} ${currencies[0].name} ${tickers[0].name} ${markets[0].name}`}
                 </Grid>
             </Container>
         </MainStyled>
