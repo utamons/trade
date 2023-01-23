@@ -7,14 +7,14 @@ import { MarketType } from 'types'
 const ContainerStyled = styled(Box)(({theme}) => ({
     alignItems: 'top',
     display: 'flex',
-    color: theme.palette.primary.main,
+    color: theme.palette.text.primary,
     justifyContent: 'left'
 }))
 
 const DateContainerStyled = styled(Box)(({theme}) => ({
     alignItems: 'center',
     display: 'flex',
-    color: theme.palette.primary.main,
+    color: theme.palette.text.primary,
     justifyContent: 'flex-start',
     gap: remCalc(10),
     padding: remCalc(10)
@@ -51,7 +51,7 @@ const DateElem = ({name, offset}: DateElemProps) => {
     </DateContainerStyled>
 }
 
-const getMarketDates = (markets: MarketType[]) => {
+const getMarketDates = (markets: MarketType[] | undefined) => {
     console.log('markets',markets)
     if (!markets)
         return <></>
@@ -62,6 +62,8 @@ const getMarketDates = (markets: MarketType[]) => {
 
 export default () => {
     const { all } = useContext(TradeContext)
+    if (!all)
+        return <></>
     const { isLoading, markets } = all
 
     return <ContainerStyled>
