@@ -5,11 +5,13 @@ import { TradeContext } from '../utils/trade-context'
 import DateTime from './dateTime'
 
 const ContainerStyled = styled(Box)(({theme}) => ({
+    border: `solid ${remCalc(1)}`,
+    borderColor: theme.palette.text.primary,
     display: 'flex',
     flexFlow: 'row',
     alignItems: 'center',
-    color: theme.palette.primary.main,
-    backgroundColor: theme.palette.background.paper,
+    color: theme.palette.text.primary,
+    backgroundColor: theme.palette.background.default,
     fontSize: remCalc(18),
     fontWeight: 'normal',
     justifyContent: 'flex-start',
@@ -18,6 +20,8 @@ const ContainerStyled = styled(Box)(({theme}) => ({
 
 export default () => {
     const { all } = useContext(TradeContext)
+    if (!all)
+        return <></>
     const { isLoading, brokers, currencies, tickers, markets } = all
 
     return <ContainerStyled>
@@ -26,12 +30,4 @@ export default () => {
             <Box>Broker: {brokers?brokers[0].name:''}</Box>
         </Loadable>
     </ContainerStyled>
-    /*
-        Deposit:
-             KZT: ???
-             USD: ???
-        Outcome: ???
-        Profit: % to capital
-        Capital: ???
-        [ REFILL ] [ EXCHANGE ]*/
 }

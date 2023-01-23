@@ -9,7 +9,7 @@ module.exports = {
     entry: './src/index.tsx',
     output: {
         path: path.resolve(__dirname, './dist'),
-        publicPath: `${settings.base}`,
+        publicPath: `/`,
         chunkFilename: 'assets/[name].[contenthash].js',
         filename: 'assets/[name].[contenthash].js',
         sourceMapFilename: "assets/[name].[contenthash].map"
@@ -60,7 +60,7 @@ module.exports = {
                                 <title>Trade</title>
                                 <meta name="viewport" content="width=device-width,initial-scale=1">
                              </head>                        
-                             <body>
+                             <body style="margin: 0">
                                 <div id="root"></div>
                              </body>
                         </html>`

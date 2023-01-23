@@ -4,7 +4,7 @@ import { remCalc } from '../utils/utils'
 const ContainerStyled = styled(Box)(({theme}) => ({
     alignItems: 'top',
     display: 'flex',
-    color: theme.palette.primary.main,
+    color: theme.palette.text.primary,
     backgroundColor: theme.palette.background.default,
     fontSize: remCalc(18),
     fontWeight: 'normal',
