@@ -18,11 +18,20 @@ type TradeContextType = {
     currencies: ItemType[] | undefined,
     tickers: TickerType[] | undefined,
     markets: MarketType[] | undefined,
-    isLoading: boolean
+    isLoading: boolean,
+    currentBroker: ItemType | undefined,
+    setCurrentBrokerId: (id: number) => void
+}
+
+type BrokerProps = {
+    brokers: ItemType[] | undefined,
+    currentBroker: ItemType | undefined,
+    setCurrentBrokerId: (id: number) => void
 }
 
 export {
     MarketType,
     ItemType,
-    TradeContextType
+    TradeContextType,
+    BrokerProps
 }

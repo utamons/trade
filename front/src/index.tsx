@@ -6,7 +6,7 @@ import Main from './main'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { QueryClient, QueryClientProvider } from 'react-query'
-import { TradeProvider } from './utils/trade-context'
+import { TradeProvider } from './trade-context'
 
 const Outer = () => {
     const queryClient = new QueryClient()

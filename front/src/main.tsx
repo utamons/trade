@@ -1,7 +1,7 @@
 import React, { useContext } from 'react'
 import { Box, Container, Grid, styled } from '@mui/material'
-import { TradeContext } from './utils/trade-context'
-import Dashboard from './components/dashboard'
+import { TradeContext } from './trade-context'
+import Dashboard from './components/dashboard/dashboard'
 import Work from './components/work'
 
 
