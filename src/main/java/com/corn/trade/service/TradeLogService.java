@@ -73,6 +73,7 @@ public class TradeLogService {
 		open.setOutcomePercent(outcomePercent);
 		open.setProfit(percentToCapital);
 		open.setFees(open.getFees().add(closeDTO.getFees()));
+		open.setGrade(closeDTO.getGrade());
 		if (closeDTO.getNote() != null)
 			open.setNote(closeDTO.getNote());
 
