@@ -56,6 +56,10 @@ public class TradeLogDTO implements Serializable {
 
 	private final String chart;
 
+	private final String grade;
+
+	private final BigDecimal goal;
+
 	@JsonCreator
 	public TradeLogDTO(@JsonProperty("id") Long id,
 	                   @JsonProperty("position") String position,
@@ -79,7 +83,9 @@ public class TradeLogDTO implements Serializable {
 	                   @JsonProperty("outcomePercent") BigDecimal outcomePercent,
 	                   @JsonProperty("profit") BigDecimal profit,
 	                   @JsonProperty("note") String note,
-	                   @JsonProperty("chart") String chart) {
+	                   @JsonProperty("chart") String chart,
+	                   @JsonProperty("grade") String grade,
+	                   @JsonProperty("goal") BigDecimal goal) {
 		this.id = id;
 		this.position = position;
 		this.dateOpen = dateOpen;
@@ -103,6 +109,8 @@ public class TradeLogDTO implements Serializable {
 		this.profit = profit;
 		this.note = note;
 		this.chart = chart;
+		this.grade = grade;
+		this.goal = goal;
 	}
 
 	public Long getId() {
@@ -195,5 +203,13 @@ public class TradeLogDTO implements Serializable {
 
 	public String getChart() {
 		return chart;
+	}
+
+	public String getGrade() {
+		return grade;
+	}
+
+	public BigDecimal getGoal() {
+		return goal;
 	}
 }

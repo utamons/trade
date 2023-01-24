@@ -1,12 +1,7 @@
 package com.corn.trade.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -42,6 +37,12 @@ public class TradeLogOpenDTO implements Serializable {
 
 	private final String note;
 
+	private final BigDecimal goal;
+
+	public BigDecimal getGoal() {
+		return goal;
+	}
+
 	@JsonCreator
 	public TradeLogOpenDTO(@JsonProperty("position") String position,
 	                       @JsonProperty("dateOpen") LocalDateTime dateOpen,
@@ -55,7 +56,8 @@ public class TradeLogOpenDTO implements Serializable {
 	                       @JsonProperty("outcomeExpected") BigDecimal outcomeExpected,
 	                       @JsonProperty("risk") BigDecimal risk,
 	                       @JsonProperty("fees") BigDecimal fees,
-	                       @JsonProperty("note") String note) {
+	                       @JsonProperty("note") String note,
+	                       @JsonProperty("goal") BigDecimal goal) {
 		this.position = position;
 		this.dateOpen = dateOpen;
 		this.brokerId = brokerId;
@@ -69,6 +71,7 @@ public class TradeLogOpenDTO implements Serializable {
 		this.risk = risk;
 		this.fees = fees;
 		this.note = note;
+		this.goal = goal;
 	}
 
 	public String getPosition() {

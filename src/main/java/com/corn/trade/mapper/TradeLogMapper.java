@@ -36,6 +36,7 @@ public class TradeLogMapper {
 		e.setRisk(open.getRisk());
 		e.setFees(open.getFees() == null ? BigDecimal.ZERO : open.getFees());
 		e.setNote(open.getNote());
+		e.setGoal(open.getGoal());
 
 		return e;
 	}
@@ -64,7 +65,8 @@ public class TradeLogMapper {
 				entity.getOutcomePercent(),
 				entity.getProfit(),
 				entity.getNote(),
-				null
-		);
+				null,
+				entity.getGrade(),
+				entity.getGoal());
 	}
 }

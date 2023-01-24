@@ -20,18 +20,26 @@ public class TradeLogCloseDTO implements Serializable {
 
 	private final String note;
 
+	private final String grade;
+
+
+	public String getGrade() {
+		return grade;
+	}
 
 	@JsonCreator
 	public TradeLogCloseDTO(@JsonProperty("id") Long id,
 	                        @JsonProperty("dateClose") LocalDateTime dateClose,
 	                        @JsonProperty("priceClose") BigDecimal priceClose,
 	                        @JsonProperty("fees") BigDecimal fees,
-	                        @JsonProperty("note") String note) {
+	                        @JsonProperty("note") String note,
+	                        @JsonProperty("grade") String grade) {
 		this.id = id;
 		this.dateClose = dateClose;
 		this.priceClose = priceClose;
 		this.fees = fees;
 		this.note = note;
+		this.grade = grade;
 	}
 
 	public Long getId() {

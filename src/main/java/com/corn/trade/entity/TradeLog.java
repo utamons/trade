@@ -80,57 +80,14 @@ public class TradeLog implements Serializable {
 	@Column(name = "note")
 	private String note;
 
+	@Column(name = "grade")
+	private String grade;
+
+	@Column(name = "goal")
+	private BigDecimal goal;
+
 	@Column(name = "chart")
 	private byte[] chart;
-
-	public TradeLog() {}
-
-	public TradeLog(
-					String position,
-			        LocalDateTime dateOpen,
-	                LocalDateTime dateClose,
-	                Broker broker,
-	                Market market,
-	                Ticker ticker,
-	                Currency currency,
-	                Long itemNumber,
-	                BigDecimal priceOpen,
-	                BigDecimal priceClose,
-	                BigDecimal volume,
-	                BigDecimal volumeToDeposit,
-	                BigDecimal stopLoss,
-	                BigDecimal takeProfit,
-	                BigDecimal outcomeExpected,
-	                BigDecimal risk,
-	                BigDecimal fees,
-	                BigDecimal outcome,
-	                BigDecimal outcomePercent,
-	                BigDecimal profit,
-	                String note,
-	                byte[] chart) {
-		this.position = position;
-		this.dateOpen = dateOpen;
-		this.dateClose = dateClose;
-		this.broker = broker;
-		this.market = market;
-		this.ticker = ticker;
-		this.currency = currency;
-		this.itemNumber = itemNumber;
-		this.priceOpen = priceOpen;
-		this.priceClose = priceClose;
-		this.volume = volume;
-		this.volumeToDeposit = volumeToDeposit;
-		this.stopLoss = stopLoss;
-		this.takeProfit = takeProfit;
-		this.outcomeExpected = outcomeExpected;
-		this.risk = risk;
-		this.fees = fees;
-		this.outcome = outcome;
-		this.outcomePercent = outcomePercent;
-		this.profit = profit;
-		this.note = note;
-		this.chart = chart;
-	}
 
 	public Long getId() {
 		return id;
@@ -314,5 +271,21 @@ public class TradeLog implements Serializable {
 
 	public void setChart(byte[] chart) {
 		this.chart = chart;
+	}
+
+	public String getGrade() {
+		return grade;
+	}
+
+	public void setGrade(String grade) {
+		this.grade = grade;
+	}
+
+	public BigDecimal getGoal() {
+		return goal;
+	}
+
+	public void setGoal(BigDecimal goal) {
+		this.goal = goal;
 	}
 }
