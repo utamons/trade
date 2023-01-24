@@ -1,7 +1,7 @@
 import { Box, styled } from '@mui/material'
-import { Loadable, remCalc } from '../utils/utils'
+import { Loadable, remCalc } from '../../utils/utils'
 import { useContext, useEffect, useState } from 'react'
-import { TradeContext } from '../utils/trade-context'
+import { TradeContext } from '../../trade-context'
 import { MarketType } from 'types'
 
 const ContainerStyled = styled(Box)(({theme}) => ({

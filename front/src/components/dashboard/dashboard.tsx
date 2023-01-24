@@ -1,12 +1,10 @@
 import { Box, styled } from '@mui/material'
-import { Loadable, remCalc } from '../utils/utils'
+import { Loadable, remCalc } from '../../utils/utils'
 import { useContext } from 'react'
-import { TradeContext } from '../utils/trade-context'
-import DateTime from './dateTime'
+import { TradeContext } from '../../trade-context'
+import Broker from './broker'
 
 const ContainerStyled = styled(Box)(({theme}) => ({
-    border: `solid ${remCalc(1)}`,
-    borderColor: theme.palette.text.primary,
     display: 'flex',
     flexFlow: 'row',
     alignItems: 'center',
@@ -22,12 +20,11 @@ export default () => {
     const { all } = useContext(TradeContext)
     if (!all)
         return <></>
-    const { isLoading, brokers, currencies, tickers, markets } = all
+    const { isLoading, brokers, currentBroker, setCurrentBrokerId } = all
 
     return <ContainerStyled>
-        <DateTime />
         <Loadable isLoading={isLoading}>
-            <Box>Broker: {brokers?brokers[0].name:''}</Box>
+            <Broker brokers={brokers} currentBroker={currentBroker} setCurrentBrokerId={setCurrentBrokerId} />
         </Loadable>
     </ContainerStyled>
 }
