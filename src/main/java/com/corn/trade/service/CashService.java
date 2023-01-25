@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("DuplicatedCode")
 @Service
@@ -207,5 +208,14 @@ public class CashService {
 			BigDecimal convertedOutcome = outcome.divide(currencyRateDTO.getRate(),12,RoundingMode.HALF_EVEN);
 			return convertedOutcome.divide(sum,12,RoundingMode.HALF_EVEN);
 		}
+	}
+
+	public List<CashAccountDTO> getTradeAccounts(Long brokerId) {
+		Broker broker = brokerRepo.getReferenceById(brokerId);
+		CashAccountType tradeType = accountTypeRepo.findCashAccountTypeByName("trade");
+		return accountRepo.findAllByBrokerAndType(broker, tradeType)
+		                  .stream()
+		                  .map(CashAccountMapper::toDTO)
+		                  .collect(Collectors.toList());
 	}
 }

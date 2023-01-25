@@ -13,4 +13,6 @@ public interface CashAccountRepository extends JpaRepository<CashAccount, Long>,
 	CashAccount findCashAccountByBrokerAndCurrencyAndType(Broker broker, Currency currency, CashAccountType type);
 
 	List<CashAccount> findAllByType(CashAccountType type);
+
+	List<CashAccount> findAllByBrokerAndType(Broker broker, CashAccountType type);
 }
