@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -89,5 +91,15 @@ public class TradeLogService {
 		                                   Sort.by("dateOpen").descending());
 		Page<TradeLog> page = tradeLogRepo.findAll(pageable);
 		return page.map(TradeLogMapper::toDTO);
+	}
+
+	public List<TradeLogDTO> getAllClosedByBroker(Long brokerId) {
+		Broker broker = brokerRepo.getReferenceById(brokerId);
+		return tradeLogRepo.findAllClosedByBroker(broker).stream().map(TradeLogMapper::toDTO).collect(Collectors.toList());
+	}
+
+	public long getOpenCountByBroker(Long brokerId) {
+		Broker broker = brokerRepo.getReferenceById(brokerId);
+		return tradeLogRepo.opensByBroker(broker);
 	}
 }
