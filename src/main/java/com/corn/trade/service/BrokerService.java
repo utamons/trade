@@ -61,8 +61,10 @@ public class BrokerService {
 			avgProfit = avgProfit.add(dto.getOutcomePercent());
 		}
 
-		BigDecimal avgOutcome = outcome.divide(BigDecimal.valueOf(dtos.size()), 2, RoundingMode.HALF_EVEN);
-		avgProfit = avgProfit.divide(BigDecimal.valueOf(dtos.size()), 2, RoundingMode.HALF_EVEN);
+		BigDecimal avgOutcome = dtos.size() > 0 ?
+				outcome.divide(BigDecimal.valueOf(dtos.size()), 2, RoundingMode.HALF_EVEN) : BigDecimal.ZERO;
+		avgProfit = dtos.size() > 0 ?
+				avgProfit.divide(BigDecimal.valueOf(dtos.size()), 2, RoundingMode.HALF_EVEN): BigDecimal.ZERO;
 
 		long open = tradeLogService.getOpenCountByBroker(brokerId);
 		outcome = outcome.setScale(2, RoundingMode.HALF_EVEN);
