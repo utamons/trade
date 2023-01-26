@@ -1,10 +1,11 @@
-import { Box, styled } from '@mui/material'
+import { Box, Grid, styled } from '@mui/material'
 import { Loadable, remCalc } from '../../utils/utils'
 import { useContext } from 'react'
 import { TradeContext } from '../../trade-context'
 import Broker from './broker'
+import BrokerStats from './brokerStats'
 
-const ContainerStyled = styled(Box)(({theme}) => ({
+const ContainerStyled = styled(Box)(({ theme }) => ({
     display: 'flex',
     flexFlow: 'row',
     alignItems: 'center',
@@ -13,18 +14,21 @@ const ContainerStyled = styled(Box)(({theme}) => ({
     fontSize: remCalc(18),
     fontWeight: 'normal',
     justifyContent: 'flex-start',
-    width: '100%'
+    border: `solid ${remCalc(1)}`,
+    borderRadius: remCalc(2),
+    borderColor: theme.palette.text.primary
 }))
 
 export default () => {
     const { all } = useContext(TradeContext)
     if (!all)
         return <></>
-    const { isLoading, brokers, currentBroker, setCurrentBrokerId } = all
+    const { isLoading, brokers, currentBroker, brokerStats, setCurrentBrokerId } = all
 
-    return <ContainerStyled>
-        <Loadable isLoading={isLoading}>
-            <Broker brokers={brokers} currentBroker={currentBroker} setCurrentBrokerId={setCurrentBrokerId} />
-        </Loadable>
-    </ContainerStyled>
+    return <Loadable isLoading={isLoading}>
+        <ContainerStyled>
+            <Broker brokers={brokers} currentBroker={currentBroker} setCurrentBrokerId={setCurrentBrokerId}/>
+            <BrokerStats {...brokerStats}/>
+        </ContainerStyled>
+    </Loadable>
 }

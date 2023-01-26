@@ -10,10 +10,9 @@ import Select, { SelectChangeEvent } from '@mui/material/Select';
 import Button from '../button'
 
 const ContainerStyled = styled(Box)(({ theme }) => ({
-    border: `solid ${remCalc(1)}`,
-    borderRadius: remCalc(2),
+    borderRight: `solid ${remCalc(1)}`,
     borderColor: theme.palette.text.primary,
-    padding: remCalc(2),
+    padding: remCalc(10),
     fontSize: remCalc(18),
     fontWeight: 'normal',
     display: 'flex',
