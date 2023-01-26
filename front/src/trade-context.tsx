@@ -1,6 +1,6 @@
 import React, { createContext, useEffect, useMemo, useState } from 'react'
 import { useQuery } from 'react-query'
-import { fetchBrokers, fetchCurrencies, fetchMarkets, fetchTickers } from './api'
+import { fetchBrokers, fetchBrokerStats, fetchCurrencies, fetchMarkets, fetchTickers } from './api'
 import { ItemType, TradeContextType } from 'types'
 
 const onetimeQueryOptions = () => {
@@ -50,12 +50,25 @@ const useTickers = () => {
     }
 }
 
+const useBrokerStats = (brokerId: number, key: string) => {
+    const { data, isLoading } = useQuery(key+brokerId, () => {
+        return fetchBrokerStats(brokerId)
+    }, onetimeQueryOptions())
+
+    return {
+        brokerStats: data,
+        isLoadingBrokerStats: isLoading
+    }
+}
+
 const useTrade = ():TradeContextType => {
     const { brokers, isLoadingBrokers } = useBrokers();
     const { currencies, isLoadingCurrencies } = useCurrencies();
     const { tickers, isLoadingTickers } = useTickers();
     const { markets, isLoadingMarkets } = useMarkets();
     const [ currentBrokerId, setCurrentBrokerId ] = useState(0)
+    const [ brokerStatsKey, setBrokerStatsKey ] = useState('key')
+    const { brokerStats, isLoadingBrokerStats } = useBrokerStats(currentBrokerId, brokerStatsKey)
 
     const currentBroker = (): ItemType | undefined => {
         return isLoadingBrokers ? undefined : brokers.find((elem) => {
@@ -76,7 +89,9 @@ const useTrade = ():TradeContextType => {
         currencies,
         tickers,
         markets,
-        isLoading: isLoadingBrokers || isLoadingCurrencies || isLoadingMarkets || isLoadingTickers,
+        brokerStats,
+        isLoading: isLoadingBrokers || isLoadingCurrencies || isLoadingMarkets || isLoadingTickers ||
+            isLoadingBrokerStats,
         currentBroker: currentBroker(),
         setCurrentBrokerId
     }

@@ -25,7 +25,7 @@ const fetchMarkets = async () => {
     })
 }
 
-const fetchTickers= async () => {
+const fetchTickers = async () => {
     const url = 'http://localhost:8080/api/ticker/all'
     return fetch(url, {
         method: 'get'
@@ -34,4 +34,19 @@ const fetchTickers= async () => {
     })
 }
 
-export { fetchBrokers, fetchCurrencies, fetchMarkets, fetchTickers }
+const fetchBrokerStats = async (brokerId: number) => {
+    const url = `http://localhost:8080/api/broker/stats?brokerId=${brokerId}`
+    return fetch(url, {
+        method: 'get'
+    }).then((res) => {
+        return res.json()
+    })
+}
+
+export {
+    fetchBrokers,
+    fetchCurrencies,
+    fetchMarkets,
+    fetchTickers,
+    fetchBrokerStats
+}
