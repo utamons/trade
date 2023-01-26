@@ -20,4 +20,7 @@ public interface TradeLogRepository extends JpaRepository<TradeLog, Long>, JpaSp
 
 	@Query("select count(t) from TradeLog t where t.broker=:broker  and t.dateClose is null")
 	long opensByBroker(Broker broker);
+
+	@Query("select t from TradeLog t where t.dateClose is not null")
+	List<TradeLog> findAllClosed();
 }
