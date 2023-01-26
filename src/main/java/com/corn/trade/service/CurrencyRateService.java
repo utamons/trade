@@ -45,14 +45,14 @@ public class CurrencyRateService {
 
 	public BigDecimal convertToUSD(Long currencyId, BigDecimal amount, LocalDate dateTime) throws JsonProcessingException {
 		Currency usd = currencyRepository.findCurrencyByName("USD");
-		CurrencyRateDTO currencyRateDTO = findByDate(currencyId, dateTime);
 		if (usd.getId().equals(currencyId))
 			return amount;
+		CurrencyRateDTO currencyRateDTO = findByDate(currencyId, dateTime);
 		return amount.divide(currencyRateDTO.getRate(), 12, RoundingMode.HALF_EVEN);
 	}
 
-	private CurrencyRateDTO getExternalRate(Long currencyId, LocalDate dateTime) throws JsonProcessingException {
-		List<CurrencyRateDTO> rates = currencyAPI.getRatesAt(dateTime);
+	private CurrencyRateDTO getExternalRate(Long currencyId, LocalDate date) throws JsonProcessingException {
+		List<CurrencyRateDTO> rates = currencyAPI.getRatesAt(date);
 		if (rates.size() == 0)
 			return null;
 
@@ -60,10 +60,11 @@ public class CurrencyRateService {
 			Currency currency = currencyRepository.findCurrencyByName(dto.getCurrency().getName());
 			CurrencyRate rate = CurrencyRateMapper.toEntity(dto, currency);
 			repository.save(rate);
+			repository.flush();
 		}
 
 		Currency currency = currencyRepository.getReferenceById(currencyId);
-		CurrencyRate currencyRate = repository.findRateByCurrencyAndDate(currency, dateTime);
+		CurrencyRate currencyRate = repository.findRateByCurrencyAndDate(currency, date);
 
 		return CurrencyRateMapper.toDTO(currencyRate);
 	}

@@ -102,4 +102,8 @@ public class TradeLogService {
 		Broker broker = brokerRepo.getReferenceById(brokerId);
 		return tradeLogRepo.opensByBroker(broker);
 	}
+
+	public List<TradeLogDTO> getAllClosed() {
+		return tradeLogRepo.findAllClosed().stream().map(TradeLogMapper::toDTO).collect(Collectors.toList());
+	}
 }
