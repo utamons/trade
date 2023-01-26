@@ -20,8 +20,7 @@ const DateContainerStyled = styled(Box)(({ theme }) => ({
     display: 'flex',
     color: theme.palette.text.primary,
     justifyContent: 'flex-start',
-    gap: remCalc(10),
-    fontSize: remCalc(14)
+    gap: remCalc(10)
 }))
 
 interface DateElemProps {

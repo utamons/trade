@@ -35,7 +35,6 @@ const ButtonContainerStyled = styled(Box)(() => ({
     display: 'flex',
     flexFlow: 'row',
     alignItems: 'center',
-    fontSize: remCalc(18),
     fontWeight: 'normal',
     justifyContent: 'space-between',
     gap: remCalc(10)

@@ -1,6 +1,5 @@
-import React, { useContext } from 'react'
-import { Box, Container, Grid, styled } from '@mui/material'
-import { TradeContext } from './trade-context'
+import React from 'react'
+import { Box, Grid, styled } from '@mui/material'
 import Dashboard from './components/dashboard/dashboard'
 import Work from './components/work'
 
@@ -9,8 +8,9 @@ const MainStyled = styled(Box)(() => ({
     alignItems: 'center',
     display: 'flex',
     color: 'black',
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: 'normal',
+    fontFamily: 'sans',
     justifyContent: 'center',
     width: '100%'
 }))
