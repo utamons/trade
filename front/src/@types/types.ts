@@ -31,12 +31,18 @@ type BrokerStatsType = {
     open: number
 }
 
+type MoneyStateType = {
+    capital: number,
+    profit: number
+}
+
 type TradeContextType = {
     brokers: ItemType[] | undefined,
     currencies: ItemType[] | undefined,
     tickers: TickerType[] | undefined,
     markets: MarketType[] | undefined,
-    brokerStats: BrokerStatsType | undefined
+    brokerStats: BrokerStatsType | undefined,
+    moneyState: MoneyStateType | undefined,
     isLoading: boolean,
     currentBroker: ItemType | undefined,
     setCurrentBrokerId: (id: number) => void
@@ -53,5 +59,6 @@ export {
     ItemType,
     TradeContextType,
     BrokerProps,
-    BrokerStatsType
+    BrokerStatsType,
+    MoneyStateType
 }

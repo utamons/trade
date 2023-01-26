@@ -43,10 +43,20 @@ const fetchBrokerStats = async (brokerId: number) => {
     })
 }
 
+const fetchMoneyState = async () => {
+    const url = 'http://localhost:8080/api/cash/state'
+    return fetch(url, {
+        method: 'get'
+    }).then((res) => {
+        return res.json()
+    })
+}
+
 export {
     fetchBrokers,
     fetchCurrencies,
     fetchMarkets,
     fetchTickers,
-    fetchBrokerStats
+    fetchBrokerStats,
+    fetchMoneyState
 }

@@ -4,6 +4,7 @@ import { useContext } from 'react'
 import { TradeContext } from '../../trade-context'
 import Broker from './broker'
 import BrokerStats from './brokerStats'
+import MoneyState from './MoneyState'
 
 const ContainerStyled = styled(Box)(({ theme }) => ({
     display: 'flex',
@@ -23,12 +24,13 @@ export default () => {
     const { all } = useContext(TradeContext)
     if (!all)
         return <></>
-    const { isLoading, brokers, currentBroker, brokerStats, setCurrentBrokerId } = all
+    const { isLoading, brokers, currentBroker, brokerStats, moneyState, setCurrentBrokerId } = all
 
     return <Loadable isLoading={isLoading}>
         <ContainerStyled>
             <Broker brokers={brokers} currentBroker={currentBroker} setCurrentBrokerId={setCurrentBrokerId}/>
             <BrokerStats {...brokerStats}/>
+            <MoneyState {...moneyState}/>
         </ContainerStyled>
     </Loadable>
 }
