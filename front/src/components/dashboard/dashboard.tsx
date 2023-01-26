@@ -4,7 +4,8 @@ import { useContext } from 'react'
 import { TradeContext } from '../../trade-context'
 import Broker from './broker'
 import BrokerStats from './brokerStats'
-import MoneyState from './MoneyState'
+import MoneyState from './moneyState'
+import Markets from './markets'
 
 const ContainerStyled = styled(Box)(({ theme }) => ({
     display: 'flex',
@@ -31,6 +32,7 @@ export default () => {
             <Broker brokers={brokers} currentBroker={currentBroker} setCurrentBrokerId={setCurrentBrokerId}/>
             <BrokerStats {...brokerStats}/>
             <MoneyState {...moneyState}/>
+            <Markets />
         </ContainerStyled>
     </Loadable>
 }

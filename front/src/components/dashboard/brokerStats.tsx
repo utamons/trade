@@ -28,7 +28,7 @@ const BoxStyled = styled(Box)(() => ({
 }))
 
 export default ({ accounts, open, outcome, avgOutcome, avgProfit }: BrokerStatsType) => {
-    const width = accounts.length>1?remCalc(337):remCalc(164)
+    const width = accounts.length>0?remCalc(337):remCalc(164)
     return <ContainerStyled sx={{width}}>
             {accounts.map(acc => <BoxStyled>
                 <div>{acc.currency.name}:</div> <div>{acc.amount}</div>
