@@ -13,8 +13,6 @@ const ContainerStyled = styled(Box)(({ theme }) => ({
     alignItems: 'center',
     color: theme.palette.text.primary,
     backgroundColor: theme.palette.background.default,
-    fontSize: remCalc(18),
-    fontWeight: 'normal',
     justifyContent: 'flex-start',
     border: `solid ${remCalc(1)}`,
     borderRadius: remCalc(2),

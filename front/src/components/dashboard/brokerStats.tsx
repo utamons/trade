@@ -1,20 +1,14 @@
 // noinspection TypeScriptValidateTypes
 
 import React from 'react'
-import { Box, Grid, styled } from '@mui/material'
+import { Box, styled } from '@mui/material'
 import { remCalc } from '../../utils/utils'
-import { BrokerProps, BrokerStatsType } from 'types'
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
-import Button from '../button'
+import { BrokerStatsType } from 'types'
 
 const ContainerStyled = styled(Box)(({ theme }) => ({
     borderRight: `solid ${remCalc(1)}`,
     borderColor: theme.palette.text.primary,
     padding: remCalc(10),
-   // paddingRight: remCalc(10),
-    fontSize: remCalc(14),
     height: remCalc(131),
     display: 'flex',
     flexFlow: 'column wrap',
