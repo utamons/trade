@@ -15,16 +15,18 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class CurrencyRateService {
 
 	public static final Logger logger = LoggerFactory.getLogger(CurrencyRateService.class);
 
+	public static boolean IS_EXTERNAL_STARTED = false;
+
 	private final CurrencyRateRepository repository;
-	private final CurrencyRepository currencyRepository;
+	private final CurrencyRepository     currencyRepository;
 
 	private final CurrencyAPI currencyAPI = new CurrencyAPI();
 
@@ -35,12 +37,26 @@ public class CurrencyRateService {
 
 	public CurrencyRateDTO findByDate(Long currencyId, LocalDate dateTime) throws JsonProcessingException {
 		logger.info("Trying to find for a date {}", dateTime);
-		Currency currency = currencyRepository.getReferenceById(currencyId);
+		Currency     currency     = currencyRepository.getReferenceById(currencyId);
 		CurrencyRate currencyRate = repository.findRateByCurrencyAndDate(currency, dateTime);
 		if (currencyRate != null) {
 			return CurrencyRateMapper.toDTO(currencyRate);
-		} else
+		} else {
+			if (IS_EXTERNAL_STARTED) {
+				while (IS_EXTERNAL_STARTED) {
+					logger.info("External API started, waiting...");
+					try {
+						TimeUnit.MILLISECONDS.sleep(100);
+					} catch (InterruptedException e) {
+						throw new RuntimeException(e);
+					}
+				}
+				currencyRate = repository.findRateByCurrencyAndDate(currency, dateTime);
+				return CurrencyRateMapper.toDTO(currencyRate);
+			}
 			return getExternalRate(currencyId, dateTime);
+		}
+
 	}
 
 	public BigDecimal convertToUSD(Long currencyId, BigDecimal amount, LocalDate dateTime) throws JsonProcessingException {
@@ -52,20 +68,29 @@ public class CurrencyRateService {
 	}
 
 	private CurrencyRateDTO getExternalRate(Long currencyId, LocalDate date) throws JsonProcessingException {
+		IS_EXTERNAL_STARTED = true;
 		List<CurrencyRateDTO> rates = currencyAPI.getRatesAt(date);
-		if (rates.size() == 0)
+		if (rates.size() == 0) {
+			IS_EXTERNAL_STARTED = false;
 			return null;
-
-		for(CurrencyRateDTO dto: rates) {
-			Currency currency = currencyRepository.findCurrencyByName(dto.getCurrency().getName());
-			CurrencyRate rate = CurrencyRateMapper.toEntity(dto, currency);
-			repository.save(rate);
-			repository.flush();
 		}
 
-		Currency currency = currencyRepository.getReferenceById(currencyId);
+		try {
+			for (CurrencyRateDTO dto : rates) {
+				Currency currency = currencyRepository.findCurrencyByName(dto.getCurrency().getName());
+
+				CurrencyRate rate = CurrencyRateMapper.toEntity(dto, currency);
+				repository.save(rate);
+				repository.flush();
+			}
+		} catch (Exception e) {
+			logger.debug("SQL exception: {}", e.getMessage());
+		}
+
+		Currency     currency     = currencyRepository.getReferenceById(currencyId);
 		CurrencyRate currencyRate = repository.findRateByCurrencyAndDate(currency, date);
 
+		IS_EXTERNAL_STARTED = false;
 		return CurrencyRateMapper.toDTO(currencyRate);
 	}
 }
