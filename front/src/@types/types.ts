@@ -36,6 +36,12 @@ type MoneyStateType = {
     profit: number
 }
 
+type RefillType = {
+    brokerId: number,
+    currencyId: number,
+    amount: number
+}
+
 type TradeContextType = {
     brokers: ItemType[] | undefined,
     currencies: ItemType[] | undefined,
@@ -45,13 +51,16 @@ type TradeContextType = {
     moneyState: MoneyStateType | undefined,
     isLoading: boolean,
     currentBroker: ItemType | undefined,
-    setCurrentBrokerId: (id: number) => void
+    setCurrentBrokerId: (id: number) => void,
+    refill: (currencyId: number, amount: number) => void
 }
 
 type BrokerProps = {
     brokers: ItemType[] | undefined,
+    currencies: ItemType[] | undefined,
     currentBroker: ItemType | undefined,
-    setCurrentBrokerId: (id: number) => void
+    setCurrentBrokerId: (id: number) => void,
+    refill: (currencyId: number, amount: number) => void
 }
 
 export {
@@ -60,5 +69,6 @@ export {
     TradeContextType,
     BrokerProps,
     BrokerStatsType,
-    MoneyStateType
+    MoneyStateType,
+    RefillType
 }

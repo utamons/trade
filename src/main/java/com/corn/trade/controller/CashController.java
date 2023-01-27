@@ -5,6 +5,7 @@ import com.corn.trade.service.CashService;
 import com.corn.trade.service.CurrencyRateService;
 import com.corn.trade.service.TradeLogService;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -28,7 +29,7 @@ public class CashController {
 		this.currencyRateService = currencyRateService;
 	}
 
-	@PostMapping("/refill")
+	@PostMapping(value="/refill", consumes=MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE )
 	public CashAccountDTO refill(@RequestBody TransferDTO transferDTO) {
 		return service.refill(transferDTO);
 	}
