@@ -1,6 +1,6 @@
 // noinspection TypeScriptValidateTypes
 
-import React from 'react'
+import React, { useState } from 'react'
 import { Box, styled } from '@mui/material'
 import { remCalc } from '../../utils/utils'
 import { BrokerProps } from 'types'
@@ -8,6 +8,8 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import Button from '../button'
+import Refill from '../refill'
+import { ButtonContainerStyled, SelectorContainerStyled } from '../../styles/style'
 
 const ContainerStyled = styled(Box)(({ theme }) => ({
     borderRight: `solid ${remCalc(1)}`,
@@ -20,28 +22,10 @@ const ContainerStyled = styled(Box)(({ theme }) => ({
     justifyContent: 'space-between'
 }))
 
-const SelectorContainerStyled = styled(Box)(() => ({
-    padding: remCalc(20),
-    display: 'flex',
-    flexFlow: 'row',
-    alignItems: 'center',
-    fontSize: remCalc(18),
-    fontWeight: 'normal',
-    justifyContent: 'center'
-}))
 
-const ButtonContainerStyled = styled(Box)(() => ({
-    padding: remCalc(8),
-    display: 'flex',
-    flexFlow: 'row',
-    alignItems: 'center',
-    fontWeight: 'normal',
-    justifyContent: 'space-between',
-    gap: remCalc(10)
-}))
-
-export default ({ brokers, currentBroker, setCurrentBrokerId }: BrokerProps) => {
-    const [id, setId] = React.useState('' + (currentBroker ? currentBroker.id : 1));
+export default ({ brokers, currencies, currentBroker, setCurrentBrokerId, refill }: BrokerProps) => {
+    const [id, setId] = useState('' + (currentBroker ? currentBroker.id : 1));
+    const [refillOpen, setRefillOpen] = useState(false)
 
     const handleChange = (event: SelectChangeEvent) => {
         setId(event.target.value as string);
@@ -49,7 +33,12 @@ export default ({ brokers, currentBroker, setCurrentBrokerId }: BrokerProps) => 
     };
 
     const handleRefill = () => {
-        console.log('Refill')
+        setRefillOpen(true)
+    }
+
+    const refillClose = (currencyId: number, amount: number) => {
+        refill(currencyId,amount)
+        setRefillOpen(false)
     }
 
     const handleExchange = () => {
@@ -75,6 +64,7 @@ export default ({ brokers, currentBroker, setCurrentBrokerId }: BrokerProps) => 
             <Button style={{ minWidth: remCalc(101) }} text="Refill" disabled={false} onClick={handleRefill}/>
             <Button style={{ minWidth: remCalc(101) }} text="Exchange" disabled={false} onClick={handleExchange}/>
         </ButtonContainerStyled>
+        <Refill open={refillOpen} onClose={refillClose} currencies={currencies} />
     </ContainerStyled>
 
 }

@@ -23,11 +23,17 @@ export default () => {
     const { all } = useContext(TradeContext)
     if (!all)
         return <></>
-    const { isLoading, brokers, currentBroker, brokerStats, moneyState, setCurrentBrokerId } = all
+    const { isLoading, currencies, brokers, currentBroker, brokerStats, moneyState,
+        setCurrentBrokerId, refill } = all
 
     return <Loadable isLoading={isLoading}>
         <ContainerStyled>
-            <Broker brokers={brokers} currentBroker={currentBroker} setCurrentBrokerId={setCurrentBrokerId}/>
+            <Broker
+                brokers={brokers}
+                currentBroker={currentBroker}
+                currencies={currencies}
+                refill={refill}
+                setCurrentBrokerId={setCurrentBrokerId}/>
             <BrokerStats {...brokerStats}/>
             <MoneyState {...moneyState}/>
             <Markets />
