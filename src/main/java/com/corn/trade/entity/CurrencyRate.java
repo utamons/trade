@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "currency_rate")
+@Cacheable(false)
 public class CurrencyRate {
 
 	public CurrencyRate() {
