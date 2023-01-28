@@ -142,7 +142,7 @@ export default (logPage: TradeLogPageType) => {
             <HeaderBox>Fees</HeaderBox>
         </Grid>
         <Grid item xs={2}>
-            &nbsp;
+            <HeaderBox>&nbsp;</HeaderBox>
         </Grid>
         {logPage ? getRows(logPage) : <></>}
     </Grid>
