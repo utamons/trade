@@ -5,11 +5,12 @@ import { Box, styled } from '@mui/material'
 import { remCalc } from '../../utils/utils'
 import { BrokerProps } from 'types'
 import MenuItem from '@mui/material/MenuItem'
-import FormControl from '@mui/material/FormControl'
-import Select, { SelectChangeEvent } from '@mui/material/Select'
+import { SelectChangeEvent } from '@mui/material/Select'
 import Button from '../button'
 import Refill from '../refill'
 import { ButtonContainerStyled, SelectorContainerStyled } from '../../styles/style'
+import Exchange from '../exchange'
+import Select from '../select'
 
 const ContainerStyled = styled(Box)(({ theme }) => ({
     borderRight: `solid ${remCalc(1)}`,
@@ -23,11 +24,12 @@ const ContainerStyled = styled(Box)(({ theme }) => ({
 }))
 
 
-export default ({ brokers, currencies, currentBroker, setCurrentBrokerId, refill }: BrokerProps) => {
+export default ({ brokers, currencies, currentBroker, setCurrentBrokerId, refill, exchange }: BrokerProps) => {
     const [id, setId] = useState('' + (currentBroker ? currentBroker.id : 1))
     const [refillOpen, setRefillOpen] = useState(false)
+    const [exchangeOpen, setExchangeOpen] = useState(false)
 
-    const handleChange = useCallback((event: SelectChangeEvent) => {
+    const handleChange = useCallback((event: SelectChangeEvent<unknown>) => {
         setId(event.target.value as string)
         setCurrentBrokerId(Number(event.target.value))
     }, [])
@@ -41,37 +43,41 @@ export default ({ brokers, currencies, currentBroker, setCurrentBrokerId, refill
         setRefillOpen(false)
     }, [])
 
-    const openExchangeDialog = useCallback(() => {
-        console.log('Exchange')
+    const commitExchange = useCallback((
+        currencyFromId: number,
+        amountFrom: number,
+        currencyToId: number,
+        amountTo: number) => {
+        exchange(currencyFromId, amountFrom, currencyToId, amountTo)
+        setExchangeOpen(false)
     }, [])
 
-    const cancelRefill = useCallback(()=>{
+    const openExchangeDialog = useCallback(() => {
+        setExchangeOpen(true)
+    }, [])
+
+    const cancelRefill = useCallback(() => {
         setRefillOpen(false)
+    }, [])
+
+    const cancelExchange = useCallback(() => {
+        setExchangeOpen(false)
     }, [])
 
     return <ContainerStyled>
         <SelectorContainerStyled>
-            <FormControl variant="standard" sx={{ m: 1, minWidth: 120 }}>
-                <Select
-                    labelId="demo-simple-select-standard-label"
-                    id="demo-simple-select-standard"
-                    value={id}
-                    onChange={handleChange}
-                >
-                    {
-                        brokers ?
-                            brokers.map(broker =>
-                                <MenuItem key={broker.id} value={broker.id}>{broker.name}</MenuItem>) :
-                            <></>
-                    }
-                </Select>
-            </FormControl>
+            <Select
+                value={id}
+                items={brokers ? brokers : []}
+                onChange={handleChange}
+            />
         </SelectorContainerStyled>
         <ButtonContainerStyled>
             <Button style={{ minWidth: remCalc(101) }} text="Refill" onClick={openRefillDialog}/>
             <Button style={{ minWidth: remCalc(101) }} text="Exchange" onClick={openExchangeDialog}/>
         </ButtonContainerStyled>
-        <Refill open={refillOpen} onRefill={commitRefill} onCancel={cancelRefill} currencies={currencies} />
+        <Refill open={refillOpen} onRefill={commitRefill} onCancel={cancelRefill} currencies={currencies}/>
+        <Exchange open={exchangeOpen} onExchange={commitExchange} onCancel={cancelExchange} currencies={currencies}/>
     </ContainerStyled>
 
 }

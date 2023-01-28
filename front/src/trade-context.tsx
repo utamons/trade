@@ -1,12 +1,6 @@
 import React, { createContext, useEffect, useMemo, useState } from 'react'
 import { useQuery } from 'react-query'
-import { fetchBrokers,
-    fetchBrokerStats,
-    fetchCurrencies,
-    fetchMarkets,
-    fetchMoneyState,
-    fetchTickers,
-    postRefill } from './api'
+import { fetchBrokers, fetchBrokerStats, fetchCurrencies, fetchMarkets, fetchMoneyState, fetchTickers, postExchange, postRefill } from './api'
 import { BrokerStatsType, ItemType, TradeContextType } from 'types'
 
 const onetimeQueryOptions = () => {
@@ -57,7 +51,7 @@ const useTickers = () => {
 }
 
 const useBrokerStats = (brokerId: number, key: string) => {
-    const { data, isLoading } = useQuery(key+brokerId, () => {
+    const { data, isLoading } = useQuery(key + brokerId, () => {
         return fetchBrokerStats(brokerId)
     }, onetimeQueryOptions())
 
@@ -78,14 +72,14 @@ const useMoneyState = (key: string) => {
     }
 }
 
-const useTrade = ():TradeContextType => {
+const useTrade = (): TradeContextType => {
     const { brokers, isLoadingBrokers } = useBrokers()
     const { currencies, isLoadingCurrencies } = useCurrencies()
     const { tickers, isLoadingTickers } = useTickers()
     const { markets, isLoadingMarkets } = useMarkets()
-    const [ currentBrokerId, setCurrentBrokerId ] = useState(0)
-    const [ brokerStatsKey, setBrokerStatsKey ] = useState('key')
-    const [ moneyStateKey, setMoneyStateKey ] = useState('key')
+    const [currentBrokerId, setCurrentBrokerId] = useState(0)
+    const [brokerStatsKey, setBrokerStatsKey] = useState('key')
+    const [moneyStateKey, setMoneyStateKey] = useState('key')
     const { brokerStats, isLoadingBrokerStats } = useBrokerStats(currentBrokerId, brokerStatsKey)
     const { moneyState, isLoadingMoneyState } = useMoneyState(moneyStateKey)
 
@@ -107,8 +101,24 @@ const useTrade = ():TradeContextType => {
             currencyId,
             amount
         }).then(() => {
-            setMoneyStateKey(''+Date.now())
-            setBrokerStatsKey(''+Date.now())
+            setMoneyStateKey('' + Date.now())
+            setBrokerStatsKey('' + Date.now())
+        })
+    }
+
+    const exchange = (currencyFromId: number,
+        currencyToId: number,
+        amountFrom: number,
+        amountTo: number) => {
+        postExchange({
+            brokerId: currentBrokerId,
+            currencyFromId,
+            currencyToId,
+            amountFrom,
+            amountTo
+        }).then(() => {
+            setMoneyStateKey('' + Date.now())
+            setBrokerStatsKey('' + Date.now())
         })
     }
 
@@ -120,6 +130,7 @@ const useTrade = ():TradeContextType => {
         brokerStats,
         moneyState,
         refill,
+        exchange,
         isLoading: isLoadingBrokers || isLoadingCurrencies || isLoadingMarkets || isLoadingTickers ||
             isLoadingBrokerStats || isLoadingMoneyState,
         currentBroker: currentBroker(),

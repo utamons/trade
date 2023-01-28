@@ -17,6 +17,11 @@ const Outer = () => {
             createTheme({
                 palette: {
                     mode: prefersDarkMode ? 'dark' : 'light'
+                },
+                typography: {
+                    caption: {
+                        fontSize: 14
+                    }
                 }
             }),
         [prefersDarkMode]

@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { SelectChangeEvent } from '@mui/material/Select'
+
 type ItemType = { id: number, name: string }
 
 type TickerType = {
@@ -52,7 +54,11 @@ type TradeContextType = {
     isLoading: boolean,
     currentBroker: ItemType | undefined,
     setCurrentBrokerId: (id: number) => void,
-    refill: (currencyId: number, amount: number) => void
+    refill: (currencyId: number, amount: number) => void,
+    exchange: (currencyFromId: number,
+               currencyToId: number,
+               amountFrom: number,
+               amountTo: number) => void
 }
 
 type BrokerProps = {
@@ -60,7 +66,11 @@ type BrokerProps = {
     currencies: ItemType[] | undefined,
     currentBroker: ItemType | undefined,
     setCurrentBrokerId: (id: number) => void,
-    refill: (currencyId: number, amount: number) => void
+    refill: (currencyId: number, amount: number) => void,
+    exchange: (currencyFromId: number,
+               currencyToId: number,
+               amountFrom: number,
+               amountTo: number) => void
 }
 
 type ButtonProps = {
@@ -72,8 +82,33 @@ type ButtonProps = {
 type RefillDialogProps = {
     open: boolean,
     onRefill: (currencyId: number, amount: number) => void,
-    onCancel: ()=>void,
+    onCancel: () => void,
     currencies: ItemType[] | undefined
+}
+
+type ExchangeDialogProps = {
+    open: boolean,
+    onExchange: (currencyFromId: number,
+                 currencyToId: number,
+                 amountFrom: number,
+                 amountTo: number) => void,
+    onCancel: () => void,
+    currencies: ItemType[] | undefined
+}
+
+type SelectorProps = {
+    items: ItemType[],
+    value: string,
+    onChange: (event: SelectChangeEvent<unknown>) => void,
+    variant?: string
+}
+
+type ExchangeType = {
+    brokerId: number,
+    currencyFromId: number,
+    currencyToId: number,
+    amountFrom: number,
+    amountTo: number
 }
 
 export {
@@ -84,6 +119,9 @@ export {
     BrokerStatsType,
     MoneyStateType,
     RefillType,
+    ExchangeType,
     ButtonProps,
-    RefillDialogProps
+    RefillDialogProps,
+    ExchangeDialogProps,
+    SelectorProps
 }

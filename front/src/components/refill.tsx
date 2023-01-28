@@ -7,12 +7,11 @@ import { remCalc } from '../utils/utils'
 import Button from './button'
 import React, { useCallback, useState } from 'react'
 import { ButtonContainerStyled } from '../styles/style'
-import Select, { SelectChangeEvent } from '@mui/material/Select'
-import MenuItem from '@mui/material/MenuItem'
-import FormControl from '@mui/material/FormControl'
+import { SelectChangeEvent } from '@mui/material/Select'
 import { Box, styled } from '@mui/material'
 import TextField from '@mui/material/TextField'
 import { RefillDialogProps } from 'types'
+import Select from './select'
 
 const ContainerStyled = styled(Box)(() => ({
     display: 'flex',
@@ -32,9 +31,9 @@ export default ({ open, onRefill, onCancel, currencies }: RefillDialogProps) => 
         if (validate(value))
             return
         onRefill(Number(currencyId), Number(value))
-    }, [value])
+    }, [value, currencyId])
 
-    const handleSelector = useCallback((event: SelectChangeEvent) => {
+    const handleSelector = useCallback((event: SelectChangeEvent<unknown>) => {
         setCurrencyId(event.target.value as string)
     }, [])
 
@@ -59,27 +58,19 @@ export default ({ open, onRefill, onCancel, currencies }: RefillDialogProps) => 
             validate(event.target.value)
         }, [])
 
-    function getCurrencies() {
-        return currencies ?
-            currencies.map(
-                currency => <MenuItem key={currency.id}
-                    value={currency.id}>{currency.name}
-                </MenuItem>) : <></>
-    }
-
     return <Dialog
         open={open}
     >
         <DialogContent>
             <ContainerStyled>
-                <FormControl variant="standard">
-                    <Select
-                        value={currencyId}
-                        onChange={handleSelector}
-                    >
-                        {getCurrencies()}
-                    </Select>
-                </FormControl>
+
+                <Select
+                    items={currencies?currencies:[]}
+                    value={currencyId}
+                    variant="medium"
+                    onChange={handleSelector}
+                />
+
                 <TextField
                     label="Amount"
                     variant="standard"
