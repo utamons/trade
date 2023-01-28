@@ -95,8 +95,6 @@ const useTrade = ():TradeContextType => {
         })
     }
 
-    console.log('currentBrokerId', currentBrokerId)
-
     useEffect(() => {
         if (brokers && brokers.length > 0 && currentBrokerId == 0) {
             setCurrentBrokerId(brokers[0].id)

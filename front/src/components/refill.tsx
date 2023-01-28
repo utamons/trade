@@ -18,7 +18,8 @@ const ContainerStyled = styled(Box)(() => ({
     display: 'flex',
     flexFlow: 'column',
     justifyContent: 'space-between',
-    padding: remCalc(8)
+    padding: remCalc(8),
+    gap: remCalc(20)
 }))
 
 export default ({ open, onRefill, onCancel, currencies }: RefillDialogProps) => {
@@ -31,7 +32,7 @@ export default ({ open, onRefill, onCancel, currencies }: RefillDialogProps) => 
         if (validate(value))
             return
         onRefill(Number(currencyId), Number(value))
-    }, [])
+    }, [value])
 
     const handleSelector = useCallback((event: SelectChangeEvent) => {
         setCurrencyId(event.target.value as string)

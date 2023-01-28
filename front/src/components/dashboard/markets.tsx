@@ -61,7 +61,6 @@ const DateElem = ({ name, offset }: DateElemProps) => {
 }
 
 const getMarketDates = (markets: MarketType[] | undefined) => {
-    console.log('markets', markets)
     if (!markets)
         return <></>
     return <>{markets.map((market: MarketType) => (
