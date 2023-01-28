@@ -23,22 +23,22 @@ const BoxStyled = styled(Box)(() => ({
 
 export default ({ accounts, open, outcome, avgOutcome, avgProfit }: BrokerStatsType) => {
     const width = accounts.length>0?remCalc(337):remCalc(164)
-    return <ContainerStyled sx={{width}}>
-            {accounts.map(acc => <BoxStyled key={acc.id}>
-                <div>{acc.currency.name}:</div> <div>{acc.amount}</div>
-            </BoxStyled>)}
-            <BoxStyled>
-                <div>Outcome:</div> <div>${outcome}</div>
-            </BoxStyled>
-            <BoxStyled>
-                <div>Avg. outcome:</div> <div>${avgOutcome}</div>
-            </BoxStyled>
-            <BoxStyled>
-                <div>Avg. profit:</div> <div>{avgProfit}%</div>
-            </BoxStyled>
-            <BoxStyled>
-                <div>Open:</div> <div>{open}</div>
-            </BoxStyled>
+    return <ContainerStyled sx={{ width }}>
+        {accounts.map(acc => <BoxStyled key={acc.id}>
+            <div>{acc.currency.name}:</div> <div>{acc.amount}</div>
+        </BoxStyled>)}
+        <BoxStyled>
+            <div>Outcome:</div> <div>${outcome}</div>
+        </BoxStyled>
+        <BoxStyled>
+            <div>Avg. outcome:</div> <div>${avgOutcome}</div>
+        </BoxStyled>
+        <BoxStyled>
+            <div>Avg. profit:</div> <div>{avgProfit}%</div>
+        </BoxStyled>
+        <BoxStyled>
+            <div>Open:</div> <div>{open}</div>
+        </BoxStyled>
     </ContainerStyled>
 
 }

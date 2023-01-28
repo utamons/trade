@@ -63,6 +63,19 @@ type BrokerProps = {
     refill: (currencyId: number, amount: number) => void
 }
 
+type ButtonProps = {
+    text: string,
+    onClick: () => void,
+    style?: object
+}
+
+type RefillDialogProps = {
+    open: boolean,
+    onRefill: (currencyId: number, amount: number) => void,
+    onCancel: ()=>void,
+    currencies: ItemType[] | undefined
+}
+
 export {
     MarketType,
     ItemType,
@@ -70,5 +83,7 @@ export {
     BrokerProps,
     BrokerStatsType,
     MoneyStateType,
-    RefillType
+    RefillType,
+    ButtonProps,
+    RefillDialogProps
 }
