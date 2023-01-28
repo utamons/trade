@@ -5,7 +5,7 @@ import DialogActions from '@mui/material/DialogActions'
 import Dialog from '@mui/material/Dialog'
 import { remCalc } from '../utils/utils'
 import Button from './button'
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { ButtonContainerStyled } from '../styles/style'
 import Select, { SelectChangeEvent } from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
@@ -27,20 +27,19 @@ export default ({ open, onRefill, onCancel, currencies }: RefillDialogProps) => 
     const [error, setError] = useState(false)
     const [errorText, setErrorText] = useState('')
 
-    const handleRefill = () => {
+    const handleRefill = useCallback(() => {
         if (validate(value))
             return
         onRefill(Number(currencyId), Number(value))
-    }
+    }, [])
 
-    const handleSelector = (event: SelectChangeEvent) => {
+    const handleSelector = useCallback((event: SelectChangeEvent) => {
         setCurrencyId(event.target.value as string)
-    }
+    }, [])
 
-    const handleInput = (event: { target: { value: React.SetStateAction<string> } }) => {
+    const handleInput = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         setValue(event.target.value)
-    }
-
+    }, [])
 
     const validate = (value: string): boolean => {
         const num = Number(value)
@@ -54,9 +53,10 @@ export default ({ open, onRefill, onCancel, currencies }: RefillDialogProps) => 
         return false
     }
 
-    const handleValidate = (event: { target: { value: string } }) => {
-        validate(event.target.value)
-    }
+    const handleValidate: React.FocusEventHandler<HTMLInputElement | HTMLTextAreaElement> =
+        useCallback((event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+            validate(event.target.value)
+        }, [])
 
     function getCurrencies() {
         return currencies ?
