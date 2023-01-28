@@ -1,4 +1,4 @@
-import { RefillType } from 'types'
+import { ExchangeType, RefillType } from 'types'
 
 const fetchBrokers = async () => {
     const url = 'http://localhost:8080/api/broker/all'
@@ -67,6 +67,19 @@ const postRefill = async (body: RefillType) => {
     })
 }
 
+const postExchange = async (body: ExchangeType) => {
+    const url = 'http://localhost:8080/api/cash/exchange'
+    return fetch(url, {
+        method: 'post',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+    }).then((res) => {
+        return res.json()
+    })
+}
+
 export {
     fetchBrokers,
     fetchCurrencies,
@@ -74,5 +87,6 @@ export {
     fetchTickers,
     fetchBrokerStats,
     fetchMoneyState,
-    postRefill
+    postRefill,
+    postExchange
 }
