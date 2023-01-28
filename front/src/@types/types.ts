@@ -6,6 +6,7 @@ type ItemType = { id: number, name: string }
 type TickerType = {
     id: number,
     name: string,
+    shortName: string,
     currency: ItemType
 }
 
@@ -51,6 +52,7 @@ type TradeContextType = {
     markets: MarketType[] | undefined,
     brokerStats: BrokerStatsType | undefined,
     moneyState: MoneyStateType | undefined,
+    logPage: TradeLogPageType | undefined,
     isLoading: boolean,
     currentBroker: ItemType | undefined,
     setCurrentBrokerId: (id: number) => void,
@@ -111,6 +113,72 @@ type ExchangeType = {
     amountTo: number
 }
 
+type PageRequest = {
+    pageSize: number,
+    pageNumber: number
+}
+
+type TradeLog = {
+    id: number,
+    position: string,
+    dateOpen: string,
+    dateClose: string | undefined,
+    broker: ItemType,
+    market: MarketType,
+    ticker: TickerType,
+    currency: ItemType,
+    itemNumber: number,
+    priceOpen: number,
+    priceClose: number | undefined,
+    volume: number,
+    volumeToDeposit: number,
+    stopLoss: number,
+    takeProfit: number | undefined,
+    outcomeExpected: number | undefined,
+    risk: number | undefined,
+    fees: number,
+    outcome: number | undefined,
+    outcomePercent: number | undefined,
+    profit: number | undefined,
+    note: string | undefined,
+    chart: string | undefined,
+    grade: string | undefined,
+    goal: number | undefined
+}
+
+type SortType = {
+    empty: boolean,
+    sorted: boolean,
+    unsorted: boolean
+}
+
+type PageableType = {
+    sort: SortType,
+    offset: number,
+    pageNumber: number,
+    pageSize: number,
+    paged: boolean,
+    unpaged: boolean
+}
+
+type TradeLogPageType = {
+    content: TradeLog [],
+    pageable: PageableType,
+    first: boolean,
+    last: boolean,
+    totalPages: number
+    totalElements: number
+    size: number
+    number: number
+    sort: SortType
+    numberOfElements: number,
+    empty: boolean
+}
+
+interface ExpandButtonProps {
+    onClick: (expanded: boolean) => void
+}
+
 export {
     MarketType,
     ItemType,
@@ -123,5 +191,9 @@ export {
     ButtonProps,
     RefillDialogProps,
     ExchangeDialogProps,
-    SelectorProps
+    SelectorProps,
+    TradeLogPageType,
+    TradeLog,
+    PageRequest,
+    ExpandButtonProps
 }

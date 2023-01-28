@@ -1,7 +1,7 @@
 import React, { createContext, useEffect, useMemo, useState } from 'react'
 import { useQuery } from 'react-query'
-import { fetchBrokers, fetchBrokerStats, fetchCurrencies, fetchMarkets, fetchMoneyState, fetchTickers, postExchange, postRefill } from './api'
-import { BrokerStatsType, ItemType, TradeContextType } from 'types'
+import { fetchBrokers, fetchBrokerStats, fetchCurrencies, fetchMarkets, fetchMoneyState, fetchTickers, postExchange, postLogPage, postRefill } from './api'
+import { BrokerStatsType, ItemType, PageRequest, TradeContextType, TradeLogPageType } from 'types'
 
 const onetimeQueryOptions = () => {
     return {
@@ -72,16 +72,35 @@ const useMoneyState = (key: string) => {
     }
 }
 
+export const PAGE_SIZE = 10
+
+const useLogPage = (key: string, page: number) => {
+    const { data, isLoading } = useQuery(key, () => {
+        return postLogPage({
+            pageSize: PAGE_SIZE,
+            pageNumber: page
+        })
+    }, onetimeQueryOptions())
+
+    return {
+        logPage: data as TradeLogPageType,
+        isLoadingLogPage: isLoading
+    }
+}
+
 const useTrade = (): TradeContextType => {
     const { brokers, isLoadingBrokers } = useBrokers()
     const { currencies, isLoadingCurrencies } = useCurrencies()
     const { tickers, isLoadingTickers } = useTickers()
     const { markets, isLoadingMarkets } = useMarkets()
     const [currentBrokerId, setCurrentBrokerId] = useState(0)
-    const [brokerStatsKey, setBrokerStatsKey] = useState('key')
-    const [moneyStateKey, setMoneyStateKey] = useState('key')
+    const [brokerStatsKey, setBrokerStatsKey] = useState('brokerKey')
+    const [moneyStateKey, setMoneyStateKey] = useState('moneyKey')
+    const [pageLogKey, setPageLogKey] = useState('pageLogKey')
+    const [pageNum, setPageNum] = useState(0)
     const { brokerStats, isLoadingBrokerStats } = useBrokerStats(currentBrokerId, brokerStatsKey)
     const { moneyState, isLoadingMoneyState } = useMoneyState(moneyStateKey)
+    const { logPage, isLoadingLogPage } = useLogPage(pageLogKey, pageNum)
 
     const currentBroker = (): ItemType | undefined => {
         return isLoadingBrokers ? undefined : brokers.find((elem: ItemType) => {
@@ -129,10 +148,11 @@ const useTrade = (): TradeContextType => {
         markets,
         brokerStats,
         moneyState,
+        logPage,
         refill,
         exchange,
         isLoading: isLoadingBrokers || isLoadingCurrencies || isLoadingMarkets || isLoadingTickers ||
-            isLoadingBrokerStats || isLoadingMoneyState,
+            isLoadingBrokerStats || isLoadingMoneyState || isLoadingLogPage,
         currentBroker: currentBroker(),
         setCurrentBrokerId
     }
