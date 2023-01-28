@@ -1,7 +1,9 @@
-import { ExchangeType, RefillType } from 'types'
+import { ExchangeType, PageRequest, RefillType } from 'types'
+
+const baseUrl = 'http://localhost:8080/api'
 
 const fetchBrokers = async () => {
-    const url = 'http://localhost:8080/api/broker/all'
+    const url = `${baseUrl}/broker/all`
     return fetch(url, {
         method: 'get'
     }).then((res) => {
@@ -10,7 +12,7 @@ const fetchBrokers = async () => {
 }
 
 const fetchCurrencies = async () => {
-    const url = 'http://localhost:8080/api/currency/all'
+    const url = `${baseUrl}/currency/all`
     return fetch(url, {
         method: 'get'
     }).then((res) => {
@@ -19,7 +21,7 @@ const fetchCurrencies = async () => {
 }
 
 const fetchMarkets = async () => {
-    const url = 'http://localhost:8080/api/market/all'
+    const url = `${baseUrl}/market/all`
     return fetch(url, {
         method: 'get'
     }).then((res) => {
@@ -28,7 +30,7 @@ const fetchMarkets = async () => {
 }
 
 const fetchTickers = async () => {
-    const url = 'http://localhost:8080/api/ticker/all'
+    const url = `${baseUrl}/ticker/all`
     return fetch(url, {
         method: 'get'
     }).then((res) => {
@@ -37,7 +39,7 @@ const fetchTickers = async () => {
 }
 
 const fetchBrokerStats = async (brokerId: number) => {
-    const url = `http://localhost:8080/api/broker/stats?brokerId=${brokerId}`
+    const url = `${baseUrl}/broker/stats?brokerId=${brokerId}`
     return fetch(url, {
         method: 'get'
     }).then((res) => {
@@ -46,7 +48,7 @@ const fetchBrokerStats = async (brokerId: number) => {
 }
 
 const fetchMoneyState = async () => {
-    const url = 'http://localhost:8080/api/cash/state'
+    const url = `${baseUrl}/cash/state`
     return fetch(url, {
         method: 'get'
     }).then((res) => {
@@ -55,7 +57,7 @@ const fetchMoneyState = async () => {
 }
 
 const postRefill = async (body: RefillType) => {
-    const url = 'http://localhost:8080/api/cash/refill'
+    const url = `${baseUrl}/cash/refill`
     return fetch(url, {
         method: 'post',
         headers: {
@@ -68,7 +70,20 @@ const postRefill = async (body: RefillType) => {
 }
 
 const postExchange = async (body: ExchangeType) => {
-    const url = 'http://localhost:8080/api/cash/exchange'
+    const url = `${baseUrl}/cash/exchange`
+    return fetch(url, {
+        method: 'post',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+    }).then((res) => {
+        return res.json()
+    })
+}
+
+const postLogPage = async (body: PageRequest) => {
+    const url = `${baseUrl}/log/page`
     return fetch(url, {
         method: 'post',
         headers: {
@@ -88,5 +103,6 @@ export {
     fetchBrokerStats,
     fetchMoneyState,
     postRefill,
-    postExchange
+    postExchange,
+    postLogPage
 }

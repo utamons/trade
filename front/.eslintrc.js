@@ -23,7 +23,6 @@ module.exports = {
     'ignorePatterns': ['*.js', '**/*.test.tsx', 'test'],
     'rules': {
         'prefer-spread': ['off'],
-        'indent': ['warn', 4, { SwitchCase: 1 }],
         'quotes': [
             'error',
             'single'
