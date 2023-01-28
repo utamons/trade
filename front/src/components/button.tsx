@@ -1,6 +1,7 @@
 import React from 'react'
 import { styled, Button } from '@mui/material'
 import { remCalc } from '../utils/utils'
+import { ButtonProps } from 'types'
 
 const ButtonStyled = styled(Button)(({ theme }) => ({
     color: theme.palette.text.primary,
@@ -15,11 +16,11 @@ const ButtonStyled = styled(Button)(({ theme }) => ({
     '&:hover': {
         color: theme.palette.text.primary,
         backgroundColor: theme.palette.action.hover,
-        borderColor: theme.palette.text.primary,
+        borderColor: theme.palette.text.primary
     }
 }))
 
-export default ({ text, onClick, style={} }) => {
+export default ({ text, onClick, style={} }: ButtonProps) => {
 
     return <ButtonStyled sx={style} variant="outlined" onClick={onClick}>
         {text}

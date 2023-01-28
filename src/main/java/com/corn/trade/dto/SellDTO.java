@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
 
+@SuppressWarnings("unused")
 public class SellDTO {
 	private final Long brokerId;
 	private final Long currencyId;
@@ -29,6 +30,7 @@ public class SellDTO {
 	public Long getBrokerId() {
 		return brokerId;
 	}
+
 
 	public Long getCurrencyId() {
 		return currencyId;

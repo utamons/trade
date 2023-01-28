@@ -1,14 +1,20 @@
 import React, { createContext, useEffect, useMemo, useState } from 'react'
 import { useQuery } from 'react-query'
-import { fetchBrokers, fetchBrokerStats, fetchCurrencies, fetchMarkets, fetchMoneyState, fetchTickers, postRefill } from './api'
-import { ItemType, TradeContextType } from 'types'
+import { fetchBrokers,
+    fetchBrokerStats,
+    fetchCurrencies,
+    fetchMarkets,
+    fetchMoneyState,
+    fetchTickers,
+    postRefill } from './api'
+import { BrokerStatsType, ItemType, TradeContextType } from 'types'
 
 const onetimeQueryOptions = () => {
     return {
         refetchOnMount: false,
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
-        refetchInterval: false as false,
+        refetchInterval: false as const,
         retry: 0
     }
 }
@@ -56,7 +62,7 @@ const useBrokerStats = (brokerId: number, key: string) => {
     }, onetimeQueryOptions())
 
     return {
-        brokerStats: data,
+        brokerStats: data as BrokerStatsType,
         isLoadingBrokerStats: isLoading
     }
 }
@@ -73,10 +79,10 @@ const useMoneyState = (key: string) => {
 }
 
 const useTrade = ():TradeContextType => {
-    const { brokers, isLoadingBrokers } = useBrokers();
-    const { currencies, isLoadingCurrencies } = useCurrencies();
-    const { tickers, isLoadingTickers } = useTickers();
-    const { markets, isLoadingMarkets } = useMarkets();
+    const { brokers, isLoadingBrokers } = useBrokers()
+    const { currencies, isLoadingCurrencies } = useCurrencies()
+    const { tickers, isLoadingTickers } = useTickers()
+    const { markets, isLoadingMarkets } = useMarkets()
     const [ currentBrokerId, setCurrentBrokerId ] = useState(0)
     const [ brokerStatsKey, setBrokerStatsKey ] = useState('key')
     const [ moneyStateKey, setMoneyStateKey ] = useState('key')
@@ -84,12 +90,12 @@ const useTrade = ():TradeContextType => {
     const { moneyState, isLoadingMoneyState } = useMoneyState(moneyStateKey)
 
     const currentBroker = (): ItemType | undefined => {
-        return isLoadingBrokers ? undefined : brokers.find((elem) => {
+        return isLoadingBrokers ? undefined : brokers.find((elem: ItemType) => {
             return elem.id == currentBrokerId
         })
     }
 
-    console.log('currentBrokerId',currentBrokerId)
+    console.log('currentBrokerId', currentBrokerId)
 
     useEffect(() => {
         if (brokers && brokers.length > 0 && currentBrokerId == 0) {

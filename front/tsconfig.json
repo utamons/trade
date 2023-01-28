@@ -20,7 +20,8 @@
     "resolveJsonModule": true,
     "jsx": "react-jsx",
     "types": ["node","jest"],
-    "typeRoots": ["./src/@types","./node_modules/@types"],
+    "typeRoots": [
+      "./src/@types","./node_modules/@types"],
     "paths": {
       "*": ["./src/@types/*"]
     }

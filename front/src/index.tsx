@@ -4,23 +4,23 @@ import * as ReactDOM from 'react-dom'
 import './styles/global.css'
 import Main from './main'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
-import useMediaQuery from '@mui/material/useMediaQuery';
+import useMediaQuery from '@mui/material/useMediaQuery'
 import { QueryClient, QueryClientProvider } from 'react-query'
 import { TradeProvider } from './trade-context'
 
 const Outer = () => {
     const queryClient = new QueryClient()
-    const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
+    const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)')
 
     const theme = React.useMemo(
         () =>
             createTheme({
                 palette: {
-                    mode: prefersDarkMode ? 'dark' : 'light',
-                },
+                    mode: prefersDarkMode ? 'dark' : 'light'
+                }
             }),
-        [prefersDarkMode],
-    );
+        [prefersDarkMode]
+    )
     return <ThemeProvider theme={theme}>
         <QueryClientProvider client={queryClient}>
             <TradeProvider>

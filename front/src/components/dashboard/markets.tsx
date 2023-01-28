@@ -1,3 +1,4 @@
+import React from 'react'
 import { Box, styled } from '@mui/material'
 import { Loadable, remCalc } from '../../utils/utils'
 import { useContext, useEffect, useState } from 'react'
@@ -35,23 +36,23 @@ const timeWithOffset = (date: Date, offset: number | undefined) => {
         minute: '2-digit'
     }
     if (offset) {
-        const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
-        const newDate = new Date(utc + (3600000 * offset));
-        return newDate.toLocaleString('en-us', options);
+        const utc = date.getTime() + (date.getTimezoneOffset() * 60000)
+        const newDate = new Date(utc + (3600000 * offset))
+        return newDate.toLocaleString('en-us', options)
     }
-    return date.toLocaleTimeString();
+    return date.toLocaleTimeString()
 }
 
 const DateElem = ({ name, offset }: DateElemProps) => {
-    const [time, setTime] = useState(new Date());
+    const [time, setTime] = useState(new Date())
 
     useEffect(() => {
         const intervalId = setInterval(() => {
-            setTime(new Date());
-        }, 1000);
+            setTime(new Date())
+        }, 1000)
 
-        return () => clearInterval(intervalId);
-    }, []);
+        return () => clearInterval(intervalId)
+    }, [])
 
     return <DateContainerStyled>
         <Box>{name}:</Box>

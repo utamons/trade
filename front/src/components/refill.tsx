@@ -11,16 +11,17 @@ import Select, { SelectChangeEvent } from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
 import FormControl from '@mui/material/FormControl'
 import { Box, styled } from '@mui/material'
-import TextField from '@mui/material/TextField';
+import TextField from '@mui/material/TextField'
+import { RefillDialogProps } from 'types'
 
-const ContainerStyled = styled(Box)(({ theme }) => ({
+const ContainerStyled = styled(Box)(() => ({
     display: 'flex',
     flexFlow: 'column',
     justifyContent: 'space-between',
     padding: remCalc(8)
 }))
 
-export default ({ open, onClose, currencies }) => {
+export default ({ open, onRefill, onCancel, currencies }: RefillDialogProps) => {
     const [currencyId, setCurrencyId] = useState('' + (currencies ? currencies[0].id : 0))
     const [value, setValue] = useState('')
     const [error, setError] = useState(false)
@@ -29,16 +30,16 @@ export default ({ open, onClose, currencies }) => {
     const handleRefill = () => {
         if (validate(value))
             return
-        onClose(currencyId, Number(value))
+        onRefill(Number(currencyId), Number(value))
     }
 
     const handleSelector = (event: SelectChangeEvent) => {
-        setCurrencyId(event.target.value as string);
-    };
+        setCurrencyId(event.target.value as string)
+    }
 
-    const handleInput = (event) => {
-        setValue(event.target.value);
-    };
+    const handleInput = (event: { target: { value: React.SetStateAction<string> } }) => {
+        setValue(event.target.value)
+    }
 
 
     const validate = (value: string): boolean => {
@@ -53,8 +54,16 @@ export default ({ open, onClose, currencies }) => {
         return false
     }
 
-    const handleValidate = (event) => {
+    const handleValidate = (event: { target: { value: string } }) => {
         validate(event.target.value)
+    }
+
+    function getCurrencies() {
+        return currencies ?
+            currencies.map(
+                currency => <MenuItem key={currency.id}
+                    value={currency.id}>{currency.name}
+                </MenuItem>) : <></>
     }
 
     return <Dialog
@@ -67,9 +76,7 @@ export default ({ open, onClose, currencies }) => {
                         value={currencyId}
                         onChange={handleSelector}
                     >
-                        {
-                            currencies ? currencies.map(currency => <MenuItem key={currency.id} value={currency.id}>{currency.name}</MenuItem>) : <></>
-                        }
+                        {getCurrencies()}
                     </Select>
                 </FormControl>
                 <TextField
@@ -84,10 +91,10 @@ export default ({ open, onClose, currencies }) => {
             </ContainerStyled>
         </DialogContent>
 
-        <DialogActions sx={{justifyContent: 'center'}}>
+        <DialogActions sx={{ justifyContent: 'center' }}>
             <ButtonContainerStyled>
                 <Button style={{ minWidth: remCalc(101) }} text="Refill" onClick={handleRefill}/>
-                <Button style={{ minWidth: remCalc(101) }} text="Cancel" onClick={onClose}/>
+                <Button style={{ minWidth: remCalc(101) }} text="Cancel" onClick={onCancel}/>
             </ButtonContainerStyled>
         </DialogActions>
     </Dialog>

@@ -9,7 +9,7 @@ const ContainerStyled = styled(Box)(({ theme }) => ({
     borderRight: `solid ${remCalc(1)}`,
     borderColor: theme.palette.text.primary,
     padding: remCalc(10),
-   // paddingRight: remCalc(10),
+    // paddingRight: remCalc(10),
     height: remCalc(131),
     display: 'flex',
     flexFlow: 'column wrap',
@@ -24,11 +24,11 @@ const BoxStyled = styled(Box)(() => ({
 
 export default ({ capital, profit }: MoneyStateType) => {
     return <ContainerStyled>
-            <BoxStyled>
-                <div>Capital:</div> <div>${capital}</div>
-            </BoxStyled>
-            <BoxStyled>
-                <div>Profit:</div> <div>{profit}%</div>
-            </BoxStyled>
+        <BoxStyled>
+            <div>Capital:</div> <div>${capital}</div>
+        </BoxStyled>
+        <BoxStyled>
+            <div>Profit:</div> <div>{profit}%</div>
+        </BoxStyled>
     </ContainerStyled>
 }

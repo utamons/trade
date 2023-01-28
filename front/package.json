@@ -7,7 +7,9 @@
     "test:watch": "jest --watch",
     "test:update": "npm run test -- -u",
     "start": "webpack-dashboard -- webpack serve --mode development --hot --open",
-    "build": "webpack --mode production --config ./webpack.config.prod.js"
+    "build": "webpack --mode production --config ./webpack.config.prod.js",
+    "lint": "eslint --cache --ext tsx,jsx,js,ts src",
+    "lint:fix": "npm run lint -- --fix"
   },
   "dependencies": {
     "@mui/icons-material": "^5.10.15",
@@ -38,6 +40,8 @@
     "clean-webpack-plugin": "^4.0.0",
     "cpy-cli": "^3.1.1",
     "css-loader": "^6.7.1",
+    "eslint": "^8.27.0",
+    "eslint-plugin-react": "^7.31.10",
     "esbuild-loader": "^2.20.0",
     "history": "^5.3.0",
     "html-webpack-plugin": "^5.5.0",

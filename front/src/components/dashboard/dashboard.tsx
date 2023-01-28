@@ -1,4 +1,5 @@
-import { Box, Grid, styled } from '@mui/material'
+import React from 'react'
+import { Box, styled } from '@mui/material'
 import { Loadable, remCalc } from '../../utils/utils'
 import { useContext } from 'react'
 import { TradeContext } from '../../trade-context'
@@ -34,8 +35,8 @@ export default () => {
                 currencies={currencies}
                 refill={refill}
                 setCurrentBrokerId={setCurrentBrokerId}/>
-            <BrokerStats {...brokerStats}/>
-            <MoneyState {...moneyState}/>
+            {brokerStats? <BrokerStats {...brokerStats}/>:<></>}
+            {moneyState? <MoneyState {...moneyState}/>: <></>}
             <Markets />
         </ContainerStyled>
     </Loadable>
