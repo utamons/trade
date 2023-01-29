@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react'
 import { Grid, IconButton, styled } from '@mui/material'
-import { dateTimeWithOffset, remCalc } from '../../utils/utils'
+import { dateTimeWithOffset, money, remCalc } from '../../utils/utils'
 import { TradeLogPageType } from 'types'
 import ExpandButton from './expandButton'
 import CloseIcon from '@mui/icons-material/Close'
@@ -69,31 +69,31 @@ const getRows = (logPage: TradeLogPageType) => {
                 <ItemBox>{logItem.dateClose ?
                     dateTimeWithOffset(logItem.dateClose, logItem.market.timezone) : '-'}</ItemBox>
             </Grid>
+            <Grid item xs={4}>
+                <ItemBox>{money(logItem.currency.name, logItem.priceOpen)}</ItemBox>
+            </Grid>
+            <Grid item xs={4}>
+                <ItemBox>{logItem.priceClose ? money(logItem.currency.name, logItem.priceClose) : '-'}</ItemBox>
+            </Grid>
             <Grid item xs={3}>
                 <ItemBox>{logItem.itemNumber}</ItemBox>
             </Grid>
             <Grid item xs={4}>
-                <ItemBox>{logItem.priceOpen}</ItemBox>
+                <ItemBox>{money(logItem.currency.name, logItem.volume)}</ItemBox>
             </Grid>
             <Grid item xs={4}>
-                <ItemBox>{logItem.priceClose ? logItem.priceClose : '-'}</ItemBox>
+                <ItemBox>{money(logItem.currency.name, logItem.outcome)}</ItemBox>
             </Grid>
             <Grid item xs={4}>
-                <ItemBox>{logItem.volume}</ItemBox>
+                <ItemBox>{logItem.outcomePercent != undefined?`${logItem.outcomePercent} %`:'-'}</ItemBox>
             </Grid>
             <Grid item xs={4}>
-                <ItemBox>{logItem.stopLoss}</ItemBox>
-            </Grid>
-            <Grid item xs={4}>
-                <ItemBox>{logItem.takeProfit}</ItemBox>
-            </Grid>
-            <Grid item xs={4}>
-                <ItemBox>{logItem.fees}</ItemBox>
+                <ItemBox>{money('USD', logItem.fees)}</ItemBox>
             </Grid>
             <Grid item xs={2}>
                 <ItemBox>
                     <ExpandButton onClick={expandHandler}/>
-                    {logItem.dateClose?<></>:<CloseButton/>}
+                    {logItem.dateClose ? <></> : <CloseButton/>}
                 </ItemBox>
             </Grid>
         </RowBox>
@@ -120,23 +120,23 @@ export default (logPage: TradeLogPageType) => {
         <Grid item xs={6}>
             <HeaderBox>Closed</HeaderBox>
         </Grid>
-        <Grid item xs={3}>
-            <HeaderBox>Items</HeaderBox>
-        </Grid>
         <Grid item xs={4}>
             <HeaderBox>Price Open</HeaderBox>
         </Grid>
         <Grid item xs={4}>
             <HeaderBox>Price Close</HeaderBox>
         </Grid>
+        <Grid item xs={3}>
+            <HeaderBox>Items</HeaderBox>
+        </Grid>
         <Grid item xs={4}>
             <HeaderBox>Volume</HeaderBox>
         </Grid>
         <Grid item xs={4}>
-            <HeaderBox>Stop</HeaderBox>
+            <HeaderBox>Outcome</HeaderBox>
         </Grid>
         <Grid item xs={4}>
-            <HeaderBox>Take</HeaderBox>
+            <HeaderBox>Profit</HeaderBox>
         </Grid>
         <Grid item xs={4}>
             <HeaderBox>Fees</HeaderBox>
