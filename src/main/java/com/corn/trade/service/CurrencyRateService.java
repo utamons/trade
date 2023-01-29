@@ -36,15 +36,14 @@ public class CurrencyRateService {
 	}
 
 	public CurrencyRateDTO findByDate(Long currencyId, LocalDate dateTime) throws JsonProcessingException {
-		logger.info("Trying to find for a date {}", dateTime);
 		Currency     currency     = currencyRepository.getReferenceById(currencyId);
 		CurrencyRate currencyRate = repository.findRateByCurrencyAndDate(currency, dateTime);
 		if (currencyRate != null) {
 			return CurrencyRateMapper.toDTO(currencyRate);
 		} else {
 			if (IS_EXTERNAL_STARTED) {
+				logger.info("Waiting for the external API call to finish...");
 				while (IS_EXTERNAL_STARTED) {
-					logger.info("External API started, waiting...");
 					try {
 						TimeUnit.MILLISECONDS.sleep(100);
 					} catch (InterruptedException e) {
@@ -52,6 +51,7 @@ public class CurrencyRateService {
 					}
 				}
 				currencyRate = repository.findRateByCurrencyAndDate(currency, dateTime);
+				logger.info("The external API call is finished...");
 				return CurrencyRateMapper.toDTO(currencyRate);
 			}
 			return getExternalRate(currencyId, dateTime);

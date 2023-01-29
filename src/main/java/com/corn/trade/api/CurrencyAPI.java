@@ -26,8 +26,6 @@ public class CurrencyAPI {
 			throw new RuntimeException("Currency API key not found");
 		}
 
-		logger.info("API key: {}",currencyKey);
-
 		String baseURL = "https://api.currencyapi.com/v3/";
 		String url     =  today? baseURL + "latest" : baseURL + "historical";
 
