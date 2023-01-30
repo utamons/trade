@@ -176,6 +176,7 @@ type TradeLogPageType = {
 }
 
 interface ExpandButtonProps {
+    expanded: boolean,
     onClick: (expanded: boolean) => void
 }
 

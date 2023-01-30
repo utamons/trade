@@ -1,10 +1,7 @@
-// noinspection TypeScriptValidateTypes
-
 import React, { useCallback, useState } from 'react'
 import { Box, styled } from '@mui/material'
 import { remCalc } from '../../utils/utils'
 import { BrokerProps } from 'types'
-import MenuItem from '@mui/material/MenuItem'
 import { SelectChangeEvent } from '@mui/material/Select'
 import Button from '../button'
 import Refill from '../refill'

@@ -1,7 +1,17 @@
 import React, { createContext, useEffect, useMemo, useState } from 'react'
 import { useQuery } from 'react-query'
-import { fetchBrokers, fetchBrokerStats, fetchCurrencies, fetchMarkets, fetchMoneyState, fetchTickers, postExchange, postLogPage, postRefill } from './api'
-import { BrokerStatsType, ItemType, PageRequest, TradeContextType, TradeLogPageType } from 'types'
+import {
+    fetchBrokers,
+    fetchBrokerStats,
+    fetchCurrencies,
+    fetchMarkets,
+    fetchMoneyState,
+    fetchTickers,
+    postExchange,
+    postLogPage,
+    postRefill
+} from './api'
+import { BrokerStatsType, ItemType, TradeContextType, TradeLogPageType } from 'types'
 
 const onetimeQueryOptions = () => {
     return {
@@ -126,9 +136,9 @@ const useTrade = (): TradeContextType => {
     }
 
     const exchange = (currencyFromId: number,
-        currencyToId: number,
-        amountFrom: number,
-        amountTo: number) => {
+                      currencyToId: number,
+                      amountFrom: number,
+                      amountTo: number) => {
         postExchange({
             brokerId: currentBrokerId,
             currencyFromId,

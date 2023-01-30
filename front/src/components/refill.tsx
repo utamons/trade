@@ -1,5 +1,3 @@
-// noinspection TypeScriptValidateTypes
-
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import Dialog from '@mui/material/Dialog'
