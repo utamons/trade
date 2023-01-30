@@ -13,8 +13,8 @@ export const ExpandButtonStyled = styled(IconButton)(({ theme }) => ({
 }))
 
 
-export default ({ onClick }: ExpandButtonProps) => {
-    const [isExpanded, setExpanded] = useState(false)
+export default ({ expanded, onClick }: ExpandButtonProps) => {
+    const [isExpanded, setExpanded] = useState(expanded)
 
     const onClickHandler = useCallback(
         () => {

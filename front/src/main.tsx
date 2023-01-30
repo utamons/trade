@@ -5,7 +5,7 @@ import Work from './components/work'
 import { remCalc } from './utils/utils'
 
 
-const MainStyled = styled(Box)(({theme}) => ({
+const MainStyled = styled(Box)(({ theme }) => ({
     display: 'flex',
     color: 'black',
     fontSize: 14,
