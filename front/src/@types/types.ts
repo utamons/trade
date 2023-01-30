@@ -55,6 +55,7 @@ type TradeContextType = {
     logPage: TradeLogPageType | undefined,
     isLoading: boolean,
     currentBroker: ItemType | undefined,
+    page: (page: number) => void,
     setCurrentBrokerId: (id: number) => void,
     refill: (currencyId: number, amount: number) => void,
     exchange: (currencyFromId: number,

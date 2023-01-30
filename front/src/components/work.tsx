@@ -5,6 +5,7 @@ import Button from './button'
 import { ButtonContainerStyled } from '../styles/style'
 import LogGrid from './logGrid/logGrid'
 import { TradeContext } from '../trade-context'
+import Paginator from './logGrid/paginator'
 
 const ContainerStyled = styled(Box)(({ theme }) => ({
     alignItems: 'top',
@@ -50,6 +51,9 @@ export default () => {
             <Loadable isLoading={isLoading}>
                 {logPage? <LogGrid {...logPage}/> : <></>}
             </Loadable>
+        </RowStyled>
+        <RowStyled>
+            <Paginator />
         </RowStyled>
     </ContainerStyled>
 }
