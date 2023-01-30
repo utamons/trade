@@ -135,6 +135,11 @@ const useTrade = (): TradeContextType => {
         })
     }
 
+    const page = (page: number) => {
+        setPageNum(page)
+        setPageLogKey('' + Date.now())
+    }
+
     const exchange = (currencyFromId: number,
                       currencyToId: number,
                       amountFrom: number,
@@ -159,6 +164,7 @@ const useTrade = (): TradeContextType => {
         brokerStats,
         moneyState,
         logPage,
+        page,
         refill,
         exchange,
         isLoading: isLoadingBrokers || isLoadingCurrencies || isLoadingMarkets || isLoadingTickers ||
