@@ -16,6 +16,7 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
 import TextField from '@mui/material/TextField'
 import { ItemType, MarketType, PositionOpenType, TickerType } from 'types'
 import Select from '../select'
+import NumberInput from '../numberInput'
 
 const ContainerStyled = styled(Box)(() => ({
     display: 'flex',
@@ -71,9 +72,10 @@ export default ({ onCancel, isOpen, currentBroker, markets, tickers, open, evalu
     const [tickerId, setTickerId] = useState('' + tickers[0].id)
     const [currentTicker, setCurrentTicker] = useState<TickerType|undefined>(tickers[0])
     const [positionId, setPositionId] = useState('' + positions[0].id)
+    const [priceError, setPriceError] = useState(false)
+    const [itemsError, setItemsError] = useState(false)
     const [price, setPrice] = useState(0)
-    const [errorPrice, setErrorPrice] = useState(false)
-    const [errorPriceText, setErrorPriceText] = useState('')
+    const [items, setItems] = useState(0)
 
     const validate = (): boolean => {
         return false
@@ -101,29 +103,9 @@ export default ({ onCancel, isOpen, currentBroker, markets, tickers, open, evalu
 
     }, [])
 
-    const handlePriceInput = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-        setPrice(Number(event.target.value))
-    }, [])
-
-    const handleValidatePrice =
-        useCallback((event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-            validatePrice(event.target.value)
-        }, [])
-
-    const validatePrice = (value: string): boolean => {
-        const num = Number(value)
-        if (!value || isNaN(num)) {
-            setErrorPriceText('Incorrect value')
-            setErrorPrice(true)
-            return true
-        }
-
-        setErrorPrice(false)
-        setErrorPriceText('')
-        return false
-    }
 
     return <Dialog
+        maxWidth={false}
         open={isOpen}
     >
         <DialogContent>
@@ -173,14 +155,13 @@ export default ({ onCancel, isOpen, currentBroker, markets, tickers, open, evalu
                 <FieldBox>
                     <FieldName>Price: {`(${currentTicker?(currentTicker.currency.name):'???'})`}</FieldName>
                     <FieldValue>
-                        <TextField
-                            variant="standard"
-                            onChange={handlePriceInput}
-                            onBlur={handleValidatePrice}
-                            error={errorPrice}
-                            helperText={errorPriceText}
-                            inputProps={{ inputMode: 'numeric' }}
-                        />
+                        <NumberInput onChange={setPrice} onError={setPriceError}/>
+                    </FieldValue>
+                </FieldBox>
+                <FieldBox>
+                    <FieldName>Items:</FieldName>
+                    <FieldValue>
+                        <NumberInput onChange={setItems} onError={setItemsError}/>
                     </FieldValue>
                 </FieldBox>
             </ContainerStyled>
