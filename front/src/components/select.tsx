@@ -9,6 +9,9 @@ export default ({ items, value, onChange, variant } : SelectorProps) => {
     if (variant && variant == 'medium') {
         fontSize = remCalc(14)
     }
+    if (variant && variant == 'small') {
+        fontSize = remCalc(12)
+    }
 
     const getItems = (itemz: ItemType[]) => {
         return itemz ?
