@@ -15,20 +15,20 @@ public class Ticker implements Serializable {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@Column(name = "long_name", nullable = false)
+	private String longName;
+
 	@Column(name = "name", nullable = false)
 	private String name;
-
-	@Column(name = "short_name", nullable = false)
-	private String shortName;
 
 	@ManyToOne
 	private Currency currency;
 
 	public Ticker() {}
 
-	public Ticker(String name, String shortName, Currency currency) {
+	public Ticker(String longName, String name, Currency currency) {
+		this.longName = longName;
 		this.name = name;
-		this.shortName = shortName;
 		this.currency = currency;
 	}
 
@@ -40,20 +40,20 @@ public class Ticker implements Serializable {
 		return id;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setLongName(String name) {
+		this.longName = name;
+	}
+
+	public String getLongName() {
+		return longName;
+	}
+
+	public void setName(String shortName) {
+		this.name = shortName;
 	}
 
 	public String getName() {
 		return name;
-	}
-
-	public void setShortName(String shortName) {
-		this.shortName = shortName;
-	}
-
-	public String getShortName() {
-		return shortName;
 	}
 
 	public Currency getCurrency() {

@@ -99,7 +99,7 @@ const Expanded = ({ logItem, expandHandler }: ExpandableProps) => {
                 </FieldBox>
                 <FieldBox>
                     <FieldName>Ticker:</FieldName>
-                    <FieldValue>{ticker.name} ({ticker.shortName})</FieldValue>
+                    <FieldValue>{ticker.name} ({ticker.longName})</FieldValue>
                 </FieldBox>
                 <FieldBox>
                     <FieldName>Position:</FieldName>
@@ -192,7 +192,7 @@ const Collapsed = ({ logItem, expandHandler }: ExpandableProps) => {
     return <RowBox container columns={53}>
         <Item item xs={4}>{broker.name}</Item>
         <Item item xs={3}>{market.name}</Item>
-        <Item item xs={3}>{ticker.shortName}</Item>
+        <Item item xs={3}>{ticker.name}</Item>
         <Item item xs={2}>{position}</Item>
         <Item item xs={6}>{dateTimeWithOffset(dateOpen, tz)}</Item>
         <Item item xs={6}>{dateClose ? dateTimeWithOffset(dateClose, tz) : '-'}</Item>

@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useState } from 'react'
+import React, { useCallback, useContext } from 'react'
 import { Box, IconButton, styled } from '@mui/material'
 import { TradeContext } from '../../trade-context'
 import { remCalc } from '../../utils/utils'
