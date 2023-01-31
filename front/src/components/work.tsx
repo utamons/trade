@@ -43,7 +43,7 @@ const WorkInt = (props: WorkIntProps) => {
 
     const { currentBroker, tickers, markets, open } = props
 
-    const handleAdd = useCallback(() => {
+    const handleOpen = useCallback(() => {
         setEvaluate(false)
         setOpen(true)
     }, [])
@@ -61,7 +61,7 @@ const WorkInt = (props: WorkIntProps) => {
     return <ContainerStyled>
         <RowStyled>
             <ButtonContainerStyled>
-                <Button style={{ minWidth: remCalc(101) }} text="Add" onClick={handleAdd}/>
+                <Button style={{ minWidth: remCalc(101) }} text="Open" onClick={handleOpen}/>
                 <Button style={{ minWidth: remCalc(101) }} text="Evaluate" onClick={handleEvaluate}/>
             </ButtonContainerStyled>
         </RowStyled>

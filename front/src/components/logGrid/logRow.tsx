@@ -4,6 +4,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import { TradeLog } from 'types'
 import React, { useCallback, useState } from 'react'
 import ExpandButton from './expandButton'
+import { FieldBox, FieldName, FieldValue, NoteBox } from '../../styles/style'
 
 export const CloseButtonStyled = styled(IconButton)(({ theme }) => ({
     width: remCalc(25),
@@ -28,31 +29,7 @@ const Item = styled(Grid)(() => ({
     padding: `${remCalc(7)} 0 ${remCalc(7)} ${remCalc(10)}`
 }))
 
-const FieldBox = styled(Box)(() => ({
-    display: 'flex',
-    justifyContent: 'space-between',
-    width: remCalc(310),
-    margin: `${remCalc(2)} ${remCalc(20)} ${remCalc(2)} ${remCalc(2)}`,
-    padding: `${remCalc(7)} 0 ${remCalc(7)} ${remCalc(10)}`
-}))
 
-const NoteBox = styled(Box)(() => ({
-    paddingTop: remCalc(15),
-    paddingBottom: remCalc(15)
-}))
-
-const FieldName = styled(Box)(() => ({
-    display: 'flex',
-    justifyContent: 'flex-start',
-    fontWeight: 'bolder',
-    width: remCalc(120)
-}))
-
-const FieldValue = styled(Box)(() => ({
-    display: 'flex',
-    alignContent: 'flex-start',
-    width: remCalc(180)
-}))
 
 const ExpandedContainer = styled(Box)(({ theme }) => ({
     alignContent: 'flex-start',
