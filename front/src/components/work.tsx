@@ -1,4 +1,4 @@
-import React, { useCallback, useContext } from 'react'
+import React, { useCallback, useContext, useState } from 'react'
 import { Box, styled } from '@mui/material'
 import { Loadable, remCalc } from '../utils/utils'
 import Button from './button'
@@ -6,6 +6,9 @@ import { ButtonContainerStyled } from '../styles/style'
 import LogGrid from './logGrid/logGrid'
 import { TradeContext } from '../trade-context'
 import Paginator from './logGrid/paginator'
+import { BrokerProps, ItemType, MarketType, PositionOpenType, TickerType, TradeLogPageType } from 'types'
+import CircularProgress from '@mui/material/CircularProgress'
+import Open from './logGrid/open'
 
 const ContainerStyled = styled(Box)(({ theme }) => ({
     alignItems: 'top',
@@ -26,18 +29,33 @@ const RowStyled = styled(Box)(() => ({
     width: '100%'
 }))
 
-export default () => {
-    const { all } = useContext(TradeContext)
-    if (!all)
-        return <></>
-    const { isLoading, logPage } = all
+interface WorkIntProps {
+    logPage: TradeLogPageType,
+    currentBroker: ItemType,
+    markets: MarketType [],
+    tickers: TickerType [],
+    open: (open: PositionOpenType) => void
+}
+
+const WorkInt = (props: WorkIntProps) => {
+    const [isOpen, setOpen] = useState(false)
+    const [evaluate, setEvaluate] = useState(false)
+
+    const { currentBroker, tickers, markets, open } = props
 
     const handleAdd = useCallback(() => {
-        console.log('Add')
+        setEvaluate(false)
+        setOpen(true)
+    }, [])
+
+    const handleCancel = useCallback(() => {
+        setEvaluate(false)
+        setOpen(false)
     }, [])
 
     const handleEvaluate = useCallback(() => {
-        console.log('Evaluate')
+        setEvaluate(true)
+        setOpen(true)
     }, [])
 
     return <ContainerStyled>
@@ -48,12 +66,29 @@ export default () => {
             </ButtonContainerStyled>
         </RowStyled>
         <RowStyled>
-            <Loadable isLoading={isLoading}>
-                {logPage? <LogGrid {...logPage}/> : <></>}
-            </Loadable>
+            <LogGrid {...props.logPage}/>
         </RowStyled>
         <RowStyled>
-            <Paginator />
+            <Paginator/>
         </RowStyled>
+        <Open
+            isOpen={isOpen}
+            evaluate={evaluate}
+            open={open}
+            tickers={tickers}
+            markets={markets}
+            currentBroker={currentBroker}
+            onCancel={handleCancel}/>
     </ContainerStyled>
+}
+
+export default () => {
+    const { all } = useContext(TradeContext)
+    if (!all)
+        return <CircularProgress size={20}/>
+    const { currentBroker, markets, tickers, logPage, open } = all
+    if (!logPage || !currentBroker || !markets || !tickers)
+        return <CircularProgress size={20}/>
+
+    return <WorkInt logPage={logPage} open={open} tickers={tickers} currentBroker={currentBroker} markets={markets}/>
 }

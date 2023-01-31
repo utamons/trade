@@ -1,4 +1,4 @@
-import { ExchangeType, PageRequest, RefillType } from 'types'
+import { ExchangeType, PageRequest, PositionOpenType, RefillType } from 'types'
 
 const baseUrl = 'http://localhost:8080/api'
 
@@ -95,6 +95,19 @@ const postLogPage = async (body: PageRequest) => {
     })
 }
 
+const postOpen = async (body: PositionOpenType) => {
+    const url = `${baseUrl}/log/open`
+    return fetch(url, {
+        method: 'post',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+    }).then((res) => {
+        return res.json()
+    })
+}
+
 export {
     fetchBrokers,
     fetchCurrencies,
@@ -104,5 +117,6 @@ export {
     fetchMoneyState,
     postRefill,
     postExchange,
-    postLogPage
+    postLogPage,
+    postOpen
 }

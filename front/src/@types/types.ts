@@ -3,16 +3,12 @@ import { SelectChangeEvent } from '@mui/material/Select'
 
 type ItemType = { id: number, name: string }
 
-type TickerType = {
-    id: number,
-    name: string,
-    shortName: string,
+interface TickerType extends ItemType {
+    longName: string,
     currency: ItemType
 }
 
-type MarketType = {
-    id: number,
-    name: string,
+interface MarketType extends ItemType {
     timezone: number
 }
 
@@ -55,6 +51,7 @@ type TradeContextType = {
     logPage: TradeLogPageType | undefined,
     isLoading: boolean,
     currentBroker: ItemType | undefined,
+    open: (open: PositionOpenType) => void,
     page: (page: number) => void,
     setCurrentBrokerId: (id: number) => void,
     refill: (currencyId: number, amount: number) => void,
@@ -181,6 +178,22 @@ interface ExpandButtonProps {
     onClick: (expanded: boolean) => void
 }
 
+type PositionOpenType = {
+    position: 'short' | 'long'
+    dateOpen: string,
+    brokerId: number,
+    marketId: number,
+    tickerId: number,
+    itemNumber: number,
+    priceOpen: number,
+    stopLoss: number,
+    takeProfit: number | undefined,
+    outcomeExpected: number | undefined,
+    risk: number,
+    fees: number,
+    note: string | undefined
+}
+
 export {
     MarketType,
     ItemType,
@@ -196,6 +209,8 @@ export {
     SelectorProps,
     TradeLogPageType,
     TradeLog,
+    TickerType,
     PageRequest,
-    ExpandButtonProps
+    ExpandButtonProps,
+    PositionOpenType
 }

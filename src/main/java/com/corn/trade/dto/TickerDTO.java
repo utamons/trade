@@ -11,19 +11,19 @@ public class TickerDTO implements Serializable {
 	private static final long serialVersionUID = 5581176346440601454L;
 	private final Long id;
 
-	private final String name;
-	private final String shortName;
+	private final String      longName;
+	private final String      name;
 	private final CurrencyDTO currency;
 
     @JsonCreator
 	public TickerDTO(
 			@JsonProperty("id") Long id,
+			@JsonProperty("longName") String longName,
 			@JsonProperty("name") String name,
-			@JsonProperty("shortName") String shortName,
 			@JsonProperty("currency") CurrencyDTO currency) {
 		this.id = id;
+		this.longName = longName;
 		this.name = name;
-		this.shortName = shortName;
 		this.currency = currency;
 	}
 
@@ -31,12 +31,12 @@ public class TickerDTO implements Serializable {
 		return id;
 	}
 
-	public String getName() {
-		return name;
+	public String getLongName() {
+		return longName;
 	}
 
-	public String getShortName() {
-		return shortName;
+	public String getName() {
+		return name;
 	}
 
 	public CurrencyDTO getCurrency() {
