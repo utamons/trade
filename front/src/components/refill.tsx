@@ -3,13 +3,14 @@ import DialogActions from '@mui/material/DialogActions'
 import Dialog from '@mui/material/Dialog'
 import { remCalc } from '../utils/utils'
 import Button from './button'
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { ButtonContainerStyled } from '../styles/style'
 import { SelectChangeEvent } from '@mui/material/Select'
 import { Box, styled } from '@mui/material'
 import TextField from '@mui/material/TextField'
 import { RefillDialogProps } from 'types'
 import Select from './select'
+import NumberInput from './numberInput'
 
 const ContainerStyled = styled(Box)(() => ({
     display: 'flex',
@@ -21,63 +22,31 @@ const ContainerStyled = styled(Box)(() => ({
 
 export default ({ open, onRefill, onCancel, currencies }: RefillDialogProps) => {
     const [currencyId, setCurrencyId] = useState('' + (currencies ? currencies[0].id : 0))
-    const [value, setValue] = useState('')
+    const [value, setValue] = useState(0)
     const [error, setError] = useState(false)
-    const [errorText, setErrorText] = useState('')
 
     const handleRefill = useCallback(() => {
-        if (validate(value))
+        if (!value || error)
             return
-        onRefill(Number(currencyId), Number(value))
-    }, [value, currencyId])
+        onRefill(Number(currencyId), value)
+    }, [value, error, currencyId])
 
     const handleSelector = useCallback((event: SelectChangeEvent<unknown>) => {
         setCurrencyId(event.target.value as string)
     }, [])
-
-    const handleInput = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-        setValue(event.target.value)
-    }, [])
-
-    const validate = (value: string): boolean => {
-        const num = Number(value)
-        if (!value || isNaN(num)) {
-            setErrorText('Incorrect value')
-            setError(true)
-            return true
-        }
-        setError(false)
-        setErrorText('')
-        return false
-    }
-
-    const handleValidate: React.FocusEventHandler<HTMLInputElement | HTMLTextAreaElement> =
-        useCallback((event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-            validate(event.target.value)
-        }, [])
 
     return <Dialog
         open={open}
     >
         <DialogContent>
             <ContainerStyled>
-
                 <Select
-                    items={currencies?currencies:[]}
+                    items={currencies ? currencies : []}
                     value={currencyId}
                     variant="medium"
                     onChange={handleSelector}
                 />
-
-                <TextField
-                    label="Amount"
-                    variant="standard"
-                    onChange={handleInput}
-                    onBlur={handleValidate}
-                    error={error}
-                    helperText={errorText}
-                    inputProps={{ inputMode: 'numeric' }}
-                />
+                <NumberInput label={'Amount'} onChange={setValue} onError={setError}/>
             </ContainerStyled>
         </DialogContent>
 
