@@ -14,7 +14,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
 import TextField from '@mui/material/TextField'
-import { ItemType, MarketType, PositionOpenType, TickerType } from 'types'
+import { BrokerStatsType, ItemType, MarketType, PositionOpenType, TickerType } from 'types'
 import Select from '../select'
 import NumberInput from '../numberInput'
 
@@ -24,8 +24,8 @@ const ContainerStyled = styled(Box)(() => ({
     flexFlow: 'column wrap',
     fontSize: remCalc(14),
     fontFamily: 'sans',
-    width: remCalc(900),
-    height: remCalc(500)
+    width: remCalc(700),
+    height: remCalc(400)
 }))
 
 interface OpenDialogProps {
@@ -50,8 +50,17 @@ export const FieldValue = styled(Box)(() => ({
     width: remCalc(200)
 }))
 
-const BasicDateTimePicker = () => {
+interface DatePickerProps {
+    onChange: (date: Date) => void
+}
+
+const BasicDateTimePicker = ( { onChange }: DatePickerProps ) => {
     const [value, setValue] = React.useState<Dayjs | null>(dayjs(new Date()))
+
+    const handleChange = useCallback((value) => {
+        setValue(value)
+        onChange(value.Date)
+    }, [])
 
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -59,9 +68,7 @@ const BasicDateTimePicker = () => {
                 renderInput={(props) => <TextField {...props} />}
                 value={value}
                 inputFormat="YYYY-MM-DD HH:MM"
-                onChange={(newValue) => {
-                    setValue(newValue)
-                }}
+                onChange={handleChange}
             />
         </LocalizationProvider>
     )
@@ -74,8 +81,21 @@ export default ({ onCancel, isOpen, currentBroker, markets, tickers, open, evalu
     const [positionId, setPositionId] = useState('' + positions[0].id)
     const [priceError, setPriceError] = useState(false)
     const [itemsError, setItemsError] = useState(false)
+    const [stopLossError, setStopLossError] = useState(false)
+    const [takeProfitError, setTakeProfitError] = useState(false)
+    const [outcomeExpError, setOutcomeExpError] = useState(false)
     const [price, setPrice] = useState(0)
     const [items, setItems] = useState(0)
+    const [stopLoss, setStopLoss] = useState(0)
+    const [takeProfit, setTakeProfit] = useState(0)
+    const [outcomeExp, setOutcomeExp] = useState(0)
+    const [risk, setRisk] = useState(0)
+    const [fees, setFees] = useState(0)
+    const [note, setNote] = useState('')
+    const [date, setDate] = useState(new Date())
+    const [depoUSD, setDepoUSD] = useState(0)
+
+
 
     const validate = (): boolean => {
         return false
@@ -104,6 +124,23 @@ export default ({ onCancel, isOpen, currentBroker, markets, tickers, open, evalu
     }, [])
 
 
+    const getFees = () => {
+
+        return 1
+    }
+
+    const getRisk = () => {
+        return 1
+    }
+
+    const noteChangeHandler = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+        setNote(event.target.value)
+    }, [])
+
+    const dateChangeHandler = useCallback((newDate: Date) => {
+        setDate(newDate)
+    }, [])
+
     return <Dialog
         maxWidth={false}
         open={isOpen}
@@ -113,7 +150,7 @@ export default ({ onCancel, isOpen, currentBroker, markets, tickers, open, evalu
                 <FieldBox>
                     <FieldName>Date:</FieldName>
                     <FieldValue>
-                        <BasicDateTimePicker />
+                        <BasicDateTimePicker onChange={dateChangeHandler} />
                     </FieldValue>
                 </FieldBox>
                 <FieldBox>
@@ -162,6 +199,46 @@ export default ({ onCancel, isOpen, currentBroker, markets, tickers, open, evalu
                     <FieldName>Items:</FieldName>
                     <FieldValue>
                         <NumberInput onChange={setItems} onError={setItemsError}/>
+                    </FieldValue>
+                </FieldBox>
+                <FieldBox>
+                    <FieldName>Stop Loss:</FieldName>
+                    <FieldValue>
+                        <NumberInput onChange={setStopLoss} onError={setStopLossError}/>
+                    </FieldValue>
+                </FieldBox>
+                <FieldBox>
+                    <FieldName>Take Profit:</FieldName>
+                    <FieldValue>
+                        <NumberInput onChange={setTakeProfit} onError={setTakeProfitError}/>
+                    </FieldValue>
+                </FieldBox>
+                <FieldBox>
+                    <FieldName>Out. Exp.:</FieldName>
+                    <FieldValue>
+                        <NumberInput onChange={setOutcomeExp} onError={setOutcomeExpError}/>
+                    </FieldValue>
+                </FieldBox>
+                <FieldBox>
+                    <FieldName>Fees:</FieldName>
+                    <FieldValue>
+                        {fees}
+                    </FieldValue>
+                </FieldBox>
+                <FieldBox>
+                    <FieldName>Risk:</FieldName>
+                    <FieldValue>
+                        {risk}
+                    </FieldValue>
+                </FieldBox>
+                <FieldBox>
+                    <FieldName>Note:</FieldName>
+                    <FieldValue>
+                        <TextField
+                            id="outlined-textarea"
+                            multiline
+                            onChange={noteChangeHandler}
+                        />
                     </FieldValue>
                 </FieldBox>
             </ContainerStyled>

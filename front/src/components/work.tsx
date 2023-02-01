@@ -1,12 +1,12 @@
 import React, { useCallback, useContext, useState } from 'react'
 import { Box, styled } from '@mui/material'
-import { Loadable, remCalc } from '../utils/utils'
+import { remCalc } from '../utils/utils'
 import Button from './button'
 import { ButtonContainerStyled } from '../styles/style'
 import LogGrid from './logGrid/logGrid'
 import { TradeContext } from '../trade-context'
 import Paginator from './logGrid/paginator'
-import { BrokerProps, ItemType, MarketType, PositionOpenType, TickerType, TradeLogPageType } from 'types'
+import { ItemType, MarketType, PositionOpenType, TickerType, TradeLogPageType } from 'types'
 import CircularProgress from '@mui/material/CircularProgress'
 import Open from './logGrid/open'
 
@@ -87,7 +87,7 @@ export default () => {
     if (!all)
         return <CircularProgress size={20}/>
     const { currentBroker, markets, tickers, logPage, open } = all
-    if (!logPage || !currentBroker || !markets || !tickers)
+    if (!logPage || !currentBroker || !markets || !tickers )
         return <CircularProgress size={20}/>
 
     return <WorkInt logPage={logPage} open={open} tickers={tickers} currentBroker={currentBroker} markets={markets}/>

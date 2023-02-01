@@ -191,7 +191,7 @@ public class CashService {
 			Currency accCurrency = account.getCurrency();
 			if (!accCurrency.getId().equals(baseCurrency.getId())) {
 				CurrencyRateDTO currencyRateDTO = currencyRateService.findByDate(accCurrency.getId(), LocalDate.now());
-				BigDecimal      convertedSum    =
+				BigDecimal convertedSum =
 						account.getAmount().divide(currencyRateDTO.getRate(), 12, RoundingMode.HALF_EVEN);
 				sum = sum.add(convertedSum);
 			} else {
@@ -233,5 +233,22 @@ public class CashService {
 		}
 
 		return capital.setScale(2, RoundingMode.HALF_EVEN);
+	}
+
+	public BigDecimal getDeposit(long brokerId, LocalDate date) throws JsonProcessingException {
+		Broker            broker    = brokerRepo.getReferenceById(brokerId);
+		CashAccountType   tradeType = accountTypeRepo.findCashAccountTypeByName("trade");
+		List<CashAccount> accounts  = accountRepo.findAllByBrokerAndType(broker, tradeType);
+		BigDecimal        deposit   = BigDecimal.ZERO;
+		for (CashAccount account : accounts) {
+			deposit = deposit.add(currencyRateService.convertToUSD(
+					account.getCurrency().getId(),
+					account.getAmount(),
+					date));
+		}
+
+		BigDecimal result = deposit.setScale(2, RoundingMode.HALF_EVEN);
+		logger.debug("Deposit for {} on {} = {}",broker.getName(), date, result);
+		return result;
 	}
 }

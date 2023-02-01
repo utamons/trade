@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@SuppressWarnings("unused")
 @RestController
 @RequestMapping("/api/broker")
 public class BrokerController {
