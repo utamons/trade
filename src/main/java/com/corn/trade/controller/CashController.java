@@ -29,12 +29,14 @@ public class CashController {
 		this.currencyRateService = currencyRateService;
 	}
 
-	@PostMapping(value="/refill", consumes=MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE )
+	@PostMapping(value = "/refill", consumes = MediaType.APPLICATION_JSON_VALUE, produces =
+			MediaType.APPLICATION_JSON_VALUE)
 	public CashAccountDTO refill(@RequestBody TransferDTO transferDTO) {
 		return service.refill(transferDTO);
 	}
 
-	@PostMapping(value="/exchange", consumes=MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping(value = "/exchange", consumes = MediaType.APPLICATION_JSON_VALUE, produces =
+			MediaType.APPLICATION_JSON_VALUE)
 	public CashAccountDTO exchange(@RequestBody ExchangeDTO exchangeDTO) {
 		return service.exchange(exchangeDTO);
 	}
@@ -59,5 +61,10 @@ public class CashController {
 		                               .setScale(2, RoundingMode.HALF_EVEN);
 
 		return new MoneyStateDTO(capital, profit);
+	}
+
+	@PostMapping(value = "/eval", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	public EvalOutDTO eval(@RequestBody EvalInDTO evalDTO) throws JsonProcessingException {
+		return service.eval(evalDTO);
 	}
 }
