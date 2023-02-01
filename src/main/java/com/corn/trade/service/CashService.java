@@ -28,18 +28,22 @@ public class CashService {
 	private final BrokerRepository          brokerRepo;
 	private final CurrencyRepository        currencyRepo;
 	private final CashAccountTypeRepository accountTypeRepo;
+	private final TickerRepository          tickerRepo;
+	private final CurrencyRateService       currencyRateService;
 
-	private final CurrencyRateService currencyRateService;
-
-	public CashService(CashAccountRepository accountRepo, CashFlowRepository cashFlowRepo,
+	public CashService(CashAccountRepository accountRepo,
+	                   CashFlowRepository cashFlowRepo,
 	                   BrokerRepository brokerRepo,
 	                   CurrencyRepository currencyRepo,
-	                   CashAccountTypeRepository accountTypeRepo, CurrencyRateService currencyRateService) {
+	                   CashAccountTypeRepository accountTypeRepo,
+	                   TickerRepository tickerRepo,
+	                   CurrencyRateService currencyRateService) {
 		this.accountRepo = accountRepo;
 		this.cashFlowRepo = cashFlowRepo;
 		this.brokerRepo = brokerRepo;
 		this.currencyRepo = currencyRepo;
 		this.accountTypeRepo = accountTypeRepo;
+		this.tickerRepo = tickerRepo;
 		this.currencyRateService = currencyRateService;
 	}
 
@@ -167,7 +171,6 @@ public class CashService {
 
 		if (closeAmount.compareTo(openAmount) < 0) {
 			BigDecimal loss = openAmount.subtract(closeAmount);
-			;
 			transfer(loss, tradeLog, broker, currency, tradeType, lossType);
 		}
 
@@ -248,7 +251,56 @@ public class CashService {
 		}
 
 		BigDecimal result = deposit.setScale(2, RoundingMode.HALF_EVEN);
-		logger.debug("Deposit for {} on {} = {}",broker.getName(), date, result);
+		logger.debug("Deposit for {} on {} = {}", broker.getName(), date, result);
 		return result;
+	}
+
+	public EvalOutDTO eval(EvalInDTO evalDTO) throws JsonProcessingException {
+		Broker     broker     = brokerRepo.getReferenceById(evalDTO.getBrokerId());
+		BigDecimal depositUSD = getDeposit(evalDTO.getBrokerId(), evalDTO.getDate());
+		Ticker     ticker     = tickerRepo.getReferenceById(evalDTO.getTickerId());
+		BigDecimal priceUSD =
+				currencyRateService.convertToUSD(
+						ticker.getCurrency().getId(),
+						evalDTO.getPriceOpen(),
+						evalDTO.getDate());
+		BigDecimal stopLossUSD =
+				currencyRateService.convertToUSD(
+						ticker.getCurrency().getId(),
+						evalDTO.getStopLoss(),
+						evalDTO.getDate());
+
+		BigDecimal fees = BigDecimal.ZERO;
+
+		BigDecimal items = BigDecimal.valueOf(evalDTO.getItems());
+
+		BigDecimal sum = items.multiply(priceUSD);
+
+		BigDecimal sumLoss = items.multiply(stopLossUSD);
+
+		if (broker.getName().equals("FreedomFN")) {
+			if (ticker.getCurrency().getName().equals("KZT")) {
+				fees = sum
+						.divide(BigDecimal.valueOf(100.00), 12, RoundingMode.HALF_EVEN)
+						.multiply(BigDecimal.valueOf(0.085));
+			} else {
+
+				BigDecimal fixed = items.compareTo(BigDecimal.valueOf(100)) < 0 ?
+						BigDecimal.valueOf(1.2) :
+						items.multiply(BigDecimal.valueOf(0.012));
+				fees = sum.divide(BigDecimal.valueOf(100.00), 12, RoundingMode.HALF_EVEN)
+				          .multiply(BigDecimal.valueOf(0.5))
+				          .add(fixed);
+			}
+		}
+
+		BigDecimal losses = sum.subtract(sumLoss);
+
+		BigDecimal risk = losses.divide(depositUSD,12,RoundingMode.HALF_EVEN).multiply(BigDecimal.valueOf(100.0));
+
+		fees = fees.setScale(2, RoundingMode.HALF_EVEN);
+		risk = risk.setScale(2, RoundingMode.HALF_EVEN);
+
+		return new EvalOutDTO(fees, risk);
 	}
 }
