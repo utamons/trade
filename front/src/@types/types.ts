@@ -116,6 +116,15 @@ type PageRequest = {
     pageNumber: number
 }
 
+type EvalRequest = {
+    brokerId: number,
+    tickerId: number,
+    priceOpen: number,
+    items: number,
+    stopLoss: number,
+    date: string
+}
+
 type TradeLog = {
     id: number,
     position: string,
@@ -212,5 +221,6 @@ export {
     TickerType,
     PageRequest,
     ExpandButtonProps,
-    PositionOpenType
+    PositionOpenType,
+    EvalRequest
 }

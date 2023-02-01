@@ -17,6 +17,7 @@ import TextField from '@mui/material/TextField'
 import { BrokerStatsType, ItemType, MarketType, PositionOpenType, TickerType } from 'types'
 import Select from '../select'
 import NumberInput from '../numberInput'
+import { postEval } from '../../api'
 
 const ContainerStyled = styled(Box)(() => ({
     display: 'flex',
@@ -74,6 +75,12 @@ const BasicDateTimePicker = ( { onChange }: DatePickerProps ) => {
     )
 }
 
+interface Eval {
+    fees: number,
+    risk: number
+}
+
+
 export default ({ onCancel, isOpen, currentBroker, markets, tickers, open, evaluate }: OpenDialogProps) => {
     const [marketId, setMarketId] = useState('' + markets[0].id)
     const [tickerId, setTickerId] = useState('' + tickers[0].id)
@@ -89,23 +96,34 @@ export default ({ onCancel, isOpen, currentBroker, markets, tickers, open, evalu
     const [stopLoss, setStopLoss] = useState(0)
     const [takeProfit, setTakeProfit] = useState(0)
     const [outcomeExp, setOutcomeExp] = useState(0)
-    const [risk, setRisk] = useState(0)
-    const [fees, setFees] = useState(0)
+    const [risk, setRisk] = useState<number|undefined>(undefined)
+    const [fees, setFees] = useState<number|undefined>(undefined)
     const [note, setNote] = useState('')
     const [date, setDate] = useState(new Date())
     const [depoUSD, setDepoUSD] = useState(0)
-
-
 
     const validate = (): boolean => {
         return false
     }
 
-    const handleOpen = useCallback(() => {
+    console.log('price', price)
+
+    const handleOpen = useCallback(async () => {
         if (validate())
             return
-        console.log('open')
-    }, [])
+        if (fees == undefined || risk == undefined) {
+            const ev: Eval = await postEval({
+                brokerId: currentBroker.id,
+                tickerId: Number(tickerId),
+                priceOpen: price,
+                items,
+                stopLoss,
+                date: date.toISOString()
+            })
+            setFees(ev.fees)
+            setRisk(ev.risk)
+        }
+    }, [tickerId, price, items, stopLoss, date])
 
     const handlePositionSelector = useCallback((event: SelectChangeEvent<unknown>) => {
         setPositionId(event.target.value as string)
@@ -140,6 +158,8 @@ export default ({ onCancel, isOpen, currentBroker, markets, tickers, open, evalu
     const dateChangeHandler = useCallback((newDate: Date) => {
         setDate(newDate)
     }, [])
+
+    const buttonName = fees == undefined || risk == undefined ? 'Evaluate' : 'Open'
 
     return <Dialog
         maxWidth={false}
@@ -246,7 +266,7 @@ export default ({ onCancel, isOpen, currentBroker, markets, tickers, open, evalu
 
         <DialogActions sx={{ justifyContent: 'center' }}>
             <ButtonContainerStyled>
-                <Button style={{ minWidth: remCalc(101) }} text="Open" onClick={handleOpen}/>
+                <Button style={{ minWidth: remCalc(101) }} text={buttonName} onClick={handleOpen}/>
                 <Button style={{ minWidth: remCalc(101) }} text="Cancel" onClick={onCancel}/>
             </ButtonContainerStyled>
         </DialogActions>
