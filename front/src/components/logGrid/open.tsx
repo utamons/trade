@@ -3,40 +3,30 @@
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import Dialog from '@mui/material/Dialog'
-import { currencySymbol, remCalc } from '../../utils/utils'
+import { remCalc } from '../../utils/utils'
 import Button from '../button'
 import React, { useCallback, useState } from 'react'
-import { ButtonContainerStyled, FieldBox, FieldName } from '../../styles/style'
+import { ButtonContainerStyled, FieldName } from '../../styles/style'
 import { SelectChangeEvent } from '@mui/material/Select'
-import { Box, styled } from '@mui/material'
+import { Box, Grid, styled } from '@mui/material'
 import dayjs, { Dayjs } from 'dayjs'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
 import TextField from '@mui/material/TextField'
-import { BrokerStatsType, ItemType, MarketType, PositionOpenType, TickerType } from 'types'
+import { ItemType, MarketType, PositionOpenType, TickerType } from 'types'
 import Select from '../select'
 import NumberInput from '../numberInput'
 import { postEval } from '../../api'
-
-const ContainerStyled = styled(Box)(() => ({
-    display: 'flex',
-    justifyContent: 'flex-start',
-    flexFlow: 'column wrap',
-    fontSize: remCalc(14),
-    fontFamily: 'sans',
-    width: remCalc(700),
-    height: remCalc(400)
-}))
+import Switch from '@mui/material/Switch'
+import { DesktopDateTimePicker } from '@mui/x-date-pickers'
 
 interface OpenDialogProps {
     currentBroker: ItemType,
     markets: MarketType [],
     tickers: TickerType [],
-    evaluate: boolean,
     isOpen: boolean,
     open: (open: PositionOpenType) => void,
-    onCancel: () => void
+    onClose: () => void
 }
 
 const positions = [
@@ -51,11 +41,56 @@ export const FieldValue = styled(Box)(() => ({
     width: remCalc(200)
 }))
 
+const FieldBox = styled(Box)(() => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: remCalc(300),
+    height: remCalc(50)
+}))
+
+const SwitchBox = styled(Box)(() => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: remCalc(150),
+    height: remCalc(50)
+}))
+
+const NoteBox = styled(Box)(() => ({
+    width: '100%',
+    marginTop: remCalc(10)
+}))
+
+const RedSwitch = styled(Switch)(() => ({
+    '& .MuiSwitch-switchBase.Mui-checked': {
+        color: '#cc3300',
+        '&:hover': {
+            backgroundColor: 'rgba(204, 51, 0, 0.2)'
+        }
+    },
+    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+        backgroundColor: '#cc3300'
+    }
+}))
+
 interface DatePickerProps {
     onChange: (date: Date) => void
 }
 
-const BasicDateTimePicker = ( { onChange }: DatePickerProps ) => {
+export const TextFieldStyled = styled(TextField)(() => ({
+    '.MuiOutlinedInput-root': {
+        borderRadius: remCalc(2),
+        fontSize: remCalc(14),
+        maxHeight: remCalc(38),
+        maxWidth: remCalc(170)
+    },
+    '.MuiSvgIcon-root ': {
+        fontSize: remCalc(18)
+    }
+}))
+
+const BasicDateTimePicker = ({ onChange }: DatePickerProps) => {
     const [value, setValue] = React.useState<Dayjs | null>(dayjs(new Date()))
 
     const handleChange = useCallback((value) => {
@@ -65,8 +100,8 @@ const BasicDateTimePicker = ( { onChange }: DatePickerProps ) => {
 
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DateTimePicker
-                renderInput={(props) => <TextField {...props} />}
+            <DesktopDateTimePicker
+                renderInput={(props) => <TextFieldStyled {...props} />}
                 value={value}
                 inputFormat="YYYY-MM-DD HH:MM"
                 onChange={handleChange}
@@ -80,38 +115,38 @@ interface Eval {
     risk: number
 }
 
-
-export default ({ onCancel, isOpen, currentBroker, markets, tickers, open, evaluate }: OpenDialogProps) => {
+export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: OpenDialogProps) => {
     const [marketId, setMarketId] = useState('' + markets[0].id)
     const [tickerId, setTickerId] = useState('' + tickers[0].id)
-    const [currentTicker, setCurrentTicker] = useState<TickerType|undefined>(tickers[0])
+    const [currentTicker, setCurrentTicker] = useState<TickerType | undefined>(tickers[0])
     const [positionId, setPositionId] = useState('' + positions[0].id)
     const [priceError, setPriceError] = useState(false)
     const [itemsError, setItemsError] = useState(false)
     const [stopLossError, setStopLossError] = useState(false)
     const [takeProfitError, setTakeProfitError] = useState(false)
     const [outcomeExpError, setOutcomeExpError] = useState(false)
-    const [price, setPrice] = useState(0)
-    const [items, setItems] = useState(0)
-    const [stopLoss, setStopLoss] = useState(0)
-    const [takeProfit, setTakeProfit] = useState(0)
-    const [outcomeExp, setOutcomeExp] = useState(0)
-    const [risk, setRisk] = useState<number|undefined>(undefined)
-    const [fees, setFees] = useState<number|undefined>(undefined)
+    const [price, setPrice] = useState<number | undefined>(undefined)
+    const [items, setItems] = useState<number | undefined>(undefined)
+    const [stopLoss, setStopLoss] = useState<number | undefined>(undefined)
+    const [takeProfit, setTakeProfit] = useState<number | undefined>(undefined)
+    const [outcomeExp, setOutcomeExp] = useState<number | undefined>(undefined)
+    const [risk, setRisk] = useState<number | undefined>(undefined)
+    const [fees, setFees] = useState<number | undefined>(undefined)
     const [note, setNote] = useState('')
     const [date, setDate] = useState(new Date())
-    const [depoUSD, setDepoUSD] = useState(0)
+    const [evaluate, setEvaluate] = useState(true)
 
     const validate = (): boolean => {
-        return false
-    }
+        if (priceError || itemsError || stopLossError || takeProfitError || outcomeExpError)
+            return true
+        return price == undefined || items == undefined || stopLoss == undefined
 
-    console.log('price', price)
+    }
 
     const handleOpen = useCallback(async () => {
         if (validate())
             return
-        if (fees == undefined || risk == undefined) {
+        if (evaluate && price && items && stopLoss) {
             const ev: Eval = await postEval({
                 brokerId: currentBroker.id,
                 tickerId: Number(tickerId),
@@ -123,7 +158,27 @@ export default ({ onCancel, isOpen, currentBroker, markets, tickers, open, evalu
             setFees(ev.fees)
             setRisk(ev.risk)
         }
-    }, [tickerId, price, items, stopLoss, date])
+        console.log('1')
+        if (price && items && stopLoss && risk && fees) {
+            console.log('2')
+            open({
+                position: positionId == '0'? 'long' : 'short',
+                dateOpen: date.toISOString(),
+                brokerId: currentBroker.id,
+                marketId: Number(marketId),
+                tickerId: Number(tickerId),
+                itemNumber: items,
+                priceOpen: price,
+                stopLoss: stopLoss,
+                takeProfit: takeProfit,
+                outcomeExpected: outcomeExp,
+                risk: risk,
+                fees: fees,
+                note: note
+            })
+            onClose()
+        }
+    }, [positionId, marketId, tickerId, price, items, stopLoss, date, risk, fees, note, takeProfit, outcomeExp])
 
     const handlePositionSelector = useCallback((event: SelectChangeEvent<unknown>) => {
         setPositionId(event.target.value as string)
@@ -141,16 +196,6 @@ export default ({ onCancel, isOpen, currentBroker, markets, tickers, open, evalu
 
     }, [])
 
-
-    const getFees = () => {
-
-        return 1
-    }
-
-    const getRisk = () => {
-        return 1
-    }
-
     const noteChangeHandler = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         setNote(event.target.value)
     }, [])
@@ -159,115 +204,202 @@ export default ({ onCancel, isOpen, currentBroker, markets, tickers, open, evalu
         setDate(newDate)
     }, [])
 
-    const buttonName = fees == undefined || risk == undefined ? 'Evaluate' : 'Open'
+    const handleSwitch = useCallback((event: React.SyntheticEvent, checked: boolean) => {
+        setEvaluate(!checked)
+    }, [])
+
+    const priceChangeHandler = useCallback((newPrice: number) => {
+        setPrice(newPrice)
+    }, [])
+
+    const priceErrorHandler = useCallback((error: boolean) => {
+        setPriceError(error)
+    }, [])
+
+    const itemsChangeHandler = useCallback((newItems: number) => {
+        setItems(newItems)
+    }, [])
+
+    const itemsErrorHandler = useCallback((error: boolean) => {
+        setItemsError(error)
+    }, [])
+
+    const stopLossChangeHandler = useCallback((newStopLoss: number) => {
+        setStopLoss(newStopLoss)
+    }, [])
+
+    const stopLossErrorHandler = useCallback((error: boolean) => {
+        setStopLossError(error)
+    }, [])
+
+    const takeProfitChangeHandler = useCallback((newTakeProfit: number) => {
+        setTakeProfit(newTakeProfit)
+    }, [])
+
+    const takeProfitErrorHandler = useCallback((error: boolean) => {
+        setTakeProfitError(error)
+    }, [])
+
+    const outcomeExpChangeHandler = useCallback((newOutcomeExp: number) => {
+        setOutcomeExp(newOutcomeExp)
+    }, [])
+
+    const outcomeExpErrorHandler = useCallback((error: boolean) => {
+        setOutcomeExpError(error)
+    }, [])
 
     return <Dialog
         maxWidth={false}
         open={isOpen}
     >
-        <DialogContent>
-            <ContainerStyled>
-                <FieldBox>
-                    <FieldName>Date:</FieldName>
-                    <FieldValue>
-                        <BasicDateTimePicker onChange={dateChangeHandler} />
-                    </FieldValue>
-                </FieldBox>
-                <FieldBox>
-                    <FieldName>Position:</FieldName>
-                    <FieldValue>
-                        <Select
-                            items={positions}
-                            value={positionId}
-                            onChange={handlePositionSelector}
-                            variant="medium"/>
-                    </FieldValue>
-                </FieldBox>
-                <FieldBox>
-                    <FieldName>Broker:</FieldName>
-                    <FieldValue>{currentBroker.name}</FieldValue>
-                </FieldBox>
-                <FieldBox>
-                    <FieldName>Market:</FieldName>
-                    <FieldValue>
-                        <Select
-                            items={markets}
-                            value={marketId}
-                            onChange={handleMarketSelector}
-                            variant="medium"
+        <DialogContent sx={{ fontSize: remCalc(12), fontFamily: 'sans' }}>
+            <Grid sx={{ width: remCalc(700) }} container columns={2}>
+                <Grid item xs={2}>
+                    <SwitchBox>
+                        <FieldName>Open:</FieldName>
+                        <RedSwitch
+                            size="small"
+                            checked={!evaluate}
+                            onChange={handleSwitch}
                         />
-                    </FieldValue>
-                </FieldBox>
-                <FieldBox>
-                    <FieldName>Ticker:</FieldName>
-                    <FieldValue>
-                        <Select
-                            items={tickers}
-                            value={tickerId}
-                            onChange={handleTickerSelector}
-                            variant="medium"
-                        />
-                    </FieldValue>
-                </FieldBox>
-                <FieldBox>
-                    <FieldName>Price: {`(${currentTicker?(currentTicker.currency.name):'???'})`}</FieldName>
-                    <FieldValue>
-                        <NumberInput onChange={setPrice} onError={setPriceError}/>
-                    </FieldValue>
-                </FieldBox>
-                <FieldBox>
-                    <FieldName>Items:</FieldName>
-                    <FieldValue>
-                        <NumberInput onChange={setItems} onError={setItemsError}/>
-                    </FieldValue>
-                </FieldBox>
-                <FieldBox>
-                    <FieldName>Stop Loss:</FieldName>
-                    <FieldValue>
-                        <NumberInput onChange={setStopLoss} onError={setStopLossError}/>
-                    </FieldValue>
-                </FieldBox>
-                <FieldBox>
-                    <FieldName>Take Profit:</FieldName>
-                    <FieldValue>
-                        <NumberInput onChange={setTakeProfit} onError={setTakeProfitError}/>
-                    </FieldValue>
-                </FieldBox>
-                <FieldBox>
-                    <FieldName>Out. Exp.:</FieldName>
-                    <FieldValue>
-                        <NumberInput onChange={setOutcomeExp} onError={setOutcomeExpError}/>
-                    </FieldValue>
-                </FieldBox>
-                <FieldBox>
-                    <FieldName>Fees:</FieldName>
-                    <FieldValue>
-                        {fees}
-                    </FieldValue>
-                </FieldBox>
-                <FieldBox>
-                    <FieldName>Risk:</FieldName>
-                    <FieldValue>
-                        {risk}
-                    </FieldValue>
-                </FieldBox>
-                <FieldBox>
-                    <FieldName>Note:</FieldName>
-                    <FieldValue>
+                    </SwitchBox>
+                </Grid>
+                <Grid item xs={1}>
+                    <Grid container columns={1}>
+                        <Grid item xs={1}>
+                            <FieldBox>
+                                <FieldName>Date:</FieldName>
+                                <FieldValue>
+                                    <BasicDateTimePicker onChange={dateChangeHandler}/>
+                                </FieldValue>
+                            </FieldBox>
+                        </Grid>
+                        <Grid item xs={1}>
+                            <FieldBox>
+                                <FieldName>Position:</FieldName>
+                                <FieldValue>
+                                    <Select
+                                        items={positions}
+                                        value={positionId}
+                                        onChange={handlePositionSelector}
+                                        variant="medium"/>
+                                </FieldValue>
+                            </FieldBox>
+                        </Grid>
+                        <Grid item xs={1}>
+                            <FieldBox>
+                                <FieldName>Broker:</FieldName>
+                                <FieldValue>{currentBroker.name}</FieldValue>
+                            </FieldBox>
+                        </Grid>
+                        <Grid item xs={1}>
+                            <FieldBox>
+                                <FieldName>Market:</FieldName>
+                                <FieldValue>
+                                    <Select
+                                        items={markets}
+                                        value={marketId}
+                                        onChange={handleMarketSelector}
+                                        variant="small"
+                                    />
+                                </FieldValue>
+                            </FieldBox>
+                        </Grid>
+                        <Grid item xs={1}>
+                            <FieldBox>
+                                <FieldName>Ticker:</FieldName>
+                                <FieldValue>
+                                    <Select
+                                        items={tickers}
+                                        value={tickerId}
+                                        onChange={handleTickerSelector}
+                                        variant="small"
+                                    />
+                                </FieldValue>
+                            </FieldBox>
+                        </Grid>
+                        <Grid item xs={1}>
+                            <FieldBox>
+                                <FieldName>
+                                    Price: {`(${currentTicker ? (currentTicker.currency.name) : '???'})`}
+                                </FieldName>
+                                <FieldValue>
+                                    <NumberInput onChange={priceChangeHandler} onError={priceErrorHandler}/>
+                                </FieldValue>
+                            </FieldBox>
+                        </Grid>
+                    </Grid>
+                </Grid>
+                <Grid item xs={1}>
+                    <Grid container columns={1}>
+                        <Grid item xs={1}>
+                            <FieldBox>
+                                <FieldName>Items:</FieldName>
+                                <FieldValue>
+                                    <NumberInput onChange={itemsChangeHandler} onError={itemsErrorHandler}/>
+                                </FieldValue>
+                            </FieldBox>
+                        </Grid>
+                        <Grid item xs={1}>
+                            <FieldBox>
+                                <FieldName>Stop Loss:</FieldName>
+                                <FieldValue>
+                                    <NumberInput onChange={stopLossChangeHandler} onError={stopLossErrorHandler}/>
+                                </FieldValue>
+                            </FieldBox>
+                        </Grid>
+                        <Grid item xs={1}>
+                            <FieldBox>
+                                <FieldName>Take Profit:</FieldName>
+                                <FieldValue>
+                                    <NumberInput onChange={takeProfitChangeHandler} onError={takeProfitErrorHandler}/>
+                                </FieldValue>
+                            </FieldBox>
+                        </Grid>
+                        <Grid item xs={1}>
+                            <FieldBox>
+                                <FieldName>Out. Exp.:</FieldName>
+                                <FieldValue>
+                                    <NumberInput onChange={outcomeExpChangeHandler} onError={outcomeExpErrorHandler}/>
+                                </FieldValue>
+                            </FieldBox>
+                        </Grid>
+                        <Grid item xs={1}>
+                            <FieldBox>
+                                <FieldName>Fees:</FieldName>
+                                <FieldValue>
+                                    {fees}
+                                </FieldValue>
+                            </FieldBox>
+                        </Grid>
+                        <Grid item xs={1}>
+                            <FieldBox>
+                                <FieldName>Risk:</FieldName>
+                                <FieldValue>
+                                    {risk}
+                                </FieldValue>
+                            </FieldBox>
+                        </Grid>
+                    </Grid>
+                </Grid>
+                <Grid item xs={2}>
+                    <NoteBox>
                         <TextField
                             id="outlined-textarea"
+                            label="Note"
                             multiline
+                            style={{ width: '100%', fontSize: remCalc(14) }}
                             onChange={noteChangeHandler}
                         />
-                    </FieldValue>
-                </FieldBox>
-            </ContainerStyled>
+                    </NoteBox>
+                </Grid>
+            </Grid>
         </DialogContent>
 
         <DialogActions sx={{ justifyContent: 'center' }}>
             <ButtonContainerStyled>
-                <Button style={{ minWidth: remCalc(101) }} text={buttonName} onClick={handleOpen}/>
-                <Button style={{ minWidth: remCalc(101) }} text="Cancel" onClick={onCancel}/>
+                <Button style={{ minWidth: remCalc(101) }} text={ evaluate ? 'Evaluate' : 'Open'} onClick={handleOpen}/>
+                <Button style={{ minWidth: remCalc(101) }} text="Cancel" onClick={onClose}/>
             </ButtonContainerStyled>
         </DialogActions>
     </Dialog>

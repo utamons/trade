@@ -97,6 +97,7 @@ type ExchangeDialogProps = {
 }
 
 type SelectorProps = {
+    label?: string,
     items: ItemType[],
     value: string,
     onChange: (event: SelectChangeEvent<unknown>) => void,
