@@ -39,30 +39,21 @@ interface WorkIntProps {
 
 const WorkInt = (props: WorkIntProps) => {
     const [isOpen, setOpen] = useState(false)
-    const [evaluate, setEvaluate] = useState(false)
 
     const { currentBroker, tickers, markets, open } = props
 
     const handleOpen = useCallback(() => {
-        setEvaluate(false)
         setOpen(true)
     }, [])
 
-    const handleCancel = useCallback(() => {
-        setEvaluate(false)
+    const handleCloseOpenDialog = useCallback(() => {
         setOpen(false)
-    }, [])
-
-    const handleEvaluate = useCallback(() => {
-        setEvaluate(true)
-        setOpen(true)
     }, [])
 
     return <ContainerStyled>
         <RowStyled>
             <ButtonContainerStyled>
                 <Button style={{ minWidth: remCalc(101) }} text="Open" onClick={handleOpen}/>
-                <Button style={{ minWidth: remCalc(101) }} text="Evaluate" onClick={handleEvaluate}/>
             </ButtonContainerStyled>
         </RowStyled>
         <RowStyled>
@@ -73,12 +64,11 @@ const WorkInt = (props: WorkIntProps) => {
         </RowStyled>
         <Open
             isOpen={isOpen}
-            evaluate={evaluate}
             open={open}
             tickers={tickers}
             markets={markets}
             currentBroker={currentBroker}
-            onCancel={handleCancel}/>
+            onClose={handleCloseOpenDialog}/>
     </ContainerStyled>
 }
 
