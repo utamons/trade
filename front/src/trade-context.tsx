@@ -161,6 +161,7 @@ const useTrade = (): TradeContextType => {
             () => {
                 setMoneyStateKey('' + Date.now())
                 setBrokerStatsKey('' + Date.now())
+                setPageLogKey('' + Date.now())
             }
         )
     }

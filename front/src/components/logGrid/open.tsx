@@ -93,9 +93,11 @@ export const TextFieldStyled = styled(TextField)(() => ({
 const BasicDateTimePicker = ({ onChange }: DatePickerProps) => {
     const [value, setValue] = React.useState<Dayjs | null>(dayjs(new Date()))
 
-    const handleChange = useCallback((value) => {
-        setValue(value)
-        onChange(value.Date)
+    const handleChange = useCallback((value: Dayjs| null) => {
+        if (value) {
+            setValue(value)
+            onChange(value.toDate())
+        }
     }, [])
 
     return (
@@ -144,9 +146,12 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     }
 
     const handleOpen = useCallback(async () => {
-        if (validate())
+        if (validate()) {
+            console.error('validation failed')
             return
+        }
         if (evaluate && price && items && stopLoss) {
+            console.log('evaluation')
             const ev: Eval = await postEval({
                 brokerId: currentBroker.id,
                 tickerId: Number(tickerId),
@@ -157,10 +162,9 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
             })
             setFees(ev.fees)
             setRisk(ev.risk)
+            return
         }
-        console.log('1')
         if (price && items && stopLoss && risk && fees) {
-            console.log('2')
             open({
                 position: positionId == '0'? 'long' : 'short',
                 dateOpen: date.toISOString(),
@@ -178,7 +182,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
             })
             onClose()
         }
-    }, [positionId, marketId, tickerId, price, items, stopLoss, date, risk, fees, note, takeProfit, outcomeExp])
+    }, [evaluate, positionId, marketId, tickerId, price, items, stopLoss, date, risk, fees, note, takeProfit, outcomeExp])
 
     const handlePositionSelector = useCallback((event: SelectChangeEvent<unknown>) => {
         setPositionId(event.target.value as string)
@@ -201,6 +205,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     }, [])
 
     const dateChangeHandler = useCallback((newDate: Date) => {
+        console.log('New date:', newDate)
         setDate(newDate)
     }, [])
 
