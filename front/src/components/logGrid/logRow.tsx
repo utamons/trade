@@ -1,5 +1,5 @@
 import { Box, Grid, IconButton, styled } from '@mui/material'
-import { dateTimeWithOffset, money, remCalc } from '../../utils/utils'
+import { utc2market, money, remCalc } from '../../utils/utils'
 import CloseIcon from '@mui/icons-material/Close'
 import { TradeLog } from 'types'
 import React, { useCallback, useState } from 'react'
@@ -84,11 +84,11 @@ const Expanded = ({ logItem, expandHandler }: ExpandableProps) => {
                 </FieldBox>
                 <FieldBox>
                     <FieldName>Open on:</FieldName>
-                    <FieldValue>{dateTimeWithOffset(dateOpen, tz)}</FieldValue>
+                    <FieldValue>{utc2market(dateOpen, tz)}</FieldValue>
                 </FieldBox>
                 <FieldBox>
                     <FieldName>Closed on:</FieldName>
-                    <FieldValue>{dateClose ? dateTimeWithOffset(dateClose, tz) : '-'}</FieldValue>
+                    <FieldValue>{dateClose ? utc2market(dateClose, tz) : '-'}</FieldValue>
                 </FieldBox>
                 <FieldBox>
                     <FieldName>Price open:</FieldName>
@@ -171,8 +171,8 @@ const Collapsed = ({ logItem, expandHandler }: ExpandableProps) => {
         <Item item xs={3}>{market.name}</Item>
         <Item item xs={3}>{ticker.name}</Item>
         <Item item xs={2}>{position}</Item>
-        <Item item xs={6}>{dateTimeWithOffset(dateOpen, tz)}</Item>
-        <Item item xs={6}>{dateClose ? dateTimeWithOffset(dateClose, tz) : '-'}</Item>
+        <Item item xs={6}>{utc2market(dateOpen, tz)}</Item>
+        <Item item xs={6}>{dateClose ? utc2market(dateClose, tz) : '-'}</Item>
         <Item item xs={4}>{money(currency.name, priceOpen)}</Item>
         <Item item xs={4}>{priceClose ? money(currency.name, priceClose) : '-'}</Item>
         <Item item xs={3}>{itemNumber}</Item>

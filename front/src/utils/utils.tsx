@@ -5,12 +5,25 @@ export const Loadable = ({ children, isLoading }: { children?: JSX.Element, isLo
     isLoading ? < CircularProgress size={20}/> : <>{children}</>
 )
 
-export const dateTimeWithOffset = (dateStr: string, offset: number) => {
-    const date = new Date(dateStr)
+const leadingZero = (m: number) => {
+    return m <= 9 ? '0' + m : m
+}
 
-    const utc = date.getTime() + (date.getTimezoneOffset() * 60000)
+const formatDate = (date: Date) => {
+    const d = date.getDate()
+    const m = date.getMonth() + 1
+    const y = date.getFullYear()
+    const h = date.getHours()
+    const mm = date.getMinutes()
+    return '' + y + '-' + leadingZero(m) + '-' + leadingZero(d) + ' ' + leadingZero(h) + ':' + leadingZero(mm);
+}
+
+export const utc2market = (utcStr: string, offset: number) => {
+    if (!utcStr)
+        return '-'
+    const utc = new Date(utcStr).getTime()
     const newDate = new Date(utc + (3600000 * offset))
-    return newDate.toISOString().substring(0, 16).replace('T', ' ')
+    return formatDate(newDate)
 }
 
 export const currencySymbol = (currencyName: string): string => {
@@ -28,7 +41,7 @@ export const currencySymbol = (currencyName: string): string => {
     }
 }
 
-export const money = (currencyName: string, amount: number| undefined): string => {
+export const money = (currencyName: string, amount: number | undefined): string => {
     if (amount == undefined)
         return '-'
     const str = amount.toLocaleString('en-US', {

@@ -103,9 +103,7 @@ const postOpen = async (body: PositionOpenType) => {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify(body)
-    }).then((res) => {
-        return res.json()
-    })
+    }).then()
 }
 
 const postEval = async (body: EvalRequest) => {
