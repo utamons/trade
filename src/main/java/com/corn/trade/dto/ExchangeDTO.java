@@ -1,16 +1,14 @@
 package com.corn.trade.dto;
 
-import java.math.BigDecimal;
-
 @SuppressWarnings("unused")
 public class ExchangeDTO {
 	private final Long       brokerId;
 	private final Long       currencyFromId;
 	private final Long       currencyToId;
-	private final BigDecimal amountFrom;
-	private final BigDecimal amountTo;
+	private final Double amountFrom;
+	private final Double amountTo;
 
-	public ExchangeDTO(Long brokerId, Long currencyFromId, Long currencyToId, BigDecimal amountFrom, BigDecimal amountTo) {
+	public ExchangeDTO(Long brokerId, Long currencyFromId, Long currencyToId, Double amountFrom, Double amountTo) {
 		this.brokerId = brokerId;
 		this.currencyFromId = currencyFromId;
 		this.currencyToId = currencyToId;
@@ -30,11 +28,11 @@ public class ExchangeDTO {
 		return currencyToId;
 	}
 
-	public BigDecimal getAmountFrom() {
+	public Double getAmountFrom() {
 		return amountFrom;
 	}
 
-	public BigDecimal getAmountTo() {
+	public Double getAmountTo() {
 		return amountTo;
 	}
 }

@@ -6,9 +6,9 @@ import { ButtonContainerStyled } from '../styles/style'
 import LogGrid from './logGrid/logGrid'
 import { TradeContext } from '../trade-context'
 import Paginator from './logGrid/paginator'
-import { ItemType, MarketType, PositionOpenType, TickerType, TradeLogPageType } from 'types'
+import { ItemType, MarketType, PositionCloseType, PositionOpenType, TickerType, TradeLogPageType } from 'types'
 import CircularProgress from '@mui/material/CircularProgress'
-import Open from './logGrid/open'
+import Open from './logGrid/openDialog'
 
 const ContainerStyled = styled(Box)(({ theme }) => ({
     alignItems: 'top',
@@ -35,12 +35,13 @@ interface WorkIntProps {
     markets: MarketType [],
     tickers: TickerType [],
     open: (open: PositionOpenType) => void
+    close: (close: PositionCloseType) => void
 }
 
 const WorkInt = (props: WorkIntProps) => {
     const [isOpen, setOpen] = useState(false)
 
-    const { currentBroker, tickers, markets, open } = props
+    const { logPage, currentBroker, tickers, markets, open, close } = props
 
     const handleOpen = useCallback(() => {
         setOpen(true)
@@ -57,7 +58,7 @@ const WorkInt = (props: WorkIntProps) => {
             </ButtonContainerStyled>
         </RowStyled>
         <RowStyled>
-            <LogGrid {...props.logPage}/>
+            <LogGrid {...{ logPage, close }}/>
         </RowStyled>
         <RowStyled>
             <Paginator/>
@@ -76,9 +77,15 @@ export default () => {
     const { all } = useContext(TradeContext)
     if (!all)
         return <CircularProgress size={20}/>
-    const { currentBroker, markets, tickers, logPage, open } = all
-    if (!logPage || !currentBroker || !markets || !tickers )
+    const { currentBroker, markets, tickers, logPage, open, close } = all
+    if (!logPage || !currentBroker || !markets || !tickers)
         return <CircularProgress size={20}/>
 
-    return <WorkInt logPage={logPage} open={open} tickers={tickers} currentBroker={currentBroker} markets={markets}/>
+    return <WorkInt
+        logPage={logPage}
+        open={open}
+        close={close}
+        tickers={tickers}
+        currentBroker={currentBroker}
+        markets={markets}/>
 }

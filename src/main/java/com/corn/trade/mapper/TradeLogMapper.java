@@ -2,10 +2,10 @@ package com.corn.trade.mapper;
 
 import com.corn.trade.dto.TradeLogDTO;
 import com.corn.trade.dto.TradeLogOpenDTO;
-import com.corn.trade.entity.*;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
+import com.corn.trade.entity.Broker;
+import com.corn.trade.entity.Market;
+import com.corn.trade.entity.Ticker;
+import com.corn.trade.entity.TradeLog;
 
 public class TradeLogMapper {
 
@@ -13,7 +13,7 @@ public class TradeLogMapper {
 	                                Broker broker,
 	                                Market market,
 	                                Ticker ticker,
-	                                BigDecimal depositAmount) {
+	                                Double depositAmount) {
 		TradeLog e = new TradeLog();
 		e.setPosition(open.getPosition());
 		e.setDateOpen(open.getDateOpen());
@@ -24,9 +24,8 @@ public class TradeLogMapper {
 		e.setItemNumber(open.getItemNumber());
 		e.setPriceOpen(open.getPriceOpen());
 
-		BigDecimal volume = open.getPriceOpen().multiply(BigDecimal.valueOf(open.getItemNumber()));
-		BigDecimal volumeToDeposit = volume.divide(depositAmount, 12, RoundingMode.HALF_EVEN)
-		                                   .multiply(BigDecimal.valueOf(100.00));
+		Double volume = open.getPriceOpen()*open.getItemNumber();
+		Double volumeToDeposit = volume/depositAmount*100.0;
 
 		e.setVolume(volume);
 		e.setVolumeToDeposit(volumeToDeposit);
@@ -34,7 +33,7 @@ public class TradeLogMapper {
 		e.setTakeProfit(open.getTakeProfit());
 		e.setOutcomeExpected(open.getOutcomeExpected());
 		e.setRisk(open.getRisk());
-		e.setFees(open.getFees() == null ? BigDecimal.ZERO : open.getFees());
+		e.setFees(open.getFees() == null ? 0.0 : open.getFees());
 		e.setNote(open.getNote());
 		e.setGoal(open.getGoal());
 

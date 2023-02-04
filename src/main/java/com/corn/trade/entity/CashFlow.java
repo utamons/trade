@@ -1,7 +1,6 @@
 package com.corn.trade.entity;
 
 import javax.persistence.*;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @SuppressWarnings("unused")
@@ -15,9 +14,9 @@ public class CashFlow {
 	public CashFlow(CashAccount accountFrom,
 	                CashAccount accountTo,
 					TradeLog tradeLog,
-	                BigDecimal sumFrom,
-	                BigDecimal sumTo,
-	                BigDecimal exchangeRate) {
+	                Double sumFrom,
+	                Double sumTo,
+	                Double exchangeRate) {
 		this.accountFrom = accountFrom;
 		this.accountTo = accountTo;
 		this.tradeLog = tradeLog;
@@ -42,13 +41,13 @@ public class CashFlow {
 	private TradeLog tradeLog;
 
 	@Column(name = "sum_from", nullable = false)
-	private BigDecimal sumFrom;
+	private Double sumFrom;
 
 	@Column(name = "sum_to", nullable = false)
-	private BigDecimal sumTo;
+	private Double sumTo;
 
 	@Column(name = "exchange_rate")
-	private BigDecimal exchangeRate;
+	private Double exchangeRate;
 
 	@Column(name = "committed_at", nullable = false)
 	private LocalDateTime committedAt;
@@ -61,27 +60,27 @@ public class CashFlow {
 		return id;
 	}
 
-	public void setSumFrom(BigDecimal sumFrom) {
+	public void setSumFrom(Double sumFrom) {
 		this.sumFrom = sumFrom;
 	}
 
-	public BigDecimal getSumFrom() {
+	public Double getSumFrom() {
 		return sumFrom;
 	}
 
-	public void setSumTo(BigDecimal sumTo) {
+	public void setSumTo(Double sumTo) {
 		this.sumTo = sumTo;
 	}
 
-	public BigDecimal getSumTo() {
+	public Double getSumTo() {
 		return sumTo;
 	}
 
-	public void setExchangeRate(BigDecimal exchangeRate) {
+	public void setExchangeRate(Double exchangeRate) {
 		this.exchangeRate = exchangeRate;
 	}
 
-	public BigDecimal getExchangeRate() {
+	public Double getExchangeRate() {
 		return exchangeRate;
 	}
 

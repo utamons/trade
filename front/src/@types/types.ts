@@ -52,6 +52,7 @@ type TradeContextType = {
     isLoading: boolean,
     currentBroker: ItemType | undefined,
     open: (open: PositionOpenType) => void,
+    close: (close: PositionCloseType) => void,
     page: (page: number) => void,
     setCurrentBrokerId: (id: number) => void,
     refill: (currencyId: number, amount: number) => void,
@@ -187,6 +188,9 @@ interface ExpandButtonProps {
     expanded: boolean,
     onClick: (expanded: boolean) => void
 }
+interface CloseButtonProps {
+    onClick: () => void
+}
 
 type PositionOpenType = {
     position: 'short' | 'long'
@@ -201,6 +205,13 @@ type PositionOpenType = {
     outcomeExpected: number | undefined,
     risk: number,
     fees: number,
+    note: string | undefined
+}
+
+type PositionCloseType = {
+    id: number,
+    dateClose: string,
+    priceClose: number,
     note: string | undefined
 }
 
@@ -223,5 +234,7 @@ export {
     PageRequest,
     ExpandButtonProps,
     PositionOpenType,
-    EvalRequest
+    EvalRequest,
+    PositionCloseType,
+    CloseButtonProps
 }

@@ -12,8 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -59,12 +57,12 @@ public class CurrencyRateService {
 
 	}
 
-	public BigDecimal convertToUSD(Long currencyId, BigDecimal amount, LocalDate dateTime) throws JsonProcessingException {
+	public Double convertToUSD(long currencyId, Double amount, LocalDate dateTime) throws JsonProcessingException {
 		Currency usd = currencyRepository.findCurrencyByName("USD");
-		if (usd.getId().equals(currencyId))
+		if (usd.getId() == currencyId)
 			return amount;
 		CurrencyRateDTO currencyRateDTO = findByDate(currencyId, dateTime);
-		return amount.divide(currencyRateDTO.getRate(), 12, RoundingMode.HALF_EVEN);
+		return amount / currencyRateDTO.getRate();
 	}
 
 	private CurrencyRateDTO getExternalRate(Long currencyId, LocalDate date) throws JsonProcessingException {

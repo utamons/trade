@@ -8,10 +8,12 @@ import {
     fetchMoneyState,
     fetchTickers,
     postExchange,
-    postLogPage, postOpen,
+    postLogPage,
+    postOpen,
+    postClose,
     postRefill
 } from './api'
-import { BrokerStatsType, ItemType, PositionOpenType, TradeContextType, TradeLogPageType } from 'types'
+import { BrokerStatsType, ItemType, PositionCloseType, PositionOpenType, TradeContextType, TradeLogPageType } from 'types'
 
 const onetimeQueryOptions = () => {
     return {
@@ -166,6 +168,16 @@ const useTrade = (): TradeContextType => {
         )
     }
 
+    const close = (close: PositionCloseType) => {
+        postClose(close).then(
+            () => {
+                setMoneyStateKey('' + Date.now())
+                setBrokerStatsKey('' + Date.now())
+                setPageLogKey('' + Date.now())
+            }
+        )
+    }
+
     return {
         brokers,
         currencies,
@@ -175,6 +187,7 @@ const useTrade = (): TradeContextType => {
         moneyState,
         logPage,
         open,
+        close,
         page,
         refill,
         exchange,

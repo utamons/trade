@@ -1,7 +1,7 @@
 import { Box, Grid, IconButton, styled } from '@mui/material'
 import { utc2market, money, remCalc } from '../../utils/utils'
 import CloseIcon from '@mui/icons-material/Close'
-import { TradeLog } from 'types'
+import { CloseButtonProps, TradeLog } from 'types'
 import React, { useCallback, useState } from 'react'
 import ExpandButton from './expandButton'
 import { FieldBox, FieldName, FieldValue, NoteBox } from '../../styles/style'
@@ -42,25 +42,31 @@ const ExpandedContainer = styled(Box)(({ theme }) => ({
     padding: `${remCalc(7)} 0 ${remCalc(7)} ${remCalc(10)}`
 }))
 
-const CloseButton = () => <CloseButtonStyled>
+const CloseButton = ({ onClick }: CloseButtonProps) => <CloseButtonStyled onClick = {onClick}>
     <CloseIcon fontSize="small"/>
 </CloseButtonStyled>
 
 interface LogRowProps {
-    logItem: TradeLog
+    logItem: TradeLog,
+    closeDialog: (logItem: TradeLog) => void
 }
 
 interface ExpandableProps {
     logItem: TradeLog,
     expandHandler: (expanded: boolean) => void
+    closeDialog: (logItem: TradeLog) => void
 }
 
-const Expanded = ({ logItem, expandHandler }: ExpandableProps) => {
+const Expanded = ({ logItem, expandHandler, closeDialog }: ExpandableProps) => {
     const {
         broker, market, ticker, position, dateOpen, dateClose, currency,
         priceClose, priceOpen, itemNumber, outcomePercent, fees, volume, outcome,
         volumeToDeposit, stopLoss, takeProfit, risk, profit, goal, grade, note
     } = logItem
+
+    const closeDialogHandler = useCallback(() => {
+        closeDialog(logItem)
+    }, [])
 
     const tz = market.timezone
     return <RowBox container columns={53}>
@@ -124,7 +130,7 @@ const Expanded = ({ logItem, expandHandler }: ExpandableProps) => {
                 </FieldBox>
                 <FieldBox>
                     <FieldName>Fees:</FieldName>
-                    <FieldValue>{money(currency.name, fees)}</FieldValue>
+                    <FieldValue>{money('USD', fees)}</FieldValue>
                 </FieldBox>
                 <FieldBox>
                     <FieldName>Outcome:</FieldName>
@@ -153,18 +159,22 @@ const Expanded = ({ logItem, expandHandler }: ExpandableProps) => {
         </Grid>
         <Item item sx={{ height: remCalc(36) }} xs={2}>
             <ExpandButton expanded={true} onClick={expandHandler}/>
-            {dateClose ? <></> : <CloseButton/>}
+            {dateClose ? <></> : <CloseButton onClick={closeDialogHandler}/>}
         </Item>
     </RowBox>
 }
 
-const Collapsed = ({ logItem, expandHandler }: ExpandableProps) => {
+const Collapsed = ({ logItem, expandHandler, closeDialog }: ExpandableProps) => {
     const {
         broker, market, ticker, position, dateOpen, dateClose, currency,
         priceClose, priceOpen, itemNumber, outcomePercent, fees, volume, outcome
     } = logItem
 
     const tz = market.timezone
+
+    const closeDialogHandler = useCallback(() => {
+        closeDialog(logItem)
+    }, [])
 
     return <RowBox container columns={53}>
         <Item item xs={4}>{broker.name}</Item>
@@ -182,16 +192,17 @@ const Collapsed = ({ logItem, expandHandler }: ExpandableProps) => {
         <Item item xs={4}>{money('USD', fees)}</Item>
         <Item item xs={2}>
             <ExpandButton expanded={false} onClick={expandHandler}/>
-            {dateClose ? <></> : <CloseButton/>}
+            {dateClose ? <></> : <CloseButton onClick={closeDialogHandler}/>}
         </Item>
     </RowBox>
 }
 
-export const LogRow = ({ logItem }: LogRowProps) => {
+export const LogRow = ({ logItem, closeDialog }: LogRowProps) => {
     const [expanded, setExpanded] = useState(false)
     const expandHandler = useCallback((expanded: boolean) => {
         setExpanded(expanded)
     }, [])
-    return <>{expanded ? <Expanded logItem={logItem} expandHandler={expandHandler}/> :
-        <Collapsed logItem={logItem} expandHandler={expandHandler}/>}</>
+
+    return <>{expanded ? <Expanded closeDialog={closeDialog} logItem={logItem} expandHandler={expandHandler}/> :
+        <Collapsed closeDialog={closeDialog} logItem={logItem} expandHandler={expandHandler}/>}</>
 }

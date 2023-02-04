@@ -3,23 +3,21 @@ package com.corn.trade.dto;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.math.BigDecimal;
-
 @SuppressWarnings("unused")
 public class SellDTO {
 	private final Long brokerId;
 	private final Long currencyId;
 
-	private final BigDecimal openAmount;
+	private final Double openAmount;
 
-	private final BigDecimal closeAmount;
+	private final Double closeAmount;
 
 	@JsonCreator
 	public SellDTO(
 			@JsonProperty ("brokerId") Long brokerId,
 			@JsonProperty("currencyId") Long currencyId,
-			@JsonProperty("openAmount") BigDecimal openAmount,
-			@JsonProperty("closeAmount") BigDecimal closeAmount
+			@JsonProperty("openAmount") Double openAmount,
+			@JsonProperty("closeAmount") Double closeAmount
 			) {
 		this.brokerId = brokerId;
 		this.currencyId = currencyId;
@@ -36,11 +34,11 @@ public class SellDTO {
 		return currencyId;
 	}
 
-	public BigDecimal getOpenAmount() {
+	public Double getOpenAmount() {
 		return openAmount;
 	}
 
-	public BigDecimal getCloseAmount() {
+	public Double getCloseAmount() {
 		return closeAmount;
 	}
 }

@@ -1,7 +1,11 @@
 package com.corn.trade.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+
+import static com.corn.trade.util.Util.toOutBigDecimal;
 
 @SuppressWarnings("unused")
 public class CashAccountDTO {
@@ -16,7 +20,7 @@ public class CashAccountDTO {
 
 	private final String type;
 
-	private final BigDecimal amount;
+	private final Double amount;
 
 	private final LocalDateTime updatedAt;
 
@@ -25,7 +29,7 @@ public class CashAccountDTO {
 	                      CurrencyDTO currency,
 	                      BrokerDTO broker,
 	                      String type,
-	                      BigDecimal amount,
+	                      Double amount,
 	                      LocalDateTime updatedAt) {
 		this.id = id;
 		this.name = name;
@@ -57,6 +61,11 @@ public class CashAccountDTO {
 	}
 
 	public BigDecimal getAmount() {
+		return toOutBigDecimal(amount);
+	}
+
+	@JsonIgnore
+	public Double getAmountDouble() {
 		return amount;
 	}
 
