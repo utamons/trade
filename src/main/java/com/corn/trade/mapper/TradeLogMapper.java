@@ -6,8 +6,11 @@ import com.corn.trade.entity.Broker;
 import com.corn.trade.entity.Market;
 import com.corn.trade.entity.Ticker;
 import com.corn.trade.entity.TradeLog;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TradeLogMapper {
+	public static Logger logger = LoggerFactory.getLogger(TradeLogMapper.class);
 
 	public static TradeLog toEntity(TradeLogOpenDTO open,
 	                                Broker broker,
@@ -23,6 +26,7 @@ public class TradeLogMapper {
 		e.setCurrency(ticker.getCurrency());
 		e.setItemNumber(open.getItemNumber());
 		e.setPriceOpen(open.getPriceOpen());
+		e.setBreakEven(open.getBreakEven());
 
 		Double volume = open.getPriceOpen()*open.getItemNumber();
 		Double volumeToDeposit = volume/depositAmount*100.0;
@@ -40,7 +44,18 @@ public class TradeLogMapper {
 		return e;
 	}
 
+	public static Double roundZeroOutcome(Double outcome) {
+		if (outcome == null)
+			return null;
+		if (outcome <= 0.01 && outcome > 0)
+			return 0.0;
+		if (outcome >= -0.01 && outcome < 0)
+			return 0.0;
+		return outcome;
+	}
+
 	public static TradeLogDTO toDTO(TradeLog entity) {
+		Double outcome = roundZeroOutcome(entity.getOutcome());
 		return new TradeLogDTO(
 				entity.getId(),
 				entity.getPosition(),
@@ -59,8 +74,9 @@ public class TradeLogMapper {
 				entity.getTakeProfit(),
 				entity.getOutcomeExpected(),
 				entity.getRisk(),
+				entity.getBreakEven(),
 				entity.getFees(),
-				entity.getOutcome(),
+				outcome,
 				entity.getOutcomePercent(),
 				entity.getProfit(),
 				entity.getNote(),

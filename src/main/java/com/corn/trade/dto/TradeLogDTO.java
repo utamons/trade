@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
 import static com.corn.trade.util.Util.toOutBigDecimal;
@@ -47,6 +48,8 @@ public class TradeLogDTO implements Serializable {
 
 	private final Double risk;
 
+	private final Double breakEven;
+
 	private final Double fees;
 
 	private final Double outcome;
@@ -81,6 +84,7 @@ public class TradeLogDTO implements Serializable {
 	                   @JsonProperty("takeProfit") Double takeProfit,
 	                   @JsonProperty("outcomeExpected") Double outcomeExpected,
 	                   @JsonProperty("risk") Double risk,
+	                   @JsonProperty("breakEven") Double breakEven,
 	                   @JsonProperty("fees") Double fees,
 	                   @JsonProperty("outcome") Double outcome,
 	                   @JsonProperty("outcomePercent") Double outcomePercent,
@@ -106,6 +110,7 @@ public class TradeLogDTO implements Serializable {
 		this.takeProfit = takeProfit;
 		this.outcomeExpected = outcomeExpected;
 		this.risk = risk;
+		this.breakEven = breakEven;
 		this.fees = fees;
 		this.outcome = outcome;
 		this.outcomePercent = outcomePercent;
@@ -189,7 +194,9 @@ public class TradeLogDTO implements Serializable {
 	}
 
 	public BigDecimal getOutcome() {
-		return toOutBigDecimal(outcome);
+		if (outcome == null)
+			return null;
+		return BigDecimal.valueOf(outcome).setScale(2, RoundingMode.CEILING);
 	}
 
 	@JsonIgnore
@@ -223,5 +230,9 @@ public class TradeLogDTO implements Serializable {
 
 	public BigDecimal getGoal() {
 		return toOutBigDecimal(goal);
+	}
+
+	public Double getBreakEven() {
+		return breakEven;
 	}
 }

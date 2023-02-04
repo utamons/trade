@@ -61,7 +61,7 @@ const Expanded = ({ logItem, expandHandler, closeDialog }: ExpandableProps) => {
     const {
         broker, market, ticker, position, dateOpen, dateClose, currency,
         priceClose, priceOpen, itemNumber, outcomePercent, fees, volume, outcome,
-        volumeToDeposit, stopLoss, takeProfit, risk, profit, goal, grade, note
+        volumeToDeposit, stopLoss, takeProfit, risk, breakEven, profit, goal, note
     } = logItem
 
     const closeDialogHandler = useCallback(() => {
@@ -133,6 +133,10 @@ const Expanded = ({ logItem, expandHandler, closeDialog }: ExpandableProps) => {
                     <FieldValue>{money('USD', fees)}</FieldValue>
                 </FieldBox>
                 <FieldBox>
+                    <FieldName>Break even</FieldName>
+                    <FieldValue>{money(currency.name, breakEven)}</FieldValue>
+                </FieldBox>
+                <FieldBox>
                     <FieldName>Outcome:</FieldName>
                     <FieldValue>{money(currency.name, outcome)}</FieldValue>
                 </FieldBox>
@@ -147,10 +151,6 @@ const Expanded = ({ logItem, expandHandler, closeDialog }: ExpandableProps) => {
                 <FieldBox>
                     <FieldName>Goal:</FieldName>
                     <FieldValue>{money(currency.name, goal)}</FieldValue>
-                </FieldBox>
-                <FieldBox>
-                    <FieldName>Grade:</FieldName>
-                    <FieldValue>{grade}</FieldValue>
                 </FieldBox>
             </ExpandedContainer>
         </Grid>

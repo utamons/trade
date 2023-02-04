@@ -8,9 +8,12 @@ public class EvalOutDTO {
 	private final Double fees;
 	private final Double risk;
 
-	public EvalOutDTO(Double fees, Double risk) {
+	private final Double breakEven;
+
+	public EvalOutDTO(Double fees, Double risk, Double breakEven) {
 		this.fees = fees;
 		this.risk = risk;
+		this.breakEven = breakEven;
 	}
 
 	public BigDecimal getFees() {
@@ -19,5 +22,9 @@ public class EvalOutDTO {
 
 	public BigDecimal getRisk() {
 		return toOutBigDecimal(risk);
+	}
+
+	public BigDecimal getBreakEven() {
+		return toOutBigDecimal(breakEven);
 	}
 }

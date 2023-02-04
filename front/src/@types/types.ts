@@ -145,6 +145,7 @@ type TradeLog = {
     takeProfit: number | undefined,
     outcomeExpected: number | undefined,
     risk: number | undefined,
+    breakEven: number | undefined,
     fees: number,
     outcome: number | undefined,
     outcomePercent: number | undefined,
@@ -204,6 +205,7 @@ type PositionOpenType = {
     takeProfit: number | undefined,
     outcomeExpected: number | undefined,
     risk: number,
+    breakEven: number | undefined,
     fees: number,
     note: string | undefined
 }

@@ -32,6 +32,8 @@ public class TradeLogOpenDTO implements Serializable {
 
 	private final Double risk;
 
+	private final Double breakEven;
+
 	private final Double fees;
 
 	private final String note;
@@ -54,6 +56,7 @@ public class TradeLogOpenDTO implements Serializable {
 	                       @JsonProperty("takeProfit") Double takeProfit,
 	                       @JsonProperty("outcomeExpected") Double outcomeExpected,
 	                       @JsonProperty("risk") Double risk,
+	                       @JsonProperty("breakEven") Double breakEven,
 	                       @JsonProperty("fees") Double fees,
 	                       @JsonProperty("note") String note,
 	                       @JsonProperty("goal") Double goal) {
@@ -68,6 +71,7 @@ public class TradeLogOpenDTO implements Serializable {
 		this.takeProfit = takeProfit;
 		this.outcomeExpected = outcomeExpected;
 		this.risk = risk;
+		this.breakEven = breakEven;
 		this.fees = fees;
 		this.note = note;
 		this.goal = goal;
@@ -91,6 +95,10 @@ public class TradeLogOpenDTO implements Serializable {
 
 	public Long getTickerId() {
 		return tickerId;
+	}
+
+	public Double getBreakEven() {
+		return breakEven;
 	}
 
 	public Long getItemNumber() {

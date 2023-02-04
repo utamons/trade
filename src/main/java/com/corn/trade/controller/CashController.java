@@ -41,7 +41,7 @@ public class CashController {
 
 	@GetMapping("/state")
 	public MoneyStateDTO state() throws JsonProcessingException {
-		Double            capital     = service.getCapital();
+		double            capital     = service.getCapital();
 		List<TradeLogDTO> closed      = tradeLogService.getAllClosed();
 		double            sumOutcomes = 0.0;
 		final LocalDate   today       = LocalDate.now();
@@ -53,7 +53,7 @@ public class CashController {
 					                                 today);
 		}
 
-		Double profit = sumOutcomes/capital*100.0;
+		double profit = sumOutcomes/capital*100.0;
 
 		return new MoneyStateDTO(capital, profit);
 	}
