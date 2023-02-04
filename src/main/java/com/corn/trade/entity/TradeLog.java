@@ -67,6 +67,9 @@ public class TradeLog implements Serializable {
 	@Column(name = "fees", nullable = false)
 	private Double fees;
 
+	@Column(name = "break_even", nullable = false)
+	private Double breakEven;
+
 	@Column(name = "outcome")
 	private Double outcome;
 
@@ -286,5 +289,13 @@ public class TradeLog implements Serializable {
 
 	public void setGoal(Double goal) {
 		this.goal = goal;
+	}
+
+	public Double getBreakEven() {
+		return breakEven;
+	}
+
+	public void setBreakEven(Double breakEven) {
+		this.breakEven = breakEven;
 	}
 }

@@ -114,7 +114,8 @@ const BasicDateTimePicker = ({ onChange }: DatePickerProps) => {
 
 interface Eval {
     fees: number,
-    risk: number
+    risk: number,
+    breakEven: number
 }
 
 export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: OpenDialogProps) => {
@@ -134,6 +135,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     const [outcomeExp, setOutcomeExp] = useState<number | undefined>(undefined)
     const [risk, setRisk] = useState<number | undefined>(undefined)
     const [fees, setFees] = useState<number | undefined>(undefined)
+    const [breakEven, setBreakEven] = useState<number | undefined>(undefined)
     const [note, setNote] = useState('')
     const [date, setDate] = useState(new Date())
     const [evaluate, setEvaluate] = useState(true)
@@ -162,6 +164,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
             })
             setFees(ev.fees)
             setRisk(ev.risk)
+            setBreakEven(ev.breakEven)
             return
         }
         if (price && items && stopLoss && risk && fees) {
@@ -177,6 +180,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                 takeProfit: takeProfit,
                 outcomeExpected: outcomeExp,
                 risk: risk,
+                breakEven: breakEven,
                 fees: fees,
                 note: note
             })
@@ -193,6 +197,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
         date,
         risk,
         fees,
+        breakEven,
         note,
         takeProfit,
         outcomeExp])
@@ -395,6 +400,14 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                                 <FieldName>Risk:</FieldName>
                                 <FieldValue>
                                     {risk} %
+                                </FieldValue>
+                            </FieldBox>
+                        </Grid>
+                        <Grid item xs={1}>
+                            <FieldBox>
+                                <FieldName>Break even:</FieldName>
+                                <FieldValue>
+                                    {breakEven}
                                 </FieldValue>
                             </FieldBox>
                         </Grid>

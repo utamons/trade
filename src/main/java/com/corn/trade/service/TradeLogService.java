@@ -34,16 +34,19 @@ public class TradeLogService {
 	private final TickerRepository   tickerRepo;
 	private final CashService        cashService;
 
+	private final CurrencyRateService currencyRateService;
+
 	public TradeLogService(TradeLogRepository tradeLogRepo,
 	                       BrokerRepository brokerRepo,
 	                       MarketRepository marketRepo,
 	                       TickerRepository tickerRepo,
-	                       CashService cashService) {
+	                       CashService cashService, CurrencyRateService currencyRateService) {
 		this.tradeLogRepo = tradeLogRepo;
 		this.brokerRepo = brokerRepo;
 		this.marketRepo = marketRepo;
 		this.tickerRepo = tickerRepo;
 		this.cashService = cashService;
+		this.currencyRateService = currencyRateService;
 	}
 
 
@@ -55,6 +58,7 @@ public class TradeLogService {
 		TradeLog tradeLog      = TradeLogMapper.toEntity(openDTO, broker, market, ticker, depositAmount);
 
 		tradeLog = tradeLogRepo.save(tradeLog);
+		tradeLogRepo.flush();
 		cashService.buy(tradeLog.getVolume(), broker, ticker.getCurrency(), tradeLog);
 		if (tradeLog.getFees() != 0.0)
 			cashService.fee(tradeLog.getFees(), broker, tradeLog);
@@ -67,18 +71,22 @@ public class TradeLogService {
 
 		long items = open.getItemNumber();
 
-		double outcome = (open.getPriceClose() - open.getPriceOpen()) * items;
-
 		double sum = closeDTO.getPriceClose() * items;
+
+		// in the currency of the position:
+		double fees = cashService.getFees(open.getBroker(), open.getTicker(), items, sum);
+		double openFees = cashService.getFees(open.getBroker(), open.getTicker(), items, open.getVolume());
+
+		double outcome = ((open.getPriceClose() - open.getPriceOpen()) * items) - (fees+openFees);
 
 		double outcomePercent = outcome / open.getVolume() * 100.0;
 
-		double fees = cashService.getFees(open.getBroker(), open.getTicker(), items, sum, closeDTO.getDateClose().toLocalDate());
+		double feesUSD = currencyRateService.convertToUSD(open.getCurrency().getId(), fees, closeDTO.getDateClose().toLocalDate());
 
-		if (fees != 0)
-			cashService.fee(fees, open.getBroker(), open);
+		if (feesUSD != 0)
+			cashService.fee(feesUSD, open.getBroker(), open);
 
-		open.setFees(open.getFees() + fees);
+		open.setFees(open.getFees() + feesUSD);
 
 		double openAmount = open.getVolume();
 

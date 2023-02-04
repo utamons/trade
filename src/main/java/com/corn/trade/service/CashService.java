@@ -235,12 +235,19 @@ public class CashService {
 
 		long items = evalDTO.getItems();
 
-		double fees = getFees(broker, ticker, items, items * evalDTO.getPriceOpen(), evalDTO.getDate());
+		double priceOpen = evalDTO.getPriceOpen();
+
+		double fees      = getFees(broker, ticker, items, items * priceOpen);
+
+		double feesUSD = currencyRateService.convertToUSD(
+				ticker.getCurrency().getId(),
+				fees,
+				evalDTO.getDate());
 
 		double priceUSD =
 				currencyRateService.convertToUSD(
 						ticker.getCurrency().getId(),
-						evalDTO.getPriceOpen(),
+						priceOpen,
 						evalDTO.getDate());
 		double stopLossUSD =
 				currencyRateService.convertToUSD(
@@ -256,10 +263,16 @@ public class CashService {
 
 		double risk = losses/depositUSD*100.0;
 
-		return new EvalOutDTO(fees, risk);
+		double priceClose = priceOpen + (fees*2.3/items);
+
+		double closeFees = getFees(broker, ticker, items, items * priceClose);
+
+		double breakEven = priceOpen + (fees + closeFees) / items;
+
+		return new EvalOutDTO(feesUSD, risk, breakEven);
 	}
 
-	public Double getFees(Broker broker, Ticker ticker, long items, Double sum, LocalDate date) throws JsonProcessingException {
+	public Double getFees(Broker broker, Ticker ticker, long items, Double sum) {
 		double fees = 0.0;
 		long currencyId = ticker.getCurrency().getId();
 
@@ -271,6 +284,6 @@ public class CashService {
 				fees = sum / 100.0 * 0.5 + fixed;
 			}
 		}
-		return currencyRateService.convertToUSD(currencyId, fees, date);
+		return fees;
 	}
 }
