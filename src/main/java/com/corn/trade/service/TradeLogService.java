@@ -1,19 +1,26 @@
 package com.corn.trade.service;
 
-import com.corn.trade.dto.*;
-import com.corn.trade.entity.*;
+import com.corn.trade.dto.TradeLogCloseDTO;
+import com.corn.trade.dto.TradeLogDTO;
+import com.corn.trade.dto.TradeLogOpenDTO;
+import com.corn.trade.dto.TradeLogPageReqDTO;
+import com.corn.trade.entity.Broker;
+import com.corn.trade.entity.Market;
+import com.corn.trade.entity.Ticker;
+import com.corn.trade.entity.TradeLog;
 import com.corn.trade.mapper.TradeLogMapper;
 import com.corn.trade.repository.BrokerRepository;
 import com.corn.trade.repository.MarketRepository;
 import com.corn.trade.repository.TickerRepository;
 import com.corn.trade.repository.TradeLogRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,10 +29,10 @@ import java.util.stream.Collectors;
 public class TradeLogService {
 
 	private final TradeLogRepository tradeLogRepo;
-	private final BrokerRepository brokerRepo;
-	private final MarketRepository marketRepo;
-	private final TickerRepository tickerRepo;
-	private final CashService cashService;
+	private final BrokerRepository   brokerRepo;
+	private final MarketRepository   marketRepo;
+	private final TickerRepository   tickerRepo;
+	private final CashService        cashService;
 
 	public TradeLogService(TradeLogRepository tradeLogRepo,
 	                       BrokerRepository brokerRepo,
@@ -41,15 +48,15 @@ public class TradeLogService {
 
 
 	public void open(TradeLogOpenDTO openDTO) {
-		Broker broker = brokerRepo.getReferenceById(openDTO.getBrokerId());
-		Market market = marketRepo.getReferenceById(openDTO.getMarketId());
-		Ticker ticker = tickerRepo.getReferenceById(openDTO.getTickerId());
-		BigDecimal depositAmount = cashService.lastDepositAmount(broker,ticker.getCurrency());
-		TradeLog tradeLog = TradeLogMapper.toEntity(openDTO,broker,market,ticker,depositAmount);
+		Broker   broker        = brokerRepo.getReferenceById(openDTO.getBrokerId());
+		Market   market        = marketRepo.getReferenceById(openDTO.getMarketId());
+		Ticker   ticker        = tickerRepo.getReferenceById(openDTO.getTickerId());
+		Double   depositAmount = cashService.lastDepositAmount(broker, ticker.getCurrency());
+		TradeLog tradeLog      = TradeLogMapper.toEntity(openDTO, broker, market, ticker, depositAmount);
 
 		tradeLog = tradeLogRepo.save(tradeLog);
 		cashService.buy(tradeLog.getVolume(), broker, ticker.getCurrency(), tradeLog);
-		if (!tradeLog.getFees().equals(BigDecimal.ZERO))
+		if (tradeLog.getFees() != 0.0)
 			cashService.fee(tradeLog.getFees(), broker, tradeLog);
 	}
 
@@ -58,28 +65,33 @@ public class TradeLogService {
 		open.setDateClose(closeDTO.getDateClose());
 		open.setPriceClose(closeDTO.getPriceClose());
 
-		BigDecimal outcome = open.getPriceClose()
-		                         .subtract(open.getPriceOpen())
-				.multiply(BigDecimal.valueOf(open.getItemNumber()));
-		BigDecimal outcomePercent = outcome.divide(open.getPriceOpen(), 12, RoundingMode.HALF_EVEN)
-				                                   .multiply(BigDecimal.valueOf(100.00));
+		long items = open.getItemNumber();
 
-		if (!closeDTO.getFees().equals(BigDecimal.ZERO))
-			cashService.fee(closeDTO.getFees(),  open.getBroker(), open);
+		double outcome = (open.getPriceClose() - open.getPriceOpen()) * items;
 
-		BigDecimal openAmount = open.getPriceOpen().multiply(BigDecimal.valueOf(open.getItemNumber()));
+		double sum = closeDTO.getPriceClose() * items;
 
-		BigDecimal percentToCapital = cashService.percentToCapital(outcome, openAmount, open.getCurrency());
+		double outcomePercent = outcome / open.getVolume() * 100.0;
+
+		double fees = cashService.getFees(open.getBroker(), open.getTicker(), items, sum, closeDTO.getDateClose().toLocalDate());
+
+		if (fees != 0)
+			cashService.fee(fees, open.getBroker(), open);
+
+		open.setFees(open.getFees() + fees);
+
+		double openAmount = open.getVolume();
+
+		double percentToCapital = cashService.percentToCapital(outcome, openAmount, open.getCurrency());
 
 		open.setOutcome(outcome);
 		open.setOutcomePercent(outcomePercent);
 		open.setProfit(percentToCapital);
-		open.setFees(open.getFees().add(closeDTO.getFees()));
-		open.setGrade(closeDTO.getGrade());
+
 		if (closeDTO.getNote() != null)
 			open.setNote(closeDTO.getNote());
 
-		BigDecimal closeAmount = open.getPriceClose().multiply(BigDecimal.valueOf(open.getItemNumber()));
+		double closeAmount = open.getPriceClose() * open.getItemNumber();
 
 		open = tradeLogRepo.save(open);
 

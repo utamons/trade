@@ -3,15 +3,14 @@ package com.corn.trade.dto;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public class EvalInDTO {
 	private final Long brokerId;
 	private final Long tickerId;
-	private final BigDecimal priceOpen;
+	private final Double priceOpen;
 	private final Long items;
-	private final BigDecimal stopLoss;
+	private final Double stopLoss;
 
 	private final LocalDate date;
 
@@ -19,9 +18,9 @@ public class EvalInDTO {
 	public EvalInDTO(
 			@JsonProperty("brokerId") Long brokerId,
 			@JsonProperty("tickerId") Long tickerId,
-			@JsonProperty("priceOpen") BigDecimal priceOpen,
+			@JsonProperty("priceOpen") Double priceOpen,
 			@JsonProperty("items") Long items,
-			@JsonProperty("stopLoss") BigDecimal stopLoss,
+			@JsonProperty("stopLoss") Double stopLoss,
 			@JsonProperty("date") LocalDate date) {
 		this.brokerId = brokerId;
 		this.tickerId = tickerId;
@@ -39,7 +38,7 @@ public class EvalInDTO {
 		return tickerId;
 	}
 
-	public BigDecimal getPriceOpen() {
+	public Double getPriceOpen() {
 		return priceOpen;
 	}
 
@@ -47,7 +46,7 @@ public class EvalInDTO {
 		return items;
 	}
 
-	public BigDecimal getStopLoss() {
+	public Double getStopLoss() {
 		return stopLoss;
 	}
 

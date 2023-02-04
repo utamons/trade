@@ -2,7 +2,6 @@ package com.corn.trade.entity;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @SuppressWarnings("unused")
@@ -42,40 +41,40 @@ public class TradeLog implements Serializable {
 	private Long itemNumber;
 
 	@Column(name = "price_open", nullable = false)
-	private BigDecimal priceOpen;
+	private Double priceOpen;
 
 	@Column(name = "price_close")
-	private BigDecimal priceClose;
+	private Double priceClose;
 
 	@Column(name = "volume", nullable = false)
-	private BigDecimal volume;
+	private Double volume;
 
 	@Column(name = "volume_to_deposit")
-	private BigDecimal volumeToDeposit;
+	private Double volumeToDeposit;
 
 	@Column(name = "stop_loss")
-	private BigDecimal stopLoss;
+	private Double stopLoss;
 
 	@Column(name = "take_profit")
-	private BigDecimal takeProfit;
+	private Double takeProfit;
 
 	@Column(name = "outcome_expected")
-	private BigDecimal outcomeExpected;
+	private Double outcomeExpected;
 
 	@Column(name = "risk")
-	private BigDecimal risk;
+	private Double risk;
 
 	@Column(name = "fees", nullable = false)
-	private BigDecimal fees;
+	private Double fees;
 
 	@Column(name = "outcome")
-	private BigDecimal outcome;
+	private Double outcome;
 
 	@Column(name = "outcome_percent")
-	private BigDecimal outcomePercent;
+	private Double outcomePercent;
 
 	@Column(name = "profit")
-	private BigDecimal profit;
+	private Double profit;
 
 	@Column(name = "note")
 	private String note;
@@ -84,7 +83,7 @@ public class TradeLog implements Serializable {
 	private String grade;
 
 	@Column(name = "goal")
-	private BigDecimal goal;
+	private Double goal;
 
 	@Column(name = "chart")
 	private byte[] chart;
@@ -161,99 +160,99 @@ public class TradeLog implements Serializable {
 		this.itemNumber = itemNumber;
 	}
 
-	public BigDecimal getPriceOpen() {
+	public Double getPriceOpen() {
 		return priceOpen;
 	}
 
-	public void setPriceOpen(BigDecimal priceOpen) {
+	public void setPriceOpen(Double priceOpen) {
 		this.priceOpen = priceOpen;
 	}
 
-	public BigDecimal getPriceClose() {
+	public Double getPriceClose() {
 		return priceClose;
 	}
 
-	public void setPriceClose(BigDecimal priceClose) {
+	public void setPriceClose(Double priceClose) {
 		this.priceClose = priceClose;
 	}
 
-	public BigDecimal getVolume() {
+	public Double getVolume() {
 		return volume;
 	}
 
-	public void setVolume(BigDecimal volume) {
+	public void setVolume(Double volume) {
 		this.volume = volume;
 	}
 
-	public BigDecimal getVolumeToDeposit() {
+	public Double getVolumeToDeposit() {
 		return volumeToDeposit;
 	}
 
-	public void setVolumeToDeposit(BigDecimal volumeToDeposit) {
+	public void setVolumeToDeposit(Double volumeToDeposit) {
 		this.volumeToDeposit = volumeToDeposit;
 	}
 
-	public BigDecimal getStopLoss() {
+	public Double getStopLoss() {
 		return stopLoss;
 	}
 
-	public void setStopLoss(BigDecimal stopLoss) {
+	public void setStopLoss(Double stopLoss) {
 		this.stopLoss = stopLoss;
 	}
 
-	public BigDecimal getTakeProfit() {
+	public Double getTakeProfit() {
 		return takeProfit;
 	}
 
-	public void setTakeProfit(BigDecimal takeProfit) {
+	public void setTakeProfit(Double takeProfit) {
 		this.takeProfit = takeProfit;
 	}
 
-	public BigDecimal getOutcomeExpected() {
+	public Double getOutcomeExpected() {
 		return outcomeExpected;
 	}
 
-	public void setOutcomeExpected(BigDecimal outcomeExpected) {
+	public void setOutcomeExpected(Double outcomeExpected) {
 		this.outcomeExpected = outcomeExpected;
 	}
 
-	public BigDecimal getRisk() {
+	public Double getRisk() {
 		return risk;
 	}
 
-	public void setRisk(BigDecimal risk) {
+	public void setRisk(Double risk) {
 		this.risk = risk;
 	}
 
-	public BigDecimal getFees() {
+	public Double getFees() {
 		return fees;
 	}
 
-	public void setFees(BigDecimal fees) {
+	public void setFees(Double fees) {
 		this.fees = fees;
 	}
 
-	public BigDecimal getOutcome() {
+	public Double getOutcome() {
 		return outcome;
 	}
 
-	public void setOutcome(BigDecimal outcome) {
+	public void setOutcome(Double outcome) {
 		this.outcome = outcome;
 	}
 
-	public BigDecimal getOutcomePercent() {
+	public Double getOutcomePercent() {
 		return outcomePercent;
 	}
 
-	public void setOutcomePercent(BigDecimal outcomePercent) {
+	public void setOutcomePercent(Double outcomePercent) {
 		this.outcomePercent = outcomePercent;
 	}
 
-	public BigDecimal getProfit() {
+	public Double getProfit() {
 		return profit;
 	}
 
-	public void setProfit(BigDecimal profit) {
+	public void setProfit(Double profit) {
 		this.profit = profit;
 	}
 
@@ -281,11 +280,11 @@ public class TradeLog implements Serializable {
 		this.grade = grade;
 	}
 
-	public BigDecimal getGoal() {
+	public Double getGoal() {
 		return goal;
 	}
 
-	public void setGoal(BigDecimal goal) {
+	public void setGoal(Double goal) {
 		this.goal = goal;
 	}
 }

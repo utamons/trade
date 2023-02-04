@@ -3,7 +3,6 @@ package com.corn.trade.dto;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -16,14 +15,14 @@ public class CurrencyRateDTO {
 
 	private final CurrencyDTO currency;
 
-	private final BigDecimal rate;
+	private final Double rate;
 
 	@JsonCreator
 	public CurrencyRateDTO(
 			@JsonProperty("id") Long id,
 			@JsonProperty("date") LocalDate date,
 			@JsonProperty("currency") CurrencyDTO currency,
-			@JsonProperty("rate") BigDecimal rate) {
+			@JsonProperty("rate") Double rate) {
 		this.id = id;
 		this.date = date;
 		this.currency = currency;
@@ -42,7 +41,7 @@ public class CurrencyRateDTO {
 		return currency;
 	}
 
-	public BigDecimal getRate() {
+	public Double getRate() {
 		return rate;
 	}
 }

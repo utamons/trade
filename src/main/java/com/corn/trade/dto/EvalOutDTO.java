@@ -2,20 +2,22 @@ package com.corn.trade.dto;
 
 import java.math.BigDecimal;
 
-public class EvalOutDTO {
-	private final BigDecimal fees;
-	private final BigDecimal risk;
+import static com.corn.trade.util.Util.toOutBigDecimal;
 
-	public EvalOutDTO(BigDecimal fees, BigDecimal risk) {
+public class EvalOutDTO {
+	private final Double fees;
+	private final Double risk;
+
+	public EvalOutDTO(Double fees, Double risk) {
 		this.fees = fees;
 		this.risk = risk;
 	}
 
 	public BigDecimal getFees() {
-		return fees;
+		return toOutBigDecimal(fees);
 	}
 
 	public BigDecimal getRisk() {
-		return risk;
+		return toOutBigDecimal(risk);
 	}
 }

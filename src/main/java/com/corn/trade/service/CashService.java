@@ -10,8 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -75,7 +73,7 @@ public class CashService {
 		return CashAccountMapper.toDTO(trade);
 	}
 
-	private CashAccount transfer(BigDecimal transfer,
+	private CashAccount transfer(double transfer,
 	                             TradeLog tradeLog,
 	                             Broker broker,
 	                             Currency currency,
@@ -83,13 +81,13 @@ public class CashService {
 	                             CashAccountType toType) {
 		CashAccount from    = getAccount(broker, currency, fromType);
 		CashAccount to      = getAccount(broker, currency, toType);
-		BigDecimal  fromSum = from.getAmount();
-		BigDecimal  toSum   = to.getAmount();
+		Double      fromSum = from.getAmount();
+		Double      toSum   = to.getAmount();
 
 		CashFlow record = new CashFlow(from, to, tradeLog, transfer, transfer, null);
 		cashFlowRepo.save(record);
-		from.setAmount(fromSum.subtract(transfer));
-		to.setAmount(toSum.add(transfer));
+		from.setAmount(fromSum - transfer);
+		to.setAmount(toSum + transfer);
 
 		to = accountRepo.save(to);
 		accountRepo.save(from);
@@ -111,16 +109,16 @@ public class CashService {
 
 		CashAccount tradeFrom    = getAccount(broker, currencyFrom, tradeType);
 		CashAccount tradeTo      = getAccount(broker, currencyTo, tradeType);
-		BigDecimal  transferFrom = exchangeDTO.getAmountFrom();
-		BigDecimal  transferTo   = exchangeDTO.getAmountTo();
-		BigDecimal  tradeFromSum = tradeFrom.getAmount();
-		BigDecimal  tradeToSum   = tradeTo.getAmount();
-		BigDecimal  rate         = transferFrom.divide(transferTo, 12, RoundingMode.HALF_DOWN);
+		double      transferFrom = exchangeDTO.getAmountFrom();
+		double      transferTo   = exchangeDTO.getAmountTo();
+		double      tradeFromSum = tradeFrom.getAmount();
+		double      tradeToSum   = tradeTo.getAmount();
+		double      rate         = transferFrom / transferTo;
 
 		CashFlow record = new CashFlow(tradeFrom, tradeTo, null, transferFrom, transferTo, rate);
 		cashFlowRepo.save(record);
-		tradeFrom.setAmount(tradeFromSum.subtract(transferFrom));
-		tradeTo.setAmount(tradeToSum.add(transferTo));
+		tradeFrom.setAmount(tradeFromSum - transferFrom);
+		tradeTo.setAmount(tradeToSum + transferTo);
 
 		tradeTo = accountRepo.save(tradeTo);
 		accountRepo.save(tradeFrom);
@@ -136,7 +134,7 @@ public class CashService {
 		return CashAccountMapper.toDTO(tradeTo);
 	}
 
-	public void fee(BigDecimal amount, Broker broker, TradeLog tradeLog) {
+	public void fee(Double amount, Broker broker, TradeLog tradeLog) {
 		logger.debug("start");
 		CashAccountType fromTrade = accountTypeRepo.findCashAccountTypeByName("trade");
 		CashAccountType toFee     = accountTypeRepo.findCashAccountTypeByName("fee");
@@ -146,7 +144,7 @@ public class CashService {
 		logger.debug("finish");
 	}
 
-	public void buy(BigDecimal amount, Broker broker, Currency currency, TradeLog tradeLog) {
+	public void buy(Double amount, Broker broker, Currency currency, TradeLog tradeLog) {
 		logger.debug("start");
 		CashAccountType fromTrade = accountTypeRepo.findCashAccountTypeByName("trade");
 		CashAccountType toOpen    = accountTypeRepo.findCashAccountTypeByName("open");
@@ -155,7 +153,7 @@ public class CashService {
 		logger.debug("finish");
 	}
 
-	public void sell(BigDecimal openAmount, BigDecimal closeAmount, Broker broker, Currency currency, TradeLog tradeLog) {
+	public void sell(double openAmount, double closeAmount, Broker broker, Currency currency, TradeLog tradeLog) {
 		logger.debug("start");
 		CashAccountType tradeType  = accountTypeRepo.findCashAccountTypeByName("trade");
 		CashAccountType openType   = accountTypeRepo.findCashAccountTypeByName("open");
@@ -164,54 +162,30 @@ public class CashService {
 
 		transfer(openAmount, tradeLog, broker, currency, openType, tradeType);
 
-		if (closeAmount.compareTo(openAmount) > 0) {
-			BigDecimal profit = closeAmount.subtract(openAmount);
+		if (closeAmount > openAmount) {
+			double profit = closeAmount - openAmount;
 			transfer(profit, tradeLog, broker, currency, profitType, tradeType);
 		}
 
-		if (closeAmount.compareTo(openAmount) < 0) {
-			BigDecimal loss = openAmount.subtract(closeAmount);
+		if (closeAmount < openAmount) {
+			double loss = openAmount - closeAmount;
 			transfer(loss, tradeLog, broker, currency, tradeType, lossType);
 		}
 
 		logger.debug("finish");
 	}
 
-	public BigDecimal lastDepositAmount(Broker broker, Currency currency) {
+	public double lastDepositAmount(Broker broker, Currency currency) {
 		CashAccountType tradeType = accountTypeRepo.findCashAccountTypeByName("trade");
 		CashAccount     trade     = getAccount(broker, currency, tradeType);
 		return trade.getAmount();
 	}
 
-	public BigDecimal percentToCapital(BigDecimal outcome,
-	                                   BigDecimal openAmount,
-	                                   Currency currency) throws JsonProcessingException {
-		CashAccountType   tradeType    = accountTypeRepo.findCashAccountTypeByName("trade");
-		List<CashAccount> accounts     = accountRepo.findAllByType(tradeType);
-		Currency          baseCurrency = currencyRepo.findCurrencyByName("USD");
-		BigDecimal        sum          = BigDecimal.ZERO;
-		for (CashAccount account : accounts) {
-			Currency accCurrency = account.getCurrency();
-			if (!accCurrency.getId().equals(baseCurrency.getId())) {
-				CurrencyRateDTO currencyRateDTO = currencyRateService.findByDate(accCurrency.getId(), LocalDate.now());
-				BigDecimal convertedSum =
-						account.getAmount().divide(currencyRateDTO.getRate(), 12, RoundingMode.HALF_EVEN);
-				sum = sum.add(convertedSum);
-			} else {
-				sum = sum.add(account.getAmount());
-			}
-		}
-
-		CurrencyRateDTO currencyRateDTO    = currencyRateService.findByDate(currency.getId(), LocalDate.now());
-		BigDecimal      convertedOpenPrice = openAmount.divide(currencyRateDTO.getRate(), 12, RoundingMode.HALF_EVEN);
-		sum = sum.add(convertedOpenPrice);
-
-		if (currency.getId().equals(baseCurrency.getId())) {
-			return outcome.divide(sum, 12, RoundingMode.HALF_EVEN);
-		} else {
-			BigDecimal convertedOutcome = outcome.divide(currencyRateDTO.getRate(), 12, RoundingMode.HALF_EVEN);
-			return convertedOutcome.divide(sum, 12, RoundingMode.HALF_EVEN);
-		}
+	public double percentToCapital(double outcome,
+	                               double openAmount,
+	                               Currency currency) throws JsonProcessingException {
+		double sum = getCapital() + currencyRateService.convertToUSD(currency.getId(), openAmount, LocalDate.now());
+		return currencyRateService.convertToUSD(currency.getId(), outcome, LocalDate.now()) / sum * 100.0;
 	}
 
 	public List<CashAccountDTO> getTradeAccounts(Long brokerId) {
@@ -223,84 +197,80 @@ public class CashService {
 		                  .collect(Collectors.toList());
 	}
 
-	public BigDecimal getCapital() throws JsonProcessingException {
+	public double getCapital() throws JsonProcessingException {
 		CashAccountType   tradeType = accountTypeRepo.findCashAccountTypeByName("trade");
 		List<CashAccount> accounts  = accountRepo.findAllByType(tradeType);
-		BigDecimal        capital   = BigDecimal.ZERO;
+		double            capital   = 0.0;
 		LocalDate         today     = LocalDate.now();
 		for (CashAccount account : accounts) {
-			capital = capital.add(currencyRateService.convertToUSD(
+			capital = capital + currencyRateService.convertToUSD(
 					account.getCurrency().getId(),
 					account.getAmount(),
-					today));
+					today);
 		}
 
-		return capital.setScale(2, RoundingMode.HALF_EVEN);
+		return capital;
 	}
 
-	public BigDecimal getDeposit(long brokerId, LocalDate date) throws JsonProcessingException {
+	public double getDeposit(long brokerId, LocalDate date) throws JsonProcessingException {
 		Broker            broker    = brokerRepo.getReferenceById(brokerId);
 		CashAccountType   tradeType = accountTypeRepo.findCashAccountTypeByName("trade");
 		List<CashAccount> accounts  = accountRepo.findAllByBrokerAndType(broker, tradeType);
-		BigDecimal        deposit   = BigDecimal.ZERO;
+		double            deposit   = 0.0;
 		for (CashAccount account : accounts) {
-			deposit = deposit.add(currencyRateService.convertToUSD(
+			deposit = deposit + currencyRateService.convertToUSD(
 					account.getCurrency().getId(),
 					account.getAmount(),
-					date));
+					date);
 		}
 
-		BigDecimal result = deposit.setScale(2, RoundingMode.HALF_EVEN);
-		logger.debug("Deposit for {} on {} = {}", broker.getName(), date, result);
-		return result;
+		logger.debug("Deposit for {} on {} = {}", broker.getName(), date, deposit);
+		return deposit;
 	}
 
 	public EvalOutDTO eval(EvalInDTO evalDTO) throws JsonProcessingException {
-		Broker     broker     = brokerRepo.getReferenceById(evalDTO.getBrokerId());
-		BigDecimal depositUSD = getDeposit(evalDTO.getBrokerId(), evalDTO.getDate());
-		Ticker     ticker     = tickerRepo.getReferenceById(evalDTO.getTickerId());
-		BigDecimal priceUSD =
+		Broker broker     = brokerRepo.getReferenceById(evalDTO.getBrokerId());
+		double depositUSD = getDeposit(evalDTO.getBrokerId(), evalDTO.getDate());
+		Ticker ticker     = tickerRepo.getReferenceById(evalDTO.getTickerId());
+
+		long items = evalDTO.getItems();
+
+		double fees = getFees(broker, ticker, items, items * evalDTO.getPriceOpen(), evalDTO.getDate());
+
+		double priceUSD =
 				currencyRateService.convertToUSD(
 						ticker.getCurrency().getId(),
 						evalDTO.getPriceOpen(),
 						evalDTO.getDate());
-		BigDecimal stopLossUSD =
+		double stopLossUSD =
 				currencyRateService.convertToUSD(
 						ticker.getCurrency().getId(),
 						evalDTO.getStopLoss(),
 						evalDTO.getDate());
 
-		BigDecimal fees = BigDecimal.ZERO;
+		double sum = items * priceUSD;
 
-		BigDecimal items = BigDecimal.valueOf(evalDTO.getItems());
+		double sumLoss = items * stopLossUSD;
 
-		BigDecimal sum = items.multiply(priceUSD);
+		double losses = sum - sumLoss;
 
-		BigDecimal sumLoss = items.multiply(stopLossUSD);
+		double risk = losses/depositUSD*100.0;
+
+		return new EvalOutDTO(fees, risk);
+	}
+
+	public Double getFees(Broker broker, Ticker ticker, long items, Double sum, LocalDate date) throws JsonProcessingException {
+		double fees = 0.0;
+		long currencyId = ticker.getCurrency().getId();
 
 		if (broker.getName().equals("FreedomFN")) {
 			if (ticker.getCurrency().getName().equals("KZT")) {
-				fees = sum
-						.divide(BigDecimal.valueOf(100.00), 12, RoundingMode.HALF_EVEN)
-						.multiply(BigDecimal.valueOf(0.085));
+				fees = sum / 100.0 * 0.085;
 			} else {
-
-				BigDecimal fixed = items.compareTo(BigDecimal.valueOf(100)) < 0 ?
-						BigDecimal.valueOf(1.2) :
-						items.multiply(BigDecimal.valueOf(0.012));
-				fees = sum.divide(BigDecimal.valueOf(100.00), 12, RoundingMode.HALF_EVEN)
-				          .multiply(BigDecimal.valueOf(0.5))
-				          .add(fixed);
+				double fixed = items < 100 ? 1.2 : items * 0.012;
+				fees = sum / 100.0 * 0.5 + fixed;
 			}
 		}
-
-		BigDecimal losses = sum.subtract(sumLoss);
-
-		BigDecimal risk = losses.divide(depositUSD,12,RoundingMode.HALF_EVEN).multiply(BigDecimal.valueOf(100.0));
-
-		fees = fees.setScale(2, RoundingMode.HALF_EVEN);
-		risk = risk.setScale(2, RoundingMode.HALF_EVEN);
-
-		return new EvalOutDTO(fees, risk);
+		return currencyRateService.convertToUSD(currencyId, fees, date);
 	}
 }

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @SuppressWarnings("unused")
@@ -14,32 +13,19 @@ public class TradeLogCloseDTO implements Serializable {
 	private final Long id;
 	private final LocalDateTime dateClose;
 
-	private final BigDecimal priceClose;
-
-	private final BigDecimal fees;
+	private final Double priceClose;
 
 	private final String note;
-
-	private final String grade;
-
-
-	public String getGrade() {
-		return grade;
-	}
 
 	@JsonCreator
 	public TradeLogCloseDTO(@JsonProperty("id") Long id,
 	                        @JsonProperty("dateClose") LocalDateTime dateClose,
-	                        @JsonProperty("priceClose") BigDecimal priceClose,
-	                        @JsonProperty("fees") BigDecimal fees,
-	                        @JsonProperty("note") String note,
-	                        @JsonProperty("grade") String grade) {
+	                        @JsonProperty("priceClose") Double priceClose,
+	                        @JsonProperty("note") String note) {
 		this.id = id;
 		this.dateClose = dateClose;
 		this.priceClose = priceClose;
-		this.fees = fees;
 		this.note = note;
-		this.grade = grade;
 	}
 
 	public Long getId() {
@@ -50,12 +36,8 @@ public class TradeLogCloseDTO implements Serializable {
 		return dateClose;
 	}
 
-	public BigDecimal getPriceClose() {
+	public Double getPriceClose() {
 		return priceClose;
-	}
-
-	public BigDecimal getFees() {
-		return fees;
 	}
 
 	public String getNote() {

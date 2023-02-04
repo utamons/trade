@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @SuppressWarnings("unused")
@@ -23,23 +22,23 @@ public class TradeLogOpenDTO implements Serializable {
 
 	private final Long itemNumber;
 
-	private final BigDecimal priceOpen;
+	private final Double priceOpen;
 
-	private final BigDecimal stopLoss;
+	private final Double stopLoss;
 
-	private final BigDecimal takeProfit;
+	private final Double takeProfit;
 
-	private final BigDecimal outcomeExpected;
+	private final Double outcomeExpected;
 
-	private final BigDecimal risk;
+	private final Double risk;
 
-	private final BigDecimal fees;
+	private final Double fees;
 
 	private final String note;
 
-	private final BigDecimal goal;
+	private final Double goal;
 
-	public BigDecimal getGoal() {
+	public Double getGoal() {
 		return goal;
 	}
 
@@ -50,14 +49,14 @@ public class TradeLogOpenDTO implements Serializable {
 	                       @JsonProperty("marketId") Long marketId,
 	                       @JsonProperty("tickerId") Long tickerId,
 	                       @JsonProperty("itemNumber") Long itemNumber,
-	                       @JsonProperty("priceOpen") BigDecimal priceOpen,
-	                       @JsonProperty("stopLoss") BigDecimal stopLoss,
-	                       @JsonProperty("takeProfit") BigDecimal takeProfit,
-	                       @JsonProperty("outcomeExpected") BigDecimal outcomeExpected,
-	                       @JsonProperty("risk") BigDecimal risk,
-	                       @JsonProperty("fees") BigDecimal fees,
+	                       @JsonProperty("priceOpen") Double priceOpen,
+	                       @JsonProperty("stopLoss") Double stopLoss,
+	                       @JsonProperty("takeProfit") Double takeProfit,
+	                       @JsonProperty("outcomeExpected") Double outcomeExpected,
+	                       @JsonProperty("risk") Double risk,
+	                       @JsonProperty("fees") Double fees,
 	                       @JsonProperty("note") String note,
-	                       @JsonProperty("goal") BigDecimal goal) {
+	                       @JsonProperty("goal") Double goal) {
 		this.position = position;
 		this.dateOpen = dateOpen;
 		this.brokerId = brokerId;
@@ -98,27 +97,27 @@ public class TradeLogOpenDTO implements Serializable {
 		return itemNumber;
 	}
 
-	public BigDecimal getPriceOpen() {
+	public Double getPriceOpen() {
 		return priceOpen;
 	}
 
-	public BigDecimal getStopLoss() {
+	public Double getStopLoss() {
 		return stopLoss;
 	}
 
-	public BigDecimal getTakeProfit() {
+	public Double getTakeProfit() {
 		return takeProfit;
 	}
 
-	public BigDecimal getOutcomeExpected() {
+	public Double getOutcomeExpected() {
 		return outcomeExpected;
 	}
 
-	public BigDecimal getRisk() {
+	public Double getRisk() {
 		return risk;
 	}
 
-	public BigDecimal getFees() {
+	public Double getFees() {
 		return fees;
 	}
 

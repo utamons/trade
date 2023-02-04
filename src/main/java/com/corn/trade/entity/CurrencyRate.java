@@ -1,7 +1,6 @@
 package com.corn.trade.entity;
 
 import javax.persistence.*;
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -13,7 +12,7 @@ public class CurrencyRate {
 	public CurrencyRate() {
 	}
 
-	public CurrencyRate(LocalDate date, Currency currency, BigDecimal rate) {
+	public CurrencyRate(LocalDate date, Currency currency, Double rate) {
 		this.date = date;
 		this.currency = currency;
 		this.rate = rate;
@@ -31,7 +30,7 @@ public class CurrencyRate {
 	private Currency currency;
 
 	@Column(name = "rate", nullable = false)
-	private BigDecimal rate;
+	private Double rate;
 
 	public void setId(Long id) {
 		this.id = id;
@@ -49,11 +48,11 @@ public class CurrencyRate {
 		return date;
 	}
 
-	public void setRate(BigDecimal rate) {
+	public void setRate(Double rate) {
 		this.rate = rate;
 	}
 
-	public BigDecimal getRate() {
+	public Double getRate() {
 		return rate;
 	}
 

@@ -1,11 +1,14 @@
 package com.corn.trade.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+
+import static com.corn.trade.util.Util.toOutBigDecimal;
 
 @SuppressWarnings("unused")
 public class TradeLogDTO implements Serializable {
@@ -28,29 +31,29 @@ public class TradeLogDTO implements Serializable {
 
 	private final Long itemNumber;
 
-	private final BigDecimal priceOpen;
+	private final Double priceOpen;
 
-	private final BigDecimal priceClose;
+	private final Double priceClose;
 
-	private final BigDecimal volume;
+	private final Double volume;
 
-	private final BigDecimal volumeToDeposit;
+	private final Double volumeToDeposit;
 
-	private final BigDecimal stopLoss;
+	private final Double stopLoss;
 
-	private final BigDecimal takeProfit;
+	private final Double takeProfit;
 
-	private final BigDecimal outcomeExpected;
+	private final Double outcomeExpected;
 
-	private final BigDecimal risk;
+	private final Double risk;
 
-	private final BigDecimal fees;
+	private final Double fees;
 
-	private final BigDecimal outcome;
+	private final Double outcome;
 
-	private final BigDecimal outcomePercent;
+	private final Double outcomePercent;
 
-	private final BigDecimal profit;
+	private final Double profit;
 
 	private final String note;
 
@@ -58,7 +61,7 @@ public class TradeLogDTO implements Serializable {
 
 	private final String grade;
 
-	private final BigDecimal goal;
+	private final Double goal;
 
 	@JsonCreator
 	public TradeLogDTO(@JsonProperty("id") Long id,
@@ -70,22 +73,22 @@ public class TradeLogDTO implements Serializable {
 	                   @JsonProperty("ticker") TickerDTO ticker,
 	                   @JsonProperty("currency") CurrencyDTO currency,
 	                   @JsonProperty("itemNumber") Long itemNumber,
-	                   @JsonProperty("priceOpen") BigDecimal priceOpen,
-	                   @JsonProperty("priceClose") BigDecimal priceClose,
-	                   @JsonProperty("volume") BigDecimal volume,
-	                   @JsonProperty("volumeToDeposit") BigDecimal volumeToDeposit,
-	                   @JsonProperty("stopLoss") BigDecimal stopLoss,
-	                   @JsonProperty("takeProfit") BigDecimal takeProfit,
-	                   @JsonProperty("outcomeExpected") BigDecimal outcomeExpected,
-	                   @JsonProperty("risk") BigDecimal risk,
-	                   @JsonProperty("fees") BigDecimal fees,
-	                   @JsonProperty("outcome") BigDecimal outcome,
-	                   @JsonProperty("outcomePercent") BigDecimal outcomePercent,
-	                   @JsonProperty("profit") BigDecimal profit,
+	                   @JsonProperty("priceOpen") Double priceOpen,
+	                   @JsonProperty("priceClose") Double priceClose,
+	                   @JsonProperty("volume") Double volume,
+	                   @JsonProperty("volumeToDeposit") Double volumeToDeposit,
+	                   @JsonProperty("stopLoss") Double stopLoss,
+	                   @JsonProperty("takeProfit") Double takeProfit,
+	                   @JsonProperty("outcomeExpected") Double outcomeExpected,
+	                   @JsonProperty("risk") Double risk,
+	                   @JsonProperty("fees") Double fees,
+	                   @JsonProperty("outcome") Double outcome,
+	                   @JsonProperty("outcomePercent") Double outcomePercent,
+	                   @JsonProperty("profit") Double profit,
 	                   @JsonProperty("note") String note,
 	                   @JsonProperty("chart") String chart,
 	                   @JsonProperty("grade") String grade,
-	                   @JsonProperty("goal") BigDecimal goal) {
+	                   @JsonProperty("goal") Double goal) {
 		this.id = id;
 		this.position = position;
 		this.dateOpen = dateOpen;
@@ -150,51 +153,60 @@ public class TradeLogDTO implements Serializable {
 	}
 
 	public BigDecimal getPriceOpen() {
-		return priceOpen;
+		return toOutBigDecimal(priceOpen);
 	}
 
 	public BigDecimal getPriceClose() {
-		return priceClose;
+		return toOutBigDecimal(priceClose);
 	}
 
 	public BigDecimal getVolume() {
-		return volume;
+		return toOutBigDecimal(volume);
 	}
 
 	public BigDecimal getVolumeToDeposit() {
-		return volumeToDeposit;
+		return toOutBigDecimal(volumeToDeposit);
 	}
 
 	public BigDecimal getStopLoss() {
-		return stopLoss;
+		return toOutBigDecimal(stopLoss);
 	}
 
 	public BigDecimal getTakeProfit() {
-		return takeProfit;
+		return toOutBigDecimal(takeProfit);
 	}
 
 	public BigDecimal getOutcomeExpected() {
-		return outcomeExpected;
+		return toOutBigDecimal(outcomeExpected);
 	}
 
 	public BigDecimal getRisk() {
-		return risk;
+		return toOutBigDecimal(risk);
 	}
 
 	public BigDecimal getFees() {
-		return fees;
+		return toOutBigDecimal(fees);
 	}
 
 	public BigDecimal getOutcome() {
+		return toOutBigDecimal(outcome);
+	}
+
+	@JsonIgnore
+	public Double getOutcomeDouble() {
 		return outcome;
 	}
 
 	public BigDecimal getOutcomePercent() {
+		return toOutBigDecimal(outcomePercent);
+	}
+
+	public Double getOutcomePercentDouble() {
 		return outcomePercent;
 	}
 
 	public BigDecimal getProfit() {
-		return profit;
+		return toOutBigDecimal(profit);
 	}
 
 	public String getNote() {
@@ -210,6 +222,6 @@ public class TradeLogDTO implements Serializable {
 	}
 
 	public BigDecimal getGoal() {
-		return goal;
+		return toOutBigDecimal(goal);
 	}
 }

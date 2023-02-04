@@ -8,8 +8,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -43,22 +41,19 @@ public class CashController {
 
 	@GetMapping("/state")
 	public MoneyStateDTO state() throws JsonProcessingException {
-		BigDecimal        capital     = service.getCapital();
+		Double            capital     = service.getCapital();
 		List<TradeLogDTO> closed      = tradeLogService.getAllClosed();
-		BigDecimal        sumOutcomes = BigDecimal.ZERO;
+		double            sumOutcomes = 0.0;
 		final LocalDate   today       = LocalDate.now();
 
 		for (TradeLogDTO dto : closed) {
-			sumOutcomes = sumOutcomes.add(
+			sumOutcomes = sumOutcomes +
 					currencyRateService.convertToUSD(dto.getCurrency().getId(),
-					                                 dto.getOutcome(),
-					                                 today)
-			);
+					                                 dto.getOutcomeDouble(),
+					                                 today);
 		}
 
-		BigDecimal profit = sumOutcomes.divide(capital, 12, RoundingMode.HALF_EVEN)
-		                               .multiply(BigDecimal.valueOf(100.0))
-		                               .setScale(2, RoundingMode.HALF_EVEN);
+		Double profit = sumOutcomes/capital*100.0;
 
 		return new MoneyStateDTO(capital, profit);
 	}

@@ -46,19 +46,19 @@ public class CurrencyAPI {
 			result.add(new CurrencyRateDTO(null,
 			                               date,
 			                               new CurrencyDTO(null, "KZT"),
-			                               data.get("KZT").get("value").decimalValue()));
+			                               data.get("KZT").get("value").doubleValue()));
 			result.add(new CurrencyRateDTO(null,
 			                               date,
 			                               new CurrencyDTO(null, "EUR"),
-			                               data.get("EUR").get("value").decimalValue()));
+			                               data.get("EUR").get("value").doubleValue()));
 			result.add(new CurrencyRateDTO(null,
 			                               date,
 			                               new CurrencyDTO(null, "GBP"),
-			                               data.get("GBP").get("value").decimalValue()));
+			                               data.get("GBP").get("value").doubleValue()));
 			result.add(new CurrencyRateDTO(null,
 			                               date,
 			                               new CurrencyDTO(null, "HKD"),
-			                               data.get("HKD").get("value").decimalValue()));
+			                               data.get("HKD").get("value").doubleValue()));
 
 		}
 		return result;

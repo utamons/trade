@@ -1,7 +1,6 @@
 package com.corn.trade.entity;
 
 import javax.persistence.*;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @SuppressWarnings("unused")
@@ -16,7 +15,7 @@ public class CashAccount {
 		this.name = name;
 		this.currency = currency;
 		this.broker = broker;
-		this.amount = BigDecimal.ZERO;
+		this.amount = 0.0;
 		this.type = type;
 		this.updatedAt = LocalDateTime.now();
 	}
@@ -39,7 +38,7 @@ public class CashAccount {
 	private CashAccountType type;
 
 	@Column(name = "amount", nullable = false)
-	private BigDecimal amount;
+	private Double amount;
 
 	@Column(name = "updated_at", nullable = false)
 	private LocalDateTime updatedAt;
@@ -60,11 +59,11 @@ public class CashAccount {
 		return name;
 	}
 
-	public void setAmount(BigDecimal amount) {
+	public void setAmount(Double amount) {
 		this.amount = amount;
 	}
 
-	public BigDecimal getAmount() {
+	public Double getAmount() {
 		return amount;
 	}
 

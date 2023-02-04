@@ -11,8 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -47,27 +45,23 @@ public class BrokerService {
 		List<CashAccountDTO> accounts = cashService.getTradeAccounts(brokerId);
 		List<TradeLogDTO>    dtos     = tradeLogService.getAllClosedByBroker(brokerId);
 
-		BigDecimal outcome    = BigDecimal.ZERO;
-		BigDecimal avgProfit  = BigDecimal.ZERO;
+		double outcome    = 0.0;
+		double avgProfit  = 0.0;
 
 		LocalDate currentDate = LocalDate.now();
 
 		for (TradeLogDTO dto : dtos) {
-			outcome = outcome.add(
-					currencyRateService.convertToUSD(
+			outcome += currencyRateService.convertToUSD(
 							dto.getCurrency().getId(),
-							dto.getOutcome(),
-							currentDate));
-			avgProfit = avgProfit.add(dto.getOutcomePercent());
+							dto.getOutcomeDouble(),
+							currentDate);
+			avgProfit += dto.getOutcomePercentDouble();
 		}
 
-		BigDecimal avgOutcome = dtos.size() > 0 ?
-				outcome.divide(BigDecimal.valueOf(dtos.size()), 2, RoundingMode.HALF_EVEN) : BigDecimal.ZERO;
-		avgProfit = dtos.size() > 0 ?
-				avgProfit.divide(BigDecimal.valueOf(dtos.size()), 2, RoundingMode.HALF_EVEN): BigDecimal.ZERO;
+		double avgOutcome = dtos.size() > 0 ? outcome/dtos.size() : 0.0;
+		avgProfit = dtos.size() > 0 ? avgProfit/dtos.size(): 0.0;
 
 		long open = tradeLogService.getOpenCountByBroker(brokerId);
-		outcome = outcome.setScale(2, RoundingMode.HALF_EVEN);
 
 		return new BrokerStatsDTO(
 				accounts,

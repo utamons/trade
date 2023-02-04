@@ -182,7 +182,20 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
             })
             onClose()
         }
-    }, [evaluate, positionId, marketId, tickerId, price, items, stopLoss, date, risk, fees, note, takeProfit, outcomeExp])
+    }, [
+        evaluate,
+        positionId,
+        marketId,
+        tickerId,
+        price,
+        items,
+        stopLoss,
+        date,
+        risk,
+        fees,
+        note,
+        takeProfit,
+        outcomeExp])
 
     const handlePositionSelector = useCallback((event: SelectChangeEvent<unknown>) => {
         setPositionId(event.target.value as string)
