@@ -74,8 +74,9 @@ const BasicDateTimePicker = ({ onChange }: DatePickerProps) => {
             <DesktopDateTimePicker
                 renderInput={(props) => <TextFieldStyled {...props} />}
                 value={value}
-                inputFormat="YYYY-MM-DD HH:MM"
+                inputFormat="YYYY-MM-DD HH:mm"
                 onChange={handleChange}
+                onAccept={handleChange}
             />
         </LocalizationProvider>
     )
