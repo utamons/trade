@@ -1,16 +1,24 @@
 import { Box, Grid, IconButton, styled } from '@mui/material'
-import { utc2market, money, remCalc } from '../../utils/utils'
+import { GREEN, money, profitColor, remCalc, riskColor, utc2market } from '../../utils/utils'
 import CloseIcon from '@mui/icons-material/Close'
 import { CloseButtonProps, TradeLog } from 'types'
 import React, { useCallback, useState } from 'react'
 import ExpandButton from './expandButton'
 import { FieldBox, FieldName, FieldValue, NoteBox } from '../../styles/style'
+import { useTheme } from '@emotion/react'
+import CircleIcon from '@mui/icons-material/Circle'
 
 export const CloseButtonStyled = styled(IconButton)(({ theme }) => ({
     width: remCalc(25),
     height: remCalc(25),
     marginTop: remCalc(2),
     color: theme.palette.text.primary
+}))
+
+export const CircleStyled = styled(CircleIcon)(() => ({
+    fontSize: remCalc(10),
+    color: GREEN,
+    marginRight: remCalc(10)
 }))
 
 
@@ -67,6 +75,12 @@ const Expanded = ({ logItem, expandHandler, closeDialog }: ExpandableProps) => {
     const closeDialogHandler = useCallback(() => {
         closeDialog(logItem)
     }, [])
+
+    const theme = useTheme()
+    // noinspection TypeScriptUnresolvedVariable
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const defaultColor = theme.palette.text.primary
 
     const tz = market.timezone
     return <RowBox container columns={53}>
@@ -126,7 +140,7 @@ const Expanded = ({ logItem, expandHandler, closeDialog }: ExpandableProps) => {
                 </FieldBox>
                 <FieldBox>
                     <FieldName>Risk:</FieldName>
-                    <FieldValue>{risk} %</FieldValue>
+                    <FieldValue sx={riskColor(risk, defaultColor)}>{risk} %</FieldValue>
                 </FieldBox>
                 <FieldBox>
                     <FieldName>Fees:</FieldName>
@@ -138,15 +152,15 @@ const Expanded = ({ logItem, expandHandler, closeDialog }: ExpandableProps) => {
                 </FieldBox>
                 <FieldBox>
                     <FieldName>Outcome:</FieldName>
-                    <FieldValue>{money(currency.name, outcome)}</FieldValue>
+                    <FieldValue sx={profitColor(outcome, defaultColor)}>{money(currency.name, outcome)}</FieldValue>
                 </FieldBox>
                 <FieldBox>
                     <FieldName>Pos. profit:</FieldName>
-                    <FieldValue>{outcomePercent} %</FieldValue>
+                    <FieldValue sx={profitColor(outcomePercent, defaultColor)}>{outcomePercent} %</FieldValue>
                 </FieldBox>
                 <FieldBox>
                     <FieldName>Cap. profit:</FieldName>
-                    <FieldValue>{profit} %</FieldValue>
+                    <FieldValue sx={profitColor(profit, defaultColor)}>{profit} %</FieldValue>
                 </FieldBox>
                 <FieldBox>
                     <FieldName>Goal:</FieldName>
@@ -172,12 +186,22 @@ const Collapsed = ({ logItem, expandHandler, closeDialog }: ExpandableProps) => 
 
     const tz = market.timezone
 
+    const theme = useTheme()
+    // noinspection TypeScriptUnresolvedVariable
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const defaultColor = theme.palette.text.primary
+
     const closeDialogHandler = useCallback(() => {
         closeDialog(logItem)
     }, [])
 
+    const openP = () => {
+        return dateClose ? '' : <CircleStyled/>
+    }
+
     return <RowBox container columns={53}>
-        <Item item xs={4}>{broker.name}</Item>
+        <Item item xs={4}>{openP()} {broker.name}</Item>
         <Item item xs={3}>{market.name}</Item>
         <Item item xs={3}>{ticker.name}</Item>
         <Item item xs={2}>{position}</Item>
@@ -187,8 +211,9 @@ const Collapsed = ({ logItem, expandHandler, closeDialog }: ExpandableProps) => 
         <Item item xs={4}>{priceClose ? money(currency.name, priceClose) : '-'}</Item>
         <Item item xs={3}>{itemNumber}</Item>
         <Item item xs={4}>{money(currency.name, volume)}</Item>
-        <Item item xs={4}>{money(currency.name, outcome)}</Item>
-        <Item item xs={4}>{outcomePercent != undefined ? `${outcomePercent} %` : '-'}</Item>
+        <Item item sx={profitColor(outcome, defaultColor)} xs={4}>{money(currency.name, outcome)}</Item>
+        <Item item sx={profitColor(outcomePercent, defaultColor)}
+              xs={4}>{outcomePercent != undefined ? `${outcomePercent} %` : '-'}</Item>
         <Item item xs={4}>{money('USD', fees)}</Item>
         <Item item xs={2}>
             <ExpandButton expanded={false} onClick={expandHandler}/>
