@@ -394,7 +394,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                             <FieldBox>
                                 <FieldName>Risk:</FieldName>
                                 <FieldValue>
-                                    {risk}
+                                    {risk} %
                                 </FieldValue>
                             </FieldBox>
                         </Grid>
