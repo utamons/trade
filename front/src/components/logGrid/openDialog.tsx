@@ -3,7 +3,7 @@
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import Dialog from '@mui/material/Dialog'
-import { remCalc } from '../../utils/utils'
+import { RED, remCalc, riskColor } from '../../utils/utils'
 import Button from '../button'
 import React, { useCallback, useState } from 'react'
 import { ButtonContainerStyled, FieldName } from '../../styles/style'
@@ -19,6 +19,7 @@ import NumberInput from '../numberInput'
 import { postEval } from '../../api'
 import Switch from '@mui/material/Switch'
 import { DesktopDateTimePicker } from '@mui/x-date-pickers'
+import { useTheme } from '@emotion/react'
 
 interface OpenDialogProps {
     currentBroker: ItemType,
@@ -64,13 +65,13 @@ const NoteBox = styled(Box)(() => ({
 
 const RedSwitch = styled(Switch)(() => ({
     '& .MuiSwitch-switchBase.Mui-checked': {
-        color: '#cc3300',
+        color: RED,
         '&:hover': {
             backgroundColor: 'rgba(204, 51, 0, 0.2)'
         }
     },
     '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-        backgroundColor: '#cc3300'
+        backgroundColor: RED
     }
 }))
 
@@ -139,6 +140,12 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     const [note, setNote] = useState('')
     const [date, setDate] = useState(new Date())
     const [evaluate, setEvaluate] = useState(true)
+
+    const theme = useTheme()
+    // noinspection TypeScriptUnresolvedVariable
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const defaultColor = theme.palette.text.primary
 
     const validate = (): boolean => {
         if (priceError || itemsError || stopLossError || takeProfitError || outcomeExpError)
@@ -398,7 +405,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                         <Grid item xs={1}>
                             <FieldBox>
                                 <FieldName>Risk:</FieldName>
-                                <FieldValue>
+                                <FieldValue sx={riskColor(risk, defaultColor)}>
                                     {risk} %
                                 </FieldValue>
                             </FieldBox>

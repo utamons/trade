@@ -52,3 +52,21 @@ export const money = (currencyName: string, amount: number | undefined): string 
 }
 
 export const remCalc = (px: number): string => `${(px / 16).toFixed(3)}rem`
+
+export const RED ='#cc3300'
+export const GREEN = '#00cc00'
+
+export const riskColor = (risk:number | undefined, defaultColor: string) => {
+    if (risk && risk > 2)
+        return { color: RED, fontWeight: 'bolder' }
+    return { color: defaultColor }
+}
+
+export const profitColor = (profit:number | undefined, defaultColor: string) => {
+    if (profit && profit < 0)
+        return { color: RED, fontWeight: 'bolder' }
+    if (profit && profit > 0)
+        return { color: GREEN, fontWeight: 'bolder' }
+
+    return { color: defaultColor }
+}

@@ -2,8 +2,9 @@
 
 import React from 'react'
 import { Box, styled } from '@mui/material'
-import { remCalc } from '../../utils/utils'
+import { profitColor, remCalc } from '../../utils/utils'
 import { MoneyStateType } from 'types'
+import { useTheme } from '@emotion/react'
 
 const ContainerStyled = styled(Box)(({ theme }) => ({
     borderRight: `solid ${remCalc(1)}`,
@@ -22,12 +23,18 @@ const BoxStyled = styled(Box)(() => ({
 }))
 
 export default ({ capital, profit }: MoneyStateType) => {
+    const theme = useTheme()
+    // noinspection TypeScriptUnresolvedVariable
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const defaultColor = theme.palette.text.primary
+
     return <ContainerStyled>
         <BoxStyled>
             <div>Capital:</div> <div>${capital}</div>
         </BoxStyled>
         <BoxStyled>
-            <div>Profit:</div> <div>{profit}%</div>
+            <div>Profit:</div> <Box sx={profitColor(profit, defaultColor)}>{profit}%</Box>
         </BoxStyled>
     </ContainerStyled>
 }
