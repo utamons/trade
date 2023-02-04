@@ -8,7 +8,7 @@ module.exports = {
     mode: 'production',
     entry: './src/index.tsx',
     output: {
-        path: path.resolve(__dirname, './dist'),
+        path: path.resolve(__dirname, '../src/main/resources/static'),
         publicPath: `/`,
         chunkFilename: 'assets/[name].[contenthash].js',
         filename: 'assets/[name].[contenthash].js',

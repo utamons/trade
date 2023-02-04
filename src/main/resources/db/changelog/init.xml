@@ -87,7 +87,7 @@
             <column name="currency_id" type="bigint">
                 <constraints nullable="false"/>
             </column>
-            <column name="item_decimal(10.2)" type="bigint">
+            <column name="item_number" type="bigint">
                 <constraints nullable="false"/>
             </column>
             <column name="price_open" type="decimal(10.2)">

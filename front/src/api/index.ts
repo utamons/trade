@@ -1,6 +1,7 @@
 import { EvalRequest, ExchangeType, PageRequest, PositionCloseType, PositionOpenType, RefillType } from 'types'
+import config from '../../config/config.json'
 
-const baseUrl = 'http://localhost:8080/api'
+const baseUrl = config.baseUrl
 
 const fetchBrokers = async () => {
     const url = `${baseUrl}/broker/all`
