@@ -61,7 +61,7 @@ public class TradeLogService {
 		tradeLogRepo.flush();
 		cashService.buy(tradeLog.getVolume(), broker, ticker.getCurrency(), tradeLog);
 		if (tradeLog.getFees() != 0.0)
-			cashService.fee(tradeLog.getFees(), broker, tradeLog);
+			cashService.fee(tradeLog.getFees(), broker, tradeLog, tradeLog.getDateOpen());
 	}
 
 	public void close(TradeLogCloseDTO closeDTO) throws JsonProcessingException {
@@ -84,7 +84,7 @@ public class TradeLogService {
 		double feesUSD = currencyRateService.convertToUSD(open.getCurrency().getId(), fees, closeDTO.getDateClose().toLocalDate());
 
 		if (feesUSD != 0)
-			cashService.fee(feesUSD, open.getBroker(), open);
+			cashService.fee(feesUSD, open.getBroker(), open, closeDTO.getDateClose());
 
 		open.setFees(open.getFees() + feesUSD);
 
