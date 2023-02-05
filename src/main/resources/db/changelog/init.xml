@@ -54,10 +54,10 @@
             <column name="date" type="datetime">
                 <constraints nullable="false"/>
             </column>
-            <column name="sum" type="decimal(10.2)">
+            <column name="sum" type="decimal(10,2)">
                 <constraints nullable="false"/>
             </column>
-            <column name="total" type="decimal(10.2)" remarks="in the base currency">
+            <column name="total" type="decimal(10,2)" remarks="in the base currency">
                 <constraints nullable="false"/>
             </column>
             <column name="type" type="varchar(25)" remarks="refill, withdraw, fee, profit, loss">
@@ -90,26 +90,26 @@
             <column name="item_number" type="bigint">
                 <constraints nullable="false"/>
             </column>
-            <column name="price_open" type="decimal(10.2)">
+            <column name="price_open" type="decimal(10,2)">
                 <constraints nullable="false"/>
             </column>
-            <column name="price_close" type="decimal(10.2)"/>
-            <column name="volume" type="decimal(10.2)">
+            <column name="price_close" type="decimal(10,2)"/>
+            <column name="volume" type="decimal(10,2)">
                 <constraints nullable="false"/>
             </column>
-            <column name="volume_to_deposit" type="decimal(10.2)" remarks="% volume to the deposit total at open">
+            <column name="volume_to_deposit" type="decimal(10,2)" remarks="% volume to the deposit total at open">
                 <constraints nullable="false"/>
             </column>
-            <column name="stop_loss" type="decimal(10.2)"/>
-            <column name="take_profit" type="decimal(10.2)"/>
-            <column name="outcome_expected" type="decimal(10.2)"/>
-            <column name="risk" type="decimal(10.2)"/>
-            <column name="fees" type="decimal(10.2)">
+            <column name="stop_loss" type="decimal(10,2)"/>
+            <column name="take_profit" type="decimal(10,2)"/>
+            <column name="outcome_expected" type="decimal(10,2)"/>
+            <column name="risk" type="decimal(10,2)"/>
+            <column name="fees" type="decimal(10,2)">
                 <constraints nullable="false"/>
             </column>
-            <column name="outcome" type="decimal(10.2)" remarks="profit (positive) or loss (negative)"/>
-            <column name="outcome_percent" type="decimal(10.2)" remarks="profit (positive) or loss (negative)"/>
-            <column name="profit" type="decimal(10.4)" remarks="% profit to the capital total at close"/>
+            <column name="outcome" type="decimal(10,2)" remarks="profit (positive) or loss (negative)"/>
+            <column name="outcome_percent" type="decimal(10,2)" remarks="profit (positive) or loss (negative)"/>
+            <column name="profit" type="decimal(10,4)" remarks="% profit to the capital total at close"/>
             <column name="note" type="text"/>
             <column name="chart" type="blob"/>
         </createTable>
