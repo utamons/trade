@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -68,7 +69,14 @@ public class CashService {
 		CashAccountType toTrade    = accountTypeRepo.findCashAccountTypeByName("trade");
 		CashAccountType fromIncome = accountTypeRepo.findCashAccountTypeByName("income");
 
-		CashAccount trade = transfer(transferDTO.getAmount(), null, broker, currency, fromIncome, toTrade);
+		CashAccount trade = transfer(
+				transferDTO.getAmount(),
+				null,
+				broker,
+				currency,
+				fromIncome,
+				toTrade,
+				LocalDateTime.now());
 		logger.debug("finish");
 		return CashAccountMapper.toDTO(trade);
 	}
@@ -78,13 +86,14 @@ public class CashService {
 	                             Broker broker,
 	                             Currency currency,
 	                             CashAccountType fromType,
-	                             CashAccountType toType) {
+	                             CashAccountType toType,
+	                             LocalDateTime dateTime) {
 		CashAccount from    = getAccount(broker, currency, fromType);
 		CashAccount to      = getAccount(broker, currency, toType);
 		Double      fromSum = from.getAmount();
 		Double      toSum   = to.getAmount();
 
-		CashFlow record = new CashFlow(from, to, tradeLog, transfer, transfer, null);
+		CashFlow record = new CashFlow(from, to, tradeLog, transfer, transfer, null, dateTime);
 		cashFlowRepo.save(record);
 		from.setAmount(fromSum - transfer);
 		to.setAmount(toSum + transfer);
@@ -115,7 +124,15 @@ public class CashService {
 		double      tradeToSum   = tradeTo.getAmount();
 		double      rate         = transferFrom / transferTo;
 
-		CashFlow record = new CashFlow(tradeFrom, tradeTo, null, transferFrom, transferTo, rate);
+		CashFlow record = new CashFlow(
+				tradeFrom,
+				tradeTo,
+				null,
+				transferFrom,
+				transferTo,
+				rate,
+				LocalDateTime.now()
+		);
 		cashFlowRepo.save(record);
 		tradeFrom.setAmount(tradeFromSum - transferFrom);
 		tradeTo.setAmount(tradeToSum + transferTo);
@@ -134,13 +151,13 @@ public class CashService {
 		return CashAccountMapper.toDTO(tradeTo);
 	}
 
-	public void fee(Double amount, Broker broker, TradeLog tradeLog) {
+	public void fee(Double amount, Broker broker, TradeLog tradeLog, LocalDateTime dateTime) {
 		logger.debug("start");
 		CashAccountType fromTrade = accountTypeRepo.findCashAccountTypeByName("trade");
 		CashAccountType toFee     = accountTypeRepo.findCashAccountTypeByName("fee");
 		Currency        currency  = currencyRepo.findCurrencyByName("USD");
 
-		transfer(amount, tradeLog, broker, currency, fromTrade, toFee);
+		transfer(amount, tradeLog, broker, currency, fromTrade, toFee, dateTime);
 		logger.debug("finish");
 	}
 
@@ -149,7 +166,7 @@ public class CashService {
 		CashAccountType fromTrade = accountTypeRepo.findCashAccountTypeByName("trade");
 		CashAccountType toOpen    = accountTypeRepo.findCashAccountTypeByName("open");
 
-		transfer(amount, tradeLog, broker, currency, fromTrade, toOpen);
+		transfer(amount, tradeLog, broker, currency, fromTrade, toOpen, tradeLog.getDateOpen());
 		logger.debug("finish");
 	}
 
@@ -160,16 +177,16 @@ public class CashService {
 		CashAccountType profitType = accountTypeRepo.findCashAccountTypeByName("profit");
 		CashAccountType lossType   = accountTypeRepo.findCashAccountTypeByName("loss");
 
-		transfer(openAmount, tradeLog, broker, currency, openType, tradeType);
+		transfer(openAmount, tradeLog, broker, currency, openType, tradeType, tradeLog.getDateClose());
 
 		if (closeAmount > openAmount) {
 			double profit = closeAmount - openAmount;
-			transfer(profit, tradeLog, broker, currency, profitType, tradeType);
+			transfer(profit, tradeLog, broker, currency, profitType, tradeType, tradeLog.getDateClose());
 		}
 
 		if (closeAmount < openAmount) {
 			double loss = openAmount - closeAmount;
-			transfer(loss, tradeLog, broker, currency, tradeType, lossType);
+			transfer(loss, tradeLog, broker, currency, tradeType, lossType, tradeLog.getDateClose());
 		}
 
 		logger.debug("finish");
@@ -237,7 +254,7 @@ public class CashService {
 
 		double priceOpen = evalDTO.getPriceOpen();
 
-		double fees      = getFees(broker, ticker, items, items * priceOpen);
+		double fees = getFees(broker, ticker, items, items * priceOpen);
 
 		double feesUSD = currencyRateService.convertToUSD(
 				ticker.getCurrency().getId(),
@@ -261,9 +278,9 @@ public class CashService {
 
 		double losses = sum - sumLoss;
 
-		double risk = losses/depositUSD*100.0;
+		double risk = losses / depositUSD * 100.0;
 
-		double priceClose = priceOpen + (fees*2.3/items);
+		double priceClose = priceOpen + (fees * 2.3 / items);
 
 		double closeFees = getFees(broker, ticker, items, items * priceClose);
 
@@ -273,8 +290,7 @@ public class CashService {
 	}
 
 	public Double getFees(Broker broker, Ticker ticker, long items, Double sum) {
-		double fees = 0.0;
-		long currencyId = ticker.getCurrency().getId();
+		double fees       = 0.0;
 
 		if (broker.getName().equals("FreedomFN")) {
 			if (ticker.getCurrency().getName().equals("KZT")) {

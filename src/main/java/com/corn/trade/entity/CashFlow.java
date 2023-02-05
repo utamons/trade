@@ -16,14 +16,15 @@ public class CashFlow {
 					TradeLog tradeLog,
 	                Double sumFrom,
 	                Double sumTo,
-	                Double exchangeRate) {
+	                Double exchangeRate,
+	                LocalDateTime committedAt) {
 		this.accountFrom = accountFrom;
 		this.accountTo = accountTo;
 		this.tradeLog = tradeLog;
 		this.sumFrom = sumFrom;
 		this.sumTo = sumTo;
 		this.exchangeRate = exchangeRate;
-		committedAt = LocalDateTime.now();
+		this.committedAt = committedAt;
 	}
 
 	@Id
