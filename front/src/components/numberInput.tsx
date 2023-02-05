@@ -12,11 +12,16 @@ export default ({ onError, onChange, label, value }: NumberInputProps) => {
 
     const [error, setError] = useState(false)
     const [errorText, setErrorText] = useState('')
+    const [_value, setValue] = useState<string | number | undefined>(value)
+
 
     const handleInput = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         console.log(event.target.value)
+        setValue((event.target.value))
         validate(event.target.value)
-        onChange(Number(event.target.value))
+        const valueNum = Number(event.target.value)
+        if (event.target.value != '' && !isNaN(valueNum))
+            onChange(Number(event.target.value))
     }, [])
 
     const handleValidate =
@@ -40,7 +45,7 @@ export default ({ onError, onChange, label, value }: NumberInputProps) => {
 
     return <TextField
         label={label}
-        value={value == undefined?'':value+''}
+        value={_value == undefined ? '' : _value + ''}
         variant="standard"
         onChange={handleInput}
         onBlur={handleValidate}
