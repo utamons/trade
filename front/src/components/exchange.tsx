@@ -34,12 +34,14 @@ const SelectBoxStyled = styled(Box)(() => ({
 export default ({ open, onExchange, onCancel, currencies }: ExchangeDialogProps) => {
     const [currencyFromId, setCurrencyFromId] = useState('' + (currencies ? currencies[0].id : 0))
     const [currencyToId, setCurrencyToId] = useState('' + (currencies ? currencies[1].id : 0))
-    const [valueFrom, setValueFrom] = useState(0)
-    const [valueTo, setValueTo] = useState(0)
+    const [valueFrom, setValueFrom] = useState<number | undefined>(undefined)
+    const [valueTo, setValueTo] = useState<number | undefined>(undefined)
     const [errorFrom, setErrorFrom] = useState(false)
     const [errorTo, setErrorTo] = useState(false)
 
     const handleExchange = useCallback(() => {
+        if (!valueTo || !valueFrom)
+            return
         if (valueFrom <= 0 || valueTo <=0 || errorFrom || errorTo)
             return
         onExchange(Number(currencyFromId),  Number(currencyToId), Number(valueFrom), Number(valueTo))
@@ -74,8 +76,8 @@ export default ({ open, onExchange, onCancel, currencies }: ExchangeDialogProps)
                         variant="medium"
                     />
                 </SelectBoxStyled>
-                <NumberInput label="Amount from" onChange={setValueFrom} onError={setErrorFrom}/>
-                <NumberInput label="Amount to" onChange={setValueTo} onError={setErrorTo}/>
+                <NumberInput value={valueFrom} label="Amount from" onChange={setValueFrom} onError={setErrorFrom}/>
+                <NumberInput value={valueTo} label="Amount to" onChange={setValueTo} onError={setErrorTo}/>
             </ContainerStyled>
         </DialogContent>
 

@@ -2,17 +2,19 @@ import React, { useCallback, useState } from 'react'
 import TextField from '@mui/material/TextField'
 
 interface NumberInputProps {
+    value?: number
     onError: (error: boolean) => void
     onChange: (value: number) => void
     label?: string
 }
 
-export default ({ onError, onChange, label }: NumberInputProps) => {
+export default ({ onError, onChange, label, value }: NumberInputProps) => {
 
     const [error, setError] = useState(false)
     const [errorText, setErrorText] = useState('')
 
     const handleInput = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+        console.log(event.target.value)
         validate(event.target.value)
         onChange(Number(event.target.value))
     }, [])
@@ -38,6 +40,7 @@ export default ({ onError, onChange, label }: NumberInputProps) => {
 
     return <TextField
         label={label}
+        value={value == undefined?'':value+''}
         variant="standard"
         onChange={handleInput}
         onBlur={handleValidate}

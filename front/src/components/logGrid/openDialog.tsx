@@ -173,6 +173,10 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
             setFees(ev.fees)
             setRisk(ev.risk)
             setBreakEven(ev.breakEven)
+            setOutcomeExp(price && stopLoss &&
+            (!takeProfit || takeProfit > 0) ?
+                price + (price-stopLoss) * 3 :
+                undefined)
             return
         }
         if (price && items && stopLoss && risk && fees) {
@@ -355,7 +359,10 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                                     Price: {`(${currentTicker ? (currentTicker.currency.name) : '???'})`}
                                 </FieldName>
                                 <FieldValue>
-                                    <NumberInput onChange={priceChangeHandler} onError={priceErrorHandler}/>
+                                    <NumberInput
+                                        value={price}
+                                        onChange={priceChangeHandler}
+                                        onError={priceErrorHandler}/>
                                 </FieldValue>
                             </FieldBox>
                         </Grid>
@@ -367,7 +374,10 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                             <FieldBox>
                                 <FieldName>Items:</FieldName>
                                 <FieldValue>
-                                    <NumberInput onChange={itemsChangeHandler} onError={itemsErrorHandler}/>
+                                    <NumberInput
+                                        value={items}
+                                        onChange={itemsChangeHandler}
+                                        onError={itemsErrorHandler}/>
                                 </FieldValue>
                             </FieldBox>
                         </Grid>
@@ -375,7 +385,10 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                             <FieldBox>
                                 <FieldName>Stop Loss:</FieldName>
                                 <FieldValue>
-                                    <NumberInput onChange={stopLossChangeHandler} onError={stopLossErrorHandler}/>
+                                    <NumberInput
+                                        value={stopLoss}
+                                        onChange={stopLossChangeHandler}
+                                        onError={stopLossErrorHandler}/>
                                 </FieldValue>
                             </FieldBox>
                         </Grid>
@@ -383,7 +396,10 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                             <FieldBox>
                                 <FieldName>Take Profit:</FieldName>
                                 <FieldValue>
-                                    <NumberInput onChange={takeProfitChangeHandler} onError={takeProfitErrorHandler}/>
+                                    <NumberInput
+                                        value={takeProfit}
+                                        onChange={takeProfitChangeHandler}
+                                        onError={takeProfitErrorHandler}/>
                                 </FieldValue>
                             </FieldBox>
                         </Grid>
@@ -391,7 +407,10 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                             <FieldBox>
                                 <FieldName>Out. Exp.:</FieldName>
                                 <FieldValue>
-                                    <NumberInput onChange={outcomeExpChangeHandler} onError={outcomeExpErrorHandler}/>
+                                    <NumberInput
+                                        value={outcomeExp}
+                                        onChange={outcomeExpChangeHandler}
+                                        onError={outcomeExpErrorHandler}/>
                                 </FieldValue>
                             </FieldBox>
                         </Grid>
