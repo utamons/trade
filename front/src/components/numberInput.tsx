@@ -14,6 +14,9 @@ export default ({ onError, onChange, label, value }: NumberInputProps) => {
     const [errorText, setErrorText] = useState('')
     const [_value, setValue] = useState<string | number | undefined>(value)
 
+    if (_value != value) {
+        setValue(value)
+    }
 
     const handleInput = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         console.log(event.target.value)
@@ -22,7 +25,7 @@ export default ({ onError, onChange, label, value }: NumberInputProps) => {
         const valueNum = Number(event.target.value)
         if (event.target.value != '' && !isNaN(valueNum))
             onChange(Number(event.target.value))
-    }, [])
+    }, [value])
 
     const handleValidate =
         useCallback((event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
