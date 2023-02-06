@@ -3,7 +3,7 @@
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import Dialog from '@mui/material/Dialog'
-import { RED, remCalc, riskColor } from '../../utils/utils'
+import { RED, remCalc, riskColor, roundTo2 } from '../../utils/utils'
 import Button from '../button'
 import React, { useCallback, useState } from 'react'
 import { ButtonContainerStyled, FieldName } from '../../styles/style'
@@ -173,10 +173,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
             setFees(ev.fees)
             setRisk(ev.risk)
             setBreakEven(ev.breakEven)
-            setOutcomeExp(price && stopLoss &&
-            (!takeProfit || takeProfit > 0) ?
-                price + (price-stopLoss) * 3 :
-                undefined)
+            setOutcomeExp(roundTo2((price + (price-stopLoss) * 3) * items))
             return
         }
         if (price && items && stopLoss && risk && fees) {

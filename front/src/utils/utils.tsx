@@ -70,3 +70,7 @@ export const profitColor = (profit:number | undefined, defaultColor: string) => 
 
     return { color: defaultColor }
 }
+
+export const roundTo2 = (num: number) => {
+        return Math.round(num * 100) / 100
+}
