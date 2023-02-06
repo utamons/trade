@@ -284,7 +284,7 @@ public class CashService {
 
 		double takeProfit = breakEven + (priceOpen - evalDTO.getStopLoss()) * 3;
 
-		double outcomeExp = (takeProfit - priceOpen) * items;
+		double outcomeExp = (takeProfit - breakEven) * items;
 
 		return new EvalOutDTO(feesUSD, risk, breakEven, takeProfit, outcomeExp);
 	}
