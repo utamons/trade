@@ -74,8 +74,8 @@ public class TradeLogService {
 		double sum = closeDTO.getPriceClose() * items;
 
 		// in the currency of the position:
-		double fees = cashService.getFees(open.getBroker(), open.getTicker(), items, sum);
-		double openFees = cashService.getFees(open.getBroker(), open.getTicker(), items, open.getVolume());
+		double fees = cashService.getFees(open.getBroker(), open.getTicker(), items, sum).getAmount();
+		double openFees = cashService.getFees(open.getBroker(), open.getTicker(), items, open.getVolume()).getAmount();
 
 		double outcome = ((open.getPriceClose() - open.getPriceOpen()) * items) - (fees+openFees);
 
