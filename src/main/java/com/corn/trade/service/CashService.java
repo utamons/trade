@@ -254,7 +254,7 @@ public class CashService {
 
 		double priceOpen = evalDTO.getPriceOpen();
 
-		double fees = getFees(broker, ticker, items, items * priceOpen);
+		double fees = getFees(broker, ticker, items, items * priceOpen).getAmount();
 
 		double feesUSD = currencyRateService.convertToUSD(
 				ticker.getCurrency().getId(),
@@ -280,26 +280,47 @@ public class CashService {
 
 		double risk = losses / depositUSD * 100.0;
 
-		double priceClose = priceOpen + (fees * 2.3 / items);
+		double breakEven = getBreakEven(broker, ticker, items, priceOpen);
 
-		double closeFees = getFees(broker, ticker, items, items * priceClose);
+		double takeProfit = breakEven + (priceOpen - evalDTO.getStopLoss()) * 3;
 
-		double breakEven = priceOpen + (fees + closeFees) / items;
+		double outcomeExp = takeProfit * items;
 
-		return new EvalOutDTO(feesUSD, risk, breakEven);
+		return new EvalOutDTO(feesUSD, risk, breakEven, takeProfit, outcomeExp);
 	}
 
-	public Double getFees(Broker broker, Ticker ticker, long items, Double sum) {
-		double fees       = 0.0;
+	private double getBreakEven(Broker broker, Ticker ticker, long items, double priceOpen) {
+		double sumOpen = items * priceOpen;
+		double feesOpen = getFees(broker, ticker, items, sumOpen).getAmount();
+		double sumClose = sumOpen + feesOpen * 2;
+		double feesClose = getFees(broker, ticker, items, sumClose).getAmount();
+
+		while (sumClose-sumOpen < feesOpen + feesClose) {
+			sumClose += 0.01;
+			feesClose = getFees(broker, ticker, items, sumClose).getAmount();
+		}
+
+		return sumClose / items;
+	}
+
+	public Fees getFees(Broker broker, Ticker ticker, long items, Double sum) {
+		double fixed       = 0.0;
+		double fly = 0.0;
+		double amount = 0.0;
 
 		if (broker.getName().equals("FreedomFN")) {
 			if (ticker.getCurrency().getName().equals("KZT")) {
-				fees = sum / 100.0 * 0.085;
+				amount = fly = sum / 100.0 * 0.085;
 			} else {
-				double fixed = items < 100 ? 1.2 : items * 0.012;
-				fees = sum / 100.0 * 0.5 + fixed;
+				if (items < 100) {
+					fixed = 1.2;
+					fly = sum / 100.0 * 0.5;
+					amount = fixed + fly;
+				} else  {
+					amount = fly = items * 0.012 + sum / 100.0 * 0.5;
+				}
 			}
 		}
-		return fees;
+		return new Fees(fixed, fly, amount);
 	}
 }

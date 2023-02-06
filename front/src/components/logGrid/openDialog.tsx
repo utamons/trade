@@ -117,7 +117,9 @@ const BasicDateTimePicker = ({ onChange }: DatePickerProps) => {
 interface Eval {
     fees: number,
     risk: number,
-    breakEven: number
+    breakEven: number,
+    outcomeExp: number,
+    takeProfit: number
 }
 
 export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: OpenDialogProps) => {
@@ -173,7 +175,8 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
             setFees(ev.fees)
             setRisk(ev.risk)
             setBreakEven(ev.breakEven)
-            setOutcomeExp(roundTo2((price + (price-stopLoss) * 3) * items))
+            setTakeProfit(ev.takeProfit)
+            setOutcomeExp(ev.outcomeExp)
             return
         }
         if (price && items && stopLoss && risk && fees) {
