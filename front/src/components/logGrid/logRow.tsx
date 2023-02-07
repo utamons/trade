@@ -162,10 +162,6 @@ const Expanded = ({ logItem, expandHandler, closeDialog }: ExpandableProps) => {
                     <FieldName>Cap. profit:</FieldName>
                     <FieldValue sx={profitColor(profit, defaultColor)}>{profit} %</FieldValue>
                 </FieldBox>
-                <FieldBox>
-                    <FieldName>Goal:</FieldName>
-                    <FieldValue>{money(currency.name, goal)}</FieldValue>
-                </FieldBox>
             </ExpandedContainer>
         </Grid>
         <Grid item xs={11}>
