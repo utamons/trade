@@ -332,13 +332,9 @@ public class CashService {
 			if (ticker.getCurrency().getName().equals("KZT")) {
 				amount = fly = sum / 100.0 * 0.085;
 			} else {
-				if (items < 100) {
-					fixed = 1.2;
-					fly = sum / 100.0 * 0.5;
-					amount = fixed + fly;
-				} else {
-					amount = fly = items * 0.012 + sum / 100.0 * 0.5;
-				}
+				fixed = 1.2;
+				fly = sum / 100.0 * 0.5 + items * 0.012;
+				amount = fixed + fly;
 			}
 		}
 		return new Fees(fixed, fly, amount);
