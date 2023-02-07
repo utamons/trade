@@ -282,7 +282,11 @@ public class CashService {
 
 		final double losses = shortC * sum - (shortC * sumLoss);
 
-		final double risk = losses / depositUSD * 100.0;
+		final double feesOpen = getFees(broker, ticker, items, sum).getAmount();
+
+		final double feesLoss = getFees(broker, ticker, items, sumLoss).getAmount();
+
+		final double risk = (losses + feesOpen + feesLoss) / depositUSD * 100.0;
 
 		final double breakEven = getBreakEven(shortC, broker, ticker, items, priceOpen);
 
