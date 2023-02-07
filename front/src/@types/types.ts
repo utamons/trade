@@ -124,7 +124,8 @@ type EvalRequest = {
     priceOpen: number,
     items: number,
     stopLoss: number,
-    date: string
+    date: string,
+    short: boolean
 }
 
 type TradeLog = {

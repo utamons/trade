@@ -34,7 +34,6 @@ module.exports = {
         'object-curly-spacing': ['error', 'always'],
         'comma-spacing': 'error',
         'react/display-name': 'off',
-        'max-len': ['warn', { 'code': 120 }],
         'comma-dangle': ['error', 'never'],
         'no-use-before-define': 'off'
     }

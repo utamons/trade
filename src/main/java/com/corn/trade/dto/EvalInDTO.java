@@ -14,6 +14,8 @@ public class EvalInDTO {
 
 	private final LocalDate date;
 
+	private final boolean isShort;
+
 	@JsonCreator
 	public EvalInDTO(
 			@JsonProperty("brokerId") Long brokerId,
@@ -21,13 +23,15 @@ public class EvalInDTO {
 			@JsonProperty("priceOpen") Double priceOpen,
 			@JsonProperty("items") Long items,
 			@JsonProperty("stopLoss") Double stopLoss,
-			@JsonProperty("date") LocalDate date) {
+			@JsonProperty("date") LocalDate date,
+			@JsonProperty("short") boolean isShort) {
 		this.brokerId = brokerId;
 		this.tickerId = tickerId;
 		this.priceOpen = priceOpen;
 		this.items = items;
 		this.stopLoss = stopLoss;
 		this.date = date;
+		this.isShort = isShort;
 	}
 
 	public Long getBrokerId() {
@@ -52,5 +56,9 @@ public class EvalInDTO {
 
 	public LocalDate getDate() {
 		return date;
+	}
+
+	public boolean isShort() {
+		return isShort;
 	}
 }

@@ -4,10 +4,7 @@ import com.corn.trade.dto.TradeLogCloseDTO;
 import com.corn.trade.dto.TradeLogDTO;
 import com.corn.trade.dto.TradeLogOpenDTO;
 import com.corn.trade.dto.TradeLogPageReqDTO;
-import com.corn.trade.entity.Broker;
-import com.corn.trade.entity.Market;
-import com.corn.trade.entity.Ticker;
-import com.corn.trade.entity.TradeLog;
+import com.corn.trade.entity.*;
 import com.corn.trade.mapper.TradeLogMapper;
 import com.corn.trade.repository.BrokerRepository;
 import com.corn.trade.repository.MarketRepository;
@@ -21,6 +18,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -66,44 +65,53 @@ public class TradeLogService {
 
 	public void close(TradeLogCloseDTO closeDTO) throws JsonProcessingException {
 		TradeLog open = tradeLogRepo.getReferenceById(closeDTO.getId());
-		open.setDateClose(closeDTO.getDateClose());
-		open.setPriceClose(closeDTO.getPriceClose());
 
-		long items = open.getItemNumber();
+		final Broker   broker   = open.getBroker();
+		final Ticker   ticker   = open.getTicker();
+		final Currency currency = open.getCurrency();
 
-		double sum = closeDTO.getPriceClose() * items;
+		final double        priceOpen     = open.getPriceOpen();
+		double              priceClose    = closeDTO.getPriceClose();
+		final int           shortC        = open.getPosition().equals("long") ? 1 : -1;
+		final long          items         = open.getItemNumber();
+		final double        sum           = priceClose * items;
+		final double        volume        = open.getVolume();
+		final LocalDate     dateOpen      = open.getDateOpen().toLocalDate();
+		final LocalDateTime dateTimeClose = closeDTO.getDateClose();
+		final LocalDate     dateClose     = dateTimeClose.toLocalDate();
+		final String        note          = closeDTO.getNote();
 
 		// in the currency of the position:
-		double fees = cashService.getFees(open.getBroker(), open.getTicker(), items, sum).getAmount();
-		double openFees = cashService.getFees(open.getBroker(), open.getTicker(), items, open.getVolume()).getAmount();
+		final double closeFees = cashService.getFees(broker, ticker, items, sum).getAmount();
+		final double openFees  = cashService.getFees(broker, ticker, items, volume).getAmount();
 
-		double outcome = ((open.getPriceClose() - open.getPriceOpen()) * items) - (fees+openFees);
+		final double outcome        = ((shortC * priceClose - shortC * priceOpen) * items) - (closeFees + openFees);
+		final double outcomePercent = outcome / volume * 100.0;
 
-		double outcomePercent = outcome / open.getVolume() * 100.0;
+		final double closeFeesUSD = currencyRateService.convertToUSD(currency.getId(), closeFees, dateClose);
+		final double openFeesUSD  = currencyRateService.convertToUSD(currency.getId(), openFees, dateOpen);
 
-		double feesUSD = currencyRateService.convertToUSD(open.getCurrency().getId(), fees, closeDTO.getDateClose().toLocalDate());
+		if (closeFeesUSD != 0)
+			cashService.fee(closeFeesUSD, broker, open, dateTimeClose);
 
-		if (feesUSD != 0)
-			cashService.fee(feesUSD, open.getBroker(), open, closeDTO.getDateClose());
+		double percentToCapital = cashService.percentToCapital(outcome, volume, currency);
 
-		open.setFees(open.getFees() + feesUSD);
-
-		double openAmount = open.getVolume();
-
-		double percentToCapital = cashService.percentToCapital(outcome, openAmount, open.getCurrency());
-
+		open.setFees(openFeesUSD + closeFeesUSD);
+		open.setPriceClose(priceClose);
+		open.setDateClose(dateTimeClose);
 		open.setOutcome(outcome);
 		open.setOutcomePercent(outcomePercent);
 		open.setProfit(percentToCapital);
 
-		if (closeDTO.getNote() != null)
-			open.setNote(closeDTO.getNote());
+		if (note != null)
+			open.setNote(note);
 
-		double closeAmount = open.getPriceClose() * open.getItemNumber();
+
+		double closeAmount = priceClose * items;
 
 		open = tradeLogRepo.save(open);
 
-		cashService.sell(open.getVolume(), closeAmount, open.getBroker(), open.getCurrency(), open);
+		cashService.sell(volume, closeAmount, broker, currency, open);
 	}
 
 	public Page<TradeLogDTO> getPage(TradeLogPageReqDTO pageReqDTO) {
