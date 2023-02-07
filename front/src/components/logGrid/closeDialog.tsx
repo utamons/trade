@@ -150,7 +150,7 @@ export default ({ onClose, isOpen, position, close }: CloseDialogProps) => {
                                     Price: {`${position.currency.name}`}
                                 </FieldName>
                                 <FieldValue>
-                                    <NumberInput onChange={priceChangeHandler} onError={priceErrorHandler}/>
+                                    <NumberInput value={price} onChange={priceChangeHandler} onError={priceErrorHandler}/>
                                 </FieldValue>
                             </FieldBox>
                         </Grid>

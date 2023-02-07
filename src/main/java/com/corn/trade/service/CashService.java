@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -246,57 +248,75 @@ public class CashService {
 	}
 
 	public EvalOutDTO eval(EvalInDTO evalDTO) throws JsonProcessingException {
-		Broker broker     = brokerRepo.getReferenceById(evalDTO.getBrokerId());
-		double depositUSD = getDeposit(evalDTO.getBrokerId(), evalDTO.getDate());
-		Ticker ticker     = tickerRepo.getReferenceById(evalDTO.getTickerId());
+		final Broker    broker     = brokerRepo.getReferenceById(evalDTO.getBrokerId());
+		final LocalDate date       = evalDTO.getDate();
+		final double    depositUSD = getDeposit(evalDTO.getBrokerId(), date);
+		final Ticker    ticker     = tickerRepo.getReferenceById(evalDTO.getTickerId());
+		final long      items      = evalDTO.getItems();
+		final double    priceOpen  = evalDTO.getPriceOpen();
+		final double    fees       = getFees(broker, ticker, items, items * priceOpen).getAmount();
+		final long      currencyId = ticker.getCurrency().getId();
+		final double    stopLoss   = evalDTO.getStopLoss();
+		final int       shortC     = evalDTO.isShort() ? -1 : 1;
 
-		long items = evalDTO.getItems();
-
-		double priceOpen = evalDTO.getPriceOpen();
-
-		double fees = getFees(broker, ticker, items, items * priceOpen).getAmount();
-
-		double feesUSD = currencyRateService.convertToUSD(
-				ticker.getCurrency().getId(),
+		final double feesUSD = currencyRateService.convertToUSD(
+				currencyId,
 				fees,
-				evalDTO.getDate());
+				date);
 
-		double priceUSD =
+		final double priceUSD =
 				currencyRateService.convertToUSD(
-						ticker.getCurrency().getId(),
+						currencyId,
 						priceOpen,
-						evalDTO.getDate());
-		double stopLossUSD =
+						date);
+
+		final double stopLossUSD =
 				currencyRateService.convertToUSD(
-						ticker.getCurrency().getId(),
-						evalDTO.getStopLoss(),
-						evalDTO.getDate());
+						currencyId,
+						stopLoss,
+						date);
 
-		double sum = items * priceUSD;
+		final double sum = items * priceUSD;
 
-		double sumLoss = items * stopLossUSD;
+		final double sumLoss = items * stopLossUSD;
 
-		double losses = sum - sumLoss;
+		final double losses = shortC * sum - (shortC * sumLoss);
 
-		double risk = losses / depositUSD * 100.0;
+		final double risk = losses / depositUSD * 100.0;
 
-		double breakEven = getBreakEven(broker, ticker, items, priceOpen);
+		final double breakEven = getBreakEven(shortC, broker, ticker, items, priceOpen);
 
-		double takeProfit = breakEven + (priceOpen - evalDTO.getStopLoss()) * 3;
+		final double takeProfit = getTakeProfit(shortC, broker, ticker, items, priceOpen, stopLoss);
 
-		double outcomeExp = (takeProfit - breakEven) * items;
+		final double outcomeExp = (shortC * priceOpen - shortC * stopLoss) * 3 * items;
 
 		return new EvalOutDTO(feesUSD, risk, breakEven, takeProfit, outcomeExp);
 	}
 
-	private double getBreakEven(Broker broker, Ticker ticker, long items, double priceOpen) {
-		double sumOpen = items * priceOpen;
-		double feesOpen = getFees(broker, ticker, items, sumOpen).getAmount();
-		double sumClose = sumOpen + feesOpen * 2;
+	private double getBreakEven(int shortC, Broker broker, Ticker ticker, long items, double priceOpen) {
+		double sumOpen   = items * priceOpen;
+		double feesOpen  = getFees(broker, ticker, items, sumOpen).getAmount();
+		double sumClose  = sumOpen;
 		double feesClose = getFees(broker, ticker, items, sumClose).getAmount();
 
-		while (sumClose-sumOpen < feesOpen + feesClose) {
-			sumClose += 0.01;
+		while (shortC * sumClose - (shortC * sumOpen) < feesOpen + feesClose) {
+			sumClose = sumClose + (shortC * 0.01);
+			feesClose = getFees(broker, ticker, items, sumClose).getAmount();
+		}
+
+		return sumClose / items;
+	}
+
+	private double getTakeProfit(int shortC, Broker broker, Ticker ticker, long items, double priceOpen, double stopLoss) {
+		double sumOpen   = items * priceOpen;
+		double feesOpen  = getFees(broker, ticker, items, sumOpen).getAmount();
+		double sumClose  = sumOpen;
+		double feesClose = getFees(broker, ticker, items, sumClose).getAmount();
+		double sumLoss   = items * stopLoss;
+		double lossDelta = shortC * sumOpen - shortC * sumLoss;
+
+		while (shortC * sumClose - (shortC * sumOpen) < lossDelta * 3 + feesOpen + feesClose) {
+			sumClose = sumClose + (shortC * 0.01);
 			feesClose = getFees(broker, ticker, items, sumClose).getAmount();
 		}
 
@@ -304,8 +324,8 @@ public class CashService {
 	}
 
 	public Fees getFees(Broker broker, Ticker ticker, long items, Double sum) {
-		double fixed       = 0.0;
-		double fly = 0.0;
+		double fixed  = 0.0;
+		double fly    = 0.0;
 		double amount = 0.0;
 
 		if (broker.getName().equals("FreedomFN")) {
@@ -316,7 +336,7 @@ public class CashService {
 					fixed = 1.2;
 					fly = sum / 100.0 * 0.5;
 					amount = fixed + fly;
-				} else  {
+				} else {
 					amount = fly = items * 0.012 + sum / 100.0 * 0.5;
 				}
 			}

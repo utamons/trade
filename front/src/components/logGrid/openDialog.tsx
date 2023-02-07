@@ -170,7 +170,8 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                 priceOpen: price,
                 items,
                 stopLoss,
-                date: date.toISOString()
+                date: date.toISOString(),
+                short: positionId == '1'
             })
             setFees(ev.fees)
             setRisk(ev.risk)
