@@ -6,7 +6,16 @@
             <pattern>%-5d{dd.MM.yy HH:mm:ss.SSS} %highlight(%-5level): %cyan(%logger{25}).%yellow(%M) %m%n</pattern>
         </encoder>
     </appender>
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>/tmp/trade.log</file>
+        <encoder>
+            <pattern>%-5d{dd.MM.yy HH:mm:ss.SSS} %-5level %logger{25} %M %m%n</pattern>
+        </encoder>
+    </appender>
+    <root level="ERROR" additivity="false">
+        <appender-ref ref="FILE"/>
+    </root>
     <logger name="com.corn" level="DEBUG" additivity="false">
-        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
     </logger>
 </configuration>
