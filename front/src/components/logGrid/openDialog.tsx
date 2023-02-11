@@ -3,7 +3,7 @@
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import Dialog from '@mui/material/Dialog'
-import { RED, remCalc, riskColor, roundTo2 } from '../../utils/utils'
+import { breakEvenColor, RED, remCalc, riskColor, roundTo2 } from '../../utils/utils'
 import Button from '../button'
 import React, { useCallback, useState } from 'react'
 import { ButtonContainerStyled, FieldName } from '../../styles/style'
@@ -155,6 +155,20 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
             return true
         return price == undefined || items == undefined || stopLoss == undefined
 
+    }
+
+    const breakEvenPercentage = () => {
+        if (breakEven && price)
+            return breakEven/price*100-100
+        else
+            return 0
+    }
+
+    const breakEvenPercentageStr = () => {
+        if (breakEven && price)
+            return `(${roundTo2(breakEven/price*100-100)}%)`
+        else
+            return ''
     }
 
     const handleOpen = useCallback(async () => {
@@ -434,8 +448,8 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                         <Grid item xs={1}>
                             <FieldBox>
                                 <FieldName>Break even:</FieldName>
-                                <FieldValue>
-                                    {breakEven}
+                                <FieldValue sx={breakEvenColor(breakEvenPercentage(), defaultColor)}>
+                                    {breakEven} {breakEvenPercentageStr()}
                                 </FieldValue>
                             </FieldBox>
                         </Grid>
