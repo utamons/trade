@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <include resource="org/springframework/boot/logging/logback/base.xml"/>
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%-5d{dd.MM.yy HH:mm:ss.SSS} %highlight(%-5level): %cyan(%logger{25}).%yellow(%M) %m%n</pattern>
-        </encoder>
-    </appender>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml" />
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
         <file>/tmp/trade.log</file>
         <encoder>
