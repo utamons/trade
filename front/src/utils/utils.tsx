@@ -55,9 +55,18 @@ export const remCalc = (px: number): string => `${(px / 16).toFixed(3)}rem`
 
 export const RED ='#cc3300'
 export const GREEN = '#00cc00'
+export const ORANGE = '#ff9900'
 
 export const riskColor = (risk:number | undefined, defaultColor: string) => {
     if (risk && risk > 2)
+        return { color: RED, fontWeight: 'bolder' }
+    return { color: defaultColor }
+}
+
+export const breakEvenColor = (breakEvenPercentage:number | undefined, defaultColor: string) => {
+    if (breakEvenPercentage && breakEvenPercentage > 1.5 && breakEvenPercentage < 2)
+        return { color: ORANGE, fontWeight: 'bolder' }
+    if (breakEvenPercentage && breakEvenPercentage >= 2)
         return { color: RED, fontWeight: 'bolder' }
     return { color: defaultColor }
 }
