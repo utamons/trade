@@ -159,14 +159,14 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
 
     const breakEvenPercentage = () => {
         if (breakEven && price)
-            return breakEven/price*100-100
+            return Math.abs(breakEven/price*100-100)
         else
             return 0
     }
 
     const breakEvenPercentageStr = () => {
         if (breakEven && price)
-            return `(${roundTo2(breakEven/price*100-100)}%)`
+            return `(${roundTo2(Math.abs(breakEven/price*100-100))}%)`
         else
             return ''
     }
