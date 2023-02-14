@@ -7,3 +7,6 @@ cd ~/projects/trade
 mvn clean package
 
 cp ~/projects/trade/target/trade-0.0.1-SNAPSHOT.jar ~/bin/trade.jar
+
+sudo service trade stop
+sudo service trade start
