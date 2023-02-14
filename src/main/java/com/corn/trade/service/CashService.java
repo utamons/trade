@@ -317,14 +317,10 @@ public class CashService {
 
 	private double getTaxes(double sum) {
 		double leftSum = sum;
-		double opv = leftSum * 0.1;
-		leftSum = leftSum - opv;
-		double osms = leftSum * 0.03;
-		leftSum = leftSum - osms;
 		double ipn = leftSum * 0.1; // (ИПН)
 		leftSum = leftSum - ipn;
 
-		return (sum - leftSum) / 100;
+		return sum - leftSum;
 	}
 
 	private double getTakeProfit(int shortC, Broker broker, Ticker ticker, long items, double priceOpen, double stopLoss) {
