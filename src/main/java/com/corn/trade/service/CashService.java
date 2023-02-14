@@ -302,13 +302,29 @@ public class CashService {
 		double feesOpen  = getFees(broker, ticker, items, sumOpen).getAmount();
 		double sumClose  = sumOpen;
 		double feesClose = getFees(broker, ticker, items, sumClose).getAmount();
+		double taxes = getTaxes(shortC * sumClose - (shortC * sumOpen));
 
-		while (shortC * sumClose - (shortC * sumOpen) < feesOpen + feesClose) {
+		while (shortC * sumClose - (shortC * sumOpen) < feesOpen + feesClose + taxes) {
 			sumClose = sumClose + (shortC * 0.01);
 			feesClose = getFees(broker, ticker, items, sumClose).getAmount();
+			taxes = getTaxes(shortC * sumClose - (shortC * sumOpen));
 		}
 
+		logger.debug("Taxes: {}", taxes);
+
 		return sumClose / items;
+	}
+
+	private double getTaxes(double sum) {
+		double leftSum = sum;
+		double opv = leftSum * 0.1;
+		leftSum = leftSum - opv;
+		double osms = leftSum * 0.03;
+		leftSum = leftSum - osms;
+		double ipn = leftSum * 0.1; // (ИПН)
+		leftSum = leftSum - ipn;
+
+		return (sum - leftSum) / 100;
 	}
 
 	private double getTakeProfit(int shortC, Broker broker, Ticker ticker, long items, double priceOpen, double stopLoss) {
