@@ -64,9 +64,9 @@ export const riskColor = (risk:number | undefined, defaultColor: string) => {
 }
 
 export const breakEvenColor = (breakEvenPercentage:number | undefined, defaultColor: string) => {
-    if (breakEvenPercentage && breakEvenPercentage > 1.5 && breakEvenPercentage < 2)
+    if (breakEvenPercentage && breakEvenPercentage > 1.6 && breakEvenPercentage < 2.1)
         return { color: ORANGE, fontWeight: 'bolder' }
-    if (breakEvenPercentage && breakEvenPercentage >= 2)
+    if (breakEvenPercentage && breakEvenPercentage >= 2.1)
         return { color: RED, fontWeight: 'bolder' }
     return { color: defaultColor }
 }
