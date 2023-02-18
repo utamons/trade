@@ -10,8 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,7 +28,9 @@ public class CashService {
 	private final CurrencyRepository        currencyRepo;
 	private final CashAccountTypeRepository accountTypeRepo;
 	private final TickerRepository          tickerRepo;
-	private final CurrencyRateService       currencyRateService;
+
+	private final TradeLogRepository  tradeLogRepo;
+	private final CurrencyRateService currencyRateService;
 
 	public CashService(CashAccountRepository accountRepo,
 	                   CashFlowRepository cashFlowRepo,
@@ -38,13 +38,14 @@ public class CashService {
 	                   CurrencyRepository currencyRepo,
 	                   CashAccountTypeRepository accountTypeRepo,
 	                   TickerRepository tickerRepo,
-	                   CurrencyRateService currencyRateService) {
+	                   TradeLogRepository tradeLogRepo, CurrencyRateService currencyRateService) {
 		this.accountRepo = accountRepo;
 		this.cashFlowRepo = cashFlowRepo;
 		this.brokerRepo = brokerRepo;
 		this.currencyRepo = currencyRepo;
 		this.accountTypeRepo = accountTypeRepo;
 		this.tickerRepo = tickerRepo;
+		this.tradeLogRepo = tradeLogRepo;
 		this.currencyRateService = currencyRateService;
 	}
 
@@ -228,7 +229,7 @@ public class CashService {
 					today);
 		}
 
-		return capital;
+		return capital + getAssetsDepositUSD();
 	}
 
 	public double getDeposit(long brokerId, LocalDate date) throws JsonProcessingException {
@@ -247,10 +248,42 @@ public class CashService {
 		return deposit;
 	}
 
+	public double getAssetsDepositUSD(long brokerId) throws JsonProcessingException {
+		Broker               broker = brokerRepo.getReferenceById(brokerId);
+		List<CurrencySumDTO> opens  = tradeLogRepo.openSumsByBroker(broker);
+		double               sum    = 0.0;
+		LocalDate            date   = LocalDate.now();
+
+		for (CurrencySumDTO dto : opens) {
+			sum += currencyRateService.convertToUSD(
+					dto.getCurrencyId(),
+					dto.getSum(),
+					date);
+		}
+
+		return sum;
+	}
+
+	public double getAssetsDepositUSD() throws JsonProcessingException {
+		List<CurrencySumDTO> opens  = tradeLogRepo.openSums();
+		double               sum    = 0.0;
+		LocalDate            date   = LocalDate.now();
+
+		for (CurrencySumDTO dto : opens) {
+			sum += currencyRateService.convertToUSD(
+					dto.getCurrencyId(),
+					dto.getSum(),
+					date);
+		}
+
+		return sum;
+	}
+
 	public EvalOutDTO eval(EvalInDTO evalDTO) throws JsonProcessingException {
 		final Broker    broker     = brokerRepo.getReferenceById(evalDTO.getBrokerId());
 		final LocalDate date       = evalDTO.getDate();
-		final double    depositUSD = getDeposit(evalDTO.getBrokerId(), date);
+		final double    depositUSD = getDeposit(broker.getId(), date);
+		final double    assetsUSD  = getAssetsDepositUSD(broker.getId());
 		final Ticker    ticker     = tickerRepo.getReferenceById(evalDTO.getTickerId());
 		final long      items      = evalDTO.getItems();
 		final double    priceOpen  = evalDTO.getPriceOpen();
@@ -302,7 +335,7 @@ public class CashService {
 		double feesOpen  = getFees(broker, ticker, items, sumOpen).getAmount();
 		double sumClose  = sumOpen;
 		double feesClose = getFees(broker, ticker, items, sumClose).getAmount();
-		double taxes = getTaxes(shortC * sumClose - (shortC * sumOpen));
+		double taxes     = getTaxes(shortC * sumClose - (shortC * sumOpen));
 
 		while (shortC * sumClose - (shortC * sumOpen) < feesOpen + feesClose + taxes) {
 			sumClose = sumClose + (shortC * 0.01);
@@ -317,7 +350,7 @@ public class CashService {
 
 	private double getTaxes(double sum) {
 		double leftSum = sum;
-		double ipn = leftSum * 0.1; // (ИПН)
+		double ipn     = leftSum * 0.1; // (ИПН)
 		leftSum = leftSum - ipn;
 
 		return sum - leftSum;
