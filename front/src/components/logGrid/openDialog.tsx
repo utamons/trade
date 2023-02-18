@@ -16,10 +16,11 @@ import TextField from '@mui/material/TextField'
 import { ItemType, MarketType, PositionOpenType, TickerType } from 'types'
 import Select from '../select'
 import NumberInput from '../numberInput'
-import { postEval } from '../../api'
+import { postEval, postEvalToFit } from '../../api'
 import Switch from '@mui/material/Switch'
 import { DesktopDateTimePicker } from '@mui/x-date-pickers'
 import { useTheme } from '@emotion/react'
+import CircularProgress from '@mui/material/CircularProgress'
 
 interface OpenDialogProps {
     currentBroker: ItemType,
@@ -94,7 +95,7 @@ export const TextFieldStyled = styled(TextField)(() => ({
 const BasicDateTimePicker = ({ onChange }: DatePickerProps) => {
     const [value, setValue] = React.useState<Dayjs | null>(dayjs(new Date()))
 
-    const handleChange = useCallback((value: Dayjs| null) => {
+    const handleChange = useCallback((value: Dayjs | null) => {
         if (value) {
             setValue(value)
             onChange(value.toDate())
@@ -122,6 +123,16 @@ interface Eval {
     takeProfit: number
 }
 
+interface EvalToFit {
+    fees: number,
+    risk: number,
+    breakEven: number,
+    outcomeExp: number,
+    takeProfit: number,
+    stopLoss: number,
+    items: number
+}
+
 export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: OpenDialogProps) => {
     const [marketId, setMarketId] = useState('' + markets[0].id)
     const [tickerId, setTickerId] = useState('' + tickers[0].id)
@@ -143,6 +154,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     const [note, setNote] = useState('')
     const [date, setDate] = useState(new Date())
     const [evaluate, setEvaluate] = useState(true)
+    const [isLoading, setLoading] = useState(false)
 
     const theme = useTheme()
     // noinspection TypeScriptUnresolvedVariable
@@ -159,17 +171,45 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
 
     const breakEvenPercentage = () => {
         if (breakEven && price)
-            return Math.abs(breakEven/price*100-100)
+            return (positionId != '1' ? breakEven / price : price / breakEven) * 100.0 - 100.0
         else
             return 0
     }
 
     const breakEvenPercentageStr = () => {
         if (breakEven && price)
-            return `(${roundTo2(Math.abs(breakEven/price*100-100))}%)`
+            return `(${roundTo2(Math.abs(breakEven / price * 100 - 100))}%)`
         else
             return ''
     }
+    const handleEvalToFit = useCallback(async () => {
+        if (evaluate && price) {
+            setLoading(true)
+            const ev: EvalToFit = await postEvalToFit({
+                brokerId: currentBroker.id,
+                tickerId: Number(tickerId),
+                priceOpen: price,
+                items,
+                stopLoss,
+                date: date.toISOString(),
+                short: positionId == '1'
+            })
+            setLoading(false)
+            setItems(ev.items)
+            setStopLoss(ev.stopLoss)
+            setFees(ev.fees)
+            setRisk(ev.risk)
+            setBreakEven(ev.breakEven)
+            setTakeProfit(ev.takeProfit)
+            setOutcomeExp(ev.outcomeExp)
+            return
+        }
+    }, [
+        evaluate,
+        price,
+        items,
+        stopLoss
+    ])
 
     const handleOpen = useCallback(async () => {
         if (validate()) {
@@ -196,7 +236,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
         }
         if (price && items && stopLoss && risk && fees) {
             open({
-                position: positionId == '0'? 'long' : 'short',
+                position: positionId == '0' ? 'long' : 'short',
                 dateOpen: date.toISOString(),
                 brokerId: currentBroker.id,
                 marketId: Number(marketId),
@@ -471,8 +511,12 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
 
         <DialogActions sx={{ justifyContent: 'center' }}>
             <ButtonContainerStyled>
-                <Button style={{ minWidth: remCalc(101) }} text={ evaluate ? 'Evaluate' : 'Open'} onClick={handleOpen}/>
-                <Button style={{ minWidth: remCalc(101) }} text="Cancel" onClick={onClose}/>
+                {isLoading ? < CircularProgress size={20}/> :
+                    <>{evaluate ? <Button style={{ minWidth: remCalc(101) }} text="Evaluate To Fit"
+                                          onClick={handleEvalToFit}/> : <></>}
+                        <Button style={{ minWidth: remCalc(101) }} text={evaluate ? 'Evaluate' : 'Open'}
+                                onClick={handleOpen}/>
+                        <Button style={{ minWidth: remCalc(101) }} text="Cancel" onClick={onClose}/> </>}
             </ButtonContainerStyled>
         </DialogActions>
     </Dialog>

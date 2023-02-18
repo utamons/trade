@@ -20,6 +20,9 @@ import java.util.stream.Collectors;
 @Transactional
 public class CashService {
 
+	private final static double MAX_RISK_PC = 2.0;
+	private final static double MAX_BE_PC   = 1.65;
+
 	private final static Logger logger = LoggerFactory.getLogger(CashService.class);
 
 	private final CashAccountRepository     accountRepo;
@@ -244,7 +247,6 @@ public class CashService {
 					date);
 		}
 
-		logger.debug("Deposit for {} on {} = {}", broker.getName(), date, deposit);
 		return deposit;
 	}
 
@@ -279,11 +281,88 @@ public class CashService {
 		return sum;
 	}
 
+	public EvalOutFitDTO evalToFit(EvalInDTO evalDTO) throws JsonProcessingException {
+		logger.debug("start");
+		final int    shortC     = evalDTO.isShort() ? -1 : 1;
+		EvalOutDTO   dto;
+		double       be, risk   = 0, bePc = 0;
+		final Ticker ticker     = tickerRepo.getReferenceById(evalDTO.getTickerId());
+		final long   currencyId = ticker.getCurrency().getId();
+		double       depositUS  = getDeposit(evalDTO.getBrokerId(), LocalDate.now());
+
+		double volume;
+		if (evalDTO.getItems() != null && evalDTO.getStopLoss() != null) {
+			dto = eval(evalDTO);
+			be = dto.getBreakEven().doubleValue();
+			risk = dto.getRisk().doubleValue();
+			bePc = Math.abs(be / evalDTO.getPriceOpen() * 100.0 - 100.0);
+			if (risk <= MAX_RISK_PC && bePc <= MAX_BE_PC)
+				return new EvalOutFitDTO(dto.getFees(), dto.getRisk(), dto.getBreakEven(), dto.getTakeProfit(),
+				                         dto.getOutcomeExp(), evalDTO.getStopLoss(), evalDTO.getItems());
+		}
+
+		double stopLoss = evalDTO.getPriceOpen();
+		int    count    = 0;
+		if (evalDTO.getItems() == null) {
+			long   items = 0;
+			double bePcPrev;
+			do {
+				++items;
+				volume = currencyRateService.convertToUSD(currencyId, evalDTO.getPriceOpen() * items, LocalDate.now());
+				evalDTO.setStopLoss(stopLoss);
+				evalDTO.setItems(items);
+				if (depositUS - volume < 0) {
+					logger.debug("Too much items for current deposit");
+					break;
+				}
+				dto = eval(evalDTO);
+				be = dto.getBreakEven().doubleValue();
+				bePcPrev = bePc;
+				bePc = (shortC > 0 ? be / evalDTO.getPriceOpen(): evalDTO.getPriceOpen() / be )* 100.0 - 100.0;
+				if (be == bePcPrev && count < 3) {
+					count++;
+				} else {
+					count = 0;
+				}
+				logger.debug("BE PC: {}, Prev: {}, Items: {}", bePc, bePcPrev, items);
+			} while (bePc > MAX_BE_PC);
+		}
+
+		double riskPrev;
+		double step       = 0.01;
+		double stopLossPc;
+		do {
+			stopLoss -= (shortC * step);
+			stopLossPc = shortC > 0 ? stopLoss / evalDTO.getPriceOpen() : evalDTO.getPriceOpen() / stopLoss;
+			if (stopLoss < 1.0 || stopLossPc <= 0.8)
+				break;
+			evalDTO.setStopLoss(stopLoss);
+			riskPrev = risk;
+			risk = Math.round(getRisk(evalDTO) * 100) / 100.0;
+			if (risk == riskPrev)
+				step++;
+			logger.debug("risk: {}", risk);
+
+		} while (risk < MAX_RISK_PC);
+
+		if (risk > MAX_RISK_PC && stopLossPc >= 0.8) {
+			stopLoss += (shortC * step);
+			evalDTO.setStopLoss(stopLoss);
+		}
+
+		dto = eval(evalDTO);
+
+		logger.debug("finish");
+		if (dto != null)
+			return new EvalOutFitDTO(dto.getFees(), dto.getRisk(), dto.getBreakEven(), dto.getTakeProfit(),
+			                         dto.getOutcomeExp(), evalDTO.getStopLoss(), evalDTO.getItems());
+		else
+			throw new RuntimeException("Cannot evaluate to fit!");
+	}
+
 	public EvalOutDTO eval(EvalInDTO evalDTO) throws JsonProcessingException {
 		final Broker    broker     = brokerRepo.getReferenceById(evalDTO.getBrokerId());
 		final LocalDate date       = evalDTO.getDate();
-		final double    assetsUSD  = getAssetsDepositUSD(broker.getId());
-		final double    depositUSD = getDeposit(broker.getId(), date);
 		final Ticker    ticker     = tickerRepo.getReferenceById(evalDTO.getTickerId());
 		final long      items      = evalDTO.getItems();
 		final double    priceOpen  = evalDTO.getPriceOpen();
@@ -296,6 +375,30 @@ public class CashService {
 				currencyId,
 				fees,
 				date);
+
+		final double risk = getRisk(evalDTO);
+
+		final double breakEven = getBreakEven(shortC, broker, ticker, items, priceOpen);
+
+		final double takeProfit = getTakeProfit(shortC, broker, ticker, items, priceOpen, stopLoss);
+
+		final double outcomeExp = (shortC * priceOpen - shortC * stopLoss) * 3 * items;
+
+		return new EvalOutDTO(feesUSD, risk, breakEven, takeProfit, outcomeExp);
+	}
+
+	private double getRisk(EvalInDTO evalDTO) throws JsonProcessingException {
+		final Broker    broker     = brokerRepo.getReferenceById(evalDTO.getBrokerId());
+		final double    assetsUSD  = getAssetsDepositUSD(broker.getId());
+		final LocalDate date       = evalDTO.getDate();
+		final double    depositUSD = getDeposit(broker.getId(), date);
+		final double    priceOpen  = evalDTO.getPriceOpen();
+		final Ticker    ticker     = tickerRepo.getReferenceById(evalDTO.getTickerId());
+		final long      currencyId = ticker.getCurrency().getId();
+		final double    stopLoss   = evalDTO.getStopLoss();
+		final int       shortC     = evalDTO.isShort() ? -1 : 1;
+
+		final long      items      = evalDTO.getItems();
 
 		final double priceUSD =
 				currencyRateService.convertToUSD(
@@ -319,15 +422,7 @@ public class CashService {
 
 		final double feesLoss = getFees(broker, ticker, items, sumLoss).getAmount();
 
-		final double risk = (losses + feesOpen + feesLoss) / (depositUSD + assetsUSD) * 100.0;
-
-		final double breakEven = getBreakEven(shortC, broker, ticker, items, priceOpen);
-
-		final double takeProfit = getTakeProfit(shortC, broker, ticker, items, priceOpen, stopLoss);
-
-		final double outcomeExp = (shortC * priceOpen - shortC * stopLoss) * 3 * items;
-
-		return new EvalOutDTO(feesUSD, risk, breakEven, takeProfit, outcomeExp);
+		return (losses + feesOpen + feesLoss) / (depositUSD + assetsUSD) * 100.0;
 	}
 
 	private double getBreakEven(int shortC, Broker broker, Ticker ticker, long items, double priceOpen) {
@@ -342,8 +437,6 @@ public class CashService {
 			feesClose = getFees(broker, ticker, items, sumClose).getAmount();
 			taxes = getTaxes(shortC * sumClose - (shortC * sumOpen));
 		}
-
-		logger.debug("Taxes: {}", taxes);
 
 		return sumClose / items;
 	}

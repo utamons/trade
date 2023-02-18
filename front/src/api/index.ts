@@ -120,6 +120,19 @@ const postEval = async (body: EvalRequest) => {
     })
 }
 
+const postEvalToFit = async (body: EvalRequest) => {
+    const url = `${baseUrl}/cash/evaltofit`
+    return fetch(url, {
+        method: 'post',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+    }).then((res) => {
+        return res.json()
+    })
+}
+
 const postClose = async (body: PositionCloseType) => {
     const url = `${baseUrl}/log/close`
     return fetch(url, {
@@ -143,5 +156,6 @@ export {
     postLogPage,
     postOpen,
     postEval,
+    postEvalToFit,
     postClose
 }

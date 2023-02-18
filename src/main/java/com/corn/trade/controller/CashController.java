@@ -62,4 +62,9 @@ public class CashController {
 	public EvalOutDTO eval(@RequestBody EvalInDTO evalDTO) throws JsonProcessingException {
 		return service.eval(evalDTO);
 	}
+
+	@PostMapping(value = "/evaltofit", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	public EvalOutFitDTO evalToFit(@RequestBody EvalInDTO evalDTO) throws JsonProcessingException {
+		return service.evalToFit(evalDTO);
+	}
 }
