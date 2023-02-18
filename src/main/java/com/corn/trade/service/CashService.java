@@ -265,9 +265,9 @@ public class CashService {
 	}
 
 	public double getAssetsDepositUSD() throws JsonProcessingException {
-		List<CurrencySumDTO> opens  = tradeLogRepo.openSums();
-		double               sum    = 0.0;
-		LocalDate            date   = LocalDate.now();
+		List<CurrencySumDTO> opens = tradeLogRepo.openSums();
+		double               sum   = 0.0;
+		LocalDate            date  = LocalDate.now();
 
 		for (CurrencySumDTO dto : opens) {
 			sum += currencyRateService.convertToUSD(
@@ -282,8 +282,8 @@ public class CashService {
 	public EvalOutDTO eval(EvalInDTO evalDTO) throws JsonProcessingException {
 		final Broker    broker     = brokerRepo.getReferenceById(evalDTO.getBrokerId());
 		final LocalDate date       = evalDTO.getDate();
-		final double    depositUSD = getDeposit(broker.getId(), date);
 		final double    assetsUSD  = getAssetsDepositUSD(broker.getId());
+		final double    depositUSD = getDeposit(broker.getId(), date);
 		final Ticker    ticker     = tickerRepo.getReferenceById(evalDTO.getTickerId());
 		final long      items      = evalDTO.getItems();
 		final double    priceOpen  = evalDTO.getPriceOpen();
@@ -319,7 +319,7 @@ public class CashService {
 
 		final double feesLoss = getFees(broker, ticker, items, sumLoss).getAmount();
 
-		final double risk = (losses + feesOpen + feesLoss) / depositUSD * 100.0;
+		final double risk = (losses + feesOpen + feesLoss) / (depositUSD + assetsUSD) * 100.0;
 
 		final double breakEven = getBreakEven(shortC, broker, ticker, items, priceOpen);
 
