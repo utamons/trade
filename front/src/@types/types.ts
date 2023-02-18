@@ -122,8 +122,8 @@ type EvalRequest = {
     brokerId: number,
     tickerId: number,
     priceOpen: number,
-    items: number,
-    stopLoss: number,
+    items?: number,
+    stopLoss?: number,
     date: string,
     short: boolean
 }

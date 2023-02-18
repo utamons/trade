@@ -9,8 +9,8 @@ public class EvalInDTO {
 	private final Long brokerId;
 	private final Long tickerId;
 	private final Double priceOpen;
-	private final Long items;
-	private final Double stopLoss;
+	private Long items;
+	private Double stopLoss;
 
 	private final LocalDate date;
 
@@ -60,5 +60,13 @@ public class EvalInDTO {
 
 	public boolean isShort() {
 		return isShort;
+	}
+
+	public void setItems(Long items) {
+		this.items = items;
+	}
+
+	public void setStopLoss(Double stopLoss) {
+		this.stopLoss = stopLoss;
 	}
 }
