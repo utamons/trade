@@ -1,5 +1,6 @@
 package com.corn.trade.repository;
 
+import com.corn.trade.dto.CurrencySumDTO;
 import com.corn.trade.entity.Broker;
 import com.corn.trade.entity.TradeLog;
 import org.springframework.data.domain.Page;
@@ -18,8 +19,16 @@ public interface TradeLogRepository extends JpaRepository<TradeLog, Long>, JpaSp
 	List<TradeLog> findAllClosedByBroker(@Param("broker") Broker broker);
 
 	@Query("select count(t) from TradeLog t where t.broker=:broker  and t.dateClose is null")
-	long opensByBroker(Broker broker);
+	long opensCountByBroker(Broker broker);
 
 	@Query("select t from TradeLog t where t.dateClose is not null")
 	List<TradeLog> findAllClosed();
+
+	@Query("select new com.corn.trade.dto.CurrencySumDTO(t.currency.id, sum(t.stopLoss * t.itemNumber - t.fees * 2))" +
+	       " from TradeLog t where t.broker=:broker and t.dateClose is null group by t.currency")
+	List<CurrencySumDTO> openSumsByBroker(@Param("broker") Broker broker);
+
+	@Query("select new com.corn.trade.dto.CurrencySumDTO(t.currency.id, sum(t.stopLoss * t.itemNumber - t.fees * 2))" +
+	       " from TradeLog t where t.dateClose is null group by t.currency")
+	List<CurrencySumDTO> openSums();
 }

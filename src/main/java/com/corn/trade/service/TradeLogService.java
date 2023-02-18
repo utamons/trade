@@ -128,7 +128,7 @@ public class TradeLogService {
 
 	public long getOpenCountByBroker(Long brokerId) {
 		Broker broker = brokerRepo.getReferenceById(brokerId);
-		return tradeLogRepo.opensByBroker(broker);
+		return tradeLogRepo.opensCountByBroker(broker);
 	}
 
 	public List<TradeLogDTO> getAllClosed() {
