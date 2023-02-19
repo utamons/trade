@@ -55,7 +55,9 @@ public class CashController {
 
 		double profit = sumOutcomes/capital*100.0;
 
-		return new MoneyStateDTO(capital, profit);
+		double riskBase = service.getRiskBase(capital);
+
+		return new MoneyStateDTO(capital, profit, riskBase);
 	}
 
 	@PostMapping(value = "/eval", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)

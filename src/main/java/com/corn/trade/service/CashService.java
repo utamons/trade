@@ -235,6 +235,10 @@ public class CashService {
 		return capital + getAssetsDepositUSD();
 	}
 
+	public double getRiskBase(double capital) {
+		return capital + (12 - LocalDate.now().getMonthValue()) * 1000;
+	}
+
 	public double getDeposit(long brokerId, LocalDate date) throws JsonProcessingException {
 		Broker            broker    = brokerRepo.getReferenceById(brokerId);
 		CashAccountType   tradeType = accountTypeRepo.findCashAccountTypeByName("trade");
@@ -318,7 +322,7 @@ public class CashService {
 				dto = eval(evalDTO);
 				be = dto.getBreakEven().doubleValue();
 				bePcPrev = bePc;
-				bePc = (shortC > 0 ? be / evalDTO.getPriceOpen(): evalDTO.getPriceOpen() / be )* 100.0 - 100.0;
+				bePc = (shortC > 0 ? be / evalDTO.getPriceOpen() : evalDTO.getPriceOpen() / be) * 100.0 - 100.0;
 				if (be == bePcPrev && count < 3) {
 					count++;
 				} else {
@@ -329,7 +333,7 @@ public class CashService {
 		}
 
 		double riskPrev;
-		double step       = 0.01;
+		double step = 0.01;
 		double stopLossPc;
 		do {
 			stopLoss -= (shortC * step);
@@ -389,16 +393,17 @@ public class CashService {
 
 	private double getRisk(EvalInDTO evalDTO) throws JsonProcessingException {
 		final Broker    broker     = brokerRepo.getReferenceById(evalDTO.getBrokerId());
-		final double    assetsUSD  = getAssetsDepositUSD(broker.getId());
 		final LocalDate date       = evalDTO.getDate();
-		final double    depositUSD = getDeposit(broker.getId(), date);
+		final double    capital    = getCapital();
 		final double    priceOpen  = evalDTO.getPriceOpen();
 		final Ticker    ticker     = tickerRepo.getReferenceById(evalDTO.getTickerId());
 		final long      currencyId = ticker.getCurrency().getId();
 		final double    stopLoss   = evalDTO.getStopLoss();
 		final int       shortC     = evalDTO.isShort() ? -1 : 1;
 
-		final long      items      = evalDTO.getItems();
+		final double riskBase = getRiskBase(capital);
+
+		final long items = evalDTO.getItems();
 
 		final double priceUSD =
 				currencyRateService.convertToUSD(
@@ -422,7 +427,7 @@ public class CashService {
 
 		final double feesLoss = getFees(broker, ticker, items, sumLoss).getAmount();
 
-		return (losses + feesOpen + feesLoss) / (depositUSD + assetsUSD) * 100.0;
+		return (losses + feesOpen + feesLoss) / (riskBase) * 100.0;
 	}
 
 	private double getBreakEven(int shortC, Broker broker, Ticker ticker, long items, double priceOpen) {
