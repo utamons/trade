@@ -22,7 +22,7 @@ const BoxStyled = styled(Box)(() => ({
     justifyContent: 'space-between'
 }))
 
-export default ({ capital, profit }: MoneyStateType) => {
+export default ({ capital, profit, riskBase }: MoneyStateType) => {
     const theme = useTheme()
     // noinspection TypeScriptUnresolvedVariable
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -30,6 +30,9 @@ export default ({ capital, profit }: MoneyStateType) => {
     const defaultColor = theme.palette.text.primary
 
     return <ContainerStyled>
+        <BoxStyled>
+            <div>Risk base:</div> <div>${riskBase}</div>
+        </BoxStyled>
         <BoxStyled>
             <div>Capital:</div> <div>${capital}</div>
         </BoxStyled>

@@ -32,7 +32,8 @@ type BrokerStatsType = {
 
 type MoneyStateType = {
     capital: number,
-    profit: number
+    profit: number,
+    riskBase: number
 }
 
 type RefillType = {
