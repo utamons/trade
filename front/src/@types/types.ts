@@ -86,6 +86,7 @@ type ButtonProps = {
 type RefillDialogProps = {
     open: boolean,
     title: string,
+    negativeAllowed: boolean,
     onSubmit: (currencyId: number, amount: number) => void,
     onCancel: () => void,
     currencies: ItemType[] | undefined

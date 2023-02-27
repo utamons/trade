@@ -25,7 +25,7 @@ const DialogTitleStyled = styled(DialogTitle)(() => ({
     fontWeight: 501
 }))
 
-export default ({ open, title, onSubmit, onCancel, currencies }: RefillDialogProps) => {
+export default ({ open, title, onSubmit, onCancel, negativeAllowed, currencies }: RefillDialogProps) => {
     const [currencyId, setCurrencyId] = useState('' + (currencies ? currencies[0].id : 0))
     const [value, setValue] = useState<number | undefined>(undefined)
     const [error, setError] = useState(false)
@@ -54,7 +54,7 @@ export default ({ open, title, onSubmit, onCancel, currencies }: RefillDialogPro
                     variant="medium"
                     onChange={handleSelector}
                 />
-                <NumberInput value={value} label={'Amount'} onChange={setValue} onError={setError}/>
+                <NumberInput value={value} negativeAllowed={negativeAllowed} label={'Amount'} onChange={setValue} onError={setError}/>
             </ContainerStyled>
         </DialogContent>
 
