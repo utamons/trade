@@ -20,7 +20,7 @@ const BoxStyled = styled(Box)(() => ({
     justifyContent: 'space-between'
 }))
 
-export default ({ accounts, open, outcome, avgOutcome, avgProfit }: BrokerStatsType) => {
+export default ({ accounts, open, outcome, avgOutcome, avgProfit, borrowed }: BrokerStatsType) => {
     const width = accounts.length>0?remCalc(337):remCalc(164)
 
     const theme = useTheme()
@@ -42,6 +42,9 @@ export default ({ accounts, open, outcome, avgOutcome, avgProfit }: BrokerStatsT
         <BoxStyled>
             <div>Avg. profit:</div> <Box sx={profitColor(avgProfit, defaultColor)}>{avgProfit}%</Box>
         </BoxStyled>
+        {borrowed?<BoxStyled>
+                <div>Borrowed:</div> <Box >${borrowed}</Box>
+            </BoxStyled>:<></>}
         <BoxStyled>
             <div>Open:</div> <div>{open}</div>
         </BoxStyled>

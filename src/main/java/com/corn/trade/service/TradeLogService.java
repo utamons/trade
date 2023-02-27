@@ -58,7 +58,10 @@ public class TradeLogService {
 
 		tradeLog = tradeLogRepo.save(tradeLog);
 		tradeLogRepo.flush();
-		cashService.buy(tradeLog.getVolume(), broker, ticker.getCurrency(), tradeLog);
+		if (openDTO.getPosition().equals("long"))
+			cashService.buy(tradeLog.getVolume(), broker, ticker.getCurrency(), tradeLog);
+		else
+			cashService.sellShort(tradeLog.getVolume(), broker, ticker.getCurrency(), tradeLog);
 		if (tradeLog.getFees() != 0.0)
 			cashService.fee(tradeLog.getFees(), broker, tradeLog, tradeLog.getDateOpen());
 	}
@@ -111,7 +114,10 @@ public class TradeLogService {
 
 		open = tradeLogRepo.save(open);
 
-		cashService.sell(volume, closeAmount, broker, currency, open);
+		if (open.getPosition().equals("long"))
+			cashService.sell(volume, closeAmount, broker, currency, open);
+		else
+			cashService.buyShort(volume, closeAmount, broker, currency, open);
 	}
 
 	public Page<TradeLogDTO> getPage(TradeLogPageReqDTO pageReqDTO) {

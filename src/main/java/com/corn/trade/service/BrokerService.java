@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,24 +43,33 @@ public class BrokerService {
 	}
 
 	public BrokerStatsDTO getStats(Long brokerId) throws JsonProcessingException {
-		List<CashAccountDTO> accounts = cashService.getTradeAccounts(brokerId);
-		List<TradeLogDTO>    dtos     = tradeLogService.getAllClosedByBroker(brokerId);
+		List<CashAccountDTO> accounts         = cashService.getTradeAccounts(brokerId);
+		List<CashAccountDTO> borrowedAccounts = cashService.getBorrowedAccounts(brokerId);
+		List<TradeLogDTO>    dtos             = tradeLogService.getAllClosedByBroker(brokerId);
 
-		double outcome    = 0.0;
-		double avgProfit  = 0.0;
+		double outcome   = 0.0;
+		double avgProfit = 0.0;
 
 		LocalDate currentDate = LocalDate.now();
 
 		for (TradeLogDTO dto : dtos) {
 			outcome += currencyRateService.convertToUSD(
-							dto.getCurrency().getId(),
-							dto.getOutcomeDouble(),
-							currentDate);
+					dto.getCurrency().getId(),
+					dto.getOutcomeDouble(),
+					currentDate);
 			avgProfit += dto.getOutcomePercentDouble();
 		}
 
-		double avgOutcome = dtos.size() > 0 ? outcome/dtos.size() : 0.0;
-		avgProfit = dtos.size() > 0 ? avgProfit/dtos.size(): 0.0;
+		double borrowed = 0.0;
+
+		for (CashAccountDTO b : borrowedAccounts) {
+			borrowed += currencyRateService.convertToUSD(b.getCurrency().getId(),
+			                                             b.getAmountDouble(),
+			                                             LocalDate.now());
+		}
+
+		double avgOutcome = dtos.size() > 0 ? outcome / dtos.size() : 0.0;
+		avgProfit = dtos.size() > 0 ? avgProfit / dtos.size() : 0.0;
 
 		long open = tradeLogService.getOpenCountByBroker(brokerId);
 
@@ -68,7 +78,7 @@ public class BrokerService {
 				outcome,
 				avgOutcome,
 				avgProfit,
-				open
-		);
+				open,
+				borrowed);
 	}
 }

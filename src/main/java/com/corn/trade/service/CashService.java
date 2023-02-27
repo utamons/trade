@@ -88,12 +88,12 @@ public class CashService {
 	}
 
 	public CashAccount transfer(double transfer,
-	                             TradeLog tradeLog,
-	                             Broker broker,
-	                             Currency currency,
-	                             CashAccountType fromType,
-	                             CashAccountType toType,
-	                             LocalDateTime dateTime) {
+	                            TradeLog tradeLog,
+	                            Broker broker,
+	                            Currency currency,
+	                            CashAccountType fromType,
+	                            CashAccountType toType,
+	                            LocalDateTime dateTime) {
 		CashAccount from    = getAccount(broker, currency, fromType);
 		CashAccount to      = getAccount(broker, currency, toType);
 		Double      fromSum = from.getAmount();
@@ -176,6 +176,15 @@ public class CashService {
 		logger.debug("finish");
 	}
 
+	public void sellShort(Double amount, Broker broker, Currency currency, TradeLog tradeLog) {
+		logger.debug("start");
+		CashAccountType fromBorrowed = accountTypeRepo.findCashAccountTypeByName("borrowed");
+		CashAccountType toOpen       = accountTypeRepo.findCashAccountTypeByName("open");
+
+		transfer(amount, tradeLog, broker, currency, fromBorrowed, toOpen, tradeLog.getDateOpen());
+		logger.debug("finish");
+	}
+
 	public void sell(double openAmount, double closeAmount, Broker broker, Currency currency, TradeLog tradeLog) {
 		logger.debug("start");
 		CashAccountType tradeType  = accountTypeRepo.findCashAccountTypeByName("trade");
@@ -198,6 +207,29 @@ public class CashService {
 		logger.debug("finish");
 	}
 
+	public void buyShort(double openAmount, double closeAmount, Broker broker, Currency currency, TradeLog tradeLog) {
+		logger.debug("start");
+		CashAccountType tradeType  = accountTypeRepo.findCashAccountTypeByName("trade");
+		CashAccountType borrowedType  = accountTypeRepo.findCashAccountTypeByName("borrowed");
+		CashAccountType openType   = accountTypeRepo.findCashAccountTypeByName("open");
+		CashAccountType profitType = accountTypeRepo.findCashAccountTypeByName("profit");
+		CashAccountType lossType   = accountTypeRepo.findCashAccountTypeByName("loss");
+
+		transfer(openAmount, tradeLog, broker, currency, openType, borrowedType, tradeLog.getDateClose());
+
+		if (closeAmount < openAmount) {
+			double profit = openAmount - closeAmount;
+			transfer(profit, tradeLog, broker, currency, profitType, tradeType, tradeLog.getDateClose());
+		}
+
+		if (closeAmount > openAmount) {
+			double loss = closeAmount - openAmount;
+			transfer(loss, tradeLog, broker, currency, tradeType, lossType, tradeLog.getDateClose());
+		}
+
+		logger.debug("finish");
+	}
+
 	public double lastDepositAmount(Broker broker, Currency currency) {
 		CashAccountType tradeType = accountTypeRepo.findCashAccountTypeByName("trade");
 		CashAccount     trade     = getAccount(broker, currency, tradeType);
@@ -214,6 +246,15 @@ public class CashService {
 	public List<CashAccountDTO> getTradeAccounts(Long brokerId) {
 		Broker          broker    = brokerRepo.getReferenceById(brokerId);
 		CashAccountType tradeType = accountTypeRepo.findCashAccountTypeByName("trade");
+		return accountRepo.findAllByBrokerAndType(broker, tradeType)
+		                  .stream()
+		                  .map(CashAccountMapper::toDTO)
+		                  .collect(Collectors.toList());
+	}
+
+	public List<CashAccountDTO> getBorrowedAccounts(Long brokerId) {
+		Broker          broker    = brokerRepo.getReferenceById(brokerId);
+		CashAccountType tradeType = accountTypeRepo.findCashAccountTypeByName("borrowed");
 		return accountRepo.findAllByBrokerAndType(broker, tradeType)
 		                  .stream()
 		                  .map(CashAccountMapper::toDTO)
@@ -489,8 +530,8 @@ public class CashService {
 
 	public void correction(TransferDTO transferDTO) {
 		Currency currency = currencyRepo.getReferenceById(transferDTO.getCurrencyId());
-		Broker broker = brokerRepo.getReferenceById(transferDTO.getBrokerId());
-		double amount = transferDTO.getAmount();
+		Broker   broker   = brokerRepo.getReferenceById(transferDTO.getBrokerId());
+		double   amount   = transferDTO.getAmount();
 
 		CashAccountType from, to;
 		if (amount > 0) {
@@ -502,4 +543,8 @@ public class CashService {
 		}
 		transfer(Math.abs(amount), null, broker, currency, from, to, LocalDateTime.now());
 	}
+
+
 }
+
+
