@@ -33,6 +33,12 @@ public class CashController {
 		return service.refill(transferDTO);
 	}
 
+	@PostMapping(value = "/correction", consumes = MediaType.APPLICATION_JSON_VALUE, produces =
+			MediaType.APPLICATION_JSON_VALUE)
+	public void correction(@RequestBody TransferDTO transferDTO) {
+		service.correction(transferDTO);
+	}
+
 	@PostMapping(value = "/exchange", consumes = MediaType.APPLICATION_JSON_VALUE, produces =
 			MediaType.APPLICATION_JSON_VALUE)
 	public CashAccountDTO exchange(@RequestBody ExchangeDTO exchangeDTO) {
@@ -48,12 +54,12 @@ public class CashController {
 
 		for (TradeLogDTO dto : closed) {
 			sumOutcomes = sumOutcomes +
-					currencyRateService.convertToUSD(dto.getCurrency().getId(),
-					                                 dto.getOutcomeDouble(),
-					                                 today);
+			              currencyRateService.convertToUSD(dto.getCurrency().getId(),
+			                                               dto.getOutcomeDouble(),
+			                                               today);
 		}
 
-		double profit = sumOutcomes/capital*100.0;
+		double profit = sumOutcomes / capital * 100.0;
 
 		double riskBase = service.getRiskBase(capital);
 
@@ -65,7 +71,8 @@ public class CashController {
 		return service.eval(evalDTO);
 	}
 
-	@PostMapping(value = "/evaltofit", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping(value = "/evaltofit", consumes = MediaType.APPLICATION_JSON_VALUE, produces =
+			MediaType.APPLICATION_JSON_VALUE)
 	public EvalOutFitDTO evalToFit(@RequestBody EvalInDTO evalDTO) throws JsonProcessingException {
 		return service.evalToFit(evalDTO);
 	}

@@ -1,5 +1,6 @@
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
+import DialogTitle from '@mui/material/DialogTitle'
 import Dialog from '@mui/material/Dialog'
 import { remCalc } from '../utils/utils'
 import Button from './button'
@@ -19,15 +20,20 @@ const ContainerStyled = styled(Box)(() => ({
     gap: remCalc(20)
 }))
 
-export default ({ open, onRefill, onCancel, currencies }: RefillDialogProps) => {
+const DialogTitleStyled = styled(DialogTitle)(() => ({
+    fontSize: remCalc(16),
+    fontWeight: 501
+}))
+
+export default ({ open, title, onSubmit, onCancel, currencies }: RefillDialogProps) => {
     const [currencyId, setCurrencyId] = useState('' + (currencies ? currencies[0].id : 0))
     const [value, setValue] = useState<number | undefined>(undefined)
     const [error, setError] = useState(false)
 
-    const handleRefill = useCallback(() => {
+    const handleSubmit = useCallback(() => {
         if (!value || error)
             return
-        onRefill(Number(currencyId), value)
+        onSubmit(Number(currencyId), value)
     }, [value, error, currencyId])
 
     const handleSelector = useCallback((event: SelectChangeEvent<unknown>) => {
@@ -37,6 +43,9 @@ export default ({ open, onRefill, onCancel, currencies }: RefillDialogProps) => 
     return <Dialog
         open={open}
     >
+        <DialogTitleStyled>
+            {title}
+        </DialogTitleStyled>
         <DialogContent>
             <ContainerStyled>
                 <Select
@@ -51,7 +60,7 @@ export default ({ open, onRefill, onCancel, currencies }: RefillDialogProps) => 
 
         <DialogActions sx={{ justifyContent: 'center' }}>
             <ButtonContainerStyled>
-                <Button style={{ minWidth: remCalc(101) }} text="Refill" onClick={handleRefill}/>
+                <Button style={{ minWidth: remCalc(101) }} text="Submit" onClick={handleSubmit}/>
                 <Button style={{ minWidth: remCalc(101) }} text="Cancel" onClick={onCancel}/>
             </ButtonContainerStyled>
         </DialogActions>

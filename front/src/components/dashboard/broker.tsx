@@ -21,9 +21,10 @@ const ContainerStyled = styled(Box)(({ theme }) => ({
 }))
 
 
-export default ({ brokers, currencies, currentBroker, setCurrentBrokerId, refill, exchange }: BrokerProps) => {
+export default ({ brokers, currencies, currentBroker, setCurrentBrokerId, refill, correction, exchange }: BrokerProps) => {
     const [id, setId] = useState('' + (currentBroker ? currentBroker.id : 1))
     const [refillOpen, setRefillOpen] = useState(false)
+    const [correctionOpen, setCorrectionOpen] = useState(false)
     const [exchangeOpen, setExchangeOpen] = useState(false)
 
     const handleChange = useCallback((event: SelectChangeEvent<unknown>) => {
@@ -35,9 +36,18 @@ export default ({ brokers, currencies, currentBroker, setCurrentBrokerId, refill
         setRefillOpen(true)
     }, [])
 
+    const openCorrectionDialog = useCallback(() => {
+        setCorrectionOpen(true)
+    }, [])
+
     const commitRefill = useCallback((currencyId: number, amount: number) => {
         refill(currencyId, amount)
         setRefillOpen(false)
+    }, [])
+
+    const commitCorrection = useCallback((currencyId: number, amount: number) => {
+        correction(currencyId, amount)
+        setCorrectionOpen(false)
     }, [])
 
     const commitExchange = useCallback((
@@ -57,6 +67,10 @@ export default ({ brokers, currencies, currentBroker, setCurrentBrokerId, refill
         setRefillOpen(false)
     }, [])
 
+    const cancelCorrection = useCallback(() => {
+        setCorrectionOpen(false)
+    }, [])
+
     const cancelExchange = useCallback(() => {
         setExchangeOpen(false)
     }, [])
@@ -71,9 +85,11 @@ export default ({ brokers, currencies, currentBroker, setCurrentBrokerId, refill
         </SelectorContainerStyled>
         <ButtonContainerStyled>
             <Button style={{ minWidth: remCalc(101) }} text="Refill" onClick={openRefillDialog}/>
+            <Button style={{ minWidth: remCalc(101) }} text="Correction" onClick={openCorrectionDialog}/>
             <Button style={{ minWidth: remCalc(101) }} text="Exchange" onClick={openExchangeDialog}/>
         </ButtonContainerStyled>
-        <Refill open={refillOpen} onRefill={commitRefill} onCancel={cancelRefill} currencies={currencies}/>
+        <Refill open={refillOpen} title="Refill" onSubmit={commitRefill} onCancel={cancelRefill} currencies={currencies}/>
+        <Refill open={correctionOpen} title="Correction" onSubmit={commitCorrection} onCancel={cancelCorrection} currencies={currencies}/>
         <Exchange open={exchangeOpen} onExchange={commitExchange} onCancel={cancelExchange} currencies={currencies}/>
     </ContainerStyled>
 
