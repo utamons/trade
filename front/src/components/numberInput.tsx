@@ -6,26 +6,30 @@ interface NumberInputProps {
     onError: (error: boolean) => void
     onChange: (value: number) => void
     label?: string
+    negativeAllowed?: boolean
+    zeroAllowed?: boolean
 }
 
-export default ({ onError, onChange, label, value }: NumberInputProps) => {
+export default ({ onError, onChange, label, negativeAllowed, zeroAllowed, value }: NumberInputProps) => {
 
     const [error, setError] = useState(false)
     const [errorText, setErrorText] = useState('')
     const [_value, setValue] = useState<string | number | undefined>(value)
+    const [oldValue, setOldValue] = useState<string | number | undefined>(value)
 
-    if (_value != value) {
+    if (value && oldValue != value) {
         setValue(value)
+        setOldValue(value)
     }
 
+    console.log(_value)
+
     const handleInput = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-        console.log(event.target.value)
         setValue((event.target.value))
-        validate(event.target.value)
         const valueNum = Number(event.target.value)
         if (event.target.value != '' && !isNaN(valueNum))
             onChange(Number(event.target.value))
-    }, [value])
+    }, [])
 
     const handleValidate =
         useCallback((event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -34,7 +38,11 @@ export default ({ onError, onChange, label, value }: NumberInputProps) => {
 
     const validate = (value: string): boolean => {
         const num = Number(value)
-        if (!value || isNaN(num)) {
+        if (!value ||
+            isNaN(num) ||
+            ((negativeAllowed == undefined || !negativeAllowed) && num < 0) ||
+            ((zeroAllowed == undefined || !zeroAllowed) && num == 0)
+        ) {
             setErrorText('Incorrect value')
             setError(true)
             onError(true)
@@ -54,6 +62,5 @@ export default ({ onError, onChange, label, value }: NumberInputProps) => {
         onBlur={handleValidate}
         error={error}
         helperText={errorText}
-        inputProps={{ inputMode: 'numeric' }}
     />
 }
