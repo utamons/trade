@@ -41,13 +41,4 @@ public class CashAccountType {
 	public String getDescription() {
 		return description;
 	}
-
-	@Override
-	public String toString() {
-		return "CashAccountType{" +
-		       "id=" + id + '\'' +
-		       "name=" + name + '\'' +
-		       "description=" + description + '\'' +
-		       '}';
-	}
 }

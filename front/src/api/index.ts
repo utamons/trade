@@ -70,6 +70,17 @@ const postRefill = async (body: RefillType) => {
     })
 }
 
+const postCorrection = async (body: RefillType) => {
+    const url = `${baseUrl}/cash/correction`
+    return fetch(url, {
+        method: 'post',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+    })
+}
+
 const postExchange = async (body: ExchangeType) => {
     const url = `${baseUrl}/cash/exchange`
     return fetch(url, {
@@ -152,6 +163,7 @@ export {
     fetchBrokerStats,
     fetchMoneyState,
     postRefill,
+    postCorrection,
     postExchange,
     postLogPage,
     postOpen,

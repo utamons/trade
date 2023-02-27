@@ -11,7 +11,7 @@ import {
     postLogPage,
     postOpen,
     postClose,
-    postRefill
+    postRefill, postCorrection
 } from './api'
 import { BrokerStatsType, ItemType, PositionCloseType, PositionOpenType, TradeContextType, TradeLogPageType } from 'types'
 
@@ -137,6 +137,17 @@ const useTrade = (): TradeContextType => {
         })
     }
 
+    const correction = (currencyId: number, amount: number) => {
+        postCorrection({
+            brokerId: currentBrokerId,
+            currencyId,
+            amount
+        }).then(() => {
+            setMoneyStateKey('' + Date.now())
+            setBrokerStatsKey('' + Date.now())
+        })
+    }
+
     const page = (page: number) => {
         setPageNum(page)
         setPageLogKey('' + Date.now())
@@ -190,6 +201,7 @@ const useTrade = (): TradeContextType => {
         close,
         page,
         refill,
+        correction,
         exchange,
         isLoading: isLoadingBrokers || isLoadingCurrencies || isLoadingMarkets || isLoadingTickers ||
             isLoadingBrokerStats || isLoadingMoneyState || isLoadingLogPage,

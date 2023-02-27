@@ -57,6 +57,7 @@ type TradeContextType = {
     page: (page: number) => void,
     setCurrentBrokerId: (id: number) => void,
     refill: (currencyId: number, amount: number) => void,
+    correction: (currencyId: number, amount: number) => void,
     exchange: (currencyFromId: number,
                currencyToId: number,
                amountFrom: number,
@@ -69,6 +70,7 @@ type BrokerProps = {
     currentBroker: ItemType | undefined,
     setCurrentBrokerId: (id: number) => void,
     refill: (currencyId: number, amount: number) => void,
+    correction: (currencyId: number, amount: number) => void,
     exchange: (currencyFromId: number,
                currencyToId: number,
                amountFrom: number,
@@ -83,7 +85,8 @@ type ButtonProps = {
 
 type RefillDialogProps = {
     open: boolean,
-    onRefill: (currencyId: number, amount: number) => void,
+    title: string,
+    onSubmit: (currencyId: number, amount: number) => void,
     onCancel: () => void,
     currencies: ItemType[] | undefined
 }

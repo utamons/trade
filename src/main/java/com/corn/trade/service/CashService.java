@@ -52,7 +52,7 @@ public class CashService {
 		this.currencyRateService = currencyRateService;
 	}
 
-	private CashAccount getAccount(Broker broker, Currency currency, CashAccountType type) {
+	public CashAccount getAccount(Broker broker, Currency currency, CashAccountType type) {
 		logger.debug("start");
 		CashAccount account = accountRepo.findCashAccountByBrokerAndCurrencyAndType(broker, currency, type);
 		if (account == null) {
@@ -87,7 +87,7 @@ public class CashService {
 		return CashAccountMapper.toDTO(trade);
 	}
 
-	private CashAccount transfer(double transfer,
+	public CashAccount transfer(double transfer,
 	                             TradeLog tradeLog,
 	                             Broker broker,
 	                             Currency currency,
@@ -485,5 +485,21 @@ public class CashService {
 			}
 		}
 		return new Fees(fixed, fly, amount);
+	}
+
+	public void correction(TransferDTO transferDTO) {
+		Currency currency = currencyRepo.getReferenceById(transferDTO.getCurrencyId());
+		Broker broker = brokerRepo.getReferenceById(transferDTO.getBrokerId());
+		double amount = transferDTO.getAmount();
+
+		CashAccountType from, to;
+		if (amount > 0) {
+			from = accountTypeRepo.findCashAccountTypeByName("correction");
+			to = accountTypeRepo.findCashAccountTypeByName("trade");
+		} else {
+			from = accountTypeRepo.findCashAccountTypeByName("trade");
+			to = accountTypeRepo.findCashAccountTypeByName("correction");
+		}
+		transfer(Math.abs(amount), null, broker, currency, from, to, LocalDateTime.now());
 	}
 }

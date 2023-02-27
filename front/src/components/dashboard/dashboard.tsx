@@ -25,7 +25,7 @@ export default () => {
     if (!all)
         return <></>
     const { isLoading, currencies, brokers, currentBroker, brokerStats, moneyState,
-        setCurrentBrokerId, refill, exchange } = all
+        setCurrentBrokerId, refill, exchange, correction } = all
 
     return <Loadable isLoading={isLoading}>
         <ContainerStyled>
@@ -35,6 +35,7 @@ export default () => {
                 currencies={currencies}
                 refill={refill}
                 exchange={exchange}
+                correction={correction}
                 setCurrentBrokerId={setCurrentBrokerId}/>
             {brokerStats? <BrokerStats {...brokerStats}/>:<></>}
             {moneyState? <MoneyState {...moneyState}/>: <></>}
