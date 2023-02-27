@@ -20,7 +20,7 @@ public class BrokerStatsDTOTest {
         accounts.add(new CashAccountDTO(1L, "Account 1", USD_CURRENCY, BROKER, "type1", 100.0, UPDATED_AT));
         accounts.add(new CashAccountDTO(2L, "Account 2", USD_CURRENCY, BROKER, "type2", 200.0, UPDATED_AT));
 
-        BrokerStatsDTO brokerStatsDTO = new BrokerStatsDTO(accounts, 1000.0, 500.0, 400.0, 5L);
+        BrokerStatsDTO brokerStatsDTO = new BrokerStatsDTO(accounts, 1000.0, 500.0, 400.0, 5L, 1.0);
 
         assertEquals(accounts, brokerStatsDTO.getAccounts());
     }
@@ -28,7 +28,7 @@ public class BrokerStatsDTOTest {
     @Test
     public void testGetOutcome() {
         List<CashAccountDTO> accounts = new ArrayList<>();
-        BrokerStatsDTO brokerStatsDTO = new BrokerStatsDTO(accounts, 1000.0, 500.0, 400.0, 5L);
+        BrokerStatsDTO brokerStatsDTO = new BrokerStatsDTO(accounts, 1000.0, 500.0, 400.0, 5L, 1.0);
 
         BigDecimal outcome = brokerStatsDTO.getOutcome();
 
@@ -38,7 +38,7 @@ public class BrokerStatsDTOTest {
     @Test
     public void testGetAvgOutcome() {
         List<CashAccountDTO> accounts = new ArrayList<>();
-        BrokerStatsDTO brokerStatsDTO = new BrokerStatsDTO(accounts, 1000.0, 500.0, 400.0, 5L);
+        BrokerStatsDTO brokerStatsDTO = new BrokerStatsDTO(accounts, 1000.0, 500.0, 400.0, 5L, 1.0);
 
         BigDecimal avgOutcome = brokerStatsDTO.getAvgOutcome();
 
@@ -48,7 +48,7 @@ public class BrokerStatsDTOTest {
     @Test
     public void testGetAvgProfit() {
         List<CashAccountDTO> accounts = new ArrayList<>();
-        BrokerStatsDTO brokerStatsDTO = new BrokerStatsDTO(accounts, 1000.0, 500.0, 400.0, 5L);
+        BrokerStatsDTO brokerStatsDTO = new BrokerStatsDTO(accounts, 1000.0, 500.0, 400.0, 5L, 1.0);
 
         BigDecimal avgProfit = brokerStatsDTO.getAvgProfit();
 
@@ -58,7 +58,7 @@ public class BrokerStatsDTOTest {
     @Test
     public void testGetOpen() {
         List<CashAccountDTO> accounts = new ArrayList<>();
-        BrokerStatsDTO brokerStatsDTO = new BrokerStatsDTO(accounts, 1000.0, 500.0, 400.0, 5L);
+        BrokerStatsDTO brokerStatsDTO = new BrokerStatsDTO(accounts, 1000.0, 500.0, 400.0, 5L, 1.0);
 
         long open = brokerStatsDTO.getOpen();
 

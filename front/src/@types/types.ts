@@ -27,7 +27,8 @@ type BrokerStatsType = {
     outcome: number,
     avgOutcome: number,
     avgProfit: number,
-    open: number
+    open: number,
+    borrowed?: number
 }
 
 type MoneyStateType = {
