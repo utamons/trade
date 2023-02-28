@@ -82,6 +82,7 @@ public class TradeLogMapper {
 				entity.getNote(),
 				null,
 				entity.getGrade(),
-				entity.getGoal());
+				entity.getGoal(),
+				entity.getBrokerInterest());
 	}
 }

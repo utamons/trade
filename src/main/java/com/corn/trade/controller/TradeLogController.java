@@ -33,7 +33,7 @@ public class TradeLogController {
 	}
 
 	@PostMapping(value = "/page", consumes=MediaType.APPLICATION_JSON_VALUE)
-	public Page<TradeLogDTO> page(@RequestBody TradeLogPageReqDTO pageReqDTO) {
+	public Page<TradeLogDTO> page(@RequestBody TradeLogPageReqDTO pageReqDTO) throws JsonProcessingException {
 		return service.getPage(pageReqDTO);
 	}
 }

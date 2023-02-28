@@ -91,6 +91,9 @@ public class TradeLog implements Serializable {
 	@Column(name = "chart")
 	private byte[] chart;
 
+	@Column(name="broker_interest")
+	private Double brokerInterest;
+
 	public Long getId() {
 		return id;
 	}
@@ -297,5 +300,23 @@ public class TradeLog implements Serializable {
 
 	public void setBreakEven(Double breakEven) {
 		this.breakEven = breakEven;
+	}
+
+	public Double getBrokerInterest() {
+		return brokerInterest;
+	}
+
+	public void setBrokerInterest(Double brokerInterest) {
+		this.brokerInterest = brokerInterest;
+	}
+
+	@Transient
+	public boolean isLong() {
+		return "long".equals(position);
+	}
+
+	@Transient
+	public boolean isClosed() {
+		return dateClose != null;
 	}
 }

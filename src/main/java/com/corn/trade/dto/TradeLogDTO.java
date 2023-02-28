@@ -66,6 +66,8 @@ public class TradeLogDTO implements Serializable {
 
 	private final Double goal;
 
+	private final Double brokerInterest;
+
 	@JsonCreator
 	public TradeLogDTO(@JsonProperty("id") Long id,
 	                   @JsonProperty("position") String position,
@@ -92,7 +94,8 @@ public class TradeLogDTO implements Serializable {
 	                   @JsonProperty("note") String note,
 	                   @JsonProperty("chart") String chart,
 	                   @JsonProperty("grade") String grade,
-	                   @JsonProperty("goal") Double goal) {
+	                   @JsonProperty("goal") Double goal,
+	                   @JsonProperty("brokerInterest") Double brokerInterest) {
 		this.id = id;
 		this.position = position;
 		this.dateOpen = dateOpen;
@@ -119,6 +122,7 @@ public class TradeLogDTO implements Serializable {
 		this.chart = chart;
 		this.grade = grade;
 		this.goal = goal;
+		this.brokerInterest = brokerInterest;
 	}
 
 	public Long getId() {
@@ -234,5 +238,9 @@ public class TradeLogDTO implements Serializable {
 
 	public Double getBreakEven() {
 		return breakEven;
+	}
+
+	public BigDecimal getBrokerInterest() {
+		return toOutBigDecimal(brokerInterest);
 	}
 }

@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -423,7 +424,7 @@ public class CashService {
 
 		final double risk = getRisk(evalDTO);
 
-		final double breakEven = getBreakEven(shortC, broker, ticker, items, priceOpen);
+		final double breakEven = getBreakEven(shortC, broker, ticker, items, priceOpen, 0);
 
 		final double takeProfit = getTakeProfit(shortC, broker, ticker, items, priceOpen, stopLoss);
 
@@ -471,14 +472,14 @@ public class CashService {
 		return (losses + feesOpen + feesLoss) / (riskBase) * 100.0;
 	}
 
-	private double getBreakEven(int shortC, Broker broker, Ticker ticker, long items, double priceOpen) {
+	private double getBreakEven(int shortC, Broker broker, Ticker ticker, long items, double priceOpen, double interest) {
 		double sumOpen   = items * priceOpen;
 		double feesOpen  = getFees(broker, ticker, items, sumOpen).getAmount();
 		double sumClose  = sumOpen;
 		double feesClose = getFees(broker, ticker, items, sumClose).getAmount();
 		double taxes     = getTaxes(shortC * sumClose - (shortC * sumOpen));
 
-		while (shortC * sumClose - (shortC * sumOpen) < feesOpen + feesClose + taxes) {
+		while (shortC * sumClose - (shortC * sumOpen) < feesOpen + feesClose + taxes + interest) {
 			sumClose = sumClose + (shortC * 0.01);
 			feesClose = getFees(broker, ticker, items, sumClose).getAmount();
 			taxes = getTaxes(shortC * sumClose - (shortC * sumOpen));
@@ -545,6 +546,27 @@ public class CashService {
 	}
 
 
+	public void applyBorrowInterest(TradeLog tradeLog) throws JsonProcessingException {
+		if (tradeLog.isClosed() || tradeLog.isLong()) {
+			return;
+		}
+		LocalDate openDate = tradeLog.getDateOpen().toLocalDate();
+		LocalDate currentDate = LocalDate.now();
+		long daysBetween = ChronoUnit.DAYS.between(openDate, currentDate);
+		if (tradeLog.getBroker().getName().equals("FreedomFN")) {
+			double interest = (tradeLog.getVolume()/100.0*12.0/365.0)*daysBetween;
+			double interestUSD = currencyRateService.convertToUSD(tradeLog.getTicker().getCurrency().getId(), interest, currentDate);
+			tradeLog.setBrokerInterest(interestUSD);
+			double breakEven = getBreakEven(-1,
+			                                tradeLog.getBroker(),
+			                                tradeLog.getTicker(),
+			                                tradeLog.getItemNumber(),
+			                                tradeLog.getPriceOpen(),
+			                                interest);
+			tradeLog.setBreakEven(breakEven);
+			tradeLogRepo.save(tradeLog);
+		}
+	}
 }
 
 
