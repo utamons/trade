@@ -62,7 +62,7 @@ export const TextFieldStyled = styled(TextField)(() => ({
 const BasicDateTimePicker = ({ onChange }: DatePickerProps) => {
     const [value, setValue] = React.useState<Dayjs | null>(dayjs(new Date()))
 
-    const handleChange = useCallback((value: Dayjs| null) => {
+    const handleChange = useCallback((value: Dayjs | null) => {
         if (value) {
             setValue(value)
             onChange(value.toDate())
@@ -85,11 +85,13 @@ const BasicDateTimePicker = ({ onChange }: DatePickerProps) => {
 export default ({ onClose, isOpen, position, close }: CloseDialogProps) => {
     const [priceError, setPriceError] = useState(false)
     const [price, setPrice] = useState<number | undefined>(undefined)
+    const [brokerInterestError, setBrokerInterestError] = useState(false)
+    const [brokerInterest, setBrokerInterest] = useState(0.00)
     const [note, setNote] = useState(position.note)
     const [date, setDate] = useState(new Date())
 
     const validate = (): boolean => {
-        if (priceError )
+        if (priceError || brokerInterestError)
             return true
         return price == undefined
 
@@ -105,11 +107,12 @@ export default ({ onClose, isOpen, position, close }: CloseDialogProps) => {
                 id: position.id,
                 dateClose: date.toISOString(),
                 priceClose: price,
+                brokerInterest,
                 note: note
             })
             onClose()
         }
-    }, [price, date,  note ])
+    }, [price, date, note, brokerInterest, brokerInterestError, priceError])
 
     const noteChangeHandler = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         setNote(event.target.value)
@@ -126,6 +129,14 @@ export default ({ onClose, isOpen, position, close }: CloseDialogProps) => {
 
     const priceErrorHandler = useCallback((error: boolean) => {
         setPriceError(error)
+    }, [])
+
+    const brokerInterestChangeHandler = useCallback((newBrokerInterest: number) => {
+        setBrokerInterest(newBrokerInterest)
+    }, [])
+
+    const brokerInterestErrorHandler = useCallback((error: boolean) => {
+        setBrokerInterestError(error)
     }, [])
 
     return <Dialog
@@ -150,10 +161,22 @@ export default ({ onClose, isOpen, position, close }: CloseDialogProps) => {
                                     Price: {`${position.currency.name}`}
                                 </FieldName>
                                 <FieldValue>
-                                    <NumberInput value={price} onChange={priceChangeHandler} onError={priceErrorHandler}/>
+                                    <NumberInput value={price} onChange={priceChangeHandler}
+                                                 onError={priceErrorHandler}/>
                                 </FieldValue>
                             </FieldBox>
                         </Grid>
+                        {position.position == 'short' ? <Grid item xs={1}>
+                            <FieldBox>
+                                <FieldName>
+                                    Broker interest (USD):
+                                </FieldName>
+                                <FieldValue>
+                                    <NumberInput value={brokerInterest} zeroAllowed onChange={brokerInterestChangeHandler}
+                                                 onError={brokerInterestErrorHandler}/>
+                                </FieldValue>
+                            </FieldBox>
+                        </Grid> : <></>}
                     </Grid>
                 </Grid>
                 <Grid item xs={1}>
