@@ -120,10 +120,13 @@ public class TradeLogService {
 			cashService.buyShort(volume, closeAmount, broker, currency, open);
 	}
 
-	public Page<TradeLogDTO> getPage(TradeLogPageReqDTO pageReqDTO) {
+	public Page<TradeLogDTO> getPage(TradeLogPageReqDTO pageReqDTO) throws JsonProcessingException {
 		Pageable pageable = PageRequest.of(pageReqDTO.getPageNumber(), pageReqDTO.getPageSize(),
 		                                   Sort.by("dateOpen").descending());
 		Page<TradeLog> page = tradeLogRepo.findAll(pageable);
+		for (TradeLog log: page) {
+			cashService.applyBorrowInterest(log);
+		}
 		return page.map(TradeLogMapper::toDTO);
 	}
 
