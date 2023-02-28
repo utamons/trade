@@ -319,4 +319,8 @@ public class TradeLog implements Serializable {
 	public boolean isClosed() {
 		return dateClose != null;
 	}
+	@Transient
+	public boolean isShort() {
+		return "short".equals(position);
+	}
 }

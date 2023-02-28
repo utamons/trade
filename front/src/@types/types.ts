@@ -222,6 +222,7 @@ type PositionCloseType = {
     id: number,
     dateClose: string,
     priceClose: number,
+    brokerInterest: number,
     note: string | undefined
 }
 

@@ -73,22 +73,23 @@ public class TradeLogService {
 		final Ticker   ticker   = open.getTicker();
 		final Currency currency = open.getCurrency();
 
-		final double        priceOpen     = open.getPriceOpen();
-		double              priceClose    = closeDTO.getPriceClose();
-		final int           shortC        = open.getPosition().equals("long") ? 1 : -1;
-		final long          items         = open.getItemNumber();
-		final double        sum           = priceClose * items;
-		final double        volume        = open.getVolume();
-		final LocalDate     dateOpen      = open.getDateOpen().toLocalDate();
-		final LocalDateTime dateTimeClose = closeDTO.getDateClose();
-		final LocalDate     dateClose     = dateTimeClose.toLocalDate();
-		final String        note          = closeDTO.getNote();
+		final double        priceOpen      = open.getPriceOpen();
+		double              priceClose     = closeDTO.getPriceClose();
+		final int           shortC         = open.getPosition().equals("long") ? 1 : -1;
+		final long          items          = open.getItemNumber();
+		final double        sum            = priceClose * items;
+		final double        volume         = open.getVolume();
+		final LocalDate     dateOpen       = open.getDateOpen().toLocalDate();
+		final LocalDateTime dateTimeClose  = closeDTO.getDateClose();
+		final LocalDate     dateClose      = dateTimeClose.toLocalDate();
+		final String        note           = closeDTO.getNote();
+		final double        brokerInterest = closeDTO.getBrokerInterest() == null ? 0.0 : closeDTO.getBrokerInterest();
 
 		// in the currency of the position:
 		final double closeFees = cashService.getFees(broker, ticker, items, sum).getAmount();
 		final double openFees  = cashService.getFees(broker, ticker, items, volume).getAmount();
 
-		final double outcome        = ((shortC * priceClose - shortC * priceOpen) * items) - (closeFees + openFees);
+		final double outcome        = ((shortC * priceClose - shortC * priceOpen) * items) - (closeFees + openFees + brokerInterest);
 		final double outcomePercent = outcome / volume * 100.0;
 
 		final double closeFeesUSD = currencyRateService.convertToUSD(currency.getId(), closeFees, dateClose);
@@ -96,6 +97,8 @@ public class TradeLogService {
 
 		if (closeFeesUSD != 0)
 			cashService.fee(closeFeesUSD, broker, open, dateTimeClose);
+		if (brokerInterest != 0)
+			cashService.fee(brokerInterest, broker, open, dateTimeClose);
 
 		double percentToCapital = cashService.percentToCapital(outcome, volume, currency);
 
@@ -105,6 +108,9 @@ public class TradeLogService {
 		open.setOutcome(outcome);
 		open.setOutcomePercent(outcomePercent);
 		open.setProfit(percentToCapital);
+		if (open.isShort()) {
+			open.setBrokerInterest(brokerInterest);
+		}
 
 		if (note != null)
 			open.setNote(note);
@@ -124,7 +130,7 @@ public class TradeLogService {
 		Pageable pageable = PageRequest.of(pageReqDTO.getPageNumber(), pageReqDTO.getPageSize(),
 		                                   Sort.by("dateOpen").descending());
 		Page<TradeLog> page = tradeLogRepo.findAll(pageable);
-		for (TradeLog log: page) {
+		for (TradeLog log : page) {
 			cashService.applyBorrowInterest(log);
 		}
 		return page.map(TradeLogMapper::toDTO);
