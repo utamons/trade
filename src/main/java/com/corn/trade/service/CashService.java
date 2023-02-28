@@ -313,7 +313,7 @@ public class CashService {
 	}
 
 	public double getAssetsDepositUSD() throws JsonProcessingException {
-		List<CurrencySumDTO> opens = tradeLogRepo.openSums();
+		List<CurrencySumDTO> opens = tradeLogRepo.openLongSums();
 		double               sum   = 0.0;
 		LocalDate            date  = LocalDate.now();
 
