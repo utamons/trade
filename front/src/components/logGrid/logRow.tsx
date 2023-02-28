@@ -67,9 +67,9 @@ interface ExpandableProps {
 
 const Expanded = ({ logItem, expandHandler, closeDialog }: ExpandableProps) => {
     const {
-        broker, market, ticker, position, dateOpen, dateClose, currency,
+        broker, market, ticker, position, dateOpen, dateClose, currency, brokerInterest,
         priceClose, priceOpen, itemNumber, outcomePercent, fees, volume, outcome,
-        volumeToDeposit, stopLoss, takeProfit, risk, breakEven, profit, goal, note
+        volumeToDeposit, stopLoss, takeProfit, risk, breakEven, profit, note
     } = logItem
 
     const closeDialogHandler = useCallback(() => {
@@ -150,6 +150,10 @@ const Expanded = ({ logItem, expandHandler, closeDialog }: ExpandableProps) => {
                     <FieldName>Break even</FieldName>
                     <FieldValue>{money(currency.name, breakEven)}</FieldValue>
                 </FieldBox>
+                {position == 'short'?<FieldBox>
+                        <FieldName>Broker interest</FieldName>
+                        <FieldValue>{money('USD', brokerInterest)}</FieldValue>
+                    </FieldBox>:<></>}
                 <FieldBox>
                     <FieldName>Outcome:</FieldName>
                     <FieldValue sx={profitColor(outcome, defaultColor)}>{money(currency.name, outcome)}</FieldValue>

@@ -160,7 +160,8 @@ type TradeLog = {
     note: string | undefined,
     chart: string | undefined,
     grade: string | undefined,
-    goal: number | undefined
+    goal: number | undefined,
+    brokerInterest: number | undefined
 }
 
 type SortType = {
