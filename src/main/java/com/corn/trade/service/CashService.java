@@ -278,7 +278,7 @@ public class CashService {
 	}
 
 	public double getRiskBase(double capital) {
-		return capital + (12 - LocalDate.now().getMonthValue()) * 1000;
+		return capital;
 	}
 
 	public double getDeposit(long brokerId, LocalDate date) throws JsonProcessingException {
@@ -341,7 +341,7 @@ public class CashService {
 			dto = eval(evalDTO);
 			be = dto.getBreakEven().doubleValue();
 			risk = dto.getRisk().doubleValue();
-			bePc = Math.abs(be / evalDTO.getPriceOpen() * 100.0 - 100.0);
+			bePc = Math.abs(be / (evalDTO.getPriceOpen()/100.0) - 100.0);
 			if (risk <= MAX_RISK_PC && bePc <= MAX_BE_PC)
 				return new EvalOutFitDTO(dto.getFees(), dto.getRisk(), dto.getBreakEven(), dto.getTakeProfit(),
 				                         dto.getOutcomeExp(), evalDTO.getStopLoss(), evalDTO.getItems());
@@ -364,7 +364,7 @@ public class CashService {
 				dto = eval(evalDTO);
 				be = dto.getBreakEven().doubleValue();
 				bePcPrev = bePc;
-				bePc = (shortC > 0 ? be / evalDTO.getPriceOpen() : evalDTO.getPriceOpen() / be) * 100.0 - 100.0;
+				bePc = Math.abs(be / (evalDTO.getPriceOpen()/100.0) - 100.0);
 				if (be == bePcPrev && count < 3) {
 					count++;
 				} else {
@@ -428,7 +428,7 @@ public class CashService {
 
 		final double takeProfit = getTakeProfit(shortC, broker, ticker, items, priceOpen, stopLoss);
 
-		final double outcomeExp = (shortC * priceOpen - shortC * stopLoss) * 3 * items;
+		final double outcomeExp = (shortC * takeProfit - shortC * priceOpen) * items;
 
 		return new EvalOutDTO(feesUSD, risk, breakEven, takeProfit, outcomeExp);
 	}
