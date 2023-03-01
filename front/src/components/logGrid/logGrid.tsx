@@ -1,31 +1,46 @@
 import React, { useCallback, useState } from 'react'
 import { Grid } from '@mui/material'
-import { PositionCloseType, TradeLog, TradeLogPageType } from 'types'
+import { PositionCloseType, PositionEditType, TradeLog, TradeLogPageType } from 'types'
 import { LogHeader } from './logHeader'
 import { LogRow } from './logRow'
 import CloseDialog from './closeDialog'
+import EditDialog from './editDialog'
 
 interface LogGridProps {
     logPage: TradeLogPageType,
+    edit: (position: PositionEditType) => void
     close: (position: PositionCloseType) => void
 }
 
-const getRows = ({ logPage, close }: LogGridProps) => {
-    const [openDialog, setOpenDialog] = useState(false)
+const getRows = ({ logPage, close, edit }: LogGridProps) => {
+    const [openCloseDialog, setOpenCloseDialog] = useState(false)
+    const [openEditDialog, setOpenEditDialog] = useState(false)
     const [logItem, setLogItem] = useState<TradeLog | undefined>()
 
     const closeDialogUp = useCallback((logItem: TradeLog) => {
         setLogItem(logItem)
-        setOpenDialog(true)
+        setOpenCloseDialog(true)
     }, [])
 
     const closeDialogDown = useCallback(() => {
-        setOpenDialog(false)
+        setOpenCloseDialog(false)
+    }, [])
+
+    const editDialogUp = useCallback((logItem: TradeLog) => {
+        setLogItem(logItem)
+        setOpenEditDialog(true)
+    }, [])
+
+    const editDialogDown = useCallback(() => {
+        setOpenEditDialog(false)
     }, [])
 
     return <>
-        {logPage.content.map(logItem => <LogRow closeDialog={closeDialogUp} key={logItem.id} logItem={logItem}/>)}
-        {logItem?<CloseDialog isOpen={openDialog} close={close} onClose={closeDialogDown} position={logItem} />:<></>}
+        {logPage.content.map(logItem => <LogRow
+            editDialog={editDialogUp}
+            closeDialog={closeDialogUp} key={logItem.id} logItem={logItem}/>)}
+        {logItem?<CloseDialog isOpen={openCloseDialog} close={close} onClose={closeDialogDown} position={logItem} />:<></>}
+        {logItem?<EditDialog isOpen={openEditDialog} edit={edit} onClose={editDialogDown} position={logItem} />:<></>}
     </>
 }
 

@@ -10,6 +10,9 @@ import java.time.LocalDateTime;
 public class TradeLogOpenDTO implements Serializable {
 
 	private static final long serialVersionUID = -4135659016328220866L;
+
+	private final Long id;
+
 	private final String position;
 
 	private final LocalDateTime dateOpen;
@@ -45,7 +48,8 @@ public class TradeLogOpenDTO implements Serializable {
 	}
 
 	@JsonCreator
-	public TradeLogOpenDTO(@JsonProperty("position") String position,
+	public TradeLogOpenDTO(@JsonProperty("id") Long id,
+	                       @JsonProperty("position") String position,
 	                       @JsonProperty("dateOpen") LocalDateTime dateOpen,
 	                       @JsonProperty("brokerId") Long brokerId,
 	                       @JsonProperty("marketId") Long marketId,
@@ -60,6 +64,7 @@ public class TradeLogOpenDTO implements Serializable {
 	                       @JsonProperty("fees") Double fees,
 	                       @JsonProperty("note") String note,
 	                       @JsonProperty("goal") Double goal) {
+		this.id = id;
 		this.position = position;
 		this.dateOpen = dateOpen;
 		this.brokerId = brokerId;
@@ -131,5 +136,9 @@ public class TradeLogOpenDTO implements Serializable {
 
 	public String getNote() {
 		return note;
+	}
+
+	public Long getId() {
+		return id;
 	}
 }

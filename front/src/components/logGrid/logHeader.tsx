@@ -51,10 +51,10 @@ export const LogHeader = () => {
         <Grid item xs={4}>
             <HeaderBox>Profit</HeaderBox>
         </Grid>
-        <Grid item xs={4}>
+        <Grid item xs={3.5}>
             <HeaderBox>Fees</HeaderBox>
         </Grid>
-        <Grid item xs={2}>
+        <Grid item xs={2.5}>
             <HeaderBox>&nbsp;</HeaderBox>
         </Grid></>
 }

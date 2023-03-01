@@ -433,7 +433,7 @@ public class CashService {
 		return new EvalOutDTO(feesUSD, risk, breakEven, takeProfit, outcomeExp);
 	}
 
-	private double getRisk(EvalInDTO evalDTO) throws JsonProcessingException {
+	public double getRisk(EvalInDTO evalDTO) throws JsonProcessingException {
 		final Broker    broker     = brokerRepo.getReferenceById(evalDTO.getBrokerId());
 		final LocalDate date       = evalDTO.getDate();
 		final double    capital    = getCapital();

@@ -11,9 +11,17 @@ import {
     postLogPage,
     postOpen,
     postClose,
-    postRefill, postCorrection
+    postRefill, postCorrection, postEdit
 } from './api'
-import { BrokerStatsType, ItemType, PositionCloseType, PositionOpenType, TradeContextType, TradeLogPageType } from 'types'
+import {
+    BrokerStatsType,
+    ItemType,
+    PositionCloseType,
+    PositionEditType,
+    PositionOpenType,
+    TradeContextType,
+    TradeLogPageType
+} from 'types'
 
 const onetimeQueryOptions = () => {
     return {
@@ -189,6 +197,14 @@ const useTrade = (): TradeContextType => {
         )
     }
 
+    const edit = (edit: PositionEditType) => {
+        postEdit(edit).then(
+            () => {
+                setPageLogKey('' + Date.now())
+            }
+        )
+    }
+
     return {
         brokers,
         currencies,
@@ -199,6 +215,7 @@ const useTrade = (): TradeContextType => {
         logPage,
         open,
         close,
+        edit,
         page,
         refill,
         correction,

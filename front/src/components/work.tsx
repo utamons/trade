@@ -6,7 +6,15 @@ import { ButtonContainerStyled } from '../styles/style'
 import LogGrid from './logGrid/logGrid'
 import { TradeContext } from '../trade-context'
 import Paginator from './logGrid/paginator'
-import { ItemType, MarketType, PositionCloseType, PositionOpenType, TickerType, TradeLogPageType } from 'types'
+import {
+    ItemType,
+    MarketType,
+    PositionCloseType,
+    PositionEditType,
+    PositionOpenType,
+    TickerType,
+    TradeLogPageType
+} from 'types'
 import CircularProgress from '@mui/material/CircularProgress'
 import Open from './logGrid/openDialog'
 
@@ -34,6 +42,7 @@ interface WorkIntProps {
     currentBroker: ItemType,
     markets: MarketType [],
     tickers: TickerType [],
+    edit: (edit: PositionEditType) => void
     open: (open: PositionOpenType) => void
     close: (close: PositionCloseType) => void
 }
@@ -41,7 +50,7 @@ interface WorkIntProps {
 const WorkInt = (props: WorkIntProps) => {
     const [isOpen, setOpen] = useState(false)
 
-    const { logPage, currentBroker, tickers, markets, open, close } = props
+    const { logPage, currentBroker, tickers, markets, open, close, edit } = props
 
     const handleOpen = useCallback(() => {
         setOpen(true)
@@ -58,7 +67,7 @@ const WorkInt = (props: WorkIntProps) => {
             </ButtonContainerStyled>
         </RowStyled>
         <RowStyled>
-            <LogGrid {...{ logPage, close }}/>
+            <LogGrid {...{ logPage, close, edit }}/>
         </RowStyled>
         <RowStyled>
             <Paginator/>
@@ -77,13 +86,14 @@ export default () => {
     const { all } = useContext(TradeContext)
     if (!all)
         return <CircularProgress size={20}/>
-    const { currentBroker, markets, tickers, logPage, open, close } = all
+    const { currentBroker, markets, tickers, logPage, open, close, edit } = all
     if (!logPage || !currentBroker || !markets || !tickers)
         return <CircularProgress size={20}/>
 
     return <WorkInt
         logPage={logPage}
         open={open}
+        edit={edit}
         close={close}
         tickers={tickers}
         currentBroker={currentBroker}
