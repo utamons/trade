@@ -6,10 +6,7 @@ import com.corn.trade.service.TradeLogService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @SuppressWarnings("unused")
 @RestController
@@ -25,6 +22,11 @@ public class TradeLogController {
 	@PostMapping(value = "/open", consumes= MediaType.APPLICATION_JSON_VALUE)
 	public void open(@RequestBody TradeLogOpenDTO openDTO) {
 		service.open(openDTO);
+	}
+
+	@PutMapping(value = "/open", consumes= MediaType.APPLICATION_JSON_VALUE)
+	public void update(@RequestBody TradeLogOpenDTO openDTO) throws JsonProcessingException {
+		service.update(openDTO);
 	}
 
 	@PostMapping(value = "/close", consumes=MediaType.APPLICATION_JSON_VALUE)

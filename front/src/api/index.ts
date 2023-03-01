@@ -1,4 +1,12 @@
-import { EvalRequest, ExchangeType, PageRequest, PositionCloseType, PositionOpenType, RefillType } from 'types'
+import {
+    EvalRequest,
+    ExchangeType,
+    PageRequest,
+    PositionCloseType,
+    PositionEditType,
+    PositionOpenType,
+    RefillType
+} from 'types'
 import config from '../../config/config.json'
 
 const baseUrl = config.baseUrl
@@ -155,6 +163,17 @@ const postClose = async (body: PositionCloseType) => {
     }).then()
 }
 
+const postEdit = async (body: PositionEditType) => {
+    const url = `${baseUrl}/log/open`
+    return fetch(url, {
+        method: 'put',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+    }).then()
+}
+
 export {
     fetchBrokers,
     fetchCurrencies,
@@ -169,5 +188,6 @@ export {
     postOpen,
     postEval,
     postEvalToFit,
-    postClose
+    postClose,
+    postEdit
 }

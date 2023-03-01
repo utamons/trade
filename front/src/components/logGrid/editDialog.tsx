@@ -8,18 +8,14 @@ import Button from '../button'
 import React, { useCallback, useState } from 'react'
 import { ButtonContainerStyled, FieldName } from '../../styles/style'
 import { Box, Grid, styled } from '@mui/material'
-import dayjs, { Dayjs } from 'dayjs'
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import TextField from '@mui/material/TextField'
-import { PositionCloseType, TradeLog } from 'types'
+import { PositionEditType, TradeLog } from 'types'
 import NumberInput from '../numberInput'
-import { DesktopDateTimePicker } from '@mui/x-date-pickers'
 
-interface CloseDialogProps {
+interface EditDialogProps {
     position: TradeLog,
     isOpen: boolean,
-    close: (close: PositionCloseType) => void,
+    edit: (edit: PositionEditType) => void,
     onClose: () => void
 }
 
@@ -43,10 +39,6 @@ const NoteBox = styled(Box)(() => ({
     marginTop: remCalc(10)
 }))
 
-interface DatePickerProps {
-    onChange: (date: Date) => void
-}
-
 export const TextFieldStyled = styled(TextField)(() => ({
     '.MuiOutlinedInput-root': {
         borderRadius: remCalc(2),
@@ -59,41 +51,17 @@ export const TextFieldStyled = styled(TextField)(() => ({
     }
 }))
 
-const BasicDateTimePicker = ({ onChange }: DatePickerProps) => {
-    const [value, setValue] = React.useState<Dayjs | null>(dayjs(new Date()))
-
-    const handleChange = useCallback((value: Dayjs | null) => {
-        if (value) {
-            setValue(value)
-            onChange(value.toDate())
-        }
-    }, [])
-
-    return (
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DesktopDateTimePicker
-                renderInput={(props) => <TextFieldStyled {...props} />}
-                value={value}
-                inputFormat="YYYY-MM-DD HH:mm"
-                onChange={handleChange}
-                onAccept={handleChange}
-            />
-        </LocalizationProvider>
-    )
-}
-
-export default ({ onClose, isOpen, position, close }: CloseDialogProps) => {
-    const [priceError, setPriceError] = useState(false)
-    const [price, setPrice] = useState<number | undefined>(undefined)
-    const [brokerInterestError, setBrokerInterestError] = useState(false)
-    const [brokerInterest, setBrokerInterest] = useState(position.brokerInterest)
+export default ({ onClose, isOpen, position, edit }: EditDialogProps) => {
+    const [stopLossError, setStopLossError] = useState(false)
+    const [stopLoss, setStopLoss] = useState(position.stopLoss)
+    const [takeProfitError, setTakeProfitError] = useState(false)
+    const [takeProfit, setTakeProfit] = useState(position.takeProfit)
     const [note, setNote] = useState(position.note)
-    const [date, setDate] = useState(new Date())
 
     const validate = (): boolean => {
-        if (priceError || brokerInterestError)
+        if (stopLossError || takeProfitError)
             return true
-        return price == undefined
+        return stopLoss == undefined
 
     }
 
@@ -102,41 +70,35 @@ export default ({ onClose, isOpen, position, close }: CloseDialogProps) => {
             console.error('validation failed')
             return
         }
-        if (price) {
-            close({
+        if (stopLoss) {
+            edit({
                 id: position.id,
-                dateClose: date.toISOString(),
-                priceClose: price,
-                brokerInterest: brokerInterest? brokerInterest : 0,
+                stopLoss,
+                takeProfit,
                 note: note
             })
             onClose()
         }
-    }, [price, date, note, brokerInterest, brokerInterestError, priceError])
+    }, [stopLoss, note, takeProfit, takeProfitError, stopLossError])
 
     const noteChangeHandler = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         setNote(event.target.value)
     }, [])
 
-    const dateChangeHandler = useCallback((newDate: Date) => {
-        console.log('New date:', newDate)
-        setDate(newDate)
+    const stopLossChangeHandler = useCallback((newStopLoss: number) => {
+        setStopLoss(newStopLoss)
     }, [])
 
-    const priceChangeHandler = useCallback((newPrice: number) => {
-        setPrice(newPrice)
+    const stopLossErrorHandler = useCallback((error: boolean) => {
+        setStopLossError(error)
     }, [])
 
-    const priceErrorHandler = useCallback((error: boolean) => {
-        setPriceError(error)
+    const takeProfitChangeHandler = useCallback((newTakeProfit: number) => {
+        setTakeProfit(newTakeProfit)
     }, [])
 
-    const brokerInterestChangeHandler = useCallback((newBrokerInterest: number) => {
-        setBrokerInterest(newBrokerInterest)
-    }, [])
-
-    const brokerInterestErrorHandler = useCallback((error: boolean) => {
-        setBrokerInterestError(error)
+    const takeProfitErrorHandler = useCallback((error: boolean) => {
+        setTakeProfitError(error)
     }, [])
 
     return <Dialog
@@ -149,34 +111,26 @@ export default ({ onClose, isOpen, position, close }: CloseDialogProps) => {
                     <Grid container columns={1}>
                         <Grid item xs={1}>
                             <FieldBox>
-                                <FieldName>Date Close:</FieldName>
+                                <FieldName>
+                                    StopLoss:
+                                </FieldName>
                                 <FieldValue>
-                                    <BasicDateTimePicker onChange={dateChangeHandler}/>
+                                    <NumberInput value={stopLoss} onChange={stopLossChangeHandler}
+                                                 onError={stopLossErrorHandler}/>
                                 </FieldValue>
                             </FieldBox>
                         </Grid>
                         <Grid item xs={1}>
                             <FieldBox>
                                 <FieldName>
-                                    Price: {`${position.currency.name}`}
+                                    Take profit:
                                 </FieldName>
                                 <FieldValue>
-                                    <NumberInput value={price} onChange={priceChangeHandler}
-                                                 onError={priceErrorHandler}/>
+                                    <NumberInput value={takeProfit} zeroAllowed onChange={takeProfitChangeHandler}
+                                                 onError={takeProfitErrorHandler}/>
                                 </FieldValue>
                             </FieldBox>
                         </Grid>
-                        {position.position == 'short' ? <Grid item xs={1}>
-                            <FieldBox>
-                                <FieldName>
-                                    Broker interest (USD):
-                                </FieldName>
-                                <FieldValue>
-                                    <NumberInput value={brokerInterest} zeroAllowed onChange={brokerInterestChangeHandler}
-                                                 onError={brokerInterestErrorHandler}/>
-                                </FieldValue>
-                            </FieldBox>
-                        </Grid> : <></>}
                     </Grid>
                 </Grid>
                 <Grid item xs={1}>

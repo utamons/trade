@@ -7,6 +7,8 @@ import ExpandButton from './expandButton'
 import { FieldBox, FieldName, FieldValue, NoteBox } from '../../styles/style'
 import { useTheme } from '@emotion/react'
 import CircleIcon from '@mui/icons-material/Circle'
+import EditIcon from '@mui/icons-material/Edit';
+import editDialog from './editDialog'
 
 export const CloseButtonStyled = styled(IconButton)(({ theme }) => ({
     width: remCalc(25),
@@ -38,7 +40,6 @@ const Item = styled(Grid)(() => ({
 }))
 
 
-
 const ExpandedContainer = styled(Box)(({ theme }) => ({
     alignContent: 'flex-start',
     display: 'flex',
@@ -50,22 +51,28 @@ const ExpandedContainer = styled(Box)(({ theme }) => ({
     padding: `${remCalc(7)} 0 ${remCalc(7)} ${remCalc(10)}`
 }))
 
-const CloseButton = ({ onClick }: CloseButtonProps) => <CloseButtonStyled onClick = {onClick}>
+const CloseButton = ({ onClick }: CloseButtonProps) => <CloseButtonStyled onClick={onClick}>
     <CloseIcon fontSize="small"/>
+</CloseButtonStyled>
+
+const EditButton = ({ onClick }: CloseButtonProps) => <CloseButtonStyled onClick={onClick}>
+    <EditIcon fontSize="small"/>
 </CloseButtonStyled>
 
 interface LogRowProps {
     logItem: TradeLog,
     closeDialog: (logItem: TradeLog) => void
+    editDialog: (logItem: TradeLog) => void
 }
 
 interface ExpandableProps {
     logItem: TradeLog,
     expandHandler: (expanded: boolean) => void
     closeDialog: (logItem: TradeLog) => void
+    editDialog: (logItem: TradeLog) => void
 }
 
-const Expanded = ({ logItem, expandHandler, closeDialog }: ExpandableProps) => {
+const Expanded = ({ logItem, expandHandler, closeDialog, editDialog }: ExpandableProps) => {
     const {
         broker, market, ticker, position, dateOpen, dateClose, currency, brokerInterest,
         priceClose, priceOpen, itemNumber, outcomePercent, fees, volume, outcome,
@@ -74,6 +81,10 @@ const Expanded = ({ logItem, expandHandler, closeDialog }: ExpandableProps) => {
 
     const closeDialogHandler = useCallback(() => {
         closeDialog(logItem)
+    }, [])
+
+    const editDialogHandler = useCallback(() => {
+        editDialog(logItem)
     }, [])
 
     const theme = useTheme()
@@ -150,10 +161,10 @@ const Expanded = ({ logItem, expandHandler, closeDialog }: ExpandableProps) => {
                     <FieldName>Break even</FieldName>
                     <FieldValue>{money(currency.name, breakEven)}</FieldValue>
                 </FieldBox>
-                {position == 'short'?<FieldBox>
-                        <FieldName>Broker interest</FieldName>
-                        <FieldValue>{money('USD', brokerInterest)}</FieldValue>
-                    </FieldBox>:<></>}
+                {position == 'short' ? <FieldBox>
+                    <FieldName>Broker interest</FieldName>
+                    <FieldValue>{money('USD', brokerInterest)}</FieldValue>
+                </FieldBox> : <></>}
                 <FieldBox>
                     <FieldName>Outcome:</FieldName>
                     <FieldValue sx={profitColor(outcome, defaultColor)}>{money(currency.name, outcome)}</FieldValue>
@@ -168,17 +179,18 @@ const Expanded = ({ logItem, expandHandler, closeDialog }: ExpandableProps) => {
                 </FieldBox>
             </ExpandedContainer>
         </Grid>
-        <Grid item xs={11}>
+        <Grid item xs={10.5}>
             <NoteBox>{note}</NoteBox>
         </Grid>
-        <Item item sx={{ height: remCalc(36) }} xs={2}>
+        <Item item sx={{ height: remCalc(36) }} xs={2.5}>
             <ExpandButton expanded={true} onClick={expandHandler}/>
+            {dateClose ? <></> : <EditButton onClick={editDialogHandler}/>}
             {dateClose ? <></> : <CloseButton onClick={closeDialogHandler}/>}
         </Item>
     </RowBox>
 }
 
-const Collapsed = ({ logItem, expandHandler, closeDialog }: ExpandableProps) => {
+const Collapsed = ({ logItem, expandHandler, closeDialog, editDialog }: ExpandableProps) => {
     const {
         broker, market, ticker, position, dateOpen, dateClose, currency,
         priceClose, priceOpen, itemNumber, outcomePercent, fees, volume, outcome
@@ -194,6 +206,10 @@ const Collapsed = ({ logItem, expandHandler, closeDialog }: ExpandableProps) => 
 
     const closeDialogHandler = useCallback(() => {
         closeDialog(logItem)
+    }, [])
+
+    const editDialogHandler = useCallback(() => {
+        editDialog(logItem)
     }, [])
 
     const openP = () => {
@@ -214,20 +230,21 @@ const Collapsed = ({ logItem, expandHandler, closeDialog }: ExpandableProps) => 
         <Item item sx={profitColor(outcome, defaultColor)} xs={4}>{money(currency.name, outcome)}</Item>
         <Item item sx={profitColor(outcomePercent, defaultColor)}
               xs={4}>{outcomePercent != undefined ? `${outcomePercent} %` : '-'}</Item>
-        <Item item xs={4}>{money('USD', fees)}</Item>
-        <Item item xs={2}>
+        <Item item xs={3.5}>{money('USD', fees)}</Item>
+        <Item item xs={2.5}>
             <ExpandButton expanded={false} onClick={expandHandler}/>
+            {dateClose ? <></> : <EditButton onClick={editDialogHandler}/>}
             {dateClose ? <></> : <CloseButton onClick={closeDialogHandler}/>}
         </Item>
     </RowBox>
 }
 
-export const LogRow = ({ logItem, closeDialog }: LogRowProps) => {
+export const LogRow = ({ logItem, closeDialog, editDialog }: LogRowProps) => {
     const [expanded, setExpanded] = useState(false)
     const expandHandler = useCallback((expanded: boolean) => {
         setExpanded(expanded)
     }, [])
 
-    return <>{expanded ? <Expanded closeDialog={closeDialog} logItem={logItem} expandHandler={expandHandler}/> :
-        <Collapsed closeDialog={closeDialog} logItem={logItem} expandHandler={expandHandler}/>}</>
+    return <>{expanded ? <Expanded editDialog={editDialog} closeDialog={closeDialog} logItem={logItem} expandHandler={expandHandler}/> :
+        <Collapsed editDialog={editDialog} closeDialog={closeDialog} logItem={logItem} expandHandler={expandHandler}/>}</>
 }

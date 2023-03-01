@@ -1,9 +1,6 @@
 package com.corn.trade.service;
 
-import com.corn.trade.dto.TradeLogCloseDTO;
-import com.corn.trade.dto.TradeLogDTO;
-import com.corn.trade.dto.TradeLogOpenDTO;
-import com.corn.trade.dto.TradeLogPageReqDTO;
+import com.corn.trade.dto.*;
 import com.corn.trade.entity.*;
 import com.corn.trade.mapper.TradeLogMapper;
 import com.corn.trade.repository.BrokerRepository;
@@ -148,5 +145,28 @@ public class TradeLogService {
 
 	public List<TradeLogDTO> getAllClosed() {
 		return tradeLogRepo.findAllClosed().stream().map(TradeLogMapper::toDTO).collect(Collectors.toList());
+	}
+
+	public void update(TradeLogOpenDTO openDTO) throws JsonProcessingException {
+		TradeLog tradeLog = tradeLogRepo.getReferenceById(openDTO.getId());
+
+		EvalInDTO evalInDTO = new EvalInDTO(
+				tradeLog.getBroker().getId(),
+				tradeLog.getTicker().getId(),
+				tradeLog.getPriceOpen(),
+				tradeLog.getItemNumber(),
+				openDTO.getStopLoss(),
+				LocalDate.now(),
+				tradeLog.isShort()
+		);
+
+		double risk = cashService.getRisk(evalInDTO);
+
+		tradeLog.setStopLoss(openDTO.getStopLoss());
+		tradeLog.setTakeProfit(openDTO.getTakeProfit());
+		tradeLog.setNote(openDTO.getNote());
+		tradeLog.setRisk(risk);
+
+		tradeLogRepo.save(tradeLog);
 	}
 }

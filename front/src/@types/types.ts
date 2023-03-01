@@ -54,6 +54,7 @@ type TradeContextType = {
     isLoading: boolean,
     currentBroker: ItemType | undefined,
     open: (open: PositionOpenType) => void,
+    edit: (edit: PositionEditType) => void,
     close: (close: PositionCloseType) => void,
     page: (page: number) => void,
     setCurrentBrokerId: (id: number) => void,
@@ -226,6 +227,13 @@ type PositionCloseType = {
     note: string | undefined
 }
 
+type PositionEditType = {
+    id: number,
+    stopLoss: number,
+    takeProfit: number | undefined,
+    note: string | undefined
+}
+
 export {
     MarketType,
     ItemType,
@@ -247,5 +255,6 @@ export {
     PositionOpenType,
     EvalRequest,
     PositionCloseType,
-    CloseButtonProps
+    CloseButtonProps,
+    PositionEditType
 }
