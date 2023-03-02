@@ -34,3 +34,4 @@ build/
 /front/node_modules/
 /front/config/config.json
 /src/main/resources/static/
+/front/.scannerwork/
