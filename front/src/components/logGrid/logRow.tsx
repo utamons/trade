@@ -94,6 +94,12 @@ const Expanded = ({ logItem, expandHandler, closeDialog, editDialog }: Expandabl
     const defaultColor = theme.palette.text.primary
 
     const tz = market.timezone
+
+    const breakEvenPc = () => {
+        if (!breakEven) return '-'
+            return (Math.abs(priceOpen - breakEven) / priceOpen * 100).toFixed(2)
+    }
+
     return <RowBox container columns={53}>
         <Grid item xs={40}>
             <ExpandedContainer>
@@ -159,7 +165,7 @@ const Expanded = ({ logItem, expandHandler, closeDialog, editDialog }: Expandabl
                 </FieldBox>
                 <FieldBox>
                     <FieldName>Break even</FieldName>
-                    <FieldValue>{money(currency.name, breakEven)}</FieldValue>
+                    <FieldValue>{money(currency.name, breakEven)} ({breakEvenPc()}%)</FieldValue>
                 </FieldBox>
                 {position == 'short' ? <FieldBox>
                     <FieldName>Broker interest</FieldName>
