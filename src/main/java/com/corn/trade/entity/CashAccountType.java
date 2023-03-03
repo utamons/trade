@@ -7,6 +7,14 @@ import javax.persistence.*;
 @Table(name = "cash_account_type")
 public class CashAccountType {
 
+	public CashAccountType() {
+	}
+
+	public CashAccountType(String name, String description) {
+		this.name = name;
+		this.description = description;
+	}
+
 	@Id
 	@Column(name = "id", nullable = false)
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
