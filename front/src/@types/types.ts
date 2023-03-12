@@ -163,6 +163,7 @@ type TradeLog = {
     grade: string | undefined,
     goal: number | undefined,
     brokerInterest: number | undefined
+    parentId: number | undefined
 }
 
 type SortType = {
@@ -221,6 +222,7 @@ type PositionOpenType = {
 
 type PositionCloseType = {
     id: number,
+    quantity: number,
     dateClose: string,
     priceClose: number,
     brokerInterest: number,

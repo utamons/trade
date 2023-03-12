@@ -68,6 +68,8 @@ public class TradeLogDTO implements Serializable {
 
 	private final Double brokerInterest;
 
+	private final Long parentId;
+
 	@JsonCreator
 	public TradeLogDTO(@JsonProperty("id") Long id,
 	                   @JsonProperty("position") String position,
@@ -95,7 +97,8 @@ public class TradeLogDTO implements Serializable {
 	                   @JsonProperty("chart") String chart,
 	                   @JsonProperty("grade") String grade,
 	                   @JsonProperty("goal") Double goal,
-	                   @JsonProperty("brokerInterest") Double brokerInterest) {
+	                   @JsonProperty("brokerInterest") Double brokerInterest,
+	                   @JsonProperty("parentId") Long parentId) {
 		this.id = id;
 		this.position = position;
 		this.dateOpen = dateOpen;
@@ -123,6 +126,7 @@ public class TradeLogDTO implements Serializable {
 		this.grade = grade;
 		this.goal = goal;
 		this.brokerInterest = brokerInterest;
+		this.parentId = parentId;
 	}
 
 	public Long getId() {
@@ -242,5 +246,9 @@ public class TradeLogDTO implements Serializable {
 
 	public BigDecimal getBrokerInterest() {
 		return toOutBigDecimal(brokerInterest);
+	}
+
+	public Long getParentId() {
+		return parentId;
 	}
 }

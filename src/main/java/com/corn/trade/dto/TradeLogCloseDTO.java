@@ -11,6 +11,8 @@ public class TradeLogCloseDTO implements Serializable {
 
 	private static final long serialVersionUID = -993985822750284913L;
 	private final Long id;
+
+	private final Integer quantity;
 	private final LocalDateTime dateClose;
 
 	private final Double priceClose;
@@ -21,11 +23,13 @@ public class TradeLogCloseDTO implements Serializable {
 
 	@JsonCreator
 	public TradeLogCloseDTO(@JsonProperty("id") Long id,
+	                        @JsonProperty("quantity") Integer quantity,
 	                        @JsonProperty("dateClose") LocalDateTime dateClose,
 	                        @JsonProperty("priceClose") Double priceClose,
 	                        @JsonProperty("note") String note,
 	                        @JsonProperty("brokerInterest") Double brokerInterest) {
 		this.id = id;
+		this.quantity = quantity;
 		this.dateClose = dateClose;
 		this.priceClose = priceClose;
 		this.note = note;
@@ -50,5 +54,9 @@ public class TradeLogCloseDTO implements Serializable {
 
 	public Double getBrokerInterest() {
 		return brokerInterest;
+	}
+
+	public Integer getQuantity() {
+		return quantity;
 	}
 }

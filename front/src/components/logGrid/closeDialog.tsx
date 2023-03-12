@@ -85,6 +85,8 @@ const BasicDateTimePicker = ({ onChange }: DatePickerProps) => {
 export default ({ onClose, isOpen, position, close }: CloseDialogProps) => {
     const [priceError, setPriceError] = useState(false)
     const [price, setPrice] = useState<number | undefined>(undefined)
+    const [quantityError, setQuantityError] = useState(false)
+    const [quantity, setQuantity] = useState<number | undefined>(position.itemNumber)
     const [brokerInterestError, setBrokerInterestError] = useState(false)
     const [brokerInterest, setBrokerInterest] = useState(position.brokerInterest)
     const [note, setNote] = useState(position.note)
@@ -106,6 +108,7 @@ export default ({ onClose, isOpen, position, close }: CloseDialogProps) => {
             close({
                 id: position.id,
                 dateClose: date.toISOString(),
+                quantity: quantity ? quantity : position.itemNumber,
                 priceClose: price,
                 brokerInterest: brokerInterest? brokerInterest : 0,
                 note: note
@@ -131,6 +134,14 @@ export default ({ onClose, isOpen, position, close }: CloseDialogProps) => {
         setPriceError(error)
     }, [])
 
+    const quantityChangeHandler = useCallback((newQuantity: number) => {
+        setQuantity(newQuantity)
+    }, [])
+
+    const quantityErrorHandler = useCallback((error: boolean) => {
+        setQuantityError(error)
+    }, [])
+
     const brokerInterestChangeHandler = useCallback((newBrokerInterest: number) => {
         setBrokerInterest(newBrokerInterest)
     }, [])
@@ -152,6 +163,17 @@ export default ({ onClose, isOpen, position, close }: CloseDialogProps) => {
                                 <FieldName>Date Close:</FieldName>
                                 <FieldValue>
                                     <BasicDateTimePicker onChange={dateChangeHandler}/>
+                                </FieldValue>
+                            </FieldBox>
+                        </Grid>
+                        <Grid item xs={1}>
+                            <FieldBox>
+                                <FieldName>
+                                    Quantity:
+                                </FieldName>
+                                <FieldValue>
+                                    <NumberInput value={quantity} onChange={quantityChangeHandler}
+                                                 onError={quantityErrorHandler}/>
                                 </FieldValue>
                             </FieldBox>
                         </Grid>

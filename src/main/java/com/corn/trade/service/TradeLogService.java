@@ -66,6 +66,9 @@ public class TradeLogService {
 	public void close(TradeLogCloseDTO closeDTO) throws JsonProcessingException {
 		TradeLog open = tradeLogRepo.getReferenceById(closeDTO.getId());
 
+		if (closeDTO.getQuantity() != null && closeDTO.getQuantity() < open.getItemNumber())
+			open = copyPartial(closeDTO, open);
+
 		final Broker   broker   = open.getBroker();
 		final Ticker   ticker   = open.getTicker();
 		final Currency currency = open.getCurrency();
@@ -121,6 +124,42 @@ public class TradeLogService {
 			cashService.sell(volume, closeAmount, broker, currency, open);
 		else
 			cashService.buyShort(volume, closeAmount, broker, currency, open);
+	}
+
+	private TradeLog copyPartial(TradeLogCloseDTO closeDTO, TradeLog open) {
+		Double   depositAmount = cashService.lastDepositAmount(open.getBroker(), open.getCurrency());
+		Double volume = open.getPriceOpen()*closeDTO.getQuantity();
+		Double volumeToDeposit = volume/depositAmount*100.0;
+
+		TradeLog partial = new TradeLog();
+		partial.setPosition(open.getPosition());
+		partial.setDateOpen(open.getDateOpen());
+		partial.setBroker(open.getBroker());
+		partial.setMarket(open.getMarket());
+		partial.setTicker(open.getTicker());
+		partial.setCurrency(open.getCurrency());
+		partial.setItemNumber(closeDTO.getQuantity().longValue());
+		partial.setPriceOpen(open.getPriceOpen());
+		partial.setVolume(volume);
+		partial.setVolumeToDeposit(volumeToDeposit);
+		partial.setStopLoss(open.getStopLoss());
+		partial.setTakeProfit(open.getTakeProfit());
+		partial.setOutcomeExpected(open.getOutcomeExpected());
+		partial.setRisk(open.getRisk());
+		partial.setFees(open.getFees());
+		partial.setNote(open.getNote());
+		partial.setBreakEven(open.getBreakEven());
+		partial.setBrokerInterest(open.getBrokerInterest());
+		partial.setParent(open);
+
+		partial = tradeLogRepo.save(partial);
+
+		open.setItemNumber(open.getItemNumber() - closeDTO.getQuantity());
+		open.setVolume(open.getVolume() - volume);
+
+		tradeLogRepo.save(open);
+
+		return partial;
 	}
 
 	public Page<TradeLogDTO> getPage(TradeLogPageReqDTO pageReqDTO) throws JsonProcessingException {

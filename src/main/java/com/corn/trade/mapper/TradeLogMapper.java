@@ -56,6 +56,7 @@ public class TradeLogMapper {
 
 	public static TradeLogDTO toDTO(TradeLog entity) {
 		Double outcome = roundZeroOutcome(entity.getOutcome());
+		Long parentId = entity.getParent() == null ? null : entity.getParent().getId();
 		return new TradeLogDTO(
 				entity.getId(),
 				entity.getPosition(),
@@ -83,6 +84,7 @@ public class TradeLogMapper {
 				null,
 				entity.getGrade(),
 				entity.getGoal(),
-				entity.getBrokerInterest());
+				entity.getBrokerInterest(),
+				parentId);
 	}
 }

@@ -37,6 +37,9 @@ public class TradeLog implements Serializable {
 	@ManyToOne
 	private Currency currency;
 
+	@ManyToOne
+	private TradeLog parent;
+
 	@Column(name = "item_number", nullable = false)
 	private Long itemNumber;
 
@@ -308,6 +311,14 @@ public class TradeLog implements Serializable {
 
 	public void setBrokerInterest(Double brokerInterest) {
 		this.brokerInterest = brokerInterest;
+	}
+
+	public TradeLog getParent() {
+		return parent;
+	}
+
+	public void setParent(TradeLog parent) {
+		this.parent = parent;
 	}
 
 	@Transient
