@@ -65,7 +65,7 @@ export default ({ onClose, isOpen, position, edit }: EditDialogProps) => {
 
     }
 
-    const handleClose = useCallback(async () => {
+    const handleSubmit = useCallback(async () => {
         if (validate()) {
             console.error('validation failed')
             return
@@ -150,7 +150,7 @@ export default ({ onClose, isOpen, position, edit }: EditDialogProps) => {
 
         <DialogActions sx={{ justifyContent: 'center' }}>
             <ButtonContainerStyled>
-                <Button style={{ minWidth: remCalc(101) }} text="Close" onClick={handleClose}/>
+                <Button style={{ minWidth: remCalc(101) }} text="Submit" onClick={handleSubmit}/>
                 <Button style={{ minWidth: remCalc(101) }} text="Cancel" onClick={onClose}/>
             </ButtonContainerStyled>
         </DialogActions>

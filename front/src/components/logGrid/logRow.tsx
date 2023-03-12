@@ -1,5 +1,5 @@
 import { Box, Grid, IconButton, styled } from '@mui/material'
-import { GREEN, money, profitColor, remCalc, riskColor, utc2market } from '../../utils/utils'
+import { BLUE, GREEN, money, profitColor, remCalc, riskColor, utc2market } from '../../utils/utils'
 import CloseIcon from '@mui/icons-material/Close'
 import { CloseButtonProps, TradeLog } from 'types'
 import React, { useCallback, useState } from 'react'
@@ -17,9 +17,15 @@ export const CloseButtonStyled = styled(IconButton)(({ theme }) => ({
     color: theme.palette.text.primary
 }))
 
-export const CircleStyled = styled(CircleIcon)(() => ({
+export const CircleOpen = styled(CircleIcon)(() => ({
     fontSize: remCalc(10),
     color: GREEN,
+    marginRight: remCalc(10)
+}))
+
+export const CircleChild = styled(CircleIcon)(() => ({
+    fontSize: remCalc(10),
+    color: BLUE,
     marginRight: remCalc(10)
 }))
 
@@ -199,7 +205,8 @@ const Expanded = ({ logItem, expandHandler, closeDialog, editDialog }: Expandabl
 const Collapsed = ({ logItem, expandHandler, closeDialog, editDialog }: ExpandableProps) => {
     const {
         broker, market, ticker, position, dateOpen, dateClose, currency,
-        priceClose, priceOpen, itemNumber, outcomePercent, fees, volume, outcome
+        priceClose, priceOpen, itemNumber, outcomePercent, fees, volume, outcome,
+        parentId
     } = logItem
 
     const tz = market.timezone
@@ -219,11 +226,15 @@ const Collapsed = ({ logItem, expandHandler, closeDialog, editDialog }: Expandab
     }, [])
 
     const openP = () => {
-        return dateClose ? '' : <CircleStyled/>
+        return dateClose ? '' : <CircleOpen/>
+    }
+
+    const childP = () => {
+        return parentId ? <CircleChild/> : ''
     }
 
     return <RowBox container columns={53}>
-        <Item item xs={4}>{openP()} {broker.name}</Item>
+        <Item item xs={4}>{openP()}{childP()} {broker.name}</Item>
         <Item item xs={3}>{market.name}</Item>
         <Item item xs={3}>{ticker.name}</Item>
         <Item item xs={2}>{position}</Item>
