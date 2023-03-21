@@ -203,6 +203,13 @@ interface CloseButtonProps {
     onClick: () => void
 }
 
+interface ExpandableProps {
+    logItem: TradeLog,
+    expandHandler: (expanded: boolean) => void
+    closeDialog: (logItem: TradeLog) => void
+    editDialog: (logItem: TradeLog) => void
+}
+
 type PositionOpenType = {
     position: 'short' | 'long'
     dateOpen: string,
@@ -258,5 +265,6 @@ export {
     EvalRequest,
     PositionCloseType,
     CloseButtonProps,
-    PositionEditType
+    PositionEditType,
+    ExpandableProps
 }

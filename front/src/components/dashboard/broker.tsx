@@ -3,11 +3,11 @@ import { Box, styled } from '@mui/material'
 import { remCalc } from '../../utils/utils'
 import { BrokerProps } from 'types'
 import { SelectChangeEvent } from '@mui/material/Select'
-import Button from '../button'
-import Refill from '../refill'
-import { ButtonContainerStyled, SelectorContainerStyled } from '../../styles/style'
-import Exchange from '../exchange'
-import Select from '../select'
+import Button from '../tools/button'
+import Refill from '../dialogs/refill'
+import { ButtonContainerStyled } from '../../styles/style'
+import Exchange from '../dialogs/exchange'
+import Select from '../tools/select'
 
 const ContainerStyled = styled(Box)(({ theme }) => ({
     borderRight: `solid ${remCalc(1)}`,
@@ -20,6 +20,14 @@ const ContainerStyled = styled(Box)(({ theme }) => ({
     justifyContent: 'space-between'
 }))
 
+const SelectorContainerStyled = styled(Box)(() => ({
+    padding: remCalc(20),
+    display: 'flex',
+    flexFlow: 'row',
+    alignItems: 'center',
+    fontWeight: 'normal',
+    justifyContent: 'center'
+}))
 
 export default ({ brokers, currencies, currentBroker, setCurrentBrokerId, refill, correction, exchange }: BrokerProps) => {
     const [id, setId] = useState('' + (currentBroker ? currentBroker.id : 1))

@@ -3,8 +3,8 @@ import { Grid } from '@mui/material'
 import { PositionCloseType, PositionEditType, TradeLog, TradeLogPageType } from 'types'
 import { LogHeader } from './logHeader'
 import { LogRow } from './logRow'
-import CloseDialog from './closeDialog'
-import EditDialog from './editDialog'
+import CloseDialog from './dialogs/closeDialog'
+import EditDialog from './dialogs/editDialog'
 
 interface LogGridProps {
     logPage: TradeLogPageType,

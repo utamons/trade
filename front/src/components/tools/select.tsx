@@ -2,7 +2,7 @@ import Select from '@mui/material/Select'
 import React from 'react'
 import MenuItem from '@mui/material/MenuItem'
 import { ItemType, SelectorProps } from 'types'
-import { remCalc } from '../utils/utils'
+import { remCalc } from '../../utils/utils'
 
 export default ({ items, value, onChange, variant } : SelectorProps) => {
     let fontSize = remCalc(18)

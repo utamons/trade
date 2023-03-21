@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useState } from 'react'
 import { Box, styled } from '@mui/material'
 import { remCalc } from '../utils/utils'
-import Button from './button'
+import Button from './tools/button'
 import { ButtonContainerStyled } from '../styles/style'
 import LogGrid from './logGrid/logGrid'
 import { TradeContext } from '../trade-context'
@@ -16,7 +16,7 @@ import {
     TradeLogPageType
 } from 'types'
 import CircularProgress from '@mui/material/CircularProgress'
-import Open from './logGrid/openDialog'
+import Open from './logGrid/dialogs/openDialog'
 
 const ContainerStyled = styled(Box)(({ theme }) => ({
     alignItems: 'top',
