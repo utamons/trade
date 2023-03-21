@@ -3,16 +3,16 @@
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import Dialog from '@mui/material/Dialog'
-import { remCalc } from '../utils/utils'
-import Button from './button'
+import { remCalc } from '../../utils/utils'
+import Button from '../tools/button'
 import React, { useCallback, useState } from 'react'
-import { ButtonContainerStyled } from '../styles/style'
+import { ButtonContainerStyled } from '../../styles/style'
 import { SelectChangeEvent } from '@mui/material/Select'
 import { Box, styled } from '@mui/material'
 import { ExchangeDialogProps } from 'types'
 import Typography from '@mui/material/Typography'
-import Select from './select'
-import NumberInput from './numberInput'
+import Select from '../tools/select'
+import NumberInput from '../tools/numberInput'
 
 const ContainerStyled = styled(Box)(() => ({
     display: 'flex',

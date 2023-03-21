@@ -3,14 +3,15 @@
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import Dialog from '@mui/material/Dialog'
-import { remCalc } from '../../utils/utils'
-import Button from '../button'
+import { remCalc } from '../../../utils/utils'
+import Button from '../../tools/button'
 import React, { useCallback, useState } from 'react'
-import { ButtonContainerStyled, FieldName } from '../../styles/style'
-import { Box, Grid, styled } from '@mui/material'
+import { ButtonContainerStyled, FieldBox, FieldName, NoteBox } from '../../../styles/style'
+import { Grid } from '@mui/material'
 import TextField from '@mui/material/TextField'
 import { PositionEditType, TradeLog } from 'types'
-import NumberInput from '../numberInput'
+import NumberInput from '../../tools/numberInput'
+import { FieldValue } from './openDialog'
 
 interface EditDialogProps {
     position: TradeLog,
@@ -18,38 +19,6 @@ interface EditDialogProps {
     edit: (edit: PositionEditType) => void,
     onClose: () => void
 }
-
-export const FieldValue = styled(Box)(() => ({
-    display: 'flex',
-    alignContent: 'flex-start',
-    alignItems: 'center',
-    width: remCalc(200)
-}))
-
-const FieldBox = styled(Box)(() => ({
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: remCalc(300),
-    height: remCalc(50)
-}))
-
-const NoteBox = styled(Box)(() => ({
-    width: '100%',
-    marginTop: remCalc(10)
-}))
-
-export const TextFieldStyled = styled(TextField)(() => ({
-    '.MuiOutlinedInput-root': {
-        borderRadius: remCalc(2),
-        fontSize: remCalc(14),
-        maxHeight: remCalc(38),
-        maxWidth: remCalc(170)
-    },
-    '.MuiSvgIcon-root ': {
-        fontSize: remCalc(18)
-    }
-}))
 
 export default ({ onClose, isOpen, position, edit }: EditDialogProps) => {
     const [stopLossError, setStopLossError] = useState(false)

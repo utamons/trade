@@ -1,6 +1,6 @@
 import React from 'react'
 import { styled, Button } from '@mui/material'
-import { remCalc } from '../utils/utils'
+import { remCalc } from '../../utils/utils'
 import { ButtonProps } from 'types'
 
 const ButtonStyled = styled(Button)(({ theme }) => ({

@@ -3,10 +3,10 @@
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import Dialog from '@mui/material/Dialog'
-import { breakEvenColor, RED, remCalc, riskColor, roundTo2 } from '../../utils/utils'
-import Button from '../button'
+import { breakEvenColor, RED, remCalc, riskColor, roundTo2 } from '../../../utils/utils'
+import Button from '../../tools/button'
 import React, { useCallback, useState } from 'react'
-import { ButtonContainerStyled, FieldName } from '../../styles/style'
+import { ButtonContainerStyled, FieldName } from '../../../styles/style'
 import { SelectChangeEvent } from '@mui/material/Select'
 import { Box, Grid, styled } from '@mui/material'
 import dayjs, { Dayjs } from 'dayjs'
@@ -14,13 +14,14 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import TextField from '@mui/material/TextField'
 import { ItemType, MarketType, PositionOpenType, TickerType } from 'types'
-import Select from '../select'
-import NumberInput from '../numberInput'
-import { postEval, postEvalToFit } from '../../api'
+import Select from '../../tools/select'
+import NumberInput from '../../tools/numberInput'
+import { postEval, postEvalToFit } from '../../../api'
 import Switch from '@mui/material/Switch'
 import { DesktopDateTimePicker } from '@mui/x-date-pickers'
 import { useTheme } from '@emotion/react'
 import CircularProgress from '@mui/material/CircularProgress'
+import { BasicDateTimePicker } from '../../tools/dateTimePicker'
 
 interface OpenDialogProps {
     currentBroker: ItemType,
@@ -76,9 +77,7 @@ const RedSwitch = styled(Switch)(() => ({
     }
 }))
 
-interface DatePickerProps {
-    onChange: (date: Date) => void
-}
+
 
 export const TextFieldStyled = styled(TextField)(() => ({
     '.MuiOutlinedInput-root': {
@@ -91,29 +90,6 @@ export const TextFieldStyled = styled(TextField)(() => ({
         fontSize: remCalc(18)
     }
 }))
-
-const BasicDateTimePicker = ({ onChange }: DatePickerProps) => {
-    const [value, setValue] = React.useState<Dayjs | null>(dayjs(new Date()))
-
-    const handleChange = useCallback((value: Dayjs | null) => {
-        if (value) {
-            setValue(value)
-            onChange(value.toDate())
-        }
-    }, [])
-
-    return (
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DesktopDateTimePicker
-                renderInput={(props) => <TextFieldStyled {...props} />}
-                value={value}
-                inputFormat="YYYY-MM-DD HH:mm"
-                onChange={handleChange}
-                onAccept={handleChange}
-            />
-        </LocalizationProvider>
-    )
-}
 
 interface Eval {
     fees: number,
