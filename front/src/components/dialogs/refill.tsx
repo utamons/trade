@@ -4,13 +4,13 @@ import DialogTitle from '@mui/material/DialogTitle'
 import Dialog from '@mui/material/Dialog'
 import { remCalc } from '../../utils/utils'
 import Button from '../tools/button'
-import React, { useCallback, useState } from 'react'
+import React, { Dispatch, useCallback } from 'react'
 import { ButtonContainerStyled } from '../../styles/style'
-import { SelectChangeEvent } from '@mui/material/Select'
 import { Box, styled } from '@mui/material'
-import { RefillDialogProps } from 'types'
+import { FormAction, FormActionPayload, FormState, RefillDialogProps } from 'types'
 import Select from '../tools/select'
 import NumberInput from '../tools/numberInput'
+import { getFieldValue, useForm } from './dialogUtils'
 
 const ContainerStyled = styled(Box)(() => ({
     display: 'flex',
@@ -25,20 +25,43 @@ const DialogTitleStyled = styled(DialogTitle)(() => ({
     fontWeight: 501
 }))
 
+const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, currencyId: number) => {
+    if (formState.isInitialized)
+        return
+
+    const payload: FormActionPayload = {
+        valuesNumeric: [
+            {
+                name: 'currencyId',
+                valid: true,
+                value: currencyId
+            },
+            {
+                name: 'value',
+                valid: true,
+                value: undefined
+            }
+        ]
+    }
+
+    dispatch({ type: 'init', payload })
+}
+
 export default ({ open, title, onSubmit, onCancel, negativeAllowed, currencies }: RefillDialogProps) => {
-    const [currencyId, setCurrencyId] = useState('' + (currencies ? currencies[0].id : 0))
-    const [value, setValue] = useState<number | undefined>(undefined)
-    const [error, setError] = useState(false)
+    const { formState, dispatch } = useForm()
+
+    initFormState(formState, dispatch, currencies ? currencies[0].id : 0)
+
+    const { isValid } = formState
+
+    const currencyId = '' + getFieldValue('currencyId', formState)
+    const value = getFieldValue('value', formState) as number | undefined
 
     const handleSubmit = useCallback(() => {
-        if (!value || error)
+        if (!value || !isValid)
             return
         onSubmit(Number(currencyId), value)
-    }, [value, error, currencyId])
-
-    const handleSelector = useCallback((event: SelectChangeEvent<unknown>) => {
-        setCurrencyId(event.target.value as string)
-    }, [])
+    }, [value, isValid, currencyId])
 
     return <Dialog
         open={open}
@@ -52,9 +75,15 @@ export default ({ open, title, onSubmit, onCancel, negativeAllowed, currencies }
                     items={currencies ? currencies : []}
                     value={currencyId}
                     variant="medium"
-                    onChange={handleSelector}
+                    name={'currencyId'}
+                    dispatch={dispatch}
                 />
-                <NumberInput value={value} negativeAllowed={negativeAllowed} label={'Amount'} onChange={setValue} onError={setError}/>
+                <NumberInput value={value}
+                             negativeAllowed={negativeAllowed}
+                             label={'Amount'}
+                             name={'value'}
+                             dispatch={dispatch}
+                            />
             </ContainerStyled>
         </DialogContent>
 

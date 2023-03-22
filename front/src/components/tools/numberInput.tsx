@@ -1,40 +1,37 @@
-import React, { useCallback, useState } from 'react'
+import React, { Dispatch, useCallback, useEffect, useState } from 'react'
 import TextField from '@mui/material/TextField'
+import { FormAction } from 'types'
 
 interface NumberInputProps {
     value?: number
-    onError: (error: boolean) => void
-    onChange: (value: number) => void
     label?: string
+    name: string
     negativeAllowed?: boolean
     zeroAllowed?: boolean
+    dispatch: Dispatch<FormAction>
 }
 
-export default ({ onError, onChange, label, negativeAllowed, zeroAllowed, value }: NumberInputProps) => {
+export default ({ name, dispatch, label, negativeAllowed, zeroAllowed, value }: NumberInputProps) => {
 
     const [error, setError] = useState(false)
     const [errorText, setErrorText] = useState('')
-    const [_value, setValue] = useState<string | number | undefined>(value)
-    const [oldValue, setOldValue] = useState<string | number | undefined>(value)
-
-    if (value && oldValue != value) {
-        setValue(value)
-        setOldValue(value)
-    }
-
-    console.log(_value)
+    const [_value, setValue] = useState<string | number | undefined>()
 
     const handleInput = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         setValue((event.target.value))
         const valueNum = Number(event.target.value)
         if (event.target.value != '' && !isNaN(valueNum))
-            onChange(Number(event.target.value))
+            dispatch({ type: 'set', payload: { name, valueNum } })
     }, [])
 
     const handleValidate =
         useCallback((event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
             validate(event.target.value)
         }, [])
+
+    useEffect(() => {
+        setValue(value)
+    }, [value])
 
     const validate = (value: string): boolean => {
         const num = Number(value)
@@ -45,12 +42,12 @@ export default ({ onError, onChange, label, negativeAllowed, zeroAllowed, value 
         ) {
             setErrorText('Incorrect value')
             setError(true)
-            onError(true)
+            dispatch({ type: 'set', payload: { name, valid: false } })
             return true
         }
         setError(false)
         setErrorText('')
-        onError(false)
+        dispatch({ type: 'set', payload: { name, valid: true } })
         return false
     }
 

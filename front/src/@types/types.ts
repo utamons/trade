@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { SelectChangeEvent } from '@mui/material/Select'
+import React, { Dispatch } from 'react'
 
 type ItemType = { id: number, name: string }
 
@@ -108,7 +109,8 @@ type SelectorProps = {
     label?: string,
     items: ItemType[],
     value: string,
-    onChange: (event: SelectChangeEvent<unknown>) => void,
+    name: string,
+    dispatch: Dispatch<FormAction>,
     variant?: string
 }
 
@@ -243,6 +245,53 @@ type PositionEditType = {
     note: string | undefined
 }
 
+type FormFieldNumeric = {
+    name: string,
+    value: number | undefined,
+    valid: boolean
+}
+
+type FormFieldString = {
+    name: string,
+    value: string | undefined,
+    valid: boolean
+}
+
+type FormFieldDate = {
+    name: string,
+    value: Date | undefined,
+    valid: boolean
+}
+
+type FormState = {
+    isInitialized: boolean,
+    isValid: boolean,
+    valuesNumeric: FormFieldNumeric[],
+    valuesString: FormFieldString[],
+    valuesDate: FormFieldDate[]
+}
+
+type FormActionPayload = {
+    name?: string,
+    valueNum?: number,
+    valueStr?: string,
+    valueDate?: Date,
+    valid?: boolean,
+    valuesNumeric?: FormFieldNumeric[],
+    valuesString?: FormFieldString[],
+    valuesDate?: FormFieldDate[]
+}
+
+type FormOptions = {
+    formState: FormState,
+    dispatch: React.Dispatch<FormAction>
+}
+
+type FormAction = {
+    type: 'set' | 'reset' | 'init' | 'remove',
+    payload: FormActionPayload
+}
+
 export {
     MarketType,
     ItemType,
@@ -266,5 +315,12 @@ export {
     PositionCloseType,
     CloseButtonProps,
     PositionEditType,
-    ExpandableProps
+    ExpandableProps,
+    FormState,
+    FormFieldNumeric,
+    FormFieldString,
+    FormFieldDate,
+    FormAction,
+    FormActionPayload,
+    FormOptions
 }
