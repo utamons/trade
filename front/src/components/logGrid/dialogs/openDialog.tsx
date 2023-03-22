@@ -95,6 +95,7 @@ interface Eval {
 }
 
 interface EvalToFit {
+    price: number,
     fees: number,
     risk: number,
     breakEven: number,
@@ -161,6 +162,16 @@ const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, tic
                 value: undefined
             },
             {
+                name: 'levelPrice',
+                valid: true,
+                value: undefined
+            },
+            {
+                name: 'ATR',
+                valid: true,
+                value: undefined
+            },
+            {
                 name: 'fees',
                 valid: true,
                 value: undefined
@@ -210,6 +221,8 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     const fees = getFieldValue('fees', formState) as number
     const note = getFieldValue('note', formState) as string
     const date = getFieldValue('date', formState) as Date
+    const levelPrice = getFieldValue('levelPrice', formState) as number
+    const ATR = getFieldValue('ATR', formState) as number
 
     console.log('price', price)
 
@@ -233,13 +246,15 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
             const ev: EvalToFit = await postEvalToFit({
                 brokerId: currentBroker.id,
                 tickerId: Number(tickerId),
-                priceOpen: price,
+                levelPrice: levelPrice,
+                ATR: ATR,
                 items,
                 stopLoss,
                 date: date.toISOString(),
                 short: positionId == '1'
             })
             setLoading(false)
+            dispatch({ type: 'set', payload: { name: 'price', valueNum: ev.price, valid: true } })
             dispatch({ type: 'set', payload: { name: 'items', valueNum: ev.items, valid: true } })
             dispatch({ type: 'set', payload: { name: 'stopLoss', valueNum: ev.stopLoss, valid: true } })
             // noinspection DuplicatedCode
@@ -268,7 +283,9 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
             const ev: Eval = await postEval({
                 brokerId: currentBroker.id,
                 tickerId: Number(tickerId),
-                priceOpen: price,
+                ATR,
+                levelPrice,
+                price,
                 items,
                 stopLoss,
                 date: date.toISOString(),
@@ -424,6 +441,32 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                                     <NumberInput
                                         value={price}
                                         name={'price'}
+                                        dispatch={dispatch}/>
+                                </FieldValue>
+                            </FieldBox>
+                        </Grid>
+                        <Grid item xs={1}>
+                            <FieldBox>
+                                <FieldName>
+                                    Level Price:
+                                </FieldName>
+                                <FieldValue>
+                                    <NumberInput
+                                        value={levelPrice}
+                                        name={'levelPrice'}
+                                        dispatch={dispatch}/>
+                                </FieldValue>
+                            </FieldBox>
+                        </Grid>
+                        <Grid item xs={1}>
+                            <FieldBox>
+                                <FieldName>
+                                    ATR:
+                                </FieldName>
+                                <FieldValue>
+                                    <NumberInput
+                                        value={ATR}
+                                        name={'ATR'}
                                         dispatch={dispatch}/>
                                 </FieldValue>
                             </FieldBox>
