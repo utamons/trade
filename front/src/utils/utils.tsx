@@ -15,7 +15,7 @@ const formatDate = (date: Date) => {
     const y = date.getFullYear()
     const h = date.getHours()
     const mm = date.getMinutes()
-    return '' + y + '-' + leadingZero(m) + '-' + leadingZero(d) + ' ' + leadingZero(h) + ':' + leadingZero(mm);
+    return '' + y + '-' + leadingZero(m) + '-' + leadingZero(d) + ' ' + leadingZero(h) + ':' + leadingZero(mm)
 }
 
 export const utc2market = (utcStr: string, offset: number) => {
@@ -62,6 +62,17 @@ export const riskColor = (risk:number | undefined, defaultColor: string) => {
     if (risk && risk > 2)
         return { color: RED, fontWeight: 'bolder' }
     return { color: defaultColor }
+}
+
+export const takeColor = (take:number | undefined, price:number | undefined, atr: number | undefined, defaultColor: string) => {
+    if (take && atr && price) {
+        const range = Math.abs(take - price)
+        if (range > atr)
+            return RED
+        if (range / atr > 0.8)
+            return ORANGE
+    }
+    return defaultColor
 }
 
 export const breakEvenColor = (breakEvenPercentage:number | undefined, defaultColor: string) => {

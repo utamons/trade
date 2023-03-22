@@ -97,6 +97,12 @@ public class TradeLog implements Serializable {
 	@Column(name="broker_interest")
 	private Double brokerInterest;
 
+	@Column(name="level_price")
+	private Double levelPrice;
+
+	@Column(name="atr")
+	private Double atr;
+
 	public Long getId() {
 		return id;
 	}
@@ -319,6 +325,22 @@ public class TradeLog implements Serializable {
 
 	public void setParent(TradeLog parent) {
 		this.parent = parent;
+	}
+
+	public Double getLevelPrice() {
+		return levelPrice;
+	}
+
+	public void setLevelPrice(Double levelPrice) {
+		this.levelPrice = levelPrice;
+	}
+
+	public Double getAtr() {
+		return atr;
+	}
+
+	public void setAtr(Double atr) {
+		this.atr = atr;
 	}
 
 	@Transient

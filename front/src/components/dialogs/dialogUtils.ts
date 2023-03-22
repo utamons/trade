@@ -21,7 +21,6 @@ export const getFieldValue = (name: string, state: FormState): number | string |
 }
 
 const formReducer = (state: FormState, action: FormAction): FormState => {
-    console.log('formReducer action', action)
     switch (action.type) {
         case 'set': {
             const { name, valueNum, valueStr, valueDate, valid } = action.payload
@@ -57,8 +56,6 @@ const formReducer = (state: FormState, action: FormAction): FormState => {
 
             const allFields = [...updatedValuesNumeric, ...updatedValuesString, ...updatedValuesDate]
             const isValid = allFields.every((field) => field.valid)
-            console.log('formReducer isValid', isValid)
-            console.log('formReducer allFields', allFields)
 
             return {
                 ...state,

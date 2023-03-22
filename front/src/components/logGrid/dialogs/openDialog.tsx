@@ -3,7 +3,7 @@
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import Dialog from '@mui/material/Dialog'
-import { breakEvenColor, RED, remCalc, riskColor, roundTo2 } from '../../../utils/utils'
+import { breakEvenColor, RED, remCalc, riskColor, roundTo2, takeColor } from '../../../utils/utils'
 import Button from '../../tools/button'
 import React, { Dispatch, useCallback, useEffect, useState } from 'react'
 import { ButtonContainerStyled, FieldName } from '../../../styles/style'
@@ -167,7 +167,7 @@ const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, tic
                 value: undefined
             },
             {
-                name: 'ATR',
+                name: 'atr',
                 valid: true,
                 value: undefined
             },
@@ -222,9 +222,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     const note = getFieldValue('note', formState) as string
     const date = getFieldValue('date', formState) as Date
     const levelPrice = getFieldValue('levelPrice', formState) as number
-    const ATR = getFieldValue('ATR', formState) as number
-
-    console.log('price', price)
+    const atr = getFieldValue('atr', formState) as number
 
     const breakEvenPercentage = () => {
         if (breakEven && price)
@@ -241,13 +239,14 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     }
     // noinspection DuplicatedCode
     const handleEvalToFit = useCallback(async () => {
-        if (evaluate && price) {
+        if (evaluate && ((levelPrice && atr) || price)) {
             setLoading(true)
             const ev: EvalToFit = await postEvalToFit({
                 brokerId: currentBroker.id,
                 tickerId: Number(tickerId),
-                levelPrice: levelPrice,
-                ATR: ATR,
+                price,
+                levelPrice,
+                atr,
                 items,
                 stopLoss,
                 date: date.toISOString(),
@@ -269,7 +268,9 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
         evaluate,
         price,
         items,
-        stopLoss
+        stopLoss,
+        levelPrice,
+        atr
     ])
 
     const handleOpen = useCallback(async () => {
@@ -283,7 +284,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
             const ev: Eval = await postEval({
                 brokerId: currentBroker.id,
                 tickerId: Number(tickerId),
-                ATR,
+                atr,
                 levelPrice,
                 price,
                 items,
@@ -306,6 +307,8 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                 brokerId: currentBroker.id,
                 marketId: Number(marketId),
                 tickerId: Number(tickerId),
+                atr,
+                levelPrice,
                 itemNumber: items,
                 priceOpen: price,
                 stopLoss,
@@ -465,8 +468,8 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                                 </FieldName>
                                 <FieldValue>
                                     <NumberInput
-                                        value={ATR}
-                                        name={'ATR'}
+                                        value={atr}
+                                        name={'atr'}
                                         dispatch={dispatch}/>
                                 </FieldValue>
                             </FieldBox>
@@ -502,6 +505,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                                 <FieldName>Take Profit:</FieldName>
                                 <FieldValue>
                                     <NumberInput
+                                        color={takeColor(takeProfit, price, atr, defaultColor)}
                                         value={takeProfit}
                                         name={'takeProfit'}
                                         dispatch={dispatch}/>

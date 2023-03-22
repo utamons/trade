@@ -3,6 +3,7 @@ import TextField from '@mui/material/TextField'
 import { FormAction } from 'types'
 
 interface NumberInputProps {
+    color?: string,
     value?: number
     label?: string
     name: string
@@ -11,7 +12,7 @@ interface NumberInputProps {
     dispatch: Dispatch<FormAction>
 }
 
-export default ({ name, dispatch, label, negativeAllowed, zeroAllowed, value }: NumberInputProps) => {
+export default ({ color, name, dispatch, label, negativeAllowed, zeroAllowed, value }: NumberInputProps) => {
 
     const [error, setError] = useState(false)
     const [errorText, setErrorText] = useState('')
@@ -53,6 +54,12 @@ export default ({ name, dispatch, label, negativeAllowed, zeroAllowed, value }: 
 
     return <TextField
         label={label}
+        sx={{
+            '.MuiInput-input': {
+                color
+            }
+        }
+        }
         value={_value == undefined ? '' : _value + ''}
         variant="standard"
         onChange={handleInput}

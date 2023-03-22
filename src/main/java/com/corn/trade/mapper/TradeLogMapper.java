@@ -40,6 +40,8 @@ public class TradeLogMapper {
 		e.setFees(open.getFees() == null ? 0.0 : open.getFees());
 		e.setNote(open.getNote());
 		e.setGoal(open.getGoal());
+		e.setAtr(open.getAtr());
+		e.setLevelPrice(open.getLevelPrice());
 
 		return e;
 	}
@@ -85,6 +87,8 @@ public class TradeLogMapper {
 				entity.getGrade(),
 				entity.getGoal(),
 				entity.getBrokerInterest(),
-				parentId);
+				parentId,
+				entity.getLevelPrice(),
+				entity.getAtr());
 	}
 }
