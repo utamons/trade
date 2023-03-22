@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { SelectChangeEvent } from '@mui/material/Select'
 import React, { Dispatch } from 'react'
 
 type ItemType = { id: number, name: string }
@@ -130,7 +129,9 @@ type PageRequest = {
 type EvalRequest = {
     brokerId: number,
     tickerId: number,
-    priceOpen: number,
+    price?: number,
+    levelPrice?: number,
+    ATR?: number,
     items?: number,
     stopLoss?: number,
     date: string,
