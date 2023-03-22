@@ -41,6 +41,10 @@ public class TradeLogOpenDTO implements Serializable {
 
 	private final String note;
 
+	private final Double levelPrice;
+
+	private final Double atr;
+
 	private final Double goal;
 
 	public Double getGoal() {
@@ -63,6 +67,8 @@ public class TradeLogOpenDTO implements Serializable {
 	                       @JsonProperty("breakEven") Double breakEven,
 	                       @JsonProperty("fees") Double fees,
 	                       @JsonProperty("note") String note,
+	                       @JsonProperty("levelPrice") Double levelPrice,
+	                       @JsonProperty("atr") Double atr,
 	                       @JsonProperty("goal") Double goal) {
 		this.id = id;
 		this.position = position;
@@ -79,6 +85,8 @@ public class TradeLogOpenDTO implements Serializable {
 		this.breakEven = breakEven;
 		this.fees = fees;
 		this.note = note;
+		this.levelPrice = levelPrice;
+		this.atr = atr;
 		this.goal = goal;
 	}
 
@@ -140,5 +148,13 @@ public class TradeLogOpenDTO implements Serializable {
 
 	public Long getId() {
 		return id;
+	}
+
+	public Double getLevelPrice() {
+		return levelPrice;
+	}
+
+	public Double getAtr() {
+		return atr;
 	}
 }

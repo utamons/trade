@@ -193,6 +193,8 @@ public class TradeLogService {
 				tradeLog.getBroker().getId(),
 				tradeLog.getTicker().getId(),
 				tradeLog.getPriceOpen(),
+				tradeLog.getLevelPrice(),
+				tradeLog.getAtr(),
 				tradeLog.getItemNumber(),
 				openDTO.getStopLoss(),
 				LocalDate.now(),

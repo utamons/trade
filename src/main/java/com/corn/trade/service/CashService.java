@@ -210,11 +210,11 @@ public class CashService {
 
 	public void buyShort(double openAmount, double closeAmount, Broker broker, Currency currency, TradeLog tradeLog) {
 		logger.debug("start");
-		CashAccountType tradeType  = accountTypeRepo.findCashAccountTypeByName("trade");
-		CashAccountType borrowedType  = accountTypeRepo.findCashAccountTypeByName("borrowed");
-		CashAccountType openType   = accountTypeRepo.findCashAccountTypeByName("open");
-		CashAccountType profitType = accountTypeRepo.findCashAccountTypeByName("profit");
-		CashAccountType lossType   = accountTypeRepo.findCashAccountTypeByName("loss");
+		CashAccountType tradeType    = accountTypeRepo.findCashAccountTypeByName("trade");
+		CashAccountType borrowedType = accountTypeRepo.findCashAccountTypeByName("borrowed");
+		CashAccountType openType     = accountTypeRepo.findCashAccountTypeByName("open");
+		CashAccountType profitType   = accountTypeRepo.findCashAccountTypeByName("profit");
+		CashAccountType lossType     = accountTypeRepo.findCashAccountTypeByName("loss");
 
 		transfer(openAmount, tradeLog, broker, currency, openType, borrowedType, tradeLog.getDateClose());
 
@@ -296,22 +296,6 @@ public class CashService {
 		return deposit;
 	}
 
-	public double getAssetsDepositUSD(long brokerId) throws JsonProcessingException {
-		Broker               broker = brokerRepo.getReferenceById(brokerId);
-		List<CurrencySumDTO> opens  = tradeLogRepo.openSumsByBroker(broker);
-		double               sum    = 0.0;
-		LocalDate            date   = LocalDate.now();
-
-		for (CurrencySumDTO dto : opens) {
-			sum += currencyRateService.convertToUSD(
-					dto.getCurrencyId(),
-					dto.getSum(),
-					date);
-		}
-
-		return sum;
-	}
-
 	public double getAssetsDepositUSD() throws JsonProcessingException {
 		List<CurrencySumDTO> opens = tradeLogRepo.openLongSums();
 		double               sum   = 0.0;
@@ -335,27 +319,35 @@ public class CashService {
 		final Ticker ticker     = tickerRepo.getReferenceById(evalDTO.getTickerId());
 		final long   currencyId = ticker.getCurrency().getId();
 		double       depositUS  = getDeposit(evalDTO.getBrokerId(), LocalDate.now());
+		Double       levelPrice = evalDTO.getLevelPrice();
+		Double       atr        = evalDTO.getAtr();
+
+		if (levelPrice != null && atr != null) {
+			double price = levelPrice + (shortC * 0.05);
+			evalDTO.setPrice(price);
+			evalDTO.setStopLoss(price - (shortC * atr/100*10));
+		}
 
 		double volume;
 		if (evalDTO.getItems() != null && evalDTO.getStopLoss() != null) {
 			dto = eval(evalDTO);
 			be = dto.getBreakEven().doubleValue();
 			risk = dto.getRisk().doubleValue();
-			bePc = Math.abs(be / (evalDTO.getPriceOpen()/100.0) - 100.0);
+			bePc = Math.abs(be / (evalDTO.getPrice() / 100.0) - 100.0);
 			if (risk <= MAX_RISK_PC && bePc <= MAX_BE_PC)
 				return new EvalOutFitDTO(dto.getFees(), dto.getRisk(), dto.getBreakEven(), dto.getTakeProfit(),
-				                         dto.getOutcomeExp(), evalDTO.getStopLoss(), evalDTO.getItems());
+				                         dto.getOutcomeExp(), evalDTO.getStopLoss(), evalDTO.getPrice(), evalDTO.getItems());
 		}
 
-		double stopLoss = evalDTO.getPriceOpen();
 		int    count    = 0;
 		if (evalDTO.getItems() == null) {
 			long   items = 0;
 			double bePcPrev;
 			do {
 				++items;
-				volume = currencyRateService.convertToUSD(currencyId, evalDTO.getPriceOpen() * items, LocalDate.now());
-				evalDTO.setStopLoss(stopLoss);
+				volume = currencyRateService.convertToUSD(currencyId, evalDTO.getPrice() * items, LocalDate.now());
+				if (evalDTO.getStopLoss() == null)
+					evalDTO.setStopLoss(evalDTO.getPrice());
 				evalDTO.setItems(items);
 				if (depositUS - volume < 0) {
 					logger.debug("Too much items for current deposit");
@@ -364,7 +356,7 @@ public class CashService {
 				dto = eval(evalDTO);
 				be = dto.getBreakEven().doubleValue();
 				bePcPrev = bePc;
-				bePc = Math.abs(be / (evalDTO.getPriceOpen()/100.0) - 100.0);
+				bePc = Math.abs(be / (evalDTO.getPrice() / 100.0) - 100.0);
 				if (be == bePcPrev && count < 3) {
 					count++;
 				} else {
@@ -374,26 +366,29 @@ public class CashService {
 			} while (bePc > MAX_BE_PC);
 		}
 
-		double riskPrev;
-		double step = 0.01;
-		double stopLossPc;
-		do {
-			stopLoss -= (shortC * step);
-			stopLossPc = shortC > 0 ? stopLoss / evalDTO.getPriceOpen() : evalDTO.getPriceOpen() / stopLoss;
-			if (stopLoss < 1.0 || stopLossPc <= 0.8)
-				break;
-			evalDTO.setStopLoss(stopLoss);
-			riskPrev = risk;
-			risk = Math.round(getRisk(evalDTO) * 100) / 100.0;
-			if (risk == riskPrev)
-				step++;
-			logger.debug("risk: {}", risk);
+		if (evalDTO.getStopLoss() == null) {
+			double riskPrev;
+			double step     = 0.01;
+			double stopLossPc;
+			double stopLoss = evalDTO.getPrice();
+			do {
+				stopLoss -= (shortC * step);
+				stopLossPc = shortC > 0 ? stopLoss / evalDTO.getPrice() : evalDTO.getPrice() / stopLoss;
+				if (stopLoss < 1.0 || stopLossPc <= 0.8)
+					break;
+				evalDTO.setStopLoss(stopLoss);
+				riskPrev = risk;
+				risk = Math.round(getRisk(evalDTO) * 100) / 100.0;
+				if (risk == riskPrev)
+					step++;
+				logger.debug("risk: {}", risk);
 
-		} while (risk < MAX_RISK_PC);
+			} while (risk < MAX_RISK_PC);
 
-		if (risk > MAX_RISK_PC && stopLossPc >= 0.8) {
-			stopLoss += (shortC * step);
-			evalDTO.setStopLoss(stopLoss);
+			if (risk > MAX_RISK_PC && stopLossPc >= 0.8) {
+				stopLoss += (shortC * step);
+				evalDTO.setStopLoss(stopLoss);
+			}
 		}
 
 		dto = eval(evalDTO);
@@ -401,7 +396,7 @@ public class CashService {
 		logger.debug("finish");
 		if (dto != null)
 			return new EvalOutFitDTO(dto.getFees(), dto.getRisk(), dto.getBreakEven(), dto.getTakeProfit(),
-			                         dto.getOutcomeExp(), evalDTO.getStopLoss(), evalDTO.getItems());
+			                         dto.getOutcomeExp(), evalDTO.getStopLoss(), evalDTO.getPrice(), evalDTO.getItems());
 		else
 			throw new RuntimeException("Cannot evaluate to fit!");
 	}
@@ -411,7 +406,7 @@ public class CashService {
 		final LocalDate date       = evalDTO.getDate();
 		final Ticker    ticker     = tickerRepo.getReferenceById(evalDTO.getTickerId());
 		final long      items      = evalDTO.getItems();
-		final double    priceOpen  = evalDTO.getPriceOpen();
+		final double    priceOpen  = evalDTO.getPrice();
 		final double    fees       = getFees(broker, ticker, items, items * priceOpen).getAmount();
 		final long      currencyId = ticker.getCurrency().getId();
 		final double    stopLoss   = evalDTO.getStopLoss();
@@ -437,7 +432,7 @@ public class CashService {
 		final Broker    broker     = brokerRepo.getReferenceById(evalDTO.getBrokerId());
 		final LocalDate date       = evalDTO.getDate();
 		final double    capital    = getCapital();
-		final double    priceOpen  = evalDTO.getPriceOpen();
+		final double    priceOpen  = evalDTO.getPrice();
 		final Ticker    ticker     = tickerRepo.getReferenceById(evalDTO.getTickerId());
 		final long      currencyId = ticker.getCurrency().getId();
 		final double    stopLoss   = evalDTO.getStopLoss();
@@ -550,12 +545,13 @@ public class CashService {
 		if (tradeLog.isClosed() || tradeLog.isLong()) {
 			return;
 		}
-		LocalDate openDate = tradeLog.getDateOpen().toLocalDate();
+		LocalDate openDate    = tradeLog.getDateOpen().toLocalDate();
 		LocalDate currentDate = LocalDate.now();
-		long daysBetween = ChronoUnit.DAYS.between(openDate, currentDate);
+		long      daysBetween = ChronoUnit.DAYS.between(openDate, currentDate);
 		if (tradeLog.getBroker().getName().equals("FreedomFN")) {
-			double interest = (tradeLog.getVolume()/100.0*12.0/365.0)*daysBetween;
-			double interestUSD = currencyRateService.convertToUSD(tradeLog.getTicker().getCurrency().getId(), interest, currentDate);
+			double interest = (tradeLog.getVolume() / 100.0 * 12.0 / 365.0) * daysBetween;
+			double interestUSD =
+					currencyRateService.convertToUSD(tradeLog.getTicker().getCurrency().getId(), interest, currentDate);
 			tradeLog.setBrokerInterest(interestUSD);
 			double breakEven = getBreakEven(-1,
 			                                tradeLog.getBroker(),
