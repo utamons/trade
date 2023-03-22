@@ -1,13 +1,13 @@
-import React, { useCallback, useState } from 'react'
+import React, { Dispatch, useCallback, useEffect, useState } from 'react'
 import { Box, styled } from '@mui/material'
 import { remCalc } from '../../utils/utils'
-import { BrokerProps } from 'types'
-import { SelectChangeEvent } from '@mui/material/Select'
+import { BrokerProps, FormAction, FormActionPayload, FormState } from 'types'
 import Button from '../tools/button'
 import Refill from '../dialogs/refill'
 import { ButtonContainerStyled } from '../../styles/style'
 import Exchange from '../dialogs/exchange'
 import Select from '../tools/select'
+import { getFieldValue, useForm } from '../dialogs/dialogUtils'
 
 const ContainerStyled = styled(Box)(({ theme }) => ({
     borderRight: `solid ${remCalc(1)}`,
@@ -29,16 +29,36 @@ const SelectorContainerStyled = styled(Box)(() => ({
     justifyContent: 'center'
 }))
 
+const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, brokerId: number) => {
+    if (formState.isInitialized)
+        return
+
+    const payload: FormActionPayload = {
+        valuesNumeric: [
+            {
+                name: 'brokerId',
+                valid: true,
+                value: brokerId
+            }
+        ]
+    }
+
+    dispatch({ type: 'init', payload })
+}
+
 export default ({ brokers, currencies, currentBroker, setCurrentBrokerId, refill, correction, exchange }: BrokerProps) => {
-    const [id, setId] = useState('' + (currentBroker ? currentBroker.id : 1))
+    const { formState, dispatch } = useForm()
     const [refillOpen, setRefillOpen] = useState(false)
     const [correctionOpen, setCorrectionOpen] = useState(false)
     const [exchangeOpen, setExchangeOpen] = useState(false)
 
-    const handleChange = useCallback((event: SelectChangeEvent<unknown>) => {
-        setId(event.target.value as string)
-        setCurrentBrokerId(Number(event.target.value))
-    }, [])
+    initFormState(formState, dispatch, currentBroker ? currentBroker.id : 0)
+
+    const id = '' + getFieldValue('brokerId', formState)
+
+    useEffect(() => {
+        setCurrentBrokerId(Number(id))
+    }, [id])
 
     const openRefillDialog = useCallback(() => {
         setRefillOpen(true)
@@ -87,8 +107,9 @@ export default ({ brokers, currencies, currentBroker, setCurrentBrokerId, refill
         <SelectorContainerStyled>
             <Select
                 value={id}
+                name="brokerId"
                 items={brokers ? brokers : []}
-                onChange={handleChange}
+                dispatch={dispatch}
             />
         </SelectorContainerStyled>
         <ButtonContainerStyled>

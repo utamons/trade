@@ -1,10 +1,10 @@
-import Select from '@mui/material/Select'
+import Select, { SelectChangeEvent } from '@mui/material/Select'
 import React from 'react'
 import MenuItem from '@mui/material/MenuItem'
 import { ItemType, SelectorProps } from 'types'
 import { remCalc } from '../../utils/utils'
 
-export default ({ items, value, onChange, variant } : SelectorProps) => {
+export default ({ name, items, value, dispatch, variant } : SelectorProps) => {
     let fontSize = remCalc(18)
     if (variant && variant == 'medium') {
         fontSize = remCalc(14)
@@ -20,6 +20,10 @@ export default ({ items, value, onChange, variant } : SelectorProps) => {
                     <MenuItem sx={{ fontSize }} key={item.id}
                         value={item.id}>{item.name}
                     </MenuItem>) : <></>
+    }
+
+    const onChange = (event: SelectChangeEvent<unknown>) => {
+        dispatch({ type: 'set', payload: { name, valueNum: event.target.value as number, valid: true } })
     }
 
     return <Select

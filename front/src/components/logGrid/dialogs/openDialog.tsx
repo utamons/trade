@@ -5,23 +5,19 @@ import DialogActions from '@mui/material/DialogActions'
 import Dialog from '@mui/material/Dialog'
 import { breakEvenColor, RED, remCalc, riskColor, roundTo2 } from '../../../utils/utils'
 import Button from '../../tools/button'
-import React, { useCallback, useState } from 'react'
+import React, { Dispatch, useCallback, useEffect, useState } from 'react'
 import { ButtonContainerStyled, FieldName } from '../../../styles/style'
-import { SelectChangeEvent } from '@mui/material/Select'
 import { Box, Grid, styled } from '@mui/material'
-import dayjs, { Dayjs } from 'dayjs'
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import TextField from '@mui/material/TextField'
-import { ItemType, MarketType, PositionOpenType, TickerType } from 'types'
+import { FormAction, FormActionPayload, FormState, ItemType, MarketType, PositionOpenType, TickerType } from 'types'
 import Select from '../../tools/select'
 import NumberInput from '../../tools/numberInput'
 import { postEval, postEvalToFit } from '../../../api'
 import Switch from '@mui/material/Switch'
-import { DesktopDateTimePicker } from '@mui/x-date-pickers'
 import { useTheme } from '@emotion/react'
 import CircularProgress from '@mui/material/CircularProgress'
 import { BasicDateTimePicker } from '../../tools/dateTimePicker'
+import { getFieldValue, useForm } from '../../dialogs/dialogUtils'
 
 interface OpenDialogProps {
     currentBroker: ItemType,
@@ -78,7 +74,6 @@ const RedSwitch = styled(Switch)(() => ({
 }))
 
 
-
 export const TextFieldStyled = styled(TextField)(() => ({
     '.MuiOutlinedInput-root': {
         borderRadius: remCalc(2),
@@ -109,26 +104,88 @@ interface EvalToFit {
     items: number
 }
 
+const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, tickerId: number, marketId: number, positionId: number) => {
+    if (formState.isInitialized)
+        return
+
+    const payload: FormActionPayload = {
+        valuesNumeric: [
+            {
+                name: 'tickerId',
+                valid: true,
+                value: tickerId
+            },
+            {
+                name: 'marketId',
+                valid: true,
+                value: marketId
+            },
+            {
+                name: 'positionId',
+                valid: true,
+                value: positionId
+            },
+            {
+                name: 'price',
+                valid: true,
+                value: undefined
+            },
+            {
+                name: 'items',
+                valid: true,
+                value: undefined
+            },
+            {
+                name: 'stopLoss',
+                valid: true,
+                value: undefined
+            },
+            {
+                name: 'takeProfit',
+                valid: true,
+                value: undefined
+            },
+            {
+                name: 'outcomeExp',
+                valid: true,
+                value: undefined
+            },
+            {
+                name: 'risk',
+                valid: true,
+                value: undefined
+            },
+            {
+                name: 'breakEven',
+                valid: true,
+                value: undefined
+            },
+            {
+                name: 'fees',
+                valid: true,
+                value: undefined
+            }],
+        valuesString: [
+            {
+                name: 'note',
+                valid: true,
+                value: undefined
+            }],
+        valuesDate: [
+            {
+                name: 'date',
+                valid: true,
+                value: new Date()
+            }
+        ]
+    }
+
+    dispatch({ type: 'init', payload })
+}
+
 export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: OpenDialogProps) => {
-    const [marketId, setMarketId] = useState('' + markets[0].id)
-    const [tickerId, setTickerId] = useState('' + tickers[0].id)
+    const { formState, dispatch } = useForm()
     const [currentTicker, setCurrentTicker] = useState<TickerType | undefined>(tickers[0])
-    const [positionId, setPositionId] = useState('' + positions[0].id)
-    const [priceError, setPriceError] = useState(false)
-    const [itemsError, setItemsError] = useState(false)
-    const [stopLossError, setStopLossError] = useState(false)
-    const [takeProfitError, setTakeProfitError] = useState(false)
-    const [outcomeExpError, setOutcomeExpError] = useState(false)
-    const [price, setPrice] = useState<number | undefined>(undefined)
-    const [items, setItems] = useState<number | undefined>(undefined)
-    const [stopLoss, setStopLoss] = useState<number | undefined>(undefined)
-    const [takeProfit, setTakeProfit] = useState<number | undefined>(undefined)
-    const [outcomeExp, setOutcomeExp] = useState<number | undefined>(undefined)
-    const [risk, setRisk] = useState<number | undefined>(undefined)
-    const [fees, setFees] = useState<number | undefined>(undefined)
-    const [breakEven, setBreakEven] = useState<number | undefined>(undefined)
-    const [note, setNote] = useState('')
-    const [date, setDate] = useState(new Date())
     const [evaluate, setEvaluate] = useState(true)
     const [isLoading, setLoading] = useState(false)
 
@@ -138,12 +195,23 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     // @ts-ignore
     const defaultColor = theme.palette.text.primary
 
-    const validate = (): boolean => {
-        if (priceError || itemsError || stopLossError || takeProfitError || outcomeExpError)
-            return true
-        return price == undefined || items == undefined || stopLoss == undefined
+    const { isValid } = formState
 
-    }
+    const tickerId = '' + getFieldValue('tickerId', formState)
+    const marketId = '' + getFieldValue('marketId', formState)
+    const positionId = '' + getFieldValue('positionId', formState)
+    const price = getFieldValue('price', formState) as number
+    const items = getFieldValue('items', formState) as number
+    const stopLoss = getFieldValue('stopLoss', formState) as number
+    const takeProfit = getFieldValue('takeProfit', formState) as number
+    const outcomeExp = getFieldValue('outcomeExp', formState) as number
+    const risk = getFieldValue('risk', formState) as number
+    const breakEven = getFieldValue('breakEven', formState) as number
+    const fees = getFieldValue('fees', formState) as number
+    const note = getFieldValue('note', formState) as string
+    const date = getFieldValue('date', formState) as Date
+
+    console.log('price', price)
 
     const breakEvenPercentage = () => {
         if (breakEven && price)
@@ -158,6 +226,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
         else
             return ''
     }
+    // noinspection DuplicatedCode
     const handleEvalToFit = useCallback(async () => {
         if (evaluate && price) {
             setLoading(true)
@@ -171,13 +240,14 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                 short: positionId == '1'
             })
             setLoading(false)
-            setItems(ev.items)
-            setStopLoss(ev.stopLoss)
-            setFees(ev.fees)
-            setRisk(ev.risk)
-            setBreakEven(ev.breakEven)
-            setTakeProfit(ev.takeProfit)
-            setOutcomeExp(ev.outcomeExp)
+            dispatch({ type: 'set', payload: { name: 'items', valueNum: ev.items, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'stopLoss', valueNum: ev.stopLoss, valid: true } })
+            // noinspection DuplicatedCode
+            dispatch({ type: 'set', payload: { name: 'takeProfit', valueNum: ev.takeProfit, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'outcomeExp', valueNum: ev.outcomeExp, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'risk', valueNum: ev.risk, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'breakEven', valueNum: ev.breakEven, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'fees', valueNum: ev.fees, valid: true } })
             return
         }
     }, [
@@ -188,7 +258,8 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     ])
 
     const handleOpen = useCallback(async () => {
-        if (validate()) {
+        console.log('isValid', isValid)
+        if (price == undefined || items == undefined || stopLoss == undefined || !isValid) {
             console.error('validation failed')
             return
         }
@@ -203,11 +274,12 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                 date: date.toISOString(),
                 short: positionId == '1'
             })
-            setFees(ev.fees)
-            setRisk(ev.risk)
-            setBreakEven(ev.breakEven)
-            setTakeProfit(ev.takeProfit)
-            setOutcomeExp(ev.outcomeExp)
+            // noinspection DuplicatedCode
+            dispatch({ type: 'set', payload: { name: 'takeProfit', valueNum: ev.takeProfit, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'outcomeExp', valueNum: ev.outcomeExp, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'risk', valueNum: ev.risk, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'breakEven', valueNum: ev.breakEven, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'fees', valueNum: ev.fees, valid: true } })
             return
         }
         if (price && items && stopLoss && risk && fees) {
@@ -219,17 +291,18 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                 tickerId: Number(tickerId),
                 itemNumber: items,
                 priceOpen: price,
-                stopLoss: stopLoss,
-                takeProfit: takeProfit,
+                stopLoss,
+                takeProfit,
                 outcomeExpected: outcomeExp,
-                risk: risk,
-                breakEven: breakEven,
-                fees: fees,
-                note: note
+                risk,
+                breakEven,
+                fees,
+                note
             })
             onClose()
         }
     }, [
+        isValid,
         evaluate,
         positionId,
         marketId,
@@ -245,73 +318,28 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
         takeProfit,
         outcomeExp])
 
-    const handlePositionSelector = useCallback((event: SelectChangeEvent<unknown>) => {
-        setPositionId(event.target.value as string)
-    }, [])
+    useEffect(() => {
+        if (tickerId) {
+            const ticker = tickers.find((t) => t.id == Number(tickerId))
+            setCurrentTicker(ticker)
+        }
+    }, [tickerId])
 
-    const handleMarketSelector = useCallback((event: SelectChangeEvent<unknown>) => {
-        const id = Number(event.target.value)
-        setMarketId(event.target.value as string)
-        const ticker = tickers.find((t) => t.id == id)
-        setCurrentTicker(ticker)
-    }, [])
-
-    const handleTickerSelector = useCallback((event: SelectChangeEvent<unknown>) => {
-        setTickerId(event.target.value as string)
-
-    }, [])
-
-    const noteChangeHandler = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-        setNote(event.target.value)
-    }, [])
-
-    const dateChangeHandler = useCallback((newDate: Date) => {
-        console.log('New date:', newDate)
-        setDate(newDate)
-    }, [])
+    useEffect(() => {
+        initFormState(formState, dispatch, tickers[0].id, markets[0].id, positions[0].id)
+    }, [formState])
 
     const handleSwitch = useCallback((event: React.SyntheticEvent, checked: boolean) => {
         setEvaluate(!checked)
     }, [])
 
-    const priceChangeHandler = useCallback((newPrice: number) => {
-        setPrice(newPrice)
+    const handleCancel = useCallback(() => {
+        dispatch({ type: 'reset', payload: {} })
+        onClose()
     }, [])
 
-    const priceErrorHandler = useCallback((error: boolean) => {
-        setPriceError(error)
-    }, [])
-
-    const itemsChangeHandler = useCallback((newItems: number) => {
-        setItems(newItems)
-    }, [])
-
-    const itemsErrorHandler = useCallback((error: boolean) => {
-        setItemsError(error)
-    }, [])
-
-    const stopLossChangeHandler = useCallback((newStopLoss: number) => {
-        setStopLoss(newStopLoss)
-    }, [])
-
-    const stopLossErrorHandler = useCallback((error: boolean) => {
-        setStopLossError(error)
-    }, [])
-
-    const takeProfitChangeHandler = useCallback((newTakeProfit: number) => {
-        setTakeProfit(newTakeProfit)
-    }, [])
-
-    const takeProfitErrorHandler = useCallback((error: boolean) => {
-        setTakeProfitError(error)
-    }, [])
-
-    const outcomeExpChangeHandler = useCallback((newOutcomeExp: number) => {
-        setOutcomeExp(newOutcomeExp)
-    }, [])
-
-    const outcomeExpErrorHandler = useCallback((error: boolean) => {
-        setOutcomeExpError(error)
+    const handleReset = useCallback(() => {
+        dispatch({ type: 'reset', payload: {} })
     }, [])
 
     return <Dialog
@@ -336,7 +364,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                             <FieldBox>
                                 <FieldName>Date:</FieldName>
                                 <FieldValue>
-                                    <BasicDateTimePicker onChange={dateChangeHandler}/>
+                                    <BasicDateTimePicker name="date" dispatch={dispatch}/>
                                 </FieldValue>
                             </FieldBox>
                         </Grid>
@@ -347,7 +375,8 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                                     <Select
                                         items={positions}
                                         value={positionId}
-                                        onChange={handlePositionSelector}
+                                        name="positionId"
+                                        dispatch={dispatch}
                                         variant="medium"/>
                                 </FieldValue>
                             </FieldBox>
@@ -365,7 +394,8 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                                     <Select
                                         items={markets}
                                         value={marketId}
-                                        onChange={handleMarketSelector}
+                                        name={'marketId'}
+                                        dispatch={dispatch}
                                         variant="small"
                                     />
                                 </FieldValue>
@@ -378,7 +408,8 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                                     <Select
                                         items={tickers}
                                         value={tickerId}
-                                        onChange={handleTickerSelector}
+                                        name={'tickerId'}
+                                        dispatch={dispatch}
                                         variant="small"
                                     />
                                 </FieldValue>
@@ -392,8 +423,8 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                                 <FieldValue>
                                     <NumberInput
                                         value={price}
-                                        onChange={priceChangeHandler}
-                                        onError={priceErrorHandler}/>
+                                        name={'price'}
+                                        dispatch={dispatch}/>
                                 </FieldValue>
                             </FieldBox>
                         </Grid>
@@ -407,8 +438,8 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                                 <FieldValue>
                                     <NumberInput
                                         value={items}
-                                        onChange={itemsChangeHandler}
-                                        onError={itemsErrorHandler}/>
+                                        name={'items'}
+                                        dispatch={dispatch}/>
                                 </FieldValue>
                             </FieldBox>
                         </Grid>
@@ -417,9 +448,9 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                                 <FieldName>Stop Loss:</FieldName>
                                 <FieldValue>
                                     <NumberInput
+                                        name={'stopLoss'}
                                         value={stopLoss}
-                                        onChange={stopLossChangeHandler}
-                                        onError={stopLossErrorHandler}/>
+                                        dispatch={dispatch}/>
                                 </FieldValue>
                             </FieldBox>
                         </Grid>
@@ -429,8 +460,8 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                                 <FieldValue>
                                     <NumberInput
                                         value={takeProfit}
-                                        onChange={takeProfitChangeHandler}
-                                        onError={takeProfitErrorHandler}/>
+                                        name={'takeProfit'}
+                                        dispatch={dispatch}/>
                                 </FieldValue>
                             </FieldBox>
                         </Grid>
@@ -440,8 +471,8 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                                 <FieldValue>
                                     <NumberInput
                                         value={outcomeExp}
-                                        onChange={outcomeExpChangeHandler}
-                                        onError={outcomeExpErrorHandler}/>
+                                        name={'outcomeExp'}
+                                        dispatch={dispatch}/>
                                 </FieldValue>
                             </FieldBox>
                         </Grid>
@@ -478,7 +509,10 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                             label="Note"
                             multiline
                             style={{ width: '100%', fontSize: remCalc(14) }}
-                            onChange={noteChangeHandler}
+                            onChange={(event) => dispatch({
+                                type: 'set',
+                                payload: { name: 'note', valueStr: event.target.value, valid: true }
+                            })}
                         />
                     </NoteBox>
                 </Grid>
@@ -492,7 +526,8 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                                           onClick={handleEvalToFit}/> : <></>}
                         <Button style={{ minWidth: remCalc(101) }} text={evaluate ? 'Evaluate' : 'Open'}
                                 onClick={handleOpen}/>
-                        <Button style={{ minWidth: remCalc(101) }} text="Cancel" onClick={onClose}/> </>}
+                        <Button style={{ minWidth: remCalc(101) }} text="Reset" onClick={handleReset}/>
+                        <Button style={{ minWidth: remCalc(101) }} text="Cancel" onClick={handleCancel}/> </>}
             </ButtonContainerStyled>
         </DialogActions>
     </Dialog>

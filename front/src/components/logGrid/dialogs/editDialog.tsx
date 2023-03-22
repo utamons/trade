@@ -5,13 +5,14 @@ import DialogActions from '@mui/material/DialogActions'
 import Dialog from '@mui/material/Dialog'
 import { remCalc } from '../../../utils/utils'
 import Button from '../../tools/button'
-import React, { useCallback, useState } from 'react'
+import React, { Dispatch, useCallback, useEffect } from 'react'
 import { ButtonContainerStyled, FieldBox, FieldName, NoteBox } from '../../../styles/style'
 import { Grid } from '@mui/material'
 import TextField from '@mui/material/TextField'
-import { PositionEditType, TradeLog } from 'types'
+import { FormAction, FormActionPayload, FormState, PositionEditType, TradeLog } from 'types'
 import NumberInput from '../../tools/numberInput'
 import { FieldValue } from './openDialog'
+import { getFieldValue, useForm } from '../../dialogs/dialogUtils'
 
 interface EditDialogProps {
     position: TradeLog,
@@ -20,22 +21,63 @@ interface EditDialogProps {
     onClose: () => void
 }
 
-export default ({ onClose, isOpen, position, edit }: EditDialogProps) => {
-    const [stopLossError, setStopLossError] = useState(false)
-    const [stopLoss, setStopLoss] = useState(position.stopLoss)
-    const [takeProfitError, setTakeProfitError] = useState(false)
-    const [takeProfit, setTakeProfit] = useState(position.takeProfit)
-    const [note, setNote] = useState(position.note)
+const initFormState = (
+    formState: FormState,
+    dispatch: Dispatch<FormAction>,
+    stopLoss: number,
+    takeProfit: number | undefined,
+    note: string | undefined) => {
+    if (formState.isInitialized)
+        return
 
-    const validate = (): boolean => {
-        if (stopLossError || takeProfitError)
-            return true
-        return stopLoss == undefined
-
+    const payload: FormActionPayload = {
+        valuesNumeric: [
+            {
+                name: 'stopLoss',
+                valid: true,
+                value: stopLoss
+            },
+            {
+                name: 'takeProfit',
+                valid: true,
+                value: takeProfit
+            }
+        ],
+        valuesString: [
+            {
+                name: 'note',
+                valid: true,
+                value: note
+            }
+        ],
+        valuesDate: [
+            {
+                name: 'date',
+                valid: true,
+                value: new Date()
+            }
+        ]
     }
 
+    dispatch({ type: 'init', payload })
+}
+
+export default ({ onClose, isOpen, position, edit }: EditDialogProps) => {
+
+    const { formState, dispatch } = useForm()
+
+    const { isValid } = formState
+
+    useEffect(() => {
+        initFormState(formState, dispatch, position.stopLoss, position.takeProfit, position.note)
+    }, [formState])
+
+    const stopLoss = getFieldValue('stopLoss', formState) as number
+    const takeProfit = getFieldValue('takeProfit', formState) as number | undefined
+    const note = getFieldValue('note', formState) as string | undefined
+
     const handleSubmit = useCallback(async () => {
-        if (validate()) {
+        if (!isValid) {
             console.error('validation failed')
             return
         }
@@ -48,27 +90,7 @@ export default ({ onClose, isOpen, position, edit }: EditDialogProps) => {
             })
             onClose()
         }
-    }, [stopLoss, note, takeProfit, takeProfitError, stopLossError])
-
-    const noteChangeHandler = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-        setNote(event.target.value)
-    }, [])
-
-    const stopLossChangeHandler = useCallback((newStopLoss: number) => {
-        setStopLoss(newStopLoss)
-    }, [])
-
-    const stopLossErrorHandler = useCallback((error: boolean) => {
-        setStopLossError(error)
-    }, [])
-
-    const takeProfitChangeHandler = useCallback((newTakeProfit: number) => {
-        setTakeProfit(newTakeProfit)
-    }, [])
-
-    const takeProfitErrorHandler = useCallback((error: boolean) => {
-        setTakeProfitError(error)
-    }, [])
+    }, [stopLoss, note, takeProfit, isValid])
 
     return <Dialog
         maxWidth={false}
@@ -84,8 +106,7 @@ export default ({ onClose, isOpen, position, edit }: EditDialogProps) => {
                                     StopLoss:
                                 </FieldName>
                                 <FieldValue>
-                                    <NumberInput value={stopLoss} onChange={stopLossChangeHandler}
-                                                 onError={stopLossErrorHandler}/>
+                                    <NumberInput value={stopLoss} name={'stopLoss'} dispatch={dispatch}/>
                                 </FieldValue>
                             </FieldBox>
                         </Grid>
@@ -95,8 +116,7 @@ export default ({ onClose, isOpen, position, edit }: EditDialogProps) => {
                                     Take profit:
                                 </FieldName>
                                 <FieldValue>
-                                    <NumberInput value={takeProfit} zeroAllowed onChange={takeProfitChangeHandler}
-                                                 onError={takeProfitErrorHandler}/>
+                                    <NumberInput value={takeProfit} name={'takeProfit'} zeroAllowed dispatch={dispatch}/>
                                 </FieldValue>
                             </FieldBox>
                         </Grid>
@@ -110,7 +130,10 @@ export default ({ onClose, isOpen, position, edit }: EditDialogProps) => {
                             value={note}
                             multiline
                             style={{ width: '100%', fontSize: remCalc(14) }}
-                            onChange={noteChangeHandler}
+                            onChange={(event) => dispatch({
+                                type: 'set',
+                                payload: { name: 'note', valueStr: event.target.value, valid: true }
+                            })}
                         />
                     </NoteBox>
                 </Grid>
