@@ -499,7 +499,7 @@ public class CashService {
 		double sumLoss   = items * stopLoss;
 		double lossDelta = shortC * sumOpen - shortC * sumLoss;
 
-		while (shortC * sumClose - (shortC * sumOpen) < lossDelta * 3 + feesOpen + feesClose) {
+		while (shortC * sumClose - (shortC * sumOpen) < lossDelta * 4 + feesOpen + feesClose) {
 			sumClose = sumClose + (shortC * 0.01);
 			feesClose = getFees(broker, ticker, items, sumClose).getAmount();
 		}
