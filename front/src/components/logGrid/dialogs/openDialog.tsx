@@ -224,6 +224,8 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     const levelPrice = getFieldValue('levelPrice', formState) as number
     const atr = getFieldValue('atr', formState) as number
 
+    const gain = takeProfit && breakEven && price ? roundTo2(Math.abs(takeProfit - breakEven)/(price/100)) : undefined
+
     const breakEvenPercentage = () => {
         if (breakEven && price)
             return Math.abs(breakEven / (price / 100) - 100.0)
@@ -520,6 +522,14 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                                         value={outcomeExp}
                                         name={'outcomeExp'}
                                         dispatch={dispatch}/>
+                                </FieldValue>
+                            </FieldBox>
+                        </Grid>
+                        <Grid item xs={1}>
+                            <FieldBox>
+                                <FieldName>Gain:</FieldName>
+                                <FieldValue>
+                                    {gain} %
                                 </FieldValue>
                             </FieldBox>
                         </Grid>
