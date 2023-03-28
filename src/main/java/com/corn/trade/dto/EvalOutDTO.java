@@ -2,7 +2,7 @@ package com.corn.trade.dto;
 
 import java.math.BigDecimal;
 
-import static com.corn.trade.util.Util.toOutBigDecimal;
+import static com.corn.trade.util.Util.round;
 
 public class EvalOutDTO {
 	private final Double fees;
@@ -22,22 +22,22 @@ public class EvalOutDTO {
 	}
 
 	public BigDecimal getFees() {
-		return toOutBigDecimal(fees);
+		return round(fees);
 	}
 
 	public BigDecimal getRisk() {
-		return toOutBigDecimal(risk);
+		return round(risk);
 	}
 
 	public BigDecimal getBreakEven() {
-		return toOutBigDecimal(breakEven);
+		return round(breakEven);
 	}
 
 	public BigDecimal getTakeProfit() {
-		return toOutBigDecimal(takeProfit);
+		return round(takeProfit);
 	}
 
 	public BigDecimal getOutcomeExp() {
-		return toOutBigDecimal(outcomeExp);
+		return round(outcomeExp);
 	}
 }

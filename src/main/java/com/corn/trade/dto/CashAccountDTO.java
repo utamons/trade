@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import static com.corn.trade.util.Util.toOutBigDecimal;
+import static com.corn.trade.util.Util.round;
 
 @SuppressWarnings("unused")
 public class CashAccountDTO {
@@ -61,7 +61,7 @@ public class CashAccountDTO {
 	}
 
 	public BigDecimal getAmount() {
-		return toOutBigDecimal(amount);
+		return round(amount);
 	}
 
 	@JsonIgnore

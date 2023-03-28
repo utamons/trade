@@ -3,7 +3,7 @@ package com.corn.trade.dto;
 import java.math.BigDecimal;
 import java.util.List;
 
-import static com.corn.trade.util.Util.toOutBigDecimal;
+import static com.corn.trade.util.Util.round;
 
 @SuppressWarnings("unused")
 public class BrokerStatsDTO {
@@ -32,19 +32,19 @@ public class BrokerStatsDTO {
 	}
 
 	public BigDecimal getOutcome() {
-		return toOutBigDecimal(outcome);
+		return round(outcome);
 	}
 
 	public BigDecimal getAvgOutcome() {
-		return toOutBigDecimal(avgOutcome);
+		return round(avgOutcome);
 	}
 
 	public BigDecimal getAvgProfit() {
-		return toOutBigDecimal(avgProfit);
+		return round(avgProfit);
 	}
 
 	public BigDecimal getBorrowed() {
-		return toOutBigDecimal(borrowed);
+		return round(borrowed);
 	}
 
 	public long getOpen() {

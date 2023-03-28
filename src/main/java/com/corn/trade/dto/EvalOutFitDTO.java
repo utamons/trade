@@ -2,7 +2,7 @@ package com.corn.trade.dto;
 
 import java.math.BigDecimal;
 
-import static com.corn.trade.util.Util.toOutBigDecimal;
+import static com.corn.trade.util.Util.round;
 
 @SuppressWarnings("unused")
 public class EvalOutFitDTO {
@@ -55,11 +55,11 @@ public class EvalOutFitDTO {
 	}
 
 	public BigDecimal getStopLoss() {
-		return toOutBigDecimal(stopLoss);
+		return round(stopLoss);
 	}
 
 	public BigDecimal getPrice() {
-		return toOutBigDecimal(price);
+		return round(price);
 	}
 
 	public long getItems() {

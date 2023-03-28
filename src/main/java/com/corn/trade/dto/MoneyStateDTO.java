@@ -2,7 +2,7 @@ package com.corn.trade.dto;
 
 import java.math.BigDecimal;
 
-import static com.corn.trade.util.Util.toOutBigDecimal;
+import static com.corn.trade.util.Util.round;
 
 @SuppressWarnings("unused")
 public class MoneyStateDTO {
@@ -18,14 +18,14 @@ public class MoneyStateDTO {
 	}
 
 	public BigDecimal getCapital() {
-		return toOutBigDecimal(capital);
+		return round(capital);
 	}
 
 	public BigDecimal getProfit() {
-		return toOutBigDecimal(profit);
+		return round(profit);
 	}
 
 	public BigDecimal getRiskBase() {
-		return toOutBigDecimal(riskBase);
+		return round(riskBase);
 	}
 }
