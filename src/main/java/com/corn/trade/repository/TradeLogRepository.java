@@ -10,8 +10,10 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
+@SuppressWarnings("unused")
 public interface TradeLogRepository extends JpaRepository<TradeLog, Long>, JpaSpecificationExecutor<TradeLog> {
 	Page<TradeLog> findAll(Pageable pageable);
 
@@ -31,4 +33,7 @@ public interface TradeLogRepository extends JpaRepository<TradeLog, Long>, JpaSp
 	@Query("select new com.corn.trade.dto.CurrencySumDTO(t.currency.id, sum(t.stopLoss * t.itemNumber - t.fees * 2))" +
 	       " from TradeLog t where t.position='long' and t.dateClose is null group by t.currency")
 	List<CurrencySumDTO> openLongSums();
+
+	@Query("select t from TradeLog t where t.parent is null and t.dateClose is not null and t.dateClose between :from and :to")
+	List<TradeLog> findAllClosedByPeriod(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 }

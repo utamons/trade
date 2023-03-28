@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
-import static com.corn.trade.util.Util.toOutBigDecimal;
+import static com.corn.trade.util.Util.round;
 
 @SuppressWarnings("unused")
 public class TradeLogDTO implements Serializable {
@@ -174,39 +174,39 @@ public class TradeLogDTO implements Serializable {
 	}
 
 	public BigDecimal getPriceOpen() {
-		return toOutBigDecimal(priceOpen);
+		return round(priceOpen);
 	}
 
 	public BigDecimal getPriceClose() {
-		return toOutBigDecimal(priceClose);
+		return round(priceClose);
 	}
 
 	public BigDecimal getVolume() {
-		return toOutBigDecimal(volume);
+		return round(volume);
 	}
 
 	public BigDecimal getVolumeToDeposit() {
-		return toOutBigDecimal(volumeToDeposit);
+		return round(volumeToDeposit);
 	}
 
 	public BigDecimal getStopLoss() {
-		return toOutBigDecimal(stopLoss);
+		return round(stopLoss);
 	}
 
 	public BigDecimal getTakeProfit() {
-		return toOutBigDecimal(takeProfit);
+		return round(takeProfit);
 	}
 
 	public BigDecimal getOutcomeExpected() {
-		return toOutBigDecimal(outcomeExpected);
+		return round(outcomeExpected);
 	}
 
 	public BigDecimal getRisk() {
-		return toOutBigDecimal(risk);
+		return round(risk);
 	}
 
 	public BigDecimal getFees() {
-		return toOutBigDecimal(fees);
+		return round(fees);
 	}
 
 	public BigDecimal getOutcome() {
@@ -221,7 +221,7 @@ public class TradeLogDTO implements Serializable {
 	}
 
 	public BigDecimal getOutcomePercent() {
-		return toOutBigDecimal(outcomePercent);
+		return round(outcomePercent);
 	}
 
 	public Double getOutcomePercentDouble() {
@@ -229,7 +229,7 @@ public class TradeLogDTO implements Serializable {
 	}
 
 	public BigDecimal getProfit() {
-		return toOutBigDecimal(profit);
+		return round(profit);
 	}
 
 	public String getNote() {
@@ -245,7 +245,7 @@ public class TradeLogDTO implements Serializable {
 	}
 
 	public BigDecimal getGoal() {
-		return toOutBigDecimal(goal);
+		return round(goal);
 	}
 
 	public Double getBreakEven() {
@@ -253,15 +253,15 @@ public class TradeLogDTO implements Serializable {
 	}
 
 	public BigDecimal getBrokerInterest() {
-		return toOutBigDecimal(brokerInterest);
+		return round(brokerInterest);
 	}
 
 	public BigDecimal getLevelPrice() {
-		return toOutBigDecimal(levelPrice);
+		return round(levelPrice);
 	}
 
 	public BigDecimal getAtr() {
-		return toOutBigDecimal(atr);
+		return round(atr);
 	}
 
 	public Long getParentId() {
