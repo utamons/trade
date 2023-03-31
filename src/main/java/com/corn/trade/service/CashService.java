@@ -423,7 +423,7 @@ public class CashService {
 
 		final double takeProfit = getTakeProfit(shortC, broker, ticker, items, priceOpen, stopLoss);
 
-		final double outcomeExp = (shortC * takeProfit - shortC * priceOpen) * items;
+		final double outcomeExp = (shortC * takeProfit - shortC * breakEven) * items;
 
 		return new EvalOutDTO(feesUSD, risk, breakEven, takeProfit, outcomeExp);
 	}
@@ -498,10 +498,12 @@ public class CashService {
 		double feesClose = getFees(broker, ticker, items, sumClose).getAmount();
 		double sumLoss   = items * stopLoss;
 		double lossDelta = shortC * sumOpen - shortC * sumLoss;
+		double taxes = 0.0;
 
-		while (shortC * sumClose - (shortC * sumOpen) < lossDelta * 4 + feesOpen + feesClose) {
+		while (shortC * sumClose - (shortC * sumOpen) - taxes < (lossDelta + feesOpen + feesClose) * 3) {
 			sumClose = sumClose + (shortC * 0.01);
 			feesClose = getFees(broker, ticker, items, sumClose).getAmount();
+			taxes     = getTaxes(shortC * sumClose - (shortC * sumOpen));
 		}
 
 		return sumClose / items;
