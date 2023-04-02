@@ -69,18 +69,10 @@ export const takeColor = (take:number | undefined, price:number | undefined, atr
         const range = Math.abs(take - price)
         if (range > atr)
             return RED
-        if (range / atr > 0.8)
+        if (range / atr > 0.7)
             return ORANGE
     }
     return defaultColor
-}
-
-export const breakEvenColor = (breakEvenPercentage:number | undefined, defaultColor: string) => {
-    if (breakEvenPercentage && breakEvenPercentage > 1.65 && breakEvenPercentage < 2.1)
-        return { color: ORANGE, fontWeight: 'bolder' }
-    if (breakEvenPercentage && breakEvenPercentage >= 2.1)
-        return { color: RED, fontWeight: 'bolder' }
-    return { color: defaultColor }
 }
 
 export const profitColor = (profit:number | undefined, defaultColor: string) => {
@@ -92,6 +84,23 @@ export const profitColor = (profit:number | undefined, defaultColor: string) => 
     return { color: defaultColor }
 }
 
+export const rrColor = (rr:number | undefined, defaultColor: string) => {
+    if (rr && rr > roundTo2(1.0/4.0))
+        return { color: ORANGE, fontWeight: 'bolder' }
+    if (rr && rr > roundTo2(1.0/3.0))
+        return { color: RED, fontWeight: 'bolder' }
+    return { color: defaultColor }
+}
+
 export const roundTo2 = (num: number) => {
         return Math.round(num * 100) / 100
+}
+
+export const riskReward = (stopLoss: number | undefined, breakEven: number| undefined, takeProfit: number | undefined) => {
+    if (stopLoss && breakEven && takeProfit) {
+        const risk = Math.abs(breakEven - stopLoss)
+        const reward = Math.abs(takeProfit - breakEven)
+        return roundTo2(risk / reward)
+    }
+    return undefined
 }
