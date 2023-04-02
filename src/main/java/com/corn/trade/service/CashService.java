@@ -315,13 +315,11 @@ public class CashService {
 		logger.debug("start");
 		final int    shortC     = evalDTO.isShort() ? -1 : 1;
 		EvalOutDTO   dto;
-		double       risk       = 0;
 		final Ticker ticker     = tickerRepo.getReferenceById(evalDTO.getTickerId());
 		final long   currencyId = ticker.getCurrency().getId();
 		double       depositUS  = getDeposit(evalDTO.getBrokerId(), LocalDate.now());
 		Double       levelPrice = evalDTO.getLevelPrice();
 		Double       atr        = evalDTO.getAtr();
-		double       volume;
 		Double       price      = evalDTO.getPrice();
 
 		// Calculate from level price
@@ -330,6 +328,7 @@ public class CashService {
 			evalDTO.setPrice(price);
 		}
 
+		evalDTO.setItems(1L);
 		evalDTO.setStopLoss(price - (shortC * atr / 100 * 10));
 
 		/*
@@ -340,50 +339,37 @@ public class CashService {
 		   2. Отношение стоп-лосса к прибыли должно превышать 1:3
 		   3. Объём сделки не должен превышать 50% от депозита
 		 */
-		// Calculate items
-		if (evalDTO.getItems() == null) {
-			long items = 0;
+		for (int i = 0; i < 3; i++) {
+			double       risk       = 0;
+			double rr;
+			double riskPrev;
+			double step     = 0.01;
+			double stopLossPc;
+			adjustItems(evalDTO, currencyId, depositUS);
+			//evalDTO.setStopLoss(price - (shortC * atr / 100 * 10));
 			do {
-				++items;
-				volume = currencyRateService.convertToUSD(currencyId, evalDTO.getPrice() * items, LocalDate.now());
-				evalDTO.setItems(items);
-				if (depositUS - volume / 2.0 < 0) {
-					logger.debug("Too much items for current deposit");
+				double stopLoss = evalDTO.getStopLoss();
+				stopLoss -= (shortC * step);
+				stopLossPc = shortC > 0 ? stopLoss / evalDTO.getPrice() : evalDTO.getPrice() / stopLoss;
+				if (stopLoss < 1.0 || stopLossPc <= 0.8)
+					break;
+				evalDTO.setStopLoss(stopLoss);
+				riskPrev = risk;
+				dto = eval(evalDTO);
+				risk = dto.getRisk().doubleValue();
+				if (risk == riskPrev)
+					step++;
+				logger.debug("risk: {}", risk);
+
+				rr = getRr(evalDTO, dto);
+
+				if (isAtrNotFit(evalDTO, dto)) {
+					evalDTO.setStopLoss(stopLoss + (shortC * step));
 					break;
 				}
-				dto = eval(evalDTO);
 
-			} while (depositUS / 2.0 - volume > 0 && dto.getRisk().doubleValue() < MAX_RISK_PC &&
-			         isAtrNotFit(evalDTO, dto));
+			} while (risk < MAX_RISK_PC && rr < 4.0);
 		}
-
-		double rr       = 0.0;
-		double riskPrev;
-		double step     = 0.01;
-		double stopLossPc;
-		double stopLoss = evalDTO.getStopLoss();
-		do {
-			stopLoss -= (shortC * step);
-			stopLossPc = shortC > 0 ? stopLoss / evalDTO.getPrice() : evalDTO.getPrice() / stopLoss;
-			if (stopLoss < 1.0 || stopLossPc <= 0.8)
-				break;
-			evalDTO.setStopLoss(stopLoss);
-			riskPrev = risk;
-			dto = eval(evalDTO);
-			risk = dto.getRisk().doubleValue();
-			if (risk == riskPrev)
-				step++;
-			logger.debug("risk: {}", risk);
-
-			rr = Math.abs(dto.getTakeProfit().doubleValue() - dto.getBreakEven().doubleValue()) /
-			     Math.abs(evalDTO.getStopLoss() - dto.getBreakEven().doubleValue());
-
-			if (isAtrNotFit(evalDTO, dto)) {
-				evalDTO.setStopLoss(stopLoss + (shortC * step));
-				break;
-			}
-
-		} while (risk < MAX_RISK_PC && rr < 4.0);
 
 		dto = eval(evalDTO);
 
@@ -393,6 +379,29 @@ public class CashService {
 			                         dto.getOutcomeExp(), evalDTO.getStopLoss(), evalDTO.getPrice(), evalDTO.getItems());
 		else
 			throw new RuntimeException("Cannot evaluate to fit!");
+	}
+
+	private static double getRr(EvalInDTO evalDTO, EvalOutDTO dto) {
+		return Math.abs(dto.getTakeProfit().doubleValue() - dto.getBreakEven().doubleValue()) /
+		       Math.abs(evalDTO.getStopLoss() - dto.getBreakEven().doubleValue());
+	}
+
+	private void adjustItems(EvalInDTO evalDTO, long currencyId, double depositUS) throws JsonProcessingException {
+		EvalOutDTO dto= eval(evalDTO);
+		long       items  = evalDTO.getItems();
+		double     volume = currencyRateService.convertToUSD(currencyId, evalDTO.getPrice() * items, LocalDate.now());
+		while (depositUS / 2.0 - volume > 0 && dto.getRisk().doubleValue() < MAX_RISK_PC &&
+		       isAtrNotFit(evalDTO, dto)) {
+			++items;
+			volume = currencyRateService.convertToUSD(currencyId, evalDTO.getPrice() * items, LocalDate.now());
+			evalDTO.setItems(items);
+			if (depositUS - volume / 2.0 < 0) {
+				logger.debug("Too much items for current deposit");
+				break;
+			}
+			dto = eval(evalDTO);
+
+		}
 	}
 
 	private static boolean isAtrNotFit(EvalInDTO evalDTO, EvalOutDTO dto) {
