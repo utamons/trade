@@ -322,7 +322,7 @@ public class CashService {
 		Double       levelPrice = evalDTO.getLevelPrice();
 		Double       atr        = evalDTO.getAtr();
 		double       volume;
-		double       price      = evalDTO.getPrice();
+		Double       price      = evalDTO.getPrice();
 
 		// Calculate from level price
 		if (levelPrice != null) {
