@@ -3,7 +3,7 @@
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import Dialog from '@mui/material/Dialog'
-import { breakEvenColor, RED, remCalc, riskColor, roundTo2, takeColor } from '../../../utils/utils'
+import { RED, remCalc, riskColor, riskReward, roundTo2, rrColor, takeColor } from '../../../utils/utils'
 import Button from '../../tools/button'
 import React, { Dispatch, useCallback, useEffect, useState } from 'react'
 import { ButtonContainerStyled, FieldName } from '../../../styles/style'
@@ -224,14 +224,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     const levelPrice = getFieldValue('levelPrice', formState) as number
     const atr = getFieldValue('atr', formState) as number
 
-    const gain = takeProfit && breakEven && price ? roundTo2(Math.abs(takeProfit - breakEven)/(price/100)) : undefined
-
-    const breakEvenPercentage = () => {
-        if (breakEven && price)
-            return Math.abs(breakEven / (price / 100) - 100.0)
-        else
-            return 0
-    }
+    const gain = takeProfit && breakEven && price ? roundTo2(Math.abs(takeProfit - breakEven) / (price / 100)) : undefined
 
     const breakEvenPercentageStr = () => {
         if (breakEven && price)
@@ -241,7 +234,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     }
     // noinspection DuplicatedCode
     const handleEvalToFit = useCallback(async () => {
-        if (evaluate && ((levelPrice && atr) || price)) {
+        if (evaluate && ((levelPrice && atr) || (price && atr))) {
             setLoading(true)
             const ev: EvalToFit = await postEvalToFit({
                 brokerId: currentBroker.id,
@@ -281,7 +274,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
             console.error('validation failed')
             return
         }
-        if (evaluate && price && items && stopLoss) {
+        if (evaluate && price && items && stopLoss && atr) {
             console.log('evaluation')
             const ev: Eval = await postEval({
                 brokerId: currentBroker.id,
@@ -302,7 +295,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
             dispatch({ type: 'set', payload: { name: 'fees', valueNum: ev.fees, valid: true } })
             return
         }
-        if (price && items && stopLoss && risk && fees) {
+        if (price && items && stopLoss && risk && fees && atr) {
             open({
                 position: positionId == '0' ? 'long' : 'short',
                 dateOpen: date.toISOString(),
@@ -331,6 +324,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
         tickerId,
         price,
         items,
+        atr,
         stopLoss,
         date,
         risk,
@@ -363,6 +357,8 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     const handleReset = useCallback(() => {
         dispatch({ type: 'reset', payload: {} })
     }, [])
+
+    const rr = riskReward(stopLoss, breakEven, takeProfit)
 
     return <Dialog
         maxWidth={false}
@@ -551,8 +547,16 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                         </Grid>
                         <Grid item xs={1}>
                             <FieldBox>
+                                <FieldName>Risk/reward:</FieldName>
+                                <FieldValue sx={rrColor(rr, defaultColor)}>
+                                    {rr} %
+                                </FieldValue>
+                            </FieldBox>
+                        </Grid>
+                        <Grid item xs={1}>
+                            <FieldBox>
                                 <FieldName>Break even:</FieldName>
-                                <FieldValue sx={breakEvenColor(breakEvenPercentage(), defaultColor)}>
+                                <FieldValue>
                                     {breakEven} {breakEvenPercentageStr()}
                                 </FieldValue>
                             </FieldBox>

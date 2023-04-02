@@ -21,10 +21,10 @@ import java.util.stream.Collectors;
 @Transactional
 public class CashService {
 
-	private final static double MAX_RISK_PC = 2.0;
-	private final static double MAX_BE_PC   = 1.65;
+	private final static double MAX_RISK_PC = 1.0;
 
-	private final static Logger logger = LoggerFactory.getLogger(CashService.class);
+	private final static Logger logger          = LoggerFactory.getLogger(CashService.class);
+	public static final  double MAX_PART_OF_ATR = 0.7;
 
 	private final CashAccountRepository     accountRepo;
 	private final CashFlowRepository        cashFlowRepo;
@@ -315,81 +315,75 @@ public class CashService {
 		logger.debug("start");
 		final int    shortC     = evalDTO.isShort() ? -1 : 1;
 		EvalOutDTO   dto;
-		double       be, risk   = 0, bePc = 0;
+		double       risk       = 0;
 		final Ticker ticker     = tickerRepo.getReferenceById(evalDTO.getTickerId());
 		final long   currencyId = ticker.getCurrency().getId();
 		double       depositUS  = getDeposit(evalDTO.getBrokerId(), LocalDate.now());
 		Double       levelPrice = evalDTO.getLevelPrice();
 		Double       atr        = evalDTO.getAtr();
+		double       volume;
+		double       price      = evalDTO.getPrice();
 
-		if (levelPrice != null && atr != null) {
-			double price = levelPrice + (shortC * 0.05);
+		// Calculate from level price
+		if (levelPrice != null) {
+			price = levelPrice + (shortC * 0.05);
 			evalDTO.setPrice(price);
-			evalDTO.setStopLoss(price - (shortC * atr/100*10));
 		}
 
-		double volume;
-		if (evalDTO.getItems() != null && evalDTO.getStopLoss() != null) {
-			dto = eval(evalDTO);
-			be = dto.getBreakEven().doubleValue();
-			risk = dto.getRisk().doubleValue();
-			bePc = Math.abs(be / (evalDTO.getPrice() / 100.0) - 100.0);
-			if (risk <= MAX_RISK_PC && bePc <= MAX_BE_PC)
-				return new EvalOutFitDTO(dto.getFees(), dto.getRisk(), dto.getBreakEven(), dto.getTakeProfit(),
-				                         dto.getOutcomeExp(), evalDTO.getStopLoss(), evalDTO.getPrice(), evalDTO.getItems());
-		}
+		evalDTO.setStopLoss(price - (shortC * atr / 100 * 10));
 
-		int    count    = 0;
+		/*
+		   Задача - рассчитать объемы, чтобы уложиться в депозит,
+		   но при этом не превысить допуски по риску:
+
+		   1. Общий риск не должен превышать 1% от депозита
+		   2. Отношение стоп-лосса к прибыли должно превышать 1:3
+		   3. Объём сделки не должен превышать 50% от депозита
+		 */
+		// Calculate items
 		if (evalDTO.getItems() == null) {
-			long   items = 0;
-			double bePcPrev;
+			long items = 0;
 			do {
 				++items;
 				volume = currencyRateService.convertToUSD(currencyId, evalDTO.getPrice() * items, LocalDate.now());
-				if (evalDTO.getStopLoss() == null)
-					evalDTO.setStopLoss(evalDTO.getPrice());
 				evalDTO.setItems(items);
-				if (depositUS - volume < 0) {
+				if (depositUS - volume / 2.0 < 0) {
 					logger.debug("Too much items for current deposit");
 					break;
 				}
 				dto = eval(evalDTO);
-				be = dto.getBreakEven().doubleValue();
-				bePcPrev = bePc;
-				bePc = Math.abs(be / (evalDTO.getPrice() / 100.0) - 100.0);
-				if (be == bePcPrev && count < 3) {
-					count++;
-				} else {
-					count = 0;
-				}
-				logger.debug("BE PC: {}, Prev: {}, Items: {}", bePc, bePcPrev, items);
-			} while (bePc > MAX_BE_PC);
+
+			} while (depositUS / 2.0 - volume > 0 && dto.getRisk().doubleValue() < MAX_RISK_PC &&
+			         isAtrNotFit(evalDTO, dto));
 		}
 
-		if (evalDTO.getStopLoss() == null) {
-			double riskPrev;
-			double step     = 0.01;
-			double stopLossPc;
-			double stopLoss = evalDTO.getPrice();
-			do {
-				stopLoss -= (shortC * step);
-				stopLossPc = shortC > 0 ? stopLoss / evalDTO.getPrice() : evalDTO.getPrice() / stopLoss;
-				if (stopLoss < 1.0 || stopLossPc <= 0.8)
-					break;
-				evalDTO.setStopLoss(stopLoss);
-				riskPrev = risk;
-				risk = Math.round(getRisk(evalDTO) * 100) / 100.0;
-				if (risk == riskPrev)
-					step++;
-				logger.debug("risk: {}", risk);
+		double rr       = 0.0;
+		double riskPrev;
+		double step     = 0.01;
+		double stopLossPc;
+		double stopLoss = evalDTO.getStopLoss();
+		do {
+			stopLoss -= (shortC * step);
+			stopLossPc = shortC > 0 ? stopLoss / evalDTO.getPrice() : evalDTO.getPrice() / stopLoss;
+			if (stopLoss < 1.0 || stopLossPc <= 0.8)
+				break;
+			evalDTO.setStopLoss(stopLoss);
+			riskPrev = risk;
+			dto = eval(evalDTO);
+			risk = dto.getRisk().doubleValue();
+			if (risk == riskPrev)
+				step++;
+			logger.debug("risk: {}", risk);
 
-			} while (risk < MAX_RISK_PC);
+			rr = Math.abs(dto.getTakeProfit().doubleValue() - dto.getBreakEven().doubleValue()) /
+			     Math.abs(evalDTO.getStopLoss() - dto.getBreakEven().doubleValue());
 
-			if (risk > MAX_RISK_PC && stopLossPc >= 0.8) {
-				stopLoss += (shortC * step);
-				evalDTO.setStopLoss(stopLoss);
+			if (isAtrNotFit(evalDTO, dto)) {
+				evalDTO.setStopLoss(stopLoss + (shortC * step));
+				break;
 			}
-		}
+
+		} while (risk < MAX_RISK_PC && rr < 4.0);
 
 		dto = eval(evalDTO);
 
@@ -399,6 +393,11 @@ public class CashService {
 			                         dto.getOutcomeExp(), evalDTO.getStopLoss(), evalDTO.getPrice(), evalDTO.getItems());
 		else
 			throw new RuntimeException("Cannot evaluate to fit!");
+	}
+
+	private static boolean isAtrNotFit(EvalInDTO evalDTO, EvalOutDTO dto) {
+		double start = evalDTO.getLevelPrice() != null ? evalDTO.getLevelPrice() : evalDTO.getPrice();
+		return Math.abs(dto.getTakeProfit().doubleValue() - start) > evalDTO.getAtr() * MAX_PART_OF_ATR;
 	}
 
 	public EvalOutDTO eval(EvalInDTO evalDTO) throws JsonProcessingException {
@@ -498,12 +497,12 @@ public class CashService {
 		double feesClose = getFees(broker, ticker, items, sumClose).getAmount();
 		double sumLoss   = items * stopLoss;
 		double lossDelta = shortC * sumOpen - shortC * sumLoss;
-		double taxes = 0.0;
+		double taxes     = 0.0;
 
-		while (shortC * sumClose - (shortC * sumOpen) - taxes < (lossDelta + feesOpen + feesClose) * 3) {
+		while (Math.abs(sumClose - sumOpen) - taxes < (lossDelta + feesOpen + feesClose) * 4) {
 			sumClose = sumClose + (shortC * 0.01);
 			feesClose = getFees(broker, ticker, items, sumClose).getAmount();
-			taxes     = getTaxes(shortC * sumClose - (shortC * sumOpen));
+			taxes = getTaxes(shortC * sumClose - (shortC * sumOpen));
 		}
 
 		return sumClose / items;
@@ -521,6 +520,13 @@ public class CashService {
 				fixed = 1.2;
 				fly = sum / 100.0 * 0.5 + items * 0.012;
 				amount = fixed + fly;
+			}
+		} else if (broker.getName().equals("Interactive")) {
+			if (ticker.getCurrency().getName().equals("USD")) {
+				double max = items * sum / 100.0;
+				double min = items * 0.005;
+				amount = Math.min(max, min);
+				amount = amount < 1 ? 1 : amount;
 			}
 		}
 		return new Fees(fixed, fly, amount);
