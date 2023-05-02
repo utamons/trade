@@ -59,7 +59,7 @@ public class CashController {
 			                                               today);
 		}
 
-		double profit = sumOutcomes / capital * 100.0;
+		double profit = capital == 0 ? 0.0 : sumOutcomes / capital * 100.0;
 
 		double riskBase = service.getRiskBase(capital);
 

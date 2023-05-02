@@ -15,7 +15,7 @@ export const FieldName = styled(Box)(() => ({
     display: 'flex',
     justifyContent: 'flex-start',
     fontWeight: 'bolder',
-    fontFamily: 'sans',
+    fontFamily: 'sans-serif',
     fontSize: 'inherit',
     width: remCalc(120)
 }))

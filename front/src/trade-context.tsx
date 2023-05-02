@@ -134,7 +134,10 @@ const useTrade = (): TradeContextType => {
         }
     })
 
+    console.log('currentBrokerId', currentBrokerId)
+
     const refill = (currencyId: number, amount: number) => {
+        console.log('refill currentBrokerId', currentBrokerId)
         postRefill({
             brokerId: currentBrokerId,
             currencyId,

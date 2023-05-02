@@ -11,7 +11,7 @@ const MainStyled = styled(Box)(({ theme }) => ({
     fontSize: 14,
     backgroundColor: theme.palette.background.default,
     fontWeight: 'normal',
-    fontFamily: 'sans',
+    fontFamily: 'sans-serif',
     width: remCalc(1920),
     flexDirection: 'column',
     minHeight: '100vh'

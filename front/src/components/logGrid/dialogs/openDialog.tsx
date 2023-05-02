@@ -364,7 +364,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
         maxWidth={false}
         open={isOpen}
     >
-        <DialogContent sx={{ fontSize: remCalc(12), fontFamily: 'sans' }}>
+        <DialogContent sx={{ fontSize: remCalc(14), fontFamily: 'sans-serif' }}>
             <Grid sx={{ width: remCalc(700) }} container columns={2}>
                 <Grid item xs={2}>
                     <SwitchBox>

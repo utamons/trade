@@ -20,7 +20,8 @@ const Outer = () => {
                 },
                 typography: {
                     caption: {
-                        fontSize: 14
+                        fontSize: 14,
+                        fontFamily: 'sans-serif'
                     }
                 }
             }),
