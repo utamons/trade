@@ -429,7 +429,7 @@ public class CashService {
 
 		final double breakEven = getBreakEven(shortC, broker, ticker, items, priceOpen, 0);
 
-		final double takeProfit = getTakeProfit(shortC, broker, ticker, items, priceOpen, stopLoss);
+		final double takeProfit = priceOpen + shortC * evalDTO.getAtr() * MAX_PART_OF_ATR;
 
 		final double outcomeExp = (shortC * takeProfit - shortC * breakEven) * items;
 
