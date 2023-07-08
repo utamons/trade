@@ -3,88 +3,37 @@
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import Dialog from '@mui/material/Dialog'
-import { RED, remCalc, riskColor, riskReward, roundTo2, rrColor, takeColor } from '../../../utils/utils'
+import { remCalc, riskColor, riskReward, roundTo2, rrColor, takeColor } from '../../../utils/utils'
 import Button from '../../tools/button'
 import React, { Dispatch, useCallback, useEffect, useState } from 'react'
-import { ButtonContainerStyled, FieldName } from '../../../styles/style'
-import { Box, Grid, styled } from '@mui/material'
+import {
+    ButtonContainerStyled,
+    FieldBox,
+    FieldName,
+    FieldValue,
+    NoteBox,
+    RedSwitch,
+    SwitchBox
+} from '../../../styles/style'
+import { Grid } from '@mui/material'
 import TextField from '@mui/material/TextField'
-import { FormAction, FormActionPayload, FormState, ItemType, MarketType, PositionOpenType, TickerType } from 'types'
+import { FormAction, FormActionPayload, FormState, OpenDialogProps, TickerType } from 'types'
 import Select from '../../tools/select'
 import NumberInput from '../../tools/numberInput'
 import { postEval, postEvalToFit } from '../../../api'
-import Switch from '@mui/material/Switch'
 import { useTheme } from '@emotion/react'
 import CircularProgress from '@mui/material/CircularProgress'
 import { BasicDateTimePicker } from '../../tools/dateTimePicker'
 import { getFieldValue, useForm } from '../../dialogs/dialogUtils'
+import NumberFieldBox from '../../dialogs/numberFieldBox'
+import SelectFieldBox from '../../dialogs/selectFieldBox'
+import ValueFieldBox from '../../dialogs/valueFieldBox'
 
-interface OpenDialogProps {
-    currentBroker: ItemType,
-    markets: MarketType [],
-    tickers: TickerType [],
-    isOpen: boolean,
-    open: (open: PositionOpenType) => void,
-    onClose: () => void
-}
 
 const positions = [
     { id: 0, name: 'long' },
     { id: 1, name: 'short' }
 ]
-
-export const FieldValue = styled(Box)(() => ({
-    display: 'flex',
-    alignContent: 'flex-start',
-    alignItems: 'center',
-    width: remCalc(200)
-}))
-
-const FieldBox = styled(Box)(() => ({
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: remCalc(300),
-    height: remCalc(50)
-}))
-
-const SwitchBox = styled(Box)(() => ({
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: remCalc(150),
-    height: remCalc(50)
-}))
-
-const NoteBox = styled(Box)(() => ({
-    width: '100%',
-    marginTop: remCalc(10)
-}))
-
-const RedSwitch = styled(Switch)(() => ({
-    '& .MuiSwitch-switchBase.Mui-checked': {
-        color: RED,
-        '&:hover': {
-            backgroundColor: 'rgba(204, 51, 0, 0.2)'
-        }
-    },
-    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-        backgroundColor: RED
-    }
-}))
-
-
-export const TextFieldStyled = styled(TextField)(() => ({
-    '.MuiOutlinedInput-root': {
-        borderRadius: remCalc(2),
-        fontSize: remCalc(14),
-        maxHeight: remCalc(38),
-        maxWidth: remCalc(170)
-    },
-    '.MuiSvgIcon-root ': {
-        fontSize: remCalc(18)
-    }
-}))
 
 interface Eval {
     fees: number,
@@ -386,141 +335,68 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                                 </FieldValue>
                             </FieldBox>
                         </Grid>
-                        <Grid item xs={1}>
-                            <FieldBox>
-                                <FieldName>Position:</FieldName>
-                                <FieldValue>
-                                    <Select
-                                        items={positions}
-                                        value={positionId}
-                                        name="positionId"
-                                        dispatch={dispatch}
-                                        variant="medium"/>
-                                </FieldValue>
-                            </FieldBox>
-                        </Grid>
-                        <Grid item xs={1}>
-                            <FieldBox>
-                                <FieldName>Broker:</FieldName>
-                                <FieldValue>{currentBroker.name}</FieldValue>
-                            </FieldBox>
-                        </Grid>
-                        <Grid item xs={1}>
-                            <FieldBox>
-                                <FieldName>Market:</FieldName>
-                                <FieldValue>
-                                    <Select
-                                        items={markets}
-                                        value={marketId}
-                                        name={'marketId'}
-                                        dispatch={dispatch}
-                                        variant="small"
-                                    />
-                                </FieldValue>
-                            </FieldBox>
-                        </Grid>
-                        <Grid item xs={1}>
-                            <FieldBox>
-                                <FieldName>Ticker:</FieldName>
-                                <FieldValue>
-                                    <Select
-                                        items={tickers}
-                                        value={tickerId}
-                                        name={'tickerId'}
-                                        dispatch={dispatch}
-                                        variant="small"
-                                    />
-                                </FieldValue>
-                            </FieldBox>
-                        </Grid>
-                        <Grid item xs={1}>
-                            <FieldBox>
-                                <FieldName>
-                                    Price: {`(${currentTicker ? (currentTicker.currency.name) : '???'})`}
-                                </FieldName>
-                                <FieldValue>
-                                    <NumberInput
-                                        value={price}
-                                        name={'price'}
-                                        dispatch={dispatch}/>
-                                </FieldValue>
-                            </FieldBox>
-                        </Grid>
-                        <Grid item xs={1}>
-                            <FieldBox>
-                                <FieldName>
-                                    Level Price:
-                                </FieldName>
-                                <FieldValue>
-                                    <NumberInput
-                                        value={levelPrice}
-                                        name={'levelPrice'}
-                                        dispatch={dispatch}/>
-                                </FieldValue>
-                            </FieldBox>
-                        </Grid>
-                        <Grid item xs={1}>
-                            <FieldBox>
-                                <FieldName>
-                                    ATR:
-                                </FieldName>
-                                <FieldValue>
-                                    <NumberInput
-                                        value={atr}
-                                        name={'atr'}
-                                        dispatch={dispatch}/>
-                                </FieldValue>
-                            </FieldBox>
-                        </Grid>
+                        <SelectFieldBox
+                            items={positions}
+                            value={positionId}
+                            fieldName="positionId"
+                            dispatch={dispatch}
+                            label="Position:"
+                            variant="medium"/>
+                        <ValueFieldBox
+                            label={'Broker:'}
+                            value={currentBroker.name}/>
+                        <SelectFieldBox
+                            items={markets}
+                            value={marketId}
+                            fieldName="marketId"
+                            dispatch={dispatch}
+                            label="Market:"
+                            variant="small"/>
+                        <SelectFieldBox
+                            items={tickers}
+                            value={tickerId}
+                            fieldName="tickerId"
+                            dispatch={dispatch}
+                            label="Ticker:"
+                            variant="small"/>
+                        <NumberFieldBox
+                            label={`Price: (${currentTicker ? (currentTicker.currency.name) : '???'})`}
+                            value={price}
+                            fieldName={'price'}
+                            dispatch={dispatch}/>
+                        <NumberFieldBox
+                            label={'Level Price:'}
+                            value={levelPrice}
+                            fieldName={'levelPrice'}
+                            dispatch={dispatch}/>
+                        <NumberFieldBox
+                            label={'ATR:'}
+                            value={atr}
+                            fieldName={'atr'}
+                            dispatch={dispatch}/>
                     </Grid>
                 </Grid>
                 <Grid item xs={1}>
                     <Grid container columns={1}>
-                        <Grid item xs={1}>
-                            <FieldBox>
-                                <FieldName>Items:</FieldName>
-                                <FieldValue>
-                                    <NumberInput
-                                        value={items}
-                                        name={'items'}
-                                        dispatch={dispatch}/>
-                                </FieldValue>
-                            </FieldBox>
-                        </Grid>
-                        <Grid item xs={1}>
-                            <FieldBox>
-                                <FieldName>Stop Loss:</FieldName>
-                                <FieldValue>
-                                    <NumberInput
-                                        name={'stopLoss'}
-                                        value={stopLoss}
-                                        dispatch={dispatch}/>
-                                </FieldValue>
-                            </FieldBox>
-                        </Grid>
-                        <Grid item xs={1}>
-                            <FieldBox>
-                                <FieldName>Take Profit:</FieldName>
-                                <FieldValue>
-                                    <NumberInput
-                                        color={takeColor(takeProfit, price, atr, defaultColor)}
-                                        value={takeProfit}
-                                        name={'takeProfit'}
-                                        dispatch={dispatch}/>
-                                </FieldValue>
-                            </FieldBox>
-                        </Grid>
-                        <Grid item xs={1}>
-                            <FieldBox>
-                                <FieldName>Out. Exp.:</FieldName>
-                                <FieldValue>
-                                    <NumberInput
-                                        value={outcomeExp}
-                                        name={'outcomeExp'}
-                                        dispatch={dispatch}/>
-                                </FieldValue>
-                            </FieldBox>
-                        </Grid>
+                        <NumberFieldBox
+                            label={'Items:'}
+                            value={items}
+                            fieldName={'items'}
+                            dispatch={dispatch}/>
+                        <NumberFieldBox
+                            label={'Stop Loss:'}
+                            value={stopLoss}
+                            fieldName={'stopLoss'}
+                            dispatch={dispatch}/>
+                        <NumberFieldBox
+                            color={takeColor(takeProfit, price, atr, defaultColor)}
+                            label={'Take Profit:'}
+                            value={takeProfit}
+                            fieldName={'takeProfit'}
+                            dispatch={dispatch}/>
+                        <ValueFieldBox
+                            label={'Out. Exp.:'}
+                            value={outcomeExp}/>
                         <Grid item xs={1}>
                             <FieldBox>
                                 <FieldName>Gain:</FieldName>
