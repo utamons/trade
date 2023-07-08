@@ -309,6 +309,7 @@ interface NumberFieldBoxProps {
     value: number | undefined,
     dispatch: React.Dispatch<FormAction>
     fieldName: string
+    zeroAllowed?: boolean,
     color?: string
 }
 
@@ -323,11 +324,19 @@ interface SelectFieldBoxProps {
 
 interface ValueFieldBoxProps {
     label: string,
-    value: string | number,
+    value: string | number | undefined,
+    variant?: string,
     color?: object
 }
 
+interface DatePickerBoxProps {
+    label: string,
+    fieldName: string,
+    dispatch: React.Dispatch<FormAction>
+}
+
 export {
+    DatePickerBoxProps,
     ValueFieldBoxProps,
     SelectFieldBoxProps,
     NumberFieldBoxProps,
