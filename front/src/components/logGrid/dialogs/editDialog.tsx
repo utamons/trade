@@ -6,12 +6,12 @@ import Dialog from '@mui/material/Dialog'
 import { remCalc } from '../../../utils/utils'
 import Button from '../../tools/button'
 import React, { Dispatch, useCallback, useEffect } from 'react'
-import { ButtonContainerStyled, FieldBox, FieldName, FieldValue, NoteBox } from '../../../styles/style'
+import { ButtonContainerStyled, NoteBox } from '../../../styles/style'
 import { Grid } from '@mui/material'
 import TextField from '@mui/material/TextField'
 import { FormAction, FormActionPayload, FormState, PositionEditType, TradeLog } from 'types'
-import NumberInput from '../../tools/numberInput'
 import { getFieldValue, useForm } from '../../dialogs/dialogUtils'
+import NumberFieldBox from '../../dialogs/numberFieldBox'
 
 interface EditDialogProps {
     position: TradeLog,
@@ -99,26 +99,16 @@ export default ({ onClose, isOpen, position, edit }: EditDialogProps) => {
             <Grid sx={{ width: remCalc(350) }} container columns={1}>
                 <Grid item xs={1}>
                     <Grid container columns={1}>
-                        <Grid item xs={1}>
-                            <FieldBox>
-                                <FieldName>
-                                    StopLoss:
-                                </FieldName>
-                                <FieldValue>
-                                    <NumberInput value={stopLoss} name={'stopLoss'} dispatch={dispatch}/>
-                                </FieldValue>
-                            </FieldBox>
-                        </Grid>
-                        <Grid item xs={1}>
-                            <FieldBox>
-                                <FieldName>
-                                    Take profit:
-                                </FieldName>
-                                <FieldValue>
-                                    <NumberInput value={takeProfit} name={'takeProfit'} zeroAllowed dispatch={dispatch}/>
-                                </FieldValue>
-                            </FieldBox>
-                        </Grid>
+                        <NumberFieldBox
+                            fieldName={'stopLoss'}
+                            label={'StopLoss:'}
+                            value={stopLoss}
+                            dispatch={dispatch} />
+                        <NumberFieldBox
+                            fieldName={'takeProfit'}
+                            label={'Take Profit:'}
+                            value={takeProfit}
+                            dispatch={dispatch} />
                     </Grid>
                 </Grid>
                 <Grid item xs={1}>

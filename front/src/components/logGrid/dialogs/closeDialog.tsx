@@ -6,13 +6,13 @@ import Dialog from '@mui/material/Dialog'
 import { remCalc } from '../../../utils/utils'
 import Button from '../../tools/button'
 import React, { Dispatch, useCallback, useEffect } from 'react'
-import { ButtonContainerStyled, FieldBox, FieldName, FieldValue, NoteBox } from '../../../styles/style'
+import { ButtonContainerStyled, NoteBox } from '../../../styles/style'
 import { Grid } from '@mui/material'
 import TextField from '@mui/material/TextField'
 import { FormAction, FormActionPayload, FormState, PositionCloseType, TradeLog } from 'types'
-import NumberInput from '../../tools/numberInput'
-import { BasicDateTimePicker } from '../../tools/dateTimePicker'
 import { getFieldValue, useForm } from '../../dialogs/dialogUtils'
+import DatePickerBox from '../../dialogs/datePickerBox'
+import NumberFieldBox from '../../dialogs/numberFieldBox'
 
 interface CloseDialogProps {
     position: TradeLog,
@@ -108,45 +108,27 @@ export default ({ onClose, isOpen, position, close }: CloseDialogProps) => {
             <Grid sx={{ width: remCalc(350) }} container columns={1}>
                 <Grid item xs={1}>
                     <Grid container columns={1}>
-                        <Grid item xs={1}>
-                            <FieldBox>
-                                <FieldName>Date Close:</FieldName>
-                                <FieldValue>
-                                    <BasicDateTimePicker name={'date'} dispatch={dispatch}/>
-                                </FieldValue>
-                            </FieldBox>
-                        </Grid>
-                        <Grid item xs={1}>
-                            <FieldBox>
-                                <FieldName>
-                                    Quantity:
-                                </FieldName>
-                                <FieldValue>
-                                    <NumberInput value={quantity} name={'quantity'} dispatch={dispatch} />
-                                </FieldValue>
-                            </FieldBox>
-                        </Grid>
-                        <Grid item xs={1}>
-                            <FieldBox>
-                                <FieldName>
-                                    Price: {`${position.currency.name}`}
-                                </FieldName>
-                                <FieldValue>
-                                    <NumberInput value={price} dispatch={dispatch} name={'price'}/>
-                                </FieldValue>
-                            </FieldBox>
-                        </Grid>
-                        {position.position == 'short' ? <Grid item xs={1}>
-                            <FieldBox>
-                                <FieldName>
-                                    Broker interest (USD):
-                                </FieldName>
-                                <FieldValue>
-                                    <NumberInput value={brokerInterest} zeroAllowed
-                                                 name={'brokerInterest'} dispatch={dispatch}/>
-                                </FieldValue>
-                            </FieldBox>
-                        </Grid> : <></>}
+                        <DatePickerBox
+                            label="Date close:"
+                            fieldName={'date'}
+                            dispatch={dispatch}/>
+                        <NumberFieldBox
+                            label="Quantity:"
+                            value={quantity}
+                            fieldName={'quantity'}
+                            dispatch={dispatch}/>
+                        <NumberFieldBox
+                            label={`Price: ${position.currency.name}`}
+                            value={price}
+                            fieldName={'price'}
+                            dispatch={dispatch}/>
+                        {position.position == 'short' ?
+                        <NumberFieldBox
+                            label={`Broker interest: ${position.currency.name}`}
+                            value={brokerInterest}
+                            fieldName={'brokerInterest'}
+                            zeroAllowed
+                            dispatch={dispatch}/> : <></>}
                     </Grid>
                 </Grid>
                 <Grid item xs={1}>

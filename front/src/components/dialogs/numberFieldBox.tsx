@@ -8,6 +8,7 @@ export default ({
     fieldName,
     label,
     value,
+    zeroAllowed,
     color,
     dispatch
 }: NumberFieldBoxProps) => (
@@ -18,6 +19,7 @@ export default ({
             </FieldName>
             <FieldValue>
                 <NumberInput
+                    zeroAllowed={zeroAllowed}
                     color={color}
                     value={value}
                     name={fieldName}

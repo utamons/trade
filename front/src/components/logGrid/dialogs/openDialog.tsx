@@ -6,28 +6,18 @@ import Dialog from '@mui/material/Dialog'
 import { remCalc, riskColor, riskReward, roundTo2, rrColor, takeColor } from '../../../utils/utils'
 import Button from '../../tools/button'
 import React, { Dispatch, useCallback, useEffect, useState } from 'react'
-import {
-    ButtonContainerStyled,
-    FieldBox,
-    FieldName,
-    FieldValue,
-    NoteBox,
-    RedSwitch,
-    SwitchBox
-} from '../../../styles/style'
+import { ButtonContainerStyled, FieldName, NoteBox, RedSwitch, SwitchBox } from '../../../styles/style'
 import { Grid } from '@mui/material'
 import TextField from '@mui/material/TextField'
 import { FormAction, FormActionPayload, FormState, OpenDialogProps, TickerType } from 'types'
-import Select from '../../tools/select'
-import NumberInput from '../../tools/numberInput'
 import { postEval, postEvalToFit } from '../../../api'
 import { useTheme } from '@emotion/react'
 import CircularProgress from '@mui/material/CircularProgress'
-import { BasicDateTimePicker } from '../../tools/dateTimePicker'
 import { getFieldValue, useForm } from '../../dialogs/dialogUtils'
 import NumberFieldBox from '../../dialogs/numberFieldBox'
 import SelectFieldBox from '../../dialogs/selectFieldBox'
 import ValueFieldBox from '../../dialogs/valueFieldBox'
+import DatePickerBox from '../../dialogs/datePickerBox'
 
 
 const positions = [
@@ -327,14 +317,10 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                 </Grid>
                 <Grid item xs={1}>
                     <Grid container columns={1}>
-                        <Grid item xs={1}>
-                            <FieldBox>
-                                <FieldName>Date:</FieldName>
-                                <FieldValue>
-                                    <BasicDateTimePicker name="date" dispatch={dispatch}/>
-                                </FieldValue>
-                            </FieldBox>
-                        </Grid>
+                        <DatePickerBox
+                            label="Date:"
+                            fieldName={'date'}
+                            dispatch={dispatch}/>
                         <SelectFieldBox
                             items={positions}
                             value={positionId}
@@ -397,46 +383,26 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                         <ValueFieldBox
                             label={'Out. Exp.:'}
                             value={outcomeExp}/>
-                        <Grid item xs={1}>
-                            <FieldBox>
-                                <FieldName>Gain:</FieldName>
-                                <FieldValue>
-                                    {gain} %
-                                </FieldValue>
-                            </FieldBox>
-                        </Grid>
-                        <Grid item xs={1}>
-                            <FieldBox>
-                                <FieldName>Fees:</FieldName>
-                                <FieldValue>
-                                    {fees}
-                                </FieldValue>
-                            </FieldBox>
-                        </Grid>
-                        <Grid item xs={1}>
-                            <FieldBox>
-                                <FieldName>Risk:</FieldName>
-                                <FieldValue sx={riskColor(risk, defaultColor)}>
-                                    {risk} %
-                                </FieldValue>
-                            </FieldBox>
-                        </Grid>
-                        <Grid item xs={1}>
-                            <FieldBox>
-                                <FieldName>Risk/reward:</FieldName>
-                                <FieldValue sx={rrColor(rr, defaultColor)}>
-                                    {rr} %
-                                </FieldValue>
-                            </FieldBox>
-                        </Grid>
-                        <Grid item xs={1}>
-                            <FieldBox>
-                                <FieldName>Break even:</FieldName>
-                                <FieldValue>
-                                    {breakEven} {breakEvenPercentageStr()}
-                                </FieldValue>
-                            </FieldBox>
-                        </Grid>
+                        <ValueFieldBox
+                            label={'Gain:'}
+                            variant={'pc'}
+                            value={gain}/>
+                        <ValueFieldBox
+                            label={'Fees:'}
+                            value={fees}/>
+                        <ValueFieldBox
+                            label={'Risk:'}
+                            variant={'pc'}
+                            color={riskColor(risk, defaultColor)}
+                            value={risk}/>
+                        <ValueFieldBox
+                            label={'Risk/reward:'}
+                            variant={'pc'}
+                            color={rrColor(rr, defaultColor)}
+                            value={rr}/>
+                        <ValueFieldBox
+                            label={'Break even:'}
+                            value={`${breakEven} ${breakEvenPercentageStr()}`}/>
                     </Grid>
                 </Grid>
                 <Grid item xs={2}>
