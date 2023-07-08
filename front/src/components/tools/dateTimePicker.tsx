@@ -3,13 +3,27 @@ import dayjs, { Dayjs } from 'dayjs'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { DesktopDateTimePicker } from '@mui/x-date-pickers'
-import { TextFieldStyled } from '../logGrid/dialogs/openDialog'
 import { FormAction } from 'types'
+import { styled } from '@mui/material'
+import TextField from '@mui/material/TextField'
+import { remCalc } from '../../utils/utils'
 
 interface DatePickerProps {
     name: string,
     dispatch: Dispatch<FormAction>
 }
+
+const TextFieldStyled = styled(TextField)(() => ({
+    '.MuiOutlinedInput-root': {
+        borderRadius: remCalc(2),
+        fontSize: remCalc(14),
+        maxHeight: remCalc(38),
+        maxWidth: remCalc(170)
+    },
+    '.MuiSvgIcon-root ': {
+        fontSize: remCalc(18)
+    }
+}))
 
 export const BasicDateTimePicker = ({ name, dispatch }: DatePickerProps) => {
     const [value, setValue] = React.useState<Dayjs | null>(dayjs(new Date()))

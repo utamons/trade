@@ -295,7 +295,42 @@ type FormAction = {
     payload: FormActionPayload
 }
 
+interface OpenDialogProps {
+    currentBroker: ItemType,
+    markets: MarketType [],
+    tickers: TickerType [],
+    isOpen: boolean,
+    open: (open: PositionOpenType) => void,
+    onClose: () => void
+}
+
+interface NumberFieldBoxProps {
+    label: string,
+    value: number | undefined,
+    dispatch: React.Dispatch<FormAction>
+    fieldName: string
+    color?: string
+}
+
+interface SelectFieldBoxProps {
+    label: string,
+    value: string,
+    items: ItemType[],
+    variant?: string,
+    fieldName: string,
+    dispatch: React.Dispatch<FormAction>
+}
+
+interface ValueFieldBoxProps {
+    label: string,
+    value: string | number,
+    color?: object
+}
+
 export {
+    ValueFieldBoxProps,
+    SelectFieldBoxProps,
+    NumberFieldBoxProps,
     MarketType,
     ItemType,
     TradeContextType,
@@ -325,5 +360,6 @@ export {
     FormFieldDate,
     FormAction,
     FormActionPayload,
-    FormOptions
+    FormOptions,
+    OpenDialogProps
 }

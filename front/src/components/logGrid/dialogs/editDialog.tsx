@@ -6,12 +6,11 @@ import Dialog from '@mui/material/Dialog'
 import { remCalc } from '../../../utils/utils'
 import Button from '../../tools/button'
 import React, { Dispatch, useCallback, useEffect } from 'react'
-import { ButtonContainerStyled, FieldBox, FieldName, NoteBox } from '../../../styles/style'
+import { ButtonContainerStyled, FieldBox, FieldName, FieldValue, NoteBox } from '../../../styles/style'
 import { Grid } from '@mui/material'
 import TextField from '@mui/material/TextField'
 import { FormAction, FormActionPayload, FormState, PositionEditType, TradeLog } from 'types'
 import NumberInput from '../../tools/numberInput'
-import { FieldValue } from './openDialog'
 import { getFieldValue, useForm } from '../../dialogs/dialogUtils'
 
 interface EditDialogProps {
