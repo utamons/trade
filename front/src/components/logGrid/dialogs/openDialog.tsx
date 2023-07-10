@@ -3,7 +3,7 @@
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import Dialog from '@mui/material/Dialog'
-import { remCalc, riskColor, riskReward, roundTo2, rrColor, takeColor } from '../../../utils/utils'
+import { remCalc, riskColor, roundTo2, rrColor, takeColor } from '../../../utils/utils'
 import Button from '../../tools/button'
 import React, { Dispatch, useCallback, useEffect, useState } from 'react'
 import { ButtonContainerStyled, FieldName, NoteBox, RedSwitch, SwitchBox } from '../../../styles/style'
@@ -18,6 +18,7 @@ import NumberFieldBox from '../../dialogs/numberFieldBox'
 import SelectFieldBox from '../../dialogs/selectFieldBox'
 import ValueFieldBox from '../../dialogs/valueFieldBox'
 import DatePickerBox from '../../dialogs/datePickerBox'
+import { MAX_DEPOSIT_PC, MAX_RISK_PC, MAX_RISK_REWARD_PC } from '../../../utils/constants'
 
 
 const positions = [
@@ -34,14 +35,17 @@ interface Eval {
 }
 
 interface EvalToFit {
-    price: number,
-    fees: number,
-    risk: number,
-    breakEven: number,
     outcomeExp: number,
+    gainPc: number,
+    fees: number,
+    price: number,
+    riskPc: number,
+    riskRewardPc: number,
+    breakEven: number,
     takeProfit: number,
     stopLoss: number,
     items: number
+    volume: number
 }
 
 const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, tickerId: number, marketId: number, positionId: number) => {
@@ -50,6 +54,16 @@ const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, tic
 
     const payload: FormActionPayload = {
         valuesNumeric: [
+            {
+                name: 'riskRewardPc',
+                valid: true,
+                value: MAX_RISK_REWARD_PC
+            },
+            {
+                name: 'depositPc',
+                valid: true,
+                value: MAX_DEPOSIT_PC
+            },
             {
                 name: 'tickerId',
                 valid: true,
@@ -91,12 +105,17 @@ const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, tic
                 value: undefined
             },
             {
-                name: 'risk',
+                name: 'riskPc',
+                valid: true,
+                value: MAX_RISK_PC
+            },
+            {
+                name: 'breakEven',
                 valid: true,
                 value: undefined
             },
             {
-                name: 'breakEven',
+                name: 'gainPc',
                 valid: true,
                 value: undefined
             },
@@ -107,6 +126,11 @@ const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, tic
             },
             {
                 name: 'atr',
+                valid: true,
+                value: undefined
+            },
+            {
+                name: 'volume',
                 valid: true,
                 value: undefined
             },
@@ -155,16 +179,17 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     const stopLoss = getFieldValue('stopLoss', formState) as number
     const takeProfit = getFieldValue('takeProfit', formState) as number
     const outcomeExp = getFieldValue('outcomeExp', formState) as number
-    const risk = getFieldValue('risk', formState) as number
+    const riskRewardPc = getFieldValue('riskRewardPc', formState) as number
+    const riskPc = getFieldValue('riskPc', formState) as number
+    const depositPc = getFieldValue('depositPc', formState) as number
     const breakEven = getFieldValue('breakEven', formState) as number
     const fees = getFieldValue('fees', formState) as number
     const note = getFieldValue('note', formState) as string
     const date = getFieldValue('date', formState) as Date
     const levelPrice = getFieldValue('levelPrice', formState) as number
     const atr = getFieldValue('atr', formState) as number
-
-    const gain = takeProfit && breakEven && price ? roundTo2(Math.abs(takeProfit - breakEven) / (price / 100)) : undefined
-
+    const volume = getFieldValue('volume', formState) as number
+    const gainPc = getFieldValue('volume', formState) as number
     const breakEvenPercentageStr = () => {
         if (breakEven && price)
             return `(${roundTo2(Math.abs(breakEven / (price / 100) - 100))}%)`
@@ -173,29 +198,33 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     }
     // noinspection DuplicatedCode
     const handleEvalToFit = useCallback(async () => {
-        if (evaluate && ((levelPrice && atr) || (price && atr))) {
+        if (evaluate && (levelPrice && atr && riskPc && riskRewardPc && depositPc && stopLoss)) {
             setLoading(true)
             const ev: EvalToFit = await postEvalToFit({
                 brokerId: currentBroker.id,
                 tickerId: Number(tickerId),
-                price,
                 levelPrice,
                 atr,
-                items,
+                riskPc,
+                riskRewardPc,
+                depositPc,
                 stopLoss,
                 date: date.toISOString(),
                 short: positionId == '1'
             })
             setLoading(false)
-            dispatch({ type: 'set', payload: { name: 'price', valueNum: ev.price, valid: true } })
-            dispatch({ type: 'set', payload: { name: 'items', valueNum: ev.items, valid: true } })
-            dispatch({ type: 'set', payload: { name: 'stopLoss', valueNum: ev.stopLoss, valid: true } })
-            // noinspection DuplicatedCode
-            dispatch({ type: 'set', payload: { name: 'takeProfit', valueNum: ev.takeProfit, valid: true } })
             dispatch({ type: 'set', payload: { name: 'outcomeExp', valueNum: ev.outcomeExp, valid: true } })
-            dispatch({ type: 'set', payload: { name: 'risk', valueNum: ev.risk, valid: true } })
-            dispatch({ type: 'set', payload: { name: 'breakEven', valueNum: ev.breakEven, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'gainPc', valueNum: ev.gainPc, valid: true } })
             dispatch({ type: 'set', payload: { name: 'fees', valueNum: ev.fees, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'price', valueNum: ev.price, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'riskPc', valueNum: ev.riskPc, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'riskRewardPc', valueNum: ev.riskRewardPc, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'breakEven', valueNum: ev.breakEven, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'stopLoss', valueNum: ev.stopLoss, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'takeProfit', valueNum: ev.takeProfit, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'items', valueNum: ev.items, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'volume', valueNum: ev.volume, valid: true } })
+
             return
         }
     }, [
@@ -213,13 +242,14 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
             console.error('validation failed')
             return
         }
-        if (evaluate && price && items && stopLoss && atr) {
+        if (evaluate && price && items && stopLoss && atr && takeProfit) {
             console.log('evaluation')
+            // todo: check the values
             const ev: Eval = await postEval({
                 brokerId: currentBroker.id,
                 tickerId: Number(tickerId),
                 atr,
-                levelPrice,
+                takeProfit,
                 price,
                 items,
                 stopLoss,
@@ -234,7 +264,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
             dispatch({ type: 'set', payload: { name: 'fees', valueNum: ev.fees, valid: true } })
             return
         }
-        if (price && items && stopLoss && risk && fees && atr) {
+        if (price && items && stopLoss && riskPc && fees && atr) {
             open({
                 position: positionId == '0' ? 'long' : 'short',
                 dateOpen: date.toISOString(),
@@ -248,7 +278,9 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                 stopLoss,
                 takeProfit,
                 outcomeExpected: outcomeExp,
-                risk,
+                riskPc,
+                riskRewardPc,
+                depositPc,
                 breakEven,
                 fees,
                 note
@@ -266,7 +298,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
         atr,
         stopLoss,
         date,
-        risk,
+        riskPc,
         fees,
         breakEven,
         note,
@@ -296,8 +328,6 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     const handleReset = useCallback(() => {
         dispatch({ type: 'reset', payload: {} })
     }, [])
-
-    const rr = riskReward(stopLoss, breakEven, takeProfit)
 
     return <Dialog
         maxWidth={false}
@@ -360,14 +390,19 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                             value={atr}
                             fieldName={'atr'}
                             dispatch={dispatch}/>
+                        <NumberFieldBox
+                            label={'Items:'}
+                            value={items}
+                            fieldName={'items'}
+                            dispatch={dispatch}/>
                     </Grid>
                 </Grid>
                 <Grid item xs={1}>
                     <Grid container columns={1}>
                         <NumberFieldBox
-                            label={'Items:'}
-                            value={items}
-                            fieldName={'items'}
+                            label={'Vol./depo. (%):'}
+                            value={depositPc}
+                            fieldName={'depositPc'}
                             dispatch={dispatch}/>
                         <NumberFieldBox
                             label={'Stop Loss:'}
@@ -380,29 +415,35 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                             value={takeProfit}
                             fieldName={'takeProfit'}
                             dispatch={dispatch}/>
+                        <NumberFieldBox
+                            label={'Risk(%):'}
+                            fieldName={'rickPc'}
+                            color={riskColor(riskPc, defaultColor)}
+                            value={riskPc}
+                            dispatch={dispatch}/>
+                        <NumberFieldBox
+                            label={'R/R (%):'}
+                            fieldName={'riskRewardPc'}
+                            color={rrColor(riskRewardPc, defaultColor)}
+                            value={riskRewardPc}
+                            dispatch={dispatch}
+                        />
                         <ValueFieldBox
                             label={'Out. Exp.:'}
                             value={outcomeExp}/>
                         <ValueFieldBox
                             label={'Gain:'}
                             variant={'pc'}
-                            value={gain}/>
+                            value={gainPc}/>
                         <ValueFieldBox
                             label={'Fees:'}
                             value={fees}/>
                         <ValueFieldBox
-                            label={'Risk:'}
-                            variant={'pc'}
-                            color={riskColor(risk, defaultColor)}
-                            value={risk}/>
-                        <ValueFieldBox
-                            label={'Risk/reward:'}
-                            variant={'pc'}
-                            color={rrColor(rr, defaultColor)}
-                            value={rr}/>
-                        <ValueFieldBox
                             label={'Break even:'}
-                            value={`${breakEven} ${breakEvenPercentageStr()}`}/>
+                            value={`${breakEven ?? ''} ${breakEvenPercentageStr()}`}/>
+                        <ValueFieldBox
+                            label={'Volume:'}
+                            value={volume}/>
                     </Grid>
                 </Grid>
                 <Grid item xs={2}>

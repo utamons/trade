@@ -1,5 +1,6 @@
 import React from 'react'
 import CircularProgress from '@mui/material/CircularProgress'
+import { MAX_RISK_REWARD_PC } from './constants'
 
 export const Loadable = ({ children, isLoading }: { children?: JSX.Element, isLoading?: boolean }): JSX.Element => (
     isLoading ? < CircularProgress size={20}/> : <>{children}</>
@@ -60,8 +61,8 @@ export const BLUE = '#0099ff'
 
 export const riskColor = (risk:number | undefined, defaultColor: string) => {
     if (risk && risk > 2)
-        return { color: RED, fontWeight: 'bolder' }
-    return { color: defaultColor }
+        return RED
+    return defaultColor
 }
 
 export const takeColor = (take:number | undefined, price:number | undefined, atr: number | undefined, defaultColor: string) => {
@@ -84,23 +85,12 @@ export const profitColor = (profit:number | undefined, defaultColor: string) => 
     return { color: defaultColor }
 }
 
-export const rrColor = (rr:number | undefined, defaultColor: string) => {
-    if (rr && rr > roundTo2(1.0/4.0))
-        return { color: ORANGE, fontWeight: 'bolder' }
-    if (rr && rr > roundTo2(1.0/3.0))
-        return { color: RED, fontWeight: 'bolder' }
-    return { color: defaultColor }
+export const rrColor = (riskRewardPc:number | undefined, defaultColor: string) => {
+    if (riskRewardPc && riskRewardPc > MAX_RISK_REWARD_PC)
+        return RED
+    return defaultColor
 }
 
 export const roundTo2 = (num: number) => {
         return Math.round(num * 100) / 100
-}
-
-export const riskReward = (stopLoss: number | undefined, breakEven: number| undefined, takeProfit: number | undefined) => {
-    if (stopLoss && breakEven && takeProfit) {
-        const risk = Math.abs(breakEven - stopLoss)
-        const reward = Math.abs(takeProfit - breakEven)
-        return roundTo2(risk / reward)
-    }
-    return undefined
 }
