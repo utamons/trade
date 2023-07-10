@@ -129,10 +129,23 @@ type PageRequest = {
 type EvalRequest = {
     brokerId: number,
     tickerId: number,
-    price?: number,
-    levelPrice?: number,
-    atr?: number,
-    items?: number,
+    price: number,
+    atr: number,
+    items: number,
+    stopLoss: number,
+    takeProfit: number,
+    date: string,
+    short: boolean
+}
+
+type EvalToFitRequest = {
+    brokerId: number,
+    tickerId: number,
+    levelPrice: number,
+    atr: number,
+    riskPc: number,
+    riskRewardPc: number,
+    depositPc: number,
     stopLoss?: number,
     date: string,
     short: boolean
@@ -226,7 +239,9 @@ type PositionOpenType = {
     stopLoss: number,
     takeProfit: number | undefined,
     outcomeExpected: number | undefined,
-    risk: number,
+    riskPc: number,
+    riskRewardPc: number,
+    depositPc: number,
     breakEven: number | undefined,
     fees: number,
     note: string | undefined
@@ -370,5 +385,6 @@ export {
     FormAction,
     FormActionPayload,
     FormOptions,
-    OpenDialogProps
+    OpenDialogProps,
+    EvalToFitRequest
 }

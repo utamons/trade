@@ -1,5 +1,5 @@
 import {
-    EvalRequest,
+    EvalRequest, EvalToFitRequest,
     ExchangeType,
     PageRequest,
     PositionCloseType,
@@ -139,7 +139,7 @@ const postEval = async (body: EvalRequest) => {
     })
 }
 
-const postEvalToFit = async (body: EvalRequest) => {
+const postEvalToFit = async (body: EvalToFitRequest) => {
     const url = `${baseUrl}/cash/evaltofit`
     return fetch(url, {
         method: 'post',
