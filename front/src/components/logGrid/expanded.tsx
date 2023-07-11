@@ -2,12 +2,13 @@ import React, { useCallback } from 'react'
 import { useTheme } from '@emotion/react'
 import { Box, Grid, styled } from '@mui/material'
 import { FieldName } from '../../styles/style'
-import { money, profitColor, remCalc, riskColor, utc2market } from '../../utils/utils'
+import { greaterColor, money, profitColor, remCalc, utc2market } from '../../utils/utils'
 import ExpandButton from '../tools/expandButton'
 import { EditButton } from '../tools/editButton'
 import { CloseButton } from '../tools/closeButton'
 import { ExpandableProps } from 'types'
 import { Item, RowBox } from './styles'
+import { MAX_RISK_PC } from '../../utils/constants'
 
 const FieldBox = styled(Box)(() => ({
     display: 'flex',
@@ -125,7 +126,7 @@ export const Expanded = ({ logItem, expandHandler, closeDialog, editDialog }: Ex
                 </FieldBox>
                 <FieldBox>
                     <FieldName>Risk:</FieldName>
-                    <FieldValue sx={riskColor(risk, defaultColor)}>{risk} %</FieldValue>
+                    <FieldValue sx={{ color: greaterColor(risk, defaultColor, MAX_RISK_PC) }}>{risk} %</FieldValue>
                 </FieldBox>
                 <FieldBox>
                     <FieldName>Fees:</FieldName>

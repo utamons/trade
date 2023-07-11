@@ -3,7 +3,7 @@
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import Dialog from '@mui/material/Dialog'
-import { remCalc, riskColor, roundTo2, rrColor, takeColor } from '../../../utils/utils'
+import { BLUE, greaterColor, remCalc, roundTo2, takeColor } from '../../../utils/utils'
 import Button from '../../tools/button'
 import React, { Dispatch, useCallback, useEffect, useState } from 'react'
 import { ButtonContainerStyled, FieldName, NoteBox, RedSwitch, SwitchBox } from '../../../styles/style'
@@ -27,11 +27,13 @@ const positions = [
 ]
 
 interface Eval {
-    fees: number,
-    risk: number,
-    breakEven: number,
     outcomeExp: number,
-    takeProfit: number
+    gainPc: number,
+    fees: number,
+    riskPc: number,
+    riskRewardPc: number,
+    breakEven: number,
+    volume: number
 }
 
 interface EvalToFit {
@@ -244,7 +246,6 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
         }
         if (evaluate && price && items && stopLoss && atr && takeProfit) {
             console.log('evaluation')
-            // todo: check the values
             const ev: Eval = await postEval({
                 brokerId: currentBroker.id,
                 tickerId: Number(tickerId),
@@ -257,11 +258,13 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                 short: positionId == '1'
             })
             // noinspection DuplicatedCode
-            dispatch({ type: 'set', payload: { name: 'takeProfit', valueNum: ev.takeProfit, valid: true } })
             dispatch({ type: 'set', payload: { name: 'outcomeExp', valueNum: ev.outcomeExp, valid: true } })
-            dispatch({ type: 'set', payload: { name: 'risk', valueNum: ev.risk, valid: true } })
-            dispatch({ type: 'set', payload: { name: 'breakEven', valueNum: ev.breakEven, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'gainPc', valueNum: ev.gainPc, valid: true } })
             dispatch({ type: 'set', payload: { name: 'fees', valueNum: ev.fees, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'riskPc', valueNum: ev.riskPc, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'riskRewardPc', valueNum: ev.riskRewardPc, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'breakEven', valueNum: ev.breakEven, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'volume', valueNum: ev.volume, valid: true } })
             return
         }
         if (price && items && stopLoss && riskPc && fees && atr) {
@@ -379,6 +382,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                             label={`Price: (${currentTicker ? (currentTicker.currency.name) : '???'})`}
                             value={price}
                             fieldName={'price'}
+                            color={BLUE}
                             dispatch={dispatch}/>
                         <NumberFieldBox
                             label={'Level Price:'}
@@ -393,6 +397,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                         <NumberFieldBox
                             label={'Items:'}
                             value={items}
+                            color={BLUE}
                             fieldName={'items'}
                             dispatch={dispatch}/>
                     </Grid>
@@ -402,15 +407,17 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                         <NumberFieldBox
                             label={'Vol./depo. (%):'}
                             value={depositPc}
+                            color={greaterColor(depositPc, defaultColor, MAX_DEPOSIT_PC)}
                             fieldName={'depositPc'}
                             dispatch={dispatch}/>
                         <NumberFieldBox
                             label={'Stop Loss:'}
                             value={stopLoss}
+                            color={BLUE}
                             fieldName={'stopLoss'}
                             dispatch={dispatch}/>
                         <NumberFieldBox
-                            color={takeColor(takeProfit, price, atr, defaultColor)}
+                            color={takeColor(takeProfit, price, atr)}
                             label={'Take Profit:'}
                             value={takeProfit}
                             fieldName={'takeProfit'}
@@ -418,13 +425,13 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                         <NumberFieldBox
                             label={'Risk(%):'}
                             fieldName={'rickPc'}
-                            color={riskColor(riskPc, defaultColor)}
+                            color={greaterColor(riskPc, defaultColor, MAX_RISK_PC)}
                             value={riskPc}
                             dispatch={dispatch}/>
                         <NumberFieldBox
                             label={'R/R (%):'}
                             fieldName={'riskRewardPc'}
-                            color={rrColor(riskRewardPc, defaultColor)}
+                            color={greaterColor(riskRewardPc, defaultColor, MAX_RISK_REWARD_PC)}
                             value={riskRewardPc}
                             dispatch={dispatch}
                         />

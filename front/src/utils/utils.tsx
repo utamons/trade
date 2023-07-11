@@ -1,6 +1,5 @@
 import React from 'react'
 import CircularProgress from '@mui/material/CircularProgress'
-import { MAX_RISK_REWARD_PC } from './constants'
 
 export const Loadable = ({ children, isLoading }: { children?: JSX.Element, isLoading?: boolean }): JSX.Element => (
     isLoading ? < CircularProgress size={20}/> : <>{children}</>
@@ -59,13 +58,7 @@ export const GREEN = '#00cc00'
 export const ORANGE = '#ff9900'
 export const BLUE = '#0099ff'
 
-export const riskColor = (risk:number | undefined, defaultColor: string) => {
-    if (risk && risk > 2)
-        return RED
-    return defaultColor
-}
-
-export const takeColor = (take:number | undefined, price:number | undefined, atr: number | undefined, defaultColor: string) => {
+export const takeColor = (take:number | undefined, price:number | undefined, atr: number | undefined) => {
     if (take && atr && price) {
         const range = Math.abs(take - price)
         if (range > atr)
@@ -73,7 +66,7 @@ export const takeColor = (take:number | undefined, price:number | undefined, atr
         if (range / atr > 0.7)
             return ORANGE
     }
-    return defaultColor
+    return BLUE
 }
 
 export const profitColor = (profit:number | undefined, defaultColor: string) => {
@@ -85,8 +78,8 @@ export const profitColor = (profit:number | undefined, defaultColor: string) => 
     return { color: defaultColor }
 }
 
-export const rrColor = (riskRewardPc:number | undefined, defaultColor: string) => {
-    if (riskRewardPc && riskRewardPc > MAX_RISK_REWARD_PC)
+export const greaterColor = (value:number | undefined, defaultColor: string, maxValue: number) => {
+    if (value && value > maxValue)
         return RED
     return defaultColor
 }
