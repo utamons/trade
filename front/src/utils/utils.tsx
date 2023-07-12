@@ -84,6 +84,8 @@ export const greaterColor = (value:number | undefined, defaultColor: string, max
     return defaultColor
 }
 
-export const roundTo2 = (num: number) => {
-        return Math.round(num * 100) / 100
+export const roundTo2 = (num: number | undefined) => {
+    if (num == undefined)
+        return 0
+    return Math.round(num * 100) / 100
 }

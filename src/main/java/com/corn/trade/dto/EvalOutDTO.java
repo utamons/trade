@@ -1,43 +1,5 @@
 package com.corn.trade.dto;
 
-import java.math.BigDecimal;
-
-import static com.corn.trade.util.Util.round;
-
-public class EvalOutDTO {
-	private final Double fees;
-	private final Double risk;
-	private final Double breakEven;
-
-	private final Double takeProfit;
-
-	private final Double outcomeExp;
-
-	public EvalOutDTO(Double fees, Double risk, Double breakEven, Double takeProfit, Double outcomeExp) {
-		this.fees = fees;
-		this.risk = risk;
-		this.breakEven = breakEven;
-		this.takeProfit = takeProfit;
-		this.outcomeExp = outcomeExp;
-	}
-
-	public BigDecimal getFees() {
-		return round(fees);
-	}
-
-	public BigDecimal getRisk() {
-		return round(risk);
-	}
-
-	public BigDecimal getBreakEven() {
-		return round(breakEven);
-	}
-
-	public BigDecimal getTakeProfit() {
-		return round(takeProfit);
-	}
-
-	public BigDecimal getOutcomeExp() {
-		return round(outcomeExp);
-	}
+public record EvalOutDTO(Double outcomeExp, Double gainPc, Double fees, Double riskPc, Double riskRewardPc, Double breakEven,
+                         Double volume) {
 }
