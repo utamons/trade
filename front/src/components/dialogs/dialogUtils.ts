@@ -1,5 +1,6 @@
 import { FormAction, FormOptions, FormState } from 'types'
 import { useReducer } from 'react'
+import { roundTo2 } from '../../utils/utils'
 
 export const getFieldValue = (name: string, state: FormState): number | string | Date | undefined => {
     const numericField = state.valuesNumeric.find((field) => field.name === name)
@@ -33,7 +34,7 @@ const formReducer = (state: FormState, action: FormAction): FormState => {
             updatedValuesNumeric = state.valuesNumeric.map((field) =>
                 field.name === name ? {
                     ...field,
-                    value: valueNum ? valueNum : field.value,
+                    value: valueNum ? roundTo2(valueNum) : roundTo2(field.value),
                     valid: valid || false
                 } : field
             )

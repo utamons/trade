@@ -191,7 +191,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     const levelPrice = getFieldValue('levelPrice', formState) as number
     const atr = getFieldValue('atr', formState) as number
     const volume = getFieldValue('volume', formState) as number
-    const gainPc = getFieldValue('volume', formState) as number
+    const gainPc = getFieldValue('gainPc', formState) as number
     const breakEvenPercentageStr = () => {
         if (breakEven && price)
             return `(${roundTo2(Math.abs(breakEven / (price / 100) - 100))}%)`
