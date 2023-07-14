@@ -200,9 +200,82 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
         else
             return ''
     }
+
+    const validateStopLoss = (state: boolean) => {
+        if (price > 0 && stopLoss > 0 && isShort() && price > stopLoss) {
+            dispatch({
+                type: 'set',
+                payload: { name: 'stopLoss', valid: false, errorText: 'must be greater than price' }
+            })
+            state = false
+        }
+        if (price > 0 && stopLoss > 0 && !isShort() && price < stopLoss) {
+            dispatch({ type: 'set', payload: { name: 'stopLoss', valid: false, errorText: 'must be less than price' } })
+            state = false
+        }
+        return state
+    }
+
+    const validEvalToFit = () => {
+        console.log('riskRewardPc', riskRewardPc, 'riskPc', riskPc)
+        dispatch({ type: 'clearErrors', payload: {} })
+        let state = true
+        if (levelPrice == undefined) {
+            dispatch({ type: 'set', payload: { name: 'levelPrice', valueNum: undefined, valid: false, errorText: 'required' } })
+            state = false
+        }
+        if (levelPrice < 0) {
+            dispatch({ type: 'set', payload: { name: 'levelPrice', valueNum: levelPrice, valid: false, errorText: 'must be greater than 0' } })
+            state = false
+        }
+        if (atr == undefined) {
+            dispatch({ type: 'set', payload: { name: 'atr', valueNum: undefined, valid: false, errorText: 'required' } })
+            state = false
+        }
+        if (atr < 0) {
+            dispatch({ type: 'set', payload: { name: 'atr', valueNum: atr, valid: false, errorText: 'must be greater than 0' } })
+            state = false
+        }
+        if (riskPc == undefined) {
+            dispatch({ type: 'set', payload: { name: 'riskPc', valueNum: undefined, valid: false, errorText: 'required' } })
+            state = false
+        }
+        if (riskPc < 0) {
+            dispatch({ type: 'set', payload: { name: 'riskPc', valueNum: riskPc, valid: false, errorText: 'must be greater than 0' } })
+            state = false
+        }
+        if (riskRewardPc == undefined) {
+            dispatch({ type: 'set', payload: { name: 'riskRewardPc', valueNum: undefined, valid: false, errorText: 'required' } })
+            state = false
+        }
+        if (riskRewardPc < 0) {
+            dispatch({ type: 'set', payload: { name: 'riskRewardPc', valueNum: riskRewardPc, valid: false, errorText: 'must be greater than 0' } })
+            state = false
+        }
+        if (depositPc == undefined) {
+            dispatch({ type: 'set', payload: { name: 'depositPc', valueNum: undefined, valid: false, errorText: 'required' } })
+            state = false
+        }
+        if (depositPc < 0) {
+            dispatch({ type: 'set', payload: { name: 'depositPc', valueNum: depositPc, valid: false, errorText: 'must be greater than 0' } })
+            state = false
+        }
+        if (stopLoss == undefined) {
+            dispatch({ type: 'set', payload: { name: 'stopLoss', valueNum: undefined, valid: false, errorText: 'required' } })
+            state = false
+        }
+        if (stopLoss < 0) {
+            dispatch({ type: 'set', payload: { name: 'stopLoss', valueNum: stopLoss, valid: false, errorText: 'must be greater than 0' } })
+            state = false
+        }
+        state = validateStopLoss(state)
+
+        return state
+    }
+
     // noinspection DuplicatedCode
     const handleEvalToFit = useCallback(async () => {
-        if (evaluate && (levelPrice && atr && riskPc && riskRewardPc && depositPc && stopLoss)) {
+        if (evaluate && validEvalToFit()) {
             setLoading(true)
             const ev: EvalToFit = await postEvalToFit({
                 brokerId: currentBroker.id,
@@ -233,11 +306,12 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
         }
     }, [
         evaluate,
-        price,
-        items,
         stopLoss,
         levelPrice,
-        atr
+        atr,
+        riskPc,
+        riskRewardPc,
+        depositPc
     ])
 
     const validEval = () => {
@@ -286,17 +360,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
             })
             state = false
         }
-        if (price > 0 && stopLoss > 0 && isShort() && price > stopLoss) {
-            dispatch({
-                type: 'set',
-                payload: { name: 'stopLoss', valid: false, errorText: 'must be greater than price' }
-            })
-            state = false
-        }
-        if (price > 0 && stopLoss > 0 && !isShort() && price < stopLoss) {
-            dispatch({ type: 'set', payload: { name: 'stopLoss', valid: false, errorText: 'must be less than price' } })
-            state = false
-        }
+        state = validateStopLoss(state)
         if (price > 0 && takeProfit > 0 && isShort() && price < takeProfit) {
             dispatch({
                 type: 'set',
@@ -313,6 +377,16 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
         }
         return state
     }
+
+    const validOpen = () => {
+        let state = validEval()
+        if (levelPrice == undefined) {
+            dispatch({ type: 'set', payload: { name: 'levelPrice', valid: false, errorText: 'required' } })
+            state = false
+        }
+        return state
+    }
+
 
     const handleOpen = useCallback(async () => {
         if (evaluate && validEval()) {
@@ -337,7 +411,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
             dispatch({ type: 'set', payload: { name: 'volume', valueNum: ev.volume, valid: true } })
             return
         }
-        if (price && items && stopLoss && riskPc && fees && atr) {
+        if (validOpen() && riskPc != undefined && fees != undefined && outcomeExp != undefined && breakEven != undefined && depositPc != undefined) {
             open({
                 position: positionId == '0' ? 'long' : 'short',
                 dateOpen: date.toISOString(),
@@ -510,9 +584,9 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                             dispatch={dispatch}/>
                         <NumberFieldBox
                             label={'Risk(%):'}
-                            fieldName={'rickPc'}
-                            valid={isFieldValid('rickPc', formState)}
-                            errorText={getFieldErrorText('rickPc', formState)}
+                            fieldName={'riskPc'}
+                            valid={isFieldValid('riskPc', formState)}
+                            errorText={getFieldErrorText('riskPc', formState)}
                             color={greaterColor(riskPc, defaultColor, MAX_RISK_PC)}
                             value={riskPc}
                             dispatch={dispatch}/>
