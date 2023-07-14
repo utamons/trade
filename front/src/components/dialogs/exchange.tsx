@@ -12,7 +12,7 @@ import { ExchangeDialogProps, FormAction, FormActionPayload, FormState } from 't
 import Typography from '@mui/material/Typography'
 import Select from '../tools/select'
 import NumberInput from '../tools/numberInput'
-import { getFieldValue, useForm } from './dialogUtils'
+import { getFieldErrorText, getFieldValue, isFieldValid, useForm } from './dialogUtils'
 
 const ContainerStyled = styled(Box)(() => ({
     display: 'flex',
@@ -77,11 +77,21 @@ export default ({ open, onExchange, onCancel, currencies }: ExchangeDialogProps)
     const currencyToId = '' + getFieldValue('currencyToId', formState)
 
     const handleExchange = useCallback(() => {
-        if (!valueTo || !valueFrom)
+        if (valueTo == undefined) {
+            dispatch({ type: 'set', payload: { name: 'valueTo', valid: false, errorText: 'required' } })
+        }
+        if (valueFrom == undefined) {
+            dispatch({ type: 'set', payload: { name: 'valueFrom', valid: false, errorText: 'required' } })
+        }
+        if (valueTo != undefined && valueTo <= 0) {
+            dispatch({ type: 'set', payload: { name: 'valueTo', valid: false, errorText: 'must be > 0' } })
+        }
+        if (valueFrom != undefined && valueFrom <= 0) {
+            dispatch({ type: 'set', payload: { name: 'valueFrom', valid: false, errorText: 'must be > 0' } })
+        }
+        if (valueTo == undefined || valueFrom == undefined || valueTo <= 0 || valueFrom <= 0 || !isValid)
             return
-        if (valueFrom <= 0 || valueTo <=0 || !isValid)
-            return
-        onExchange(Number(currencyFromId),  Number(currencyToId), valueFrom, valueTo)
+        onExchange(Number(currencyFromId), Number(currencyToId), valueFrom, valueTo)
     }, [valueFrom, valueTo, isValid, currencyFromId, currencyToId])
 
     return <Dialog open={open}>
@@ -92,7 +102,7 @@ export default ({ open, onExchange, onCancel, currencies }: ExchangeDialogProps)
                     <Select
                         items={currencies ? currencies : []}
                         value={currencyFromId}
-                        name='currencyFromId'
+                        name="currencyFromId"
                         dispatch={dispatch}
                         variant="medium"
                     />
@@ -102,13 +112,25 @@ export default ({ open, onExchange, onCancel, currencies }: ExchangeDialogProps)
                     <Select
                         items={currencies ? currencies : []}
                         value={currencyToId}
-                        name='currencyToId'
+                        name="currencyToId"
                         dispatch={dispatch}
                         variant="medium"
                     />
                 </SelectBoxStyled>
-                <NumberInput name='valueFrom' dispatch={dispatch} value={valueFrom} label="Amount from" />
-                <NumberInput name='valueTo' dispatch={dispatch} value={valueTo} label="Amount to" />
+                <NumberInput
+                    name="valueFrom"
+                    valid={isFieldValid('valueFrom', formState)}
+                    errorText={getFieldErrorText('valueFrom', formState)}
+                    dispatch={dispatch}
+                    value={valueFrom}
+                    label="Amount from"/>
+                <NumberInput
+                    name="valueTo"
+                    valid={isFieldValid('valueTo', formState)}
+                    errorText={getFieldErrorText('valueTo', formState)}
+                    dispatch={dispatch}
+                    value={valueTo}
+                    label="Amount to"/>
             </ContainerStyled>
         </DialogContent>
 

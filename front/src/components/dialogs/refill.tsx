@@ -10,7 +10,7 @@ import { Box, styled } from '@mui/material'
 import { FormAction, FormActionPayload, FormState, RefillDialogProps } from 'types'
 import Select from '../tools/select'
 import NumberInput from '../tools/numberInput'
-import { getFieldValue, useForm } from './dialogUtils'
+import { getFieldErrorText, getFieldValue, isFieldValid, useForm } from './dialogUtils'
 
 const ContainerStyled = styled(Box)(() => ({
     display: 'flex',
@@ -52,16 +52,16 @@ export default ({ open, title, onSubmit, onCancel, currencies }: RefillDialogPro
 
     initFormState(formState, dispatch, currencies ? currencies[0].id : 0)
 
-    const { isValid } = formState
-
     const currencyId = '' + getFieldValue('currencyId', formState)
     const value = getFieldValue('value', formState) as number | undefined
 
     const handleSubmit = useCallback(() => {
-        if (!value || !isValid)
+        if (value == undefined) {
+            dispatch({ type: 'set', payload: { name: 'value', valid: false, errorText: 'required' } })
             return
+        }
         onSubmit(Number(currencyId), value)
-    }, [value, isValid, currencyId])
+    }, [value, currencyId])
 
     return <Dialog
         open={open}
@@ -79,6 +79,8 @@ export default ({ open, title, onSubmit, onCancel, currencies }: RefillDialogPro
                     dispatch={dispatch}
                 />
                 <NumberInput value={value}
+                             valid={isFieldValid('value', formState)}
+                             errorText={getFieldErrorText('value', formState)}
                              label={'Amount'}
                              name={'value'}
                              dispatch={dispatch}
