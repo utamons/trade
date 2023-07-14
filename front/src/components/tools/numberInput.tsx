@@ -7,16 +7,20 @@ interface NumberInputProps {
     value?: number
     label?: string
     name: string
-    negativeAllowed?: boolean
-    zeroAllowed?: boolean
     dispatch: Dispatch<FormAction>
+    valid?: boolean
+    errorText?: string
 }
 
-export default ({ color, name, dispatch, label, negativeAllowed, zeroAllowed, value }: NumberInputProps) => {
+export default ({ color, name, dispatch, label, value, valid, errorText }: NumberInputProps) => {
 
     const [error, setError] = useState(false)
-    const [errorText, setErrorText] = useState('')
+    const [_errorText, setErrorText] = useState(errorText)
     const [_value, setValue] = useState<string | number | undefined>()
+
+    const isValid = () => {
+        return valid ?? true
+    }
 
     const handleInput = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         setValue((event.target.value))
@@ -28,20 +32,19 @@ export default ({ color, name, dispatch, label, negativeAllowed, zeroAllowed, va
     const handleValidate =
         useCallback((event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
             validate(event.target.value)
-        }, [])
+        }, [valid, value])
 
     useEffect(() => {
         setValue(value)
-    }, [value])
+        setError(!isValid())
+        if (!isValid() && errorText)
+            setErrorText(errorText)
+    }, [value, valid])
 
     const validate = (value: string): boolean => {
         const num = Number(value)
-        if (!value ||
-            isNaN(num) ||
-            ((negativeAllowed == undefined || !negativeAllowed) && num < 0) ||
-            ((zeroAllowed == undefined || !zeroAllowed) && num == 0)
-        ) {
-            setErrorText('Incorrect value')
+        if (value && isNaN(num)) {
+            setErrorText('Non-numeric value')
             setError(true)
             dispatch({ type: 'set', payload: { name, valid: false } })
             return true
@@ -65,6 +68,6 @@ export default ({ color, name, dispatch, label, negativeAllowed, zeroAllowed, va
         onChange={handleInput}
         onBlur={handleValidate}
         error={error}
-        helperText={errorText}
+        helperText={_errorText}
     />
 }

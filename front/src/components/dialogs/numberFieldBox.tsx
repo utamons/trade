@@ -8,9 +8,10 @@ export default ({
     fieldName,
     label,
     value,
-    zeroAllowed,
     color,
-    dispatch
+    errorText,
+    dispatch,
+    valid
 }: NumberFieldBoxProps) => (
     <Grid item xs={1}>
         <FieldBox>
@@ -19,10 +20,11 @@ export default ({
             </FieldName>
             <FieldValue>
                 <NumberInput
-                    zeroAllowed={zeroAllowed}
+                    errorText={errorText}
                     color={color}
                     value={value}
                     name={fieldName}
+                    valid={valid}
                     dispatch={dispatch}/>
             </FieldValue>
         </FieldBox>
