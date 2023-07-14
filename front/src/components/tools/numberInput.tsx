@@ -39,6 +39,8 @@ export default ({ color, name, dispatch, label, value, valid, errorText }: Numbe
         setError(!isValid())
         if (!isValid() && errorText)
             setErrorText(errorText)
+        else
+            setErrorText('')
     }, [value, valid])
 
     const validate = (value: string): boolean => {

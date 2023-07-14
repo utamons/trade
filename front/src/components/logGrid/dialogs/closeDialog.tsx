@@ -84,7 +84,6 @@ export default ({ onClose, isOpen, position, close }: CloseDialogProps) => {
 
     const handleClose = useCallback(async () => {
         if (!isValid) {
-            console.error('validation failed')
             return
         }
         if (price) {

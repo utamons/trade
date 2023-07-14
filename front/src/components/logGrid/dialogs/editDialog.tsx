@@ -77,7 +77,6 @@ export default ({ onClose, isOpen, position, edit }: EditDialogProps) => {
 
     const handleSubmit = useCallback(async () => {
         if (!isValid) {
-            console.error('validation failed')
             return
         }
         if (stopLoss) {

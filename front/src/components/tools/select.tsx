@@ -4,7 +4,7 @@ import MenuItem from '@mui/material/MenuItem'
 import { ItemType, SelectorProps } from 'types'
 import { remCalc } from '../../utils/utils'
 
-export default ({ name, items, value, dispatch, variant } : SelectorProps) => {
+export default ({ name, items, value, dispatch, variant, color } : SelectorProps) => {
     let fontSize = remCalc(18)
     if (variant && variant == 'medium') {
         fontSize = remCalc(14)
@@ -27,7 +27,7 @@ export default ({ name, items, value, dispatch, variant } : SelectorProps) => {
     }
 
     return <Select
-        sx={{ fontSize }}
+        sx={{ fontSize, color: color }}
         label="from"
         variant="standard"
         value={value}

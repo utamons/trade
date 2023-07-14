@@ -22,8 +22,8 @@ import { MAX_DEPOSIT_PC, MAX_RISK_PC, MAX_RISK_REWARD_PC } from '../../../utils/
 
 
 const positions = [
-    { id: 0, name: 'long' },
-    { id: 1, name: 'short' }
+    { id: 0, name: 'long (buy)' },
+    { id: 1, name: 'short (sell)' }
 ]
 
 interface Eval {
@@ -202,7 +202,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     }
     // noinspection DuplicatedCode
     const handleEvalToFit = useCallback(async () => {
-        if (evaluate && (levelPrice && atr && riskPc && riskRewardPc && depositPc && stopLoss )) {
+        if (evaluate && (levelPrice && atr && riskPc && riskRewardPc && depositPc && stopLoss)) {
             setLoading(true)
             const ev: EvalToFit = await postEvalToFit({
                 brokerId: currentBroker.id,
@@ -241,7 +241,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     ])
 
     const validEval = () => {
-        // todo clear error states
+        dispatch({ type: 'clearErrors', payload: {} })
         let state = true
         if (price == undefined) {
             dispatch({ type: 'set', payload: { name: 'price', valid: false, errorText: 'required' } })
@@ -280,15 +280,35 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
             state = false
         }
         if (takeProfit <= 0) {
-            dispatch({ type: 'set', payload: { name: 'takeProfit', valid: false, errorText: 'must be greater than 0' } })
+            dispatch({
+                type: 'set',
+                payload: { name: 'takeProfit', valid: false, errorText: 'must be greater than 0' }
+            })
             state = false
         }
-        if (price > 0 && isShort() && price > stopLoss) {
-            dispatch({ type: 'set', payload: { name: 'stopLoss', valid: false, errorText: 'must be greater than price' } })
+        if (price > 0 && stopLoss > 0 && isShort() && price > stopLoss) {
+            dispatch({
+                type: 'set',
+                payload: { name: 'stopLoss', valid: false, errorText: 'must be greater than price' }
+            })
             state = false
         }
-        if (price > 0 && !isShort() && price < stopLoss) {
+        if (price > 0 && stopLoss > 0 && !isShort() && price < stopLoss) {
             dispatch({ type: 'set', payload: { name: 'stopLoss', valid: false, errorText: 'must be less than price' } })
+            state = false
+        }
+        if (price > 0 && takeProfit > 0 && isShort() && price < takeProfit) {
+            dispatch({
+                type: 'set',
+                payload: { name: 'takeProfit', valid: false, errorText: 'must be less than price' }
+            })
+            state = false
+        }
+        if (price > 0 && takeProfit > 0 && !isShort() && price > takeProfit) {
+            dispatch({
+                type: 'set',
+                payload: { name: 'takeProfit', valid: false, errorText: 'must be greater than price' }
+            })
             state = false
         }
         return state
@@ -296,7 +316,6 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
 
     const handleOpen = useCallback(async () => {
         if (evaluate && validEval()) {
-            console.log('evaluation')
             const ev: Eval = await postEval({
                 brokerId: currentBroker.id,
                 tickerId: Number(tickerId),
@@ -380,7 +399,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     }, [])
 
     const handleReset = useCallback(() => {
-        // todo reset should reset error states
+        dispatch({ type: 'clearErrors', payload: {} })
         dispatch({ type: 'reset', payload: {} })
     }, [])
 
@@ -407,6 +426,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                             fieldName={'date'}
                             dispatch={dispatch}/>
                         <SelectFieldBox
+                            color={BLUE}
                             items={positions}
                             value={positionId}
                             fieldName="positionId"
