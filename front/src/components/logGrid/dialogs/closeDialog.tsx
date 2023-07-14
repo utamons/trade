@@ -10,7 +10,7 @@ import { ButtonContainerStyled, NoteBox } from '../../../styles/style'
 import { Grid } from '@mui/material'
 import TextField from '@mui/material/TextField'
 import { FormAction, FormActionPayload, FormState, PositionCloseType, TradeLog } from 'types'
-import { getFieldValue, useForm } from '../../dialogs/dialogUtils'
+import { getFieldErrorText, getFieldValue, isFieldValid, useForm } from '../../dialogs/dialogUtils'
 import DatePickerBox from '../../dialogs/datePickerBox'
 import NumberFieldBox from '../../dialogs/numberFieldBox'
 
@@ -70,8 +70,6 @@ const initFormState = (
 export default ({ onClose, isOpen, position, close }: CloseDialogProps) => {
     const { formState, dispatch } = useForm()
 
-    const { isValid } = formState
-
     useEffect(() => {
         initFormState(formState, dispatch, position.itemNumber, position.brokerInterest, position.note)
     }, [formState])
@@ -82,8 +80,29 @@ export default ({ onClose, isOpen, position, close }: CloseDialogProps) => {
     const note = getFieldValue('note', formState) as string
     const date = getFieldValue('date', formState) as Date
 
+    const valid = () => {
+        let state = true
+        if (price == undefined) {
+            dispatch({ type: 'set', payload: { name: 'price', valid: false, errorText: 'required' } })
+            state = false
+        }
+        if (quantity == undefined) {
+            dispatch({ type: 'set', payload: { name: 'quantity', valid: false, errorText: 'required' } })
+            state = false
+        }
+        if (price <= 0) {
+            dispatch({ type: 'set', payload: { name: 'price', valid: false, errorText: 'must be greater than 0' } })
+            state = false
+        }
+        if (quantity <= 0) {
+            dispatch({ type: 'set', payload: { name: 'quantity', valid: false, errorText: 'must be greater than 0' } })
+            state = false
+        }
+        return state
+    }
+
     const handleClose = useCallback(async () => {
-        if (!isValid) {
+        if (!valid()) {
             return
         }
         if (price) {
@@ -97,7 +116,7 @@ export default ({ onClose, isOpen, position, close }: CloseDialogProps) => {
             })
             onClose()
         }
-    }, [price, date, note, brokerInterest, isValid])
+    }, [price, quantity, date, note, brokerInterest])
 
     return <Dialog
         maxWidth={false}
@@ -114,10 +133,14 @@ export default ({ onClose, isOpen, position, close }: CloseDialogProps) => {
                         <NumberFieldBox
                             label="Quantity:"
                             value={quantity}
+                            valid={isFieldValid('quantity', formState)}
+                            errorText={getFieldErrorText('quantity', formState)}
                             fieldName={'quantity'}
                             dispatch={dispatch}/>
                         <NumberFieldBox
                             label={`Price: ${position.currency.name}`}
+                            valid={isFieldValid('price', formState)}
+                            errorText={getFieldErrorText('price', formState)}
                             value={price}
                             fieldName={'price'}
                             dispatch={dispatch}/>
