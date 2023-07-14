@@ -9,6 +9,7 @@ export default ({
     value,
     items,
     variant,
+    color,
     fieldName,
     dispatch
 }: SelectFieldBoxProps) => (
@@ -17,6 +18,7 @@ export default ({
             <FieldName>{label}</FieldName>
             <FieldValue>
                 <Select
+                    color={color}
                     items={items}
                     value={value}
                     name={fieldName}

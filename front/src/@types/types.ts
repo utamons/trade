@@ -109,6 +109,7 @@ type SelectorProps = {
     items: ItemType[],
     value: string,
     name: string,
+    color?: string,
     dispatch: Dispatch<FormAction>,
     variant?: string
 }
@@ -308,7 +309,7 @@ type FormOptions = {
 }
 
 type FormAction = {
-    type: 'set' | 'reset' | 'init' | 'remove',
+    type: 'set' | 'reset' | 'init' | 'remove' | 'clearErrors',
     payload: FormActionPayload
 }
 
@@ -338,6 +339,7 @@ interface SelectFieldBoxProps {
     items: ItemType[],
     variant?: string,
     fieldName: string,
+    color?: string,
     dispatch: React.Dispatch<FormAction>
 }
 

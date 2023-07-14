@@ -39,6 +39,18 @@ export const isFieldValid = (name: string, state: FormState): boolean => {
 
 const formReducer = (state: FormState, action: FormAction): FormState => {
     switch (action.type) {
+        case 'clearErrors': {
+            const updatedValuesNumeric = state.valuesNumeric.map((field) => ({ ...field, valid: true, errorText: undefined }))
+            const updatedValuesString = state.valuesString.map((field) => ({ ...field, valid: true }))
+            const updatedValuesDate = state.valuesDate.map((field) => ({ ...field, valid: true }))
+            return {
+                ...state,
+                isValid: true,
+                valuesNumeric: updatedValuesNumeric,
+                valuesString: updatedValuesString,
+                valuesDate: updatedValuesDate
+            }
+        }
         case 'set': {
             const { name, valueNum, valueStr, valueDate, valid, errorText } = action.payload
 
@@ -50,7 +62,7 @@ const formReducer = (state: FormState, action: FormAction): FormState => {
                 field.name === name ? {
                     ...field,
                     value: valueNum != undefined ? roundTo2(valueNum) : roundTo2(field.value),
-                    valid: valid ?? false,
+                    valid: valid ?? true,
                     errorText: errorText
                 } : field
             )
@@ -59,7 +71,7 @@ const formReducer = (state: FormState, action: FormAction): FormState => {
                 field.name === name ? {
                     ...field,
                     value: valueStr ? valueStr : field.value,
-                    valid: valid ?? false
+                    valid: valid ?? true
                 } : field
             )
 
@@ -67,7 +79,7 @@ const formReducer = (state: FormState, action: FormAction): FormState => {
                 field.name === name ? {
                     ...field,
                     value: valueDate ? valueDate : field.value,
-                    valid: valid ?? false
+                    valid: valid ?? true
                 } : field
             )
 
@@ -96,7 +108,7 @@ const formReducer = (state: FormState, action: FormAction): FormState => {
             const { valuesNumeric, valuesDate, valuesString } = action.payload
 
             return {
-                isValid: false,
+                isValid: true,
                 isInitialized: true,
                 valuesNumeric: valuesNumeric || [],
                 valuesDate: valuesDate || [],
