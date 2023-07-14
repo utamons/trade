@@ -267,6 +267,7 @@ type FormFieldNumeric = {
     name: string,
     value: number | undefined,
     valid: boolean
+    errorText?: string
 }
 
 type FormFieldString = {
@@ -295,6 +296,7 @@ type FormActionPayload = {
     valueStr?: string,
     valueDate?: Date,
     valid?: boolean,
+    errorText?: string,
     valuesNumeric?: FormFieldNumeric[],
     valuesString?: FormFieldString[],
     valuesDate?: FormFieldDate[]
@@ -325,7 +327,9 @@ interface NumberFieldBoxProps {
     dispatch: React.Dispatch<FormAction>
     fieldName: string
     zeroAllowed?: boolean,
-    color?: string
+    color?: string,
+    errorText?: string,
+    valid?: boolean
 }
 
 interface SelectFieldBoxProps {

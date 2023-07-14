@@ -21,21 +21,37 @@ export const getFieldValue = (name: string, state: FormState): number | string |
     return undefined
 }
 
+export const getFieldErrorText = (name: string, state: FormState): string | undefined => {
+    const numericField = state.valuesNumeric.find((field) => field.name === name)
+    if (numericField) {
+        return numericField.errorText
+    }
+    return undefined
+}
+
+export const isFieldValid = (name: string, state: FormState): boolean => {
+    const numericField = state.valuesNumeric.find((field) => field.name === name)
+    if (numericField) {
+        return numericField.valid
+    }
+    return true
+}
+
 const formReducer = (state: FormState, action: FormAction): FormState => {
     switch (action.type) {
         case 'set': {
-            const { name, valueNum, valueStr, valueDate, valid } = action.payload
+            const { name, valueNum, valueStr, valueDate, valid, errorText } = action.payload
 
             let updatedValuesNumeric = state.valuesNumeric
             let updatedValuesString = state.valuesString
             let updatedValuesDate = state.valuesDate
 
-
             updatedValuesNumeric = state.valuesNumeric.map((field) =>
                 field.name === name ? {
                     ...field,
-                    value: valueNum ? roundTo2(valueNum) : roundTo2(field.value),
-                    valid: valid || false
+                    value: valueNum != undefined ? roundTo2(valueNum) : roundTo2(field.value),
+                    valid: valid ?? false,
+                    errorText: errorText
                 } : field
             )
 
@@ -43,7 +59,7 @@ const formReducer = (state: FormState, action: FormAction): FormState => {
                 field.name === name ? {
                     ...field,
                     value: valueStr ? valueStr : field.value,
-                    valid: valid || false
+                    valid: valid ?? false
                 } : field
             )
 
@@ -51,7 +67,7 @@ const formReducer = (state: FormState, action: FormAction): FormState => {
                 field.name === name ? {
                     ...field,
                     value: valueDate ? valueDate : field.value,
-                    valid: valid || false
+                    valid: valid ?? false
                 } : field
             )
 

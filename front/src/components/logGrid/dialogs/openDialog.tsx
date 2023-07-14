@@ -13,7 +13,7 @@ import { FormAction, FormActionPayload, FormState, OpenDialogProps, TickerType }
 import { postEval, postEvalToFit } from '../../../api'
 import { useTheme } from '@emotion/react'
 import CircularProgress from '@mui/material/CircularProgress'
-import { getFieldValue, useForm } from '../../dialogs/dialogUtils'
+import { getFieldErrorText, getFieldValue, isFieldValid, useForm } from '../../dialogs/dialogUtils'
 import NumberFieldBox from '../../dialogs/numberFieldBox'
 import SelectFieldBox from '../../dialogs/selectFieldBox'
 import ValueFieldBox from '../../dialogs/valueFieldBox'
@@ -192,6 +192,8 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     const atr = getFieldValue('atr', formState) as number
     const volume = getFieldValue('volume', formState) as number
     const gainPc = getFieldValue('gainPc', formState) as number
+    const isShort = () => positionId == '1'
+
     const breakEvenPercentageStr = () => {
         if (breakEven && price)
             return `(${roundTo2(Math.abs(breakEven / (price / 100) - 100))}%)`
@@ -200,7 +202,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     }
     // noinspection DuplicatedCode
     const handleEvalToFit = useCallback(async () => {
-        if (evaluate && (levelPrice && atr && riskPc && riskRewardPc && depositPc && stopLoss)) {
+        if (evaluate && (levelPrice && atr && riskPc && riskRewardPc && depositPc && stopLoss )) {
             setLoading(true)
             const ev: EvalToFit = await postEvalToFit({
                 brokerId: currentBroker.id,
@@ -212,7 +214,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                 depositPc,
                 stopLoss,
                 date: date.toISOString(),
-                short: positionId == '1'
+                short: isShort()
             })
             setLoading(false)
             dispatch({ type: 'set', payload: { name: 'outcomeExp', valueNum: ev.outcomeExp, valid: true } })
@@ -238,13 +240,62 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
         atr
     ])
 
-    const handleOpen = useCallback(async () => {
-        console.log('isValid', isValid)
-        if (price == undefined || items == undefined || stopLoss == undefined || !isValid) {
-            console.error('validation failed')
-            return
+    const validEval = () => {
+        // todo clear error states
+        let state = true
+        if (price == undefined) {
+            dispatch({ type: 'set', payload: { name: 'price', valid: false, errorText: 'required' } })
+            state = false
         }
-        if (evaluate && price && items && stopLoss && atr && takeProfit) {
+        if (price <= 0) {
+            dispatch({ type: 'set', payload: { name: 'price', valid: false, errorText: 'must be greater than 0' } })
+            state = false
+        }
+        if (items == undefined) {
+            dispatch({ type: 'set', payload: { name: 'items', valid: false, errorText: 'required' } })
+            state = false
+        }
+        if (items <= 0) {
+            dispatch({ type: 'set', payload: { name: 'items', valid: false, errorText: 'must be greater than 0' } })
+            state = false
+        }
+        if (stopLoss == undefined) {
+            dispatch({ type: 'set', payload: { name: 'stopLoss', valid: false, errorText: 'required' } })
+            state = false
+        }
+        if (stopLoss <= 0) {
+            dispatch({ type: 'set', payload: { name: 'stopLoss', valid: false, errorText: 'must be greater than 0' } })
+            state = false
+        }
+        if (atr == undefined) {
+            dispatch({ type: 'set', payload: { name: 'atr', valid: false, errorText: 'required' } })
+            state = false
+        }
+        if (atr <= 0) {
+            dispatch({ type: 'set', payload: { name: 'atr', valid: false, errorText: 'must be greater than 0' } })
+            state = false
+        }
+        if (takeProfit == undefined) {
+            dispatch({ type: 'set', payload: { name: 'takeProfit', valid: false, errorText: 'required' } })
+            state = false
+        }
+        if (takeProfit <= 0) {
+            dispatch({ type: 'set', payload: { name: 'takeProfit', valid: false, errorText: 'must be greater than 0' } })
+            state = false
+        }
+        if (price > 0 && isShort() && price > stopLoss) {
+            dispatch({ type: 'set', payload: { name: 'stopLoss', valid: false, errorText: 'must be greater than price' } })
+            state = false
+        }
+        if (price > 0 && !isShort() && price < stopLoss) {
+            dispatch({ type: 'set', payload: { name: 'stopLoss', valid: false, errorText: 'must be less than price' } })
+            state = false
+        }
+        return state
+    }
+
+    const handleOpen = useCallback(async () => {
+        if (evaluate && validEval()) {
             console.log('evaluation')
             const ev: Eval = await postEval({
                 brokerId: currentBroker.id,
@@ -329,6 +380,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     }, [])
 
     const handleReset = useCallback(() => {
+        // todo reset should reset error states
         dispatch({ type: 'reset', payload: {} })
     }, [])
 
@@ -382,22 +434,30 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                             label={`Price: (${currentTicker ? (currentTicker.currency.name) : '???'})`}
                             value={price}
                             fieldName={'price'}
+                            valid={isFieldValid('price', formState)}
+                            errorText={getFieldErrorText('price', formState)}
                             color={BLUE}
                             dispatch={dispatch}/>
                         <NumberFieldBox
                             label={'Level Price:'}
                             value={levelPrice}
+                            valid={isFieldValid('levelPrice', formState)}
+                            errorText={getFieldErrorText('levelPrice', formState)}
                             fieldName={'levelPrice'}
                             dispatch={dispatch}/>
                         <NumberFieldBox
                             label={'ATR:'}
                             value={atr}
+                            valid={isFieldValid('atr', formState)}
+                            errorText={getFieldErrorText('atr', formState)}
                             fieldName={'atr'}
                             dispatch={dispatch}/>
                         <NumberFieldBox
                             label={'Items:'}
                             value={items}
                             color={BLUE}
+                            valid={isFieldValid('items', formState)}
+                            errorText={getFieldErrorText('items', formState)}
                             fieldName={'items'}
                             dispatch={dispatch}/>
                     </Grid>
@@ -407,6 +467,8 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                         <NumberFieldBox
                             label={'Vol./depo. (%):'}
                             value={depositPc}
+                            valid={isFieldValid('depositPc', formState)}
+                            errorText={getFieldErrorText('depositPc', formState)}
                             color={greaterColor(depositPc, defaultColor, MAX_DEPOSIT_PC)}
                             fieldName={'depositPc'}
                             dispatch={dispatch}/>
@@ -414,23 +476,31 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                             label={'Stop Loss:'}
                             value={stopLoss}
                             color={BLUE}
+                            valid={isFieldValid('stopLoss', formState)}
+                            errorText={getFieldErrorText('stopLoss', formState)}
                             fieldName={'stopLoss'}
                             dispatch={dispatch}/>
                         <NumberFieldBox
                             color={takeColor(takeProfit, price, atr)}
                             label={'Take Profit:'}
                             value={takeProfit}
+                            valid={isFieldValid('takeProfit', formState)}
+                            errorText={getFieldErrorText('takeProfit', formState)}
                             fieldName={'takeProfit'}
                             dispatch={dispatch}/>
                         <NumberFieldBox
                             label={'Risk(%):'}
                             fieldName={'rickPc'}
+                            valid={isFieldValid('rickPc', formState)}
+                            errorText={getFieldErrorText('rickPc', formState)}
                             color={greaterColor(riskPc, defaultColor, MAX_RISK_PC)}
                             value={riskPc}
                             dispatch={dispatch}/>
                         <NumberFieldBox
                             label={'R/R (%):'}
                             fieldName={'riskRewardPc'}
+                            valid={isFieldValid('riskRewardPc', formState)}
+                            errorText={getFieldErrorText('riskRewardPc', formState)}
                             color={greaterColor(riskRewardPc, defaultColor, MAX_RISK_REWARD_PC)}
                             value={riskRewardPc}
                             dispatch={dispatch}

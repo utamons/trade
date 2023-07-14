@@ -47,7 +47,7 @@ const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, cur
     dispatch({ type: 'init', payload })
 }
 
-export default ({ open, title, onSubmit, onCancel, negativeAllowed, currencies }: RefillDialogProps) => {
+export default ({ open, title, onSubmit, onCancel, currencies }: RefillDialogProps) => {
     const { formState, dispatch } = useForm()
 
     initFormState(formState, dispatch, currencies ? currencies[0].id : 0)
@@ -79,7 +79,6 @@ export default ({ open, title, onSubmit, onCancel, negativeAllowed, currencies }
                     dispatch={dispatch}
                 />
                 <NumberInput value={value}
-                             negativeAllowed={negativeAllowed}
                              label={'Amount'}
                              name={'value'}
                              dispatch={dispatch}
