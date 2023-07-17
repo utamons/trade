@@ -7,39 +7,51 @@ import static com.corn.trade.util.Util.round;
 @SuppressWarnings("unused")
 public class EvalOutFitDTO {
 
-	private final BigDecimal fees;
-	private final BigDecimal risk;
-	private final BigDecimal breakEven;
-	private final BigDecimal takeProfit;
-	private final BigDecimal outcomeExp;
-	private final Double     stopLoss;
+	final BigDecimal fees;
+	final BigDecimal breakEven;
+	final BigDecimal takeProfit;
+	final BigDecimal outcomeExp;
+	final BigDecimal stopLoss;
+	final BigDecimal price;
+	final long items;
+	final BigDecimal volume;
+	final BigDecimal gainPc;
+	final BigDecimal riskPc;
+	final BigDecimal riskRewardPc;
 
-	private final Double price;
-	private final long   items;
+	final BigDecimal depositPc;
 
-	public EvalOutFitDTO(BigDecimal fees,
-	                     BigDecimal risk,
-	                     BigDecimal breakEven,
-	                     BigDecimal takeProfit,
-	                     BigDecimal outcomeExp,
+	public EvalOutFitDTO(Double fees,
+	                     Double riskPc,
+	                     Double breakEven,
+	                     Double takeProfit,
+	                     Double outcomeExp,
 	                     Double stopLoss,
-	                     Double price, long items) {
-		this.fees = fees;
-		this.risk = risk;
-		this.breakEven = breakEven;
-		this.takeProfit = takeProfit;
-		this.outcomeExp = outcomeExp;
-		this.stopLoss = stopLoss;
-		this.price = price;
+	                     Double price,
+	                     long items,
+	                     Double volume,
+	                     Double gainPc,
+	                     Double riskRewardPc,
+	                     Double depositPc) {
+		this.fees = round(fees);
+		this.breakEven = round(breakEven);
+		this.takeProfit = round(takeProfit);
+		this.outcomeExp = round(outcomeExp);
+		this.stopLoss = round(stopLoss);
+		this.price = round(price);
+		this.volume = round(volume);
+		this.gainPc = round(gainPc);
+		this.riskPc = round(riskPc);
+		this.riskRewardPc = round(riskRewardPc);
 		this.items = items;
+		this.depositPc = round(depositPc);
 	}
 
+	public BigDecimal getDepositPc() {
+		return depositPc;
+	}
 	public BigDecimal getFees() {
 		return fees;
-	}
-
-	public BigDecimal getRisk() {
-		return risk;
 	}
 
 	public BigDecimal getBreakEven() {
@@ -55,14 +67,30 @@ public class EvalOutFitDTO {
 	}
 
 	public BigDecimal getStopLoss() {
-		return round(stopLoss);
+		return stopLoss;
 	}
 
 	public BigDecimal getPrice() {
-		return round(price);
+		return price;
 	}
 
 	public long getItems() {
 		return items;
+	}
+
+	public BigDecimal getVolume() {
+		return volume;
+	}
+
+	public BigDecimal getGainPc() {
+		return gainPc;
+	}
+
+	public BigDecimal getRiskPc() {
+		return riskPc;
+	}
+
+	public BigDecimal getRiskRewardPc() {
+		return riskRewardPc;
 	}
 }

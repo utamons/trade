@@ -46,14 +46,12 @@ export default ({ color, name, dispatch, label, value, valid, errorText }: Numbe
     const validate = (value: string): boolean => {
         const num = Number(value)
         if (value && isNaN(num)) {
-            setErrorText('Non-numeric value')
-            setError(true)
-            dispatch({ type: 'set', payload: { name, valid: false } })
+            dispatch({ type: 'set', payload: { name, valueStr: value, valid: false, errorText: 'Non-numeric value' } })
             return true
         }
         setError(false)
         setErrorText('')
-        dispatch({ type: 'set', payload: { name, valid: true } })
+        dispatch({ type: 'set', payload: { name, valueNum: num, valid: true } })
         return false
     }
 
