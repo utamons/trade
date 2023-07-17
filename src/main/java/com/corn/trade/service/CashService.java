@@ -299,38 +299,49 @@ public class CashService {
 		Currency    currency   = tickerRepo.getReferenceById(evalDTO.tickerId()).getCurrency();
 		double price = levelPrice + (shortC * 0.05);
 		double stopLoss = evalDTO.stopLoss() == null ? levelPrice - (shortC * levelPrice/100*0.2) : evalDTO.stopLoss();
-		logger.debug("stopLoss: {}", stopLoss);
 		double takeProfit = price + (shortC * atr * 0.7);
 		long items = 0L;
-		double volumePc = 0, prevVolumePc;
+		double volumePc = 0, prevVolumePc, prevStopLoss = -1;
 		EvalOutDTO eval = null, prev;
+
+		logger.debug("technicalStop {}", evalDTO.technicalStop());
+
 		do {
-			items++;
-			prevVolumePc = volumePc;
-			double volume = price * items;
-			double volumeUSD = currencyRateService.convertToUSD(currency.getId(), volume, LocalDate.now());
-			double capital = getCapital();
-			volumePc = volumeUSD / capital * 100.0;
-			EvalInDTO dto = new EvalInDTO(
-					evalDTO.brokerId(),
-					evalDTO.tickerId(),
-					price,
-					atr,
-					items,
-					stopLoss,
-					takeProfit,
-					LocalDate.now(),
-					evalDTO.isShort());
-			prev = eval;
+			if (evalDTO.technicalStop()) {
+				items = 0;
+				prevStopLoss = stopLoss;
+				stopLoss = stopLoss - (shortC * 0.01);
+			}
+			do {
+				items++;
+				prevVolumePc = volumePc;
+				double volume    = price * items;
+				double volumeUSD = currencyRateService.convertToUSD(currency.getId(), volume, LocalDate.now());
+				double capital   = getCapital();
+				volumePc = volumeUSD / capital * 100.0;
+				EvalInDTO dto = new EvalInDTO(
+						evalDTO.brokerId(),
+						evalDTO.tickerId(),
+						price,
+						atr,
+						items,
+						stopLoss,
+						takeProfit,
+						LocalDate.now(),
+						evalDTO.isShort());
+				prev = eval;
 
-			eval = eval(dto);
+				eval = eval(dto);
 
+
+
+
+			} while (eval.riskPc() <= evalDTO.riskPc() && volumePc <= evalDTO.depositPc());
 			logger.debug("items: {}", items);
 			logger.debug("volumePc: {}, dto: {}", volumePc, evalDTO.depositPc());
 			logger.debug("riskPc: {}, dto: {}", eval.riskPc(), evalDTO.riskPc());
 			logger.debug("riskRewardPc: {}, dto: {}", eval.riskRewardPc(), evalDTO.riskRewardPc());
-
-		} while (eval.riskPc() <= evalDTO.riskPc() && volumePc <= evalDTO.depositPc());
+		} while (eval.riskRewardPc() <= evalDTO.riskRewardPc() && evalDTO.technicalStop());
 
 		if (prev == null) {
 			return null;
@@ -342,7 +353,7 @@ public class CashService {
 				prev.breakEven(),
 				takeProfit,
 				prev.outcomeExp(),
-				stopLoss,
+				prevStopLoss > 0 ? prevStopLoss : stopLoss,
 				price,
 				items,
 				prev.volume(),

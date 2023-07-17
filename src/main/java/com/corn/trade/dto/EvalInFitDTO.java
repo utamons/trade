@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDate;
 
 public record EvalInFitDTO(Long brokerId, Long tickerId, Double levelPrice, Double atr, Double riskPc, Double riskRewardPc,
-                           Double depositPc, Double stopLoss, LocalDate date, boolean isShort) {
+                           Double depositPc, Double stopLoss, LocalDate date, boolean isShort, boolean technicalStop) {
 	@JsonCreator
 	public EvalInFitDTO(
 			@JsonProperty("brokerId") Long brokerId,
@@ -18,7 +18,8 @@ public record EvalInFitDTO(Long brokerId, Long tickerId, Double levelPrice, Doub
 			@JsonProperty("depositPc") Double depositPc,
 			@JsonProperty("stopLoss") Double stopLoss,
 			@JsonProperty("date") LocalDate date,
-			@JsonProperty("short") boolean isShort) {
+			@JsonProperty("short") boolean isShort,
+			@JsonProperty("technicalStop") boolean technicalStop) {
 		this.brokerId = brokerId;
 		this.tickerId = tickerId;
 		this.atr = atr;
@@ -29,5 +30,6 @@ public record EvalInFitDTO(Long brokerId, Long tickerId, Double levelPrice, Doub
 		this.stopLoss = stopLoss;
 		this.date = date;
 		this.isShort = isShort;
+		this.technicalStop = technicalStop;
 	}
 }
