@@ -19,6 +19,7 @@ import SelectFieldBox from '../../dialogs/selectFieldBox'
 import ValueFieldBox from '../../dialogs/valueFieldBox'
 import DatePickerBox from '../../dialogs/datePickerBox'
 import { MAX_DEPOSIT_PC, MAX_RISK_PC, MAX_RISK_REWARD_PC } from '../../../utils/constants'
+import CheckFieldBox from '../../dialogs/checkFieldBox'
 
 
 const positions = [
@@ -165,6 +166,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     const [currentTicker, setCurrentTicker] = useState<TickerType | undefined>(tickers[0])
     const [evaluate, setEvaluate] = useState(true)
     const [isLoading, setLoading] = useState(false)
+    const [technicalStop, setTechicalStop] = useState(false)
 
     const theme = useTheme()
     // noinspection TypeScriptUnresolvedVariable
@@ -221,53 +223,95 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
         dispatch({ type: 'clearErrors', payload: {} })
         let state = true
         if (levelPrice == undefined) {
-            dispatch({ type: 'set', payload: { name: 'levelPrice', valueNum: undefined, valid: false, errorText: 'required' } })
+            dispatch({
+                type: 'set',
+                payload: { name: 'levelPrice', valueNum: undefined, valid: false, errorText: 'required' }
+            })
             state = false
         }
         if (levelPrice < 0) {
-            dispatch({ type: 'set', payload: { name: 'levelPrice', valueNum: levelPrice, valid: false, errorText: 'must be greater than 0' } })
+            dispatch({
+                type: 'set',
+                payload: { name: 'levelPrice', valueNum: levelPrice, valid: false, errorText: 'must be greater than 0' }
+            })
             state = false
         }
         if (atr == undefined) {
-            dispatch({ type: 'set', payload: { name: 'atr', valueNum: undefined, valid: false, errorText: 'required' } })
+            dispatch({
+                type: 'set',
+                payload: { name: 'atr', valueNum: undefined, valid: false, errorText: 'required' }
+            })
             state = false
         }
         if (atr < 0) {
-            dispatch({ type: 'set', payload: { name: 'atr', valueNum: atr, valid: false, errorText: 'must be greater than 0' } })
+            dispatch({
+                type: 'set',
+                payload: { name: 'atr', valueNum: atr, valid: false, errorText: 'must be greater than 0' }
+            })
             state = false
         }
         if (riskPc == undefined) {
-            dispatch({ type: 'set', payload: { name: 'riskPc', valueNum: undefined, valid: false, errorText: 'required' } })
+            dispatch({
+                type: 'set',
+                payload: { name: 'riskPc', valueNum: undefined, valid: false, errorText: 'required' }
+            })
             state = false
         }
         if (riskPc < 0) {
-            dispatch({ type: 'set', payload: { name: 'riskPc', valueNum: riskPc, valid: false, errorText: 'must be greater than 0' } })
+            dispatch({
+                type: 'set',
+                payload: { name: 'riskPc', valueNum: riskPc, valid: false, errorText: 'must be greater than 0' }
+            })
             state = false
         }
         if (riskRewardPc == undefined) {
-            dispatch({ type: 'set', payload: { name: 'riskRewardPc', valueNum: undefined, valid: false, errorText: 'required' } })
+            dispatch({
+                type: 'set',
+                payload: { name: 'riskRewardPc', valueNum: undefined, valid: false, errorText: 'required' }
+            })
             state = false
         }
         if (riskRewardPc < 0) {
-            dispatch({ type: 'set', payload: { name: 'riskRewardPc', valueNum: riskRewardPc, valid: false, errorText: 'must be greater than 0' } })
+            dispatch({
+                type: 'set',
+                payload: {
+                    name: 'riskRewardPc',
+                    valueNum: riskRewardPc,
+                    valid: false,
+                    errorText: 'must be greater than 0'
+                }
+            })
             state = false
         }
         if (depositPc == undefined) {
-            dispatch({ type: 'set', payload: { name: 'depositPc', valueNum: undefined, valid: false, errorText: 'required' } })
+            dispatch({
+                type: 'set',
+                payload: { name: 'depositPc', valueNum: undefined, valid: false, errorText: 'required' }
+            })
             state = false
         }
         if (depositPc < 0) {
-            dispatch({ type: 'set', payload: { name: 'depositPc', valueNum: depositPc, valid: false, errorText: 'must be greater than 0' } })
+            dispatch({
+                type: 'set',
+                payload: { name: 'depositPc', valueNum: depositPc, valid: false, errorText: 'must be greater than 0' }
+            })
             state = false
         }
         if (stopLoss != undefined && stopLoss < 0) {
-            dispatch({ type: 'set', payload: { name: 'stopLoss', valueNum: stopLoss, valid: false, errorText: 'must be greater than 0' } })
+            dispatch({
+                type: 'set',
+                payload: { name: 'stopLoss', valueNum: stopLoss, valid: false, errorText: 'must be greater than 0' }
+            })
             state = false
         }
         state = validateStopLoss(state)
 
         return state
     }
+
+    const handleTechnicalStop = useCallback((technicalStop: boolean) => {
+        setTechicalStop(technicalStop)
+    }, [])
 
     // noinspection DuplicatedCode
     const handleEvalToFit = useCallback(async () => {
@@ -283,7 +327,8 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                 depositPc,
                 stopLoss,
                 date: date.toISOString(),
-                short: isShort()
+                short: isShort(),
+                technicalStop
             })
             setLoading(false)
             dispatch({ type: 'set', payload: { name: 'outcomeExp', valueNum: ev.outcomeExp, valid: true } })
@@ -551,10 +596,6 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                             errorText={getFieldErrorText('items', formState)}
                             fieldName={'items'}
                             dispatch={dispatch}/>
-                    </Grid>
-                </Grid>
-                <Grid item xs={1}>
-                    <Grid container columns={1}>
                         <NumberFieldBox
                             label={'Vol./depo. (%):'}
                             value={depositPc}
@@ -563,6 +604,11 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                             color={greaterColor(depositPc, defaultColor, MAX_DEPOSIT_PC)}
                             fieldName={'depositPc'}
                             dispatch={dispatch}/>
+                    </Grid>
+                </Grid>
+                <Grid item xs={1}>
+                    <Grid container columns={1}>
+                        <CheckFieldBox checked={technicalStop} label="Techincal Stop:" onChange={handleTechnicalStop}/>
                         <NumberFieldBox
                             label={'Stop Loss:'}
                             value={stopLoss}

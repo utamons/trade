@@ -149,7 +149,8 @@ type EvalToFitRequest = {
     depositPc: number,
     stopLoss?: number,
     date: string,
-    short: boolean
+    short: boolean,
+    technicalStop: boolean
 }
 
 type TradeLog = {
