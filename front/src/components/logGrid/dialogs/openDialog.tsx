@@ -47,7 +47,8 @@ interface EvalToFit {
     takeProfit: number,
     stopLoss: number,
     items: number
-    volume: number
+    volume: number,
+    depositPc: number
 }
 
 const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, tickerId: number, marketId: number, positionId: number) => {
@@ -217,7 +218,6 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     }
 
     const validEvalToFit = () => {
-        console.log('riskRewardPc', riskRewardPc, 'riskPc', riskPc)
         dispatch({ type: 'clearErrors', payload: {} })
         let state = true
         if (levelPrice == undefined) {
@@ -260,11 +260,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
             dispatch({ type: 'set', payload: { name: 'depositPc', valueNum: depositPc, valid: false, errorText: 'must be greater than 0' } })
             state = false
         }
-        if (stopLoss == undefined) {
-            dispatch({ type: 'set', payload: { name: 'stopLoss', valueNum: undefined, valid: false, errorText: 'required' } })
-            state = false
-        }
-        if (stopLoss < 0) {
+        if (stopLoss != undefined && stopLoss < 0) {
             dispatch({ type: 'set', payload: { name: 'stopLoss', valueNum: stopLoss, valid: false, errorText: 'must be greater than 0' } })
             state = false
         }
@@ -301,6 +297,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
             dispatch({ type: 'set', payload: { name: 'takeProfit', valueNum: ev.takeProfit, valid: true } })
             dispatch({ type: 'set', payload: { name: 'items', valueNum: ev.items, valid: true } })
             dispatch({ type: 'set', payload: { name: 'volume', valueNum: ev.volume, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'depositPc', valueNum: ev.depositPc, valid: true } })
 
             return
         }

@@ -61,7 +61,7 @@ const formReducer = (state: FormState, action: FormAction): FormState => {
             updatedValuesNumeric = state.valuesNumeric.map((field) =>
                 field.name === name ? {
                     ...field,
-                    value: valueNum != undefined ? roundTo2(valueNum) : roundTo2(field.value),
+                    value: roundTo2(valueNum) ? roundTo2(valueNum) : valueStr,
                     valid: valid ?? true,
                     errorText: errorText
                 } : field

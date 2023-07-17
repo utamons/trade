@@ -266,7 +266,7 @@ type PositionEditType = {
 
 type FormFieldNumeric = {
     name: string,
-    value: number | undefined,
+    value: number | string | undefined,
     valid: boolean
     errorText?: string
 }
