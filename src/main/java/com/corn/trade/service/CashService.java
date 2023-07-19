@@ -3,6 +3,7 @@ package com.corn.trade.service;
 import com.corn.trade.dto.*;
 import com.corn.trade.entity.*;
 import com.corn.trade.mapper.CashAccountMapper;
+import com.corn.trade.mapper.CurrencyMapper;
 import com.corn.trade.repository.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
@@ -20,13 +21,13 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class CashService {
-	private final static Logger logger          = LoggerFactory.getLogger(CashService.class);
-	private final CashAccountRepository     accountRepo;
-	private final CashFlowRepository        cashFlowRepo;
-	private final BrokerRepository          brokerRepo;
-	private final CurrencyRepository        currencyRepo;
-	private final CashAccountTypeRepository accountTypeRepo;
-	private final TickerRepository          tickerRepo;
+	private final static Logger                    logger = LoggerFactory.getLogger(CashService.class);
+	private final        CashAccountRepository     accountRepo;
+	private final        CashFlowRepository        cashFlowRepo;
+	private final        BrokerRepository          brokerRepo;
+	private final        CurrencyRepository        currencyRepo;
+	private final        CashAccountTypeRepository accountTypeRepo;
+	private final        TickerRepository          tickerRepo;
 
 	private final TradeLogRepository  tradeLogRepo;
 	private final CurrencyRateService currencyRateService;
@@ -291,98 +292,140 @@ public class CashService {
 		return sum;
 	}
 
-	public EvalOutFitDTO evalToFit(EvalInFitDTO evalDTO) throws JsonProcessingException {
-		logger.debug("start");
-		final int    shortC     = evalDTO.isShort() ? -1 : 1;
-		Double       levelPrice = evalDTO.levelPrice();
-		Double       atr        = evalDTO.atr();
-		Currency    currency   = tickerRepo.getReferenceById(evalDTO.tickerId()).getCurrency();
-		double price = levelPrice + (shortC * 0.05);
-		double stopLoss = evalDTO.stopLoss() == null ? levelPrice - (shortC * levelPrice/100*0.2) : evalDTO.stopLoss();
-		double takeProfit = price + (shortC * atr * 0.7);
-		long items = 0L;
-		double volumePc = 0, prevVolumePc, prevStopLoss = -1;
-		EvalOutDTO eval = null, prev;
+	public record EvalToFitRecord(long items, double volumePc, EvalOutDTO eval) {
+	}
 
-		logger.debug("technicalStop {}", evalDTO.technicalStop());
+	public long getMaxItems(Currency currency, double depositPc, double price) throws JsonProcessingException {
+		double     capital      = getCapital();
+		double     maxVolumeUSD = capital * depositPc / 100.0;
+		double     priceUSD     = currencyRateService.convertToUSD(currency.getId(), price, LocalDate.now());
+		return (long) (maxVolumeUSD / priceUSD);
+	}
 
+	public EvalToFitRecord evalToFit(EvalInFitDTO evalDTO,
+	                                 Currency currency,
+	                                 Double atr,
+	                                 Double stopLoss,
+	                                 Double takeProfit,
+	                                 double price,
+									 double capital) throws JsonProcessingException {
+		double     volumePc;
+		EvalOutDTO eval;
+		long items = getMaxItems(currency, evalDTO.depositPc(), price);
+		final Broker broker     = brokerRepo.getReferenceById(evalDTO.brokerId());
+		final Ticker ticker     = tickerRepo.getReferenceById(evalDTO.tickerId());
+		final String brokerName = broker.getName();
+		final CurrencyDTO currencyDTO = CurrencyMapper.toDTO(ticker.getCurrency());
+		EvalInDTO dto;
 		do {
-			if (evalDTO.technicalStop()) {
-				items = 0;
-				prevStopLoss = stopLoss;
-				stopLoss = stopLoss - (shortC * 0.01);
-			}
-			do {
-				items++;
-				prevVolumePc = volumePc;
-				double volume    = price * items;
-				double volumeUSD = currencyRateService.convertToUSD(currency.getId(), volume, LocalDate.now());
-				double capital   = getCapital();
-				volumePc = volumeUSD / capital * 100.0;
-				EvalInDTO dto = new EvalInDTO(
-						evalDTO.brokerId(),
-						evalDTO.tickerId(),
-						price,
-						atr,
-						items,
-						stopLoss,
-						takeProfit,
-						LocalDate.now(),
-						evalDTO.isShort());
-				prev = eval;
-
-				eval = eval(dto);
+			double volume    = price * items;
+			double volumeUSD = currencyRateService.convertToUSD(currency.getId(), volume, LocalDate.now());
+			volumePc = volumeUSD / capital * 100.0;
+			dto = new EvalInDTO(
+					evalDTO.brokerId(),
+					evalDTO.tickerId(),
+					price,
+					atr,
+					items,
+					stopLoss,
+					takeProfit,
+					LocalDate.now(),
+					evalDTO.isShort());
+			eval = eval(dto, brokerName, currencyDTO, capital);
+			items--;
+		} while (eval.riskPc() > evalDTO.riskPc() && eval.riskRewardPc() < evalDTO.riskRewardPc());
+		return new EvalToFitRecord(items, volumePc, eval);
+	}
 
 
+	public EvalOutFitDTO evalToFit(EvalInFitDTO evalDTO) throws JsonProcessingException {
+		final int shortC     = evalDTO.isShort() ? -1 : 1;
+		Double    levelPrice = evalDTO.levelPrice();
+		Double    atr        = evalDTO.atr();
+		Currency  currency   = tickerRepo.getReferenceById(evalDTO.tickerId()).getCurrency();
+		double    price      = levelPrice + (shortC * 0.05);
+		double capital = getCapital();
+		double stopLoss =
+				evalDTO.stopLoss() == null ? levelPrice - (shortC * levelPrice / 100 * 0.2) : evalDTO.stopLoss();
+		double takeProfit = price + (shortC * atr * 0.7);
 
+		EvalToFitRecord evalToFitRecord;
 
-			} while (eval.riskPc() <= evalDTO.riskPc() && volumePc <= evalDTO.depositPc());
-			logger.debug("items: {}", items);
-			logger.debug("volumePc: {}, dto: {}", volumePc, evalDTO.depositPc());
-			logger.debug("riskPc: {}, dto: {}", eval.riskPc(), evalDTO.riskPc());
-			logger.debug("riskRewardPc: {}, dto: {}", eval.riskRewardPc(), evalDTO.riskRewardPc());
-		} while (eval.riskRewardPc() <= evalDTO.riskRewardPc() && evalDTO.technicalStop());
+		if (evalDTO.technicalStop()) {
+			stopLoss = getTechnicalStop(evalDTO, shortC, atr, currency, price, stopLoss, takeProfit);
+			stopLoss = stopLoss + (shortC * 0.01);
+		}
+		evalToFitRecord = evalToFit(evalDTO, currency, atr, stopLoss, takeProfit, price, capital);
 
-		if (prev == null) {
+		if (evalToFitRecord == null) {
 			return null;
 		}
 
 		return new EvalOutFitDTO(
-				prev.fees(),
-				prev.riskPc(),
-				prev.breakEven(),
+				evalToFitRecord.eval.fees(),
+				evalToFitRecord.eval.riskPc(),
+				evalToFitRecord.eval.breakEven(),
 				takeProfit,
-				prev.outcomeExp(),
-				prevStopLoss > 0 ? prevStopLoss : stopLoss,
+				evalToFitRecord.eval.outcomeExp(),
+				stopLoss,
 				price,
-				items,
-				prev.volume(),
-				prev.gainPc(),
-				prev.riskRewardPc(),
-				prevVolumePc
+				evalToFitRecord.items + 1,
+				evalToFitRecord.eval.volume(),
+				evalToFitRecord.eval.gainPc(),
+				evalToFitRecord.eval.riskRewardPc(),
+				evalToFitRecord.volumePc
 		);
 	}
 
-	public EvalOutDTO eval(EvalInDTO evalDTO) throws JsonProcessingException {
-		final Broker    broker     = brokerRepo.getReferenceById(evalDTO.brokerId());
-		final Ticker    ticker     = tickerRepo.getReferenceById(evalDTO.tickerId());
-		final long      items      = evalDTO.items();
-		final double    priceOpen  = evalDTO.price();
-		final double    volume     = priceOpen * items;
-		final double    feesOpen   = getFees(broker, ticker, items, volume).getAmount();
-		final double    takeProfit = evalDTO.takeProfit();
-		final double    stopLoss   = evalDTO.stopLoss();
-		final int       shortC     = evalDTO.isShort() ? -1 : 1;
+	private double getTechnicalStop(EvalInFitDTO evalDTO,
+	                                int shortC,
+	                                Double atr,
+	                                Currency currency,
+	                                double price,
+	                                double stopLoss,
+	                                double takeProfit) throws JsonProcessingException {
+		EvalToFitRecord evalToFitRecord;
+		long            ms   = System.currentTimeMillis();
+		double          rrPC = 0;
+		double capital = getCapital();
+		while (rrPC <= evalDTO.riskRewardPc()) {
+			stopLoss = stopLoss - (shortC * 0.01);
+			evalToFitRecord = evalToFit(evalDTO, currency, atr, stopLoss, takeProfit, price, capital);
+			rrPC = evalToFitRecord.eval.riskRewardPc();
+		}
+		long time = System.currentTimeMillis() - ms;
+		logger.debug("time {}", time);
+		return stopLoss;
+	}
 
-		final double breakEven = getBreakEven(shortC, broker, ticker, items, priceOpen, 0);
+	public EvalOutDTO eval(EvalInDTO evalDTO) throws JsonProcessingException {
+		final Broker broker     = brokerRepo.getReferenceById(evalDTO.brokerId());
+		final Ticker ticker     = tickerRepo.getReferenceById(evalDTO.tickerId());
+		final String brokerName = broker.getName();
+		final CurrencyDTO currencyDTO = CurrencyMapper.toDTO(ticker.getCurrency());
+		final double capital = getCapital();
+		return eval(evalDTO, brokerName, currencyDTO, capital);
+	}
+
+
+	public EvalOutDTO eval(EvalInDTO evalDTO, String brokerName, CurrencyDTO currencyDTO, double capital) throws JsonProcessingException {
+		final long   items      = evalDTO.items();
+		final double priceOpen  = evalDTO.price();
+		final double volume     = priceOpen * items;
+		final double feesOpen   = getFees(brokerName, currencyDTO, items, volume).getAmount();
+		final double takeProfit = evalDTO.takeProfit();
+		final double stopLoss   = evalDTO.stopLoss();
+		final int    shortC     = evalDTO.isShort() ? -1 : 1;
+
+		final double breakEven = getBreakEven(shortC, brokerName, currencyDTO, items, priceOpen, 0);
 
 		final double profit = Math.abs(takeProfit - breakEven) * items;
 
 		final double riskRewardPc = Math.abs(stopLoss - breakEven) / Math.abs(takeProfit - breakEven) * 100;
 
-		final double riskPc = getRisk(evalDTO);
+		final double riskPc = getRisk(evalDTO, brokerName, currencyDTO, capital);
 
-		double feesClose = getFees(broker, ticker, items, takeProfit * items).getAmount();
+		double feesClose = getFees(brokerName, currencyDTO, items, takeProfit * items).getAmount();
 		double taxes     = getTaxes(profit);
 
 		final double outcomeExp = Math.abs(profit - feesOpen - feesClose - taxes);
@@ -392,13 +435,10 @@ public class CashService {
 		return new EvalOutDTO(outcomeExp, gainPc, (feesOpen + feesClose), riskPc, riskRewardPc, breakEven, volume);
 	}
 
-	public double getRisk(EvalInDTO evalDTO) throws JsonProcessingException {
-		final Broker    broker     = brokerRepo.getReferenceById(evalDTO.brokerId());
+	public double getRisk(EvalInDTO evalDTO, String brokerName, CurrencyDTO currencyDTO, double    capital) throws JsonProcessingException {
 		final LocalDate date       = evalDTO.date();
-		final double    capital    = getCapital();
 		final double    priceOpen  = evalDTO.price();
-		final Ticker    ticker     = tickerRepo.getReferenceById(evalDTO.tickerId());
-		final long      currencyId = ticker.getCurrency().getId();
+		final long      currencyId = currencyDTO.getId();
 		final double    stopLoss   = evalDTO.stopLoss();
 
 		final double riskBase = getRiskBase(capital);
@@ -423,28 +463,28 @@ public class CashService {
 
 		final double losses = Math.abs(sum - sumLoss);
 
-		final double feesOpen = getFees(broker, ticker, items, sum).getAmount();
+		final double feesOpen = getFees(brokerName, currencyDTO, items, sum).getAmount();
 
-		final double feesLoss = getFees(broker, ticker, items, sumLoss).getAmount();
+		final double feesLoss = getFees(brokerName, currencyDTO, items, sumLoss).getAmount();
 
 		return (losses + feesOpen + feesLoss) / (riskBase) * 100.0;
 	}
 
 	private double getBreakEven(int shortC,
-	                            Broker broker,
-	                            Ticker ticker,
+	                            String brokerName,
+	                            CurrencyDTO currencyDTO,
 	                            long items,
 	                            double priceOpen,
 	                            double interest) throws JsonProcessingException {
 		double sumOpen   = items * priceOpen;
-		double feesOpen  = getFees(broker, ticker, items, sumOpen).getAmount();
+		double feesOpen  = getFees(brokerName, currencyDTO, items, sumOpen).getAmount();
 		double sumClose  = sumOpen;
-		double feesClose = getFees(broker, ticker, items, sumClose).getAmount();
+		double feesClose = getFees(brokerName, currencyDTO, items, sumClose).getAmount();
 		double taxes     = getTaxes(shortC * sumClose - (shortC * sumOpen));
 
 		while (shortC * sumClose - (shortC * sumOpen) < feesOpen + feesClose + taxes + interest) {
 			sumClose = sumClose + (shortC * 0.01);
-			feesClose = getFees(broker, ticker, items, sumClose).getAmount();
+			feesClose = getFees(brokerName, currencyDTO, items, sumClose).getAmount();
 			taxes = getTaxes(shortC * sumClose - (shortC * sumOpen));
 		}
 
@@ -460,29 +500,28 @@ public class CashService {
 	}
 
 
-
-	public Fees getFees(Broker broker, Ticker ticker, long items, Double sum) throws JsonProcessingException {
+	public Fees getFees(String brokerName, CurrencyDTO currencyDTO, long items, Double sum) throws JsonProcessingException {
 		double fixed  = 0.0;
 		double fly    = 0.0;
 		double amount = 0.0;
 
-		if (broker.getName().equals("FreedomFN")) {
-			if (ticker.getCurrency().getName().equals("KZT")) {
+		if (brokerName.equals("FreedomFN")) {
+			if (currencyDTO.getName().equals("KZT")) {
 				amount = fly = sum / 100.0 * 0.085;
 			} else {
 				fixed = 1.2;
 				fly = sum / 100.0 * 0.5 + items * 0.012;
 				amount = fixed + fly;
 			}
-		} else if (broker.getName().equals("Interactive")) {
-			if (ticker.getCurrency().getName().equals("USD")) {
+		} else if (brokerName.equals("Interactive")) {
+			if (currencyDTO.getName().equals("USD")) {
 				double max = items * sum / 100.0;
 				double min = items * 0.005;
 				amount = Math.min(max, min);
 				amount = amount < 1 ? 1 : amount;
 			}
 		}
-		amount = currencyRateService.convertToUSD(ticker.getCurrency().getId(), amount, LocalDate.now());
+		amount = currencyRateService.convertToUSD(currencyDTO.getId(), amount, LocalDate.now());
 		return new Fees(fixed, fly, amount);
 	}
 
@@ -516,8 +555,8 @@ public class CashService {
 					currencyRateService.convertToUSD(tradeLog.getTicker().getCurrency().getId(), interest, currentDate);
 			tradeLog.setBrokerInterest(interestUSD);
 			double breakEven = getBreakEven(-1,
-			                                tradeLog.getBroker(),
-			                                tradeLog.getTicker(),
+			                                tradeLog.getBroker().getName(),
+			                                CurrencyMapper.toDTO(tradeLog.getTicker().getCurrency()),
 			                                tradeLog.getItemNumber(),
 			                                tradeLog.getPriceOpen(),
 			                                interest);

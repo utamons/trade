@@ -2,6 +2,7 @@ package com.corn.trade.service;
 
 import com.corn.trade.dto.*;
 import com.corn.trade.entity.*;
+import com.corn.trade.mapper.CurrencyMapper;
 import com.corn.trade.mapper.TradeLogMapper;
 import com.corn.trade.repository.BrokerRepository;
 import com.corn.trade.repository.MarketRepository;
@@ -70,8 +71,8 @@ public class TradeLogService {
 			open = copyPartial(closeDTO, open);
 
 		final Broker   broker   = open.getBroker();
-		final Ticker   ticker   = open.getTicker();
 		final Currency currency = open.getCurrency();
+		final CurrencyDTO currencyDTO = CurrencyMapper.toDTO(currency);
 
 		final double        priceOpen      = open.getPriceOpen();
 		double              priceClose     = closeDTO.getPriceClose();
@@ -86,8 +87,8 @@ public class TradeLogService {
 		final double        brokerInterest = closeDTO.getBrokerInterest() == null ? 0.0 : closeDTO.getBrokerInterest();
 
 		// in the currency of the position:
-		final double closeFees = cashService.getFees(broker, ticker, items, sum).getAmount();
-		final double openFees  = cashService.getFees(broker, ticker, items, volume).getAmount();
+		final double closeFees = cashService.getFees(broker.getName(), currencyDTO, items, sum).getAmount();
+		final double openFees  = cashService.getFees(broker.getName(), currencyDTO, items, volume).getAmount();
 
 		final double outcome        = ((shortC * priceClose - shortC * priceOpen) * items) - (closeFees + openFees + brokerInterest);
 		final double outcomePercent = outcome / volume * 100.0;
@@ -188,6 +189,7 @@ public class TradeLogService {
 
 	public void update(TradeLogOpenDTO openDTO) throws JsonProcessingException {
 		TradeLog tradeLog = tradeLogRepo.getReferenceById(openDTO.getId());
+		double capital = cashService.getCapital();
 
 		EvalInDTO evalInDTO = new EvalInDTO(
 				tradeLog.getBroker().getId(),
@@ -201,7 +203,7 @@ public class TradeLogService {
 				tradeLog.isShort()
 		);
 
-		double risk = cashService.getRisk(evalInDTO);
+		double risk = cashService.getRisk(evalInDTO, tradeLog.getBroker().getName(), CurrencyMapper.toDTO(tradeLog.getCurrency()), capital);
 
 		tradeLog.setStopLoss(openDTO.getStopLoss());
 		tradeLog.setTakeProfit(openDTO.getTakeProfit());

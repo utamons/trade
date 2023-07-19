@@ -60,10 +60,11 @@ export const BLUE = '#0099ff'
 
 export const takeColor = (take:number | undefined, price:number | undefined, atr: number | undefined) => {
     if (take && atr && price) {
-        const range = Math.abs(take - price)
+        const range = roundTo2(Math.abs(take - price)) ?? 0
+        const rangeToAtr = roundTo2(range / atr) ?? 0
         if (range > atr)
             return RED
-        if (range / atr > 0.7)
+        if (rangeToAtr > 0.7)
             return ORANGE
     }
     return BLUE

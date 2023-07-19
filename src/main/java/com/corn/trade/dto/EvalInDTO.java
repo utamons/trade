@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDate;
 
+import static com.corn.trade.util.Util.round;
+
 public record EvalInDTO(Long brokerId, Long tickerId, Double price, Double atr, Long items, Double stopLoss,
                         Double takeProfit, LocalDate date, boolean isShort) {
 	@JsonCreator
@@ -20,11 +22,11 @@ public record EvalInDTO(Long brokerId, Long tickerId, Double price, Double atr, 
 			@JsonProperty("short") boolean isShort) {
 		this.brokerId = brokerId;
 		this.tickerId = tickerId;
-		this.price = price;
-		this.takeProfit = takeProfit;
-		this.atr = atr;
+		this.price = round(price, 2);
+		this.takeProfit = round(takeProfit, 2);
+		this.atr = round(atr, 2);
 		this.items = items;
-		this.stopLoss = stopLoss;
+		this.stopLoss =round(stopLoss, 2);
 		this.date = date;
 		this.isShort = isShort;
 	}

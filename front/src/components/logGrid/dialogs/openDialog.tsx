@@ -311,6 +311,9 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
 
     const handleTechnicalStop = useCallback((technicalStop: boolean) => {
         setTechicalStop(technicalStop)
+        if (technicalStop) {
+            dispatch({ type: 'set', payload: { name: 'stopLoss', valueNum: undefined, valid: true } })
+        }
     }, [])
 
     // noinspection DuplicatedCode
@@ -327,9 +330,10 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                 depositPc,
                 stopLoss,
                 date: date.toISOString(),
-                short: isShort(),
+                short: positionId == '1',
                 technicalStop
             })
+            console.log('ev', ev)
             setLoading(false)
             dispatch({ type: 'set', payload: { name: 'outcomeExp', valueNum: ev.outcomeExp, valid: true } })
             dispatch({ type: 'set', payload: { name: 'gainPc', valueNum: ev.gainPc, valid: true } })
@@ -353,7 +357,9 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
         atr,
         riskPc,
         riskRewardPc,
-        depositPc
+        depositPc,
+        technicalStop,
+        positionId
     ])
 
     const validEval = () => {
@@ -517,6 +523,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     const handleReset = useCallback(() => {
         dispatch({ type: 'clearErrors', payload: {} })
         dispatch({ type: 'reset', payload: {} })
+        setTechicalStop(false)
     }, [])
 
     return <Dialog
