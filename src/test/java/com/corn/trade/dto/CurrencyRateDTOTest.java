@@ -1,7 +1,5 @@
 package com.corn.trade.dto;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -18,10 +16,10 @@ public class CurrencyRateDTOTest {
 
 		CurrencyRateDTO currencyRateDTO = new CurrencyRateDTO(id, date, currency, rate);
 
-		Assertions.assertEquals(id, currencyRateDTO.getId());
-		Assertions.assertEquals(date, currencyRateDTO.getDate());
-		Assertions.assertEquals(currency, currencyRateDTO.getCurrency());
-		Assertions.assertEquals(rate, currencyRateDTO.getRate());
+		Assertions.assertEquals(id, currencyRateDTO.id());
+		Assertions.assertEquals(date, currencyRateDTO.date());
+		Assertions.assertEquals(currency, currencyRateDTO.currency());
+		Assertions.assertEquals(rate, currencyRateDTO.rate());
 	}
 
 	@Test
@@ -33,9 +31,9 @@ public class CurrencyRateDTOTest {
 
 		CurrencyRateDTO currencyRateDTO = new CurrencyRateDTO(id, date, currency, rate);
 
-		Assertions.assertEquals(id, currencyRateDTO.getId());
-		Assertions.assertEquals(date, currencyRateDTO.getDate());
-		Assertions.assertEquals(currency, currencyRateDTO.getCurrency());
-		Assertions.assertEquals(rate, currencyRateDTO.getRate());
+		Assertions.assertEquals(id, currencyRateDTO.id());
+		Assertions.assertEquals(date, currencyRateDTO.date());
+		Assertions.assertEquals(currency, currencyRateDTO.currency());
+		Assertions.assertEquals(rate, currencyRateDTO.rate());
 	}
 }

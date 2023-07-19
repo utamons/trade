@@ -6,6 +6,8 @@ import com.corn.trade.entity.CurrencyRate;
 
 public class CurrencyRateMapper {
 	public static CurrencyRateDTO toDTO(CurrencyRate entity) {
+		if (entity == null)
+			return null;
 		return new CurrencyRateDTO(
 				entity.getId(),
 				entity.getDate(),
@@ -14,6 +16,6 @@ public class CurrencyRateMapper {
 	}
 
 	public static CurrencyRate toEntity(CurrencyRateDTO dto, Currency currency) {
-		return new CurrencyRate(dto.getDate(), currency, dto.getRate());
+		return new CurrencyRate(dto.date(), currency, dto.rate());
 	}
 }

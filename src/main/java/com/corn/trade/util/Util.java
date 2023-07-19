@@ -9,4 +9,9 @@ public class Util {
 			return null;
 		return BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_EVEN);
 	}
+	public static Double round(Double value, int scale) {
+		if (value == null)
+			return null;
+		return BigDecimal.valueOf(value).setScale(scale, RoundingMode.HALF_EVEN).doubleValue();
+	}
 }
