@@ -7,7 +7,7 @@
     "test:watch": "jest --watch",
     "test:update": "npm run test -- -u",
     "prestart": "cpy config/config-local.json config/ --rename=config.json",
-    "start": "webpack-dashboard -- webpack serve --mode development --hot --open",
+    "start": "webpack serve --mode development --hot --open",
     "prebuild": "cpy config/config-build.json config/ --rename=config.json",
     "build": "webpack --mode production --config ./webpack.config.prod.js",
     "lint": "eslint --cache --ext tsx,jsx,js,ts src",
