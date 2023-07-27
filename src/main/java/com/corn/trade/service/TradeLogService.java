@@ -48,62 +48,51 @@ public class TradeLogService {
 
 
 	public void open(TradeLogOpenDTO openDTO) {
-		Broker   broker        = brokerRepo.getReferenceById(openDTO.getBrokerId());
-		Market   market        = marketRepo.getReferenceById(openDTO.getMarketId());
-		Ticker   ticker        = tickerRepo.getReferenceById(openDTO.getTickerId());
+		Broker   broker        = brokerRepo.getReferenceById(openDTO.brokerId());
+		Market   market        = marketRepo.getReferenceById(openDTO.marketId());
+		Ticker   ticker        = tickerRepo.getReferenceById(openDTO.tickerId());
 		Double   depositAmount = cashService.lastDepositAmount(broker, ticker.getCurrency());
 		TradeLog tradeLog      = TradeLogMapper.toEntity(openDTO, broker, market, ticker, depositAmount);
 
 		tradeLog = tradeLogRepo.save(tradeLog);
 		tradeLogRepo.flush();
-		if (openDTO.getPosition().equals("long"))
-			cashService.buy(tradeLog.getVolume(), broker, ticker.getCurrency(), tradeLog);
+		if (openDTO.position().equals("long"))
+			cashService.buy(tradeLog.getTotalBought(), broker, ticker.getCurrency(), tradeLog);
 		else
-			cashService.sellShort(tradeLog.getVolume(), broker, ticker.getCurrency(), tradeLog);
-		if (tradeLog.getFees() != 0.0)
-			cashService.fee(tradeLog.getFees(), broker, tradeLog, tradeLog.getDateOpen());
+			cashService.sellShort(tradeLog.getTotalSold(), broker, ticker.getCurrency(), tradeLog);
+		if (openDTO.fees() != 0.0)
+			cashService.fee(openDTO.fees(), broker, tradeLog, tradeLog.getDateOpen());
 	}
 
 	public void close(TradeLogCloseDTO closeDTO) throws JsonProcessingException {
-		TradeLog open = tradeLogRepo.getReferenceById(closeDTO.getId());
+		TradeLog open = tradeLogRepo.getReferenceById(closeDTO.id());
+		boolean isLong = open.getPosition().equals("long");
 
-		if (closeDTO.getQuantity() != null && closeDTO.getQuantity() < open.getItemNumber())
+		if (closeDTO.quantity() != null && closeDTO.quantity() < open.getItemNumber())
 			open = copyPartial(closeDTO, open);
 
 		final Broker   broker   = open.getBroker();
 		final Currency currency = open.getCurrency();
-		final CurrencyDTO currencyDTO = CurrencyMapper.toDTO(currency);
 
-		final double        priceOpen      = open.getPriceOpen();
-		double              priceClose     = closeDTO.getPriceClose();
-		final int           shortC         = open.getPosition().equals("long") ? 1 : -1;
-		final long          items          = open.getItemNumber();
-		final double        sum            = priceClose * items;
-		final double        volume         = open.getVolume();
-		final LocalDate     dateOpen       = open.getDateOpen().toLocalDate();
-		final LocalDateTime dateTimeClose  = closeDTO.getDateClose();
-		final LocalDate     dateClose      = dateTimeClose.toLocalDate();
-		final String        note           = closeDTO.getNote();
-		final double        brokerInterest = closeDTO.getBrokerInterest() == null ? 0.0 : closeDTO.getBrokerInterest();
+		double realVolume = isLong ? open.getTotalBought() : open.getTotalSold();
+		double realDelta = isLong ? closeDTO.totalSold() - open.getTotalBought() : open.getTotalSold() - closeDTO.totalBought();
+		double              priceClose     = closeDTO.priceClose();
+		final LocalDateTime dateTimeClose  = closeDTO.dateClose();
+		final String        note           = closeDTO.note();
+		final double        brokerInterest = closeDTO.brokerInterest() == null ? 0.0 : closeDTO.brokerInterest();
+		final double feesUSD = currencyRateService.convertToUSD(currency.getId(), closeDTO.fees(), closeDTO.dateClose().toLocalDate());
+		final double brokerInterestUSD = currencyRateService.convertToUSD(currency.getId(), brokerInterest, closeDTO.dateClose().toLocalDate());
 
-		// in the currency of the position:
-		final double closeFees = cashService.getFees(broker.getName(), currencyDTO, items, sum).getAmount();
-		final double openFees  = cashService.getFees(broker.getName(), currencyDTO, items, volume).getAmount();
+		final double outcome        = realDelta - (closeDTO.fees() + brokerInterest);
+		final double outcomePercent = outcome / realVolume * 100.0;
 
-		final double outcome        = ((shortC * priceClose - shortC * priceOpen) * items) - (closeFees + openFees + brokerInterest);
-		final double outcomePercent = outcome / volume * 100.0;
-
-		final double closeFeesUSD = currencyRateService.convertToUSD(currency.getId(), closeFees, dateClose);
-		final double openFeesUSD  = currencyRateService.convertToUSD(currency.getId(), openFees, dateOpen);
-
-		if (closeFeesUSD != 0)
-			cashService.fee(closeFeesUSD, broker, open, dateTimeClose);
+		cashService.fee(feesUSD, broker, open, dateTimeClose);
 		if (brokerInterest != 0)
-			cashService.fee(brokerInterest, broker, open, dateTimeClose);
+			cashService.fee(brokerInterestUSD, broker, open, dateTimeClose);
 
-		double percentToCapital = cashService.percentToCapital(outcome, volume, currency);
+		double percentToCapital = cashService.percentToCapital(outcome, realVolume, currency);
 
-		open.setFees(openFeesUSD + closeFeesUSD);
+		open.setFees(closeDTO.fees());
 		open.setPriceClose(priceClose);
 		open.setDateClose(dateTimeClose);
 		open.setOutcome(outcome);
@@ -111,25 +100,26 @@ public class TradeLogService {
 		open.setProfit(percentToCapital);
 		if (open.isShort()) {
 			open.setBrokerInterest(brokerInterest);
+			open.setTotalBought(closeDTO.totalBought());
+		} else {
+			open.setTotalSold(closeDTO.totalSold());
 		}
 
 		if (note != null)
 			open.setNote(note);
 
 
-		double closeAmount = priceClose * items;
-
 		open = tradeLogRepo.save(open);
 
 		if (open.getPosition().equals("long"))
-			cashService.sell(volume, closeAmount, broker, currency, open);
+			cashService.sell(open.getTotalBought(), realVolume, broker, currency, open);
 		else
-			cashService.buyShort(volume, closeAmount, broker, currency, open);
+			cashService.buyShort(open.getTotalSold(), realVolume, broker, currency, open);
 	}
 
 	private TradeLog copyPartial(TradeLogCloseDTO closeDTO, TradeLog open) {
 		Double   depositAmount = cashService.lastDepositAmount(open.getBroker(), open.getCurrency());
-		Double volume = open.getPriceOpen()*closeDTO.getQuantity();
+		Double volume = open.getPriceOpen()*closeDTO.quantity();
 		Double volumeToDeposit = volume/depositAmount*100.0;
 
 		TradeLog partial = new TradeLog();
@@ -139,7 +129,7 @@ public class TradeLogService {
 		partial.setMarket(open.getMarket());
 		partial.setTicker(open.getTicker());
 		partial.setCurrency(open.getCurrency());
-		partial.setItemNumber(closeDTO.getQuantity().longValue());
+		partial.setItemNumber(closeDTO.quantity().longValue());
 		partial.setPriceOpen(open.getPriceOpen());
 		partial.setVolume(volume);
 		partial.setVolumeToDeposit(volumeToDeposit);
@@ -152,10 +142,12 @@ public class TradeLogService {
 		partial.setBreakEven(open.getBreakEven());
 		partial.setBrokerInterest(open.getBrokerInterest());
 		partial.setParent(open);
+		partial.setTotalBought(open.getTotalBought());
+		partial.setTotalSold(open.getTotalSold());
 
 		partial = tradeLogRepo.save(partial);
 
-		open.setItemNumber(open.getItemNumber() - closeDTO.getQuantity());
+		open.setItemNumber(open.getItemNumber() - closeDTO.quantity());
 		open.setVolume(open.getVolume() - volume);
 
 		tradeLogRepo.save(open);
@@ -188,7 +180,7 @@ public class TradeLogService {
 	}
 
 	public void update(TradeLogOpenDTO openDTO) throws JsonProcessingException {
-		TradeLog tradeLog = tradeLogRepo.getReferenceById(openDTO.getId());
+		TradeLog tradeLog = tradeLogRepo.getReferenceById(openDTO.id());
 		double capital = cashService.getCapital();
 
 		EvalInDTO evalInDTO = new EvalInDTO(
@@ -197,17 +189,17 @@ public class TradeLogService {
 				tradeLog.getPriceOpen(),
 				tradeLog.getAtr(),
 				tradeLog.getItemNumber(),
-				openDTO.getStopLoss(),
-				openDTO.getTakeProfit(),
+				openDTO.stopLoss(),
+				openDTO.takeProfit(),
 				LocalDate.now(),
 				tradeLog.isShort()
 		);
 
 		double risk = cashService.getRisk(evalInDTO, tradeLog.getBroker().getName(), CurrencyMapper.toDTO(tradeLog.getCurrency()), capital);
 
-		tradeLog.setStopLoss(openDTO.getStopLoss());
-		tradeLog.setTakeProfit(openDTO.getTakeProfit());
-		tradeLog.setNote(openDTO.getNote());
+		tradeLog.setStopLoss(openDTO.stopLoss());
+		tradeLog.setTakeProfit(openDTO.takeProfit());
+		tradeLog.setNote(openDTO.note());
 		tradeLog.setRisk(risk);
 
 		tradeLogRepo.save(tradeLog);

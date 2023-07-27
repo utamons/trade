@@ -33,6 +33,21 @@ const initFormState = (
     const payload: FormActionPayload = {
         valuesNumeric: [
             {
+                name: 'fees',
+                valid: true,
+                value: undefined
+            },
+            {
+                name: 'totalSold',
+                valid: true,
+                value: undefined
+            },
+            {
+                name: 'totalBought',
+                valid: true,
+                value: undefined
+            },
+            {
                 name: 'price',
                 valid: true,
                 value: undefined
@@ -79,9 +94,16 @@ export default ({ onClose, isOpen, position, close }: CloseDialogProps) => {
     const brokerInterest = getFieldValue('brokerInterest', formState) as number
     const note = getFieldValue('note', formState) as string
     const date = getFieldValue('date', formState) as Date
+    const fees = getFieldValue('fees', formState) as number
+    const totalSold = getFieldValue('totalSold', formState) as number
+    const totalBought = getFieldValue('totalBought', formState) as number
 
     const valid = () => {
         let state = true
+        if (date == undefined) {
+            dispatch({ type: 'set', payload: { name: 'date', valid: false, errorText: 'required' } })
+            state = false
+        }
         if (price == undefined) {
             dispatch({ type: 'set', payload: { name: 'price', valid: false, errorText: 'required' } })
             state = false
@@ -98,6 +120,41 @@ export default ({ onClose, isOpen, position, close }: CloseDialogProps) => {
             dispatch({ type: 'set', payload: { name: 'quantity', valid: false, errorText: 'must be greater than 0' } })
             state = false
         }
+        if (fees == undefined) {
+            dispatch({ type: 'set', payload: { name: 'fees', valid: false, errorText: 'required' } })
+            state = false
+        }
+
+        if (fees < 0) {
+            dispatch({ type: 'set', payload: { name: 'fees', valid: false, errorText: 'must be greater than 0' } })
+            state = false
+        }
+        if (position.position == 'long') {
+            if (totalSold < 0) {
+                dispatch({
+                    type: 'set',
+                    payload: { name: 'totalSold', valid: false, errorText: 'must be greater than 0' }
+                })
+                state = false
+            }
+            if (totalSold == undefined) {
+                dispatch({ type: 'set', payload: { name: 'totalSold', valid: false, errorText: 'required' } })
+                state = false
+            }
+        }
+        if (position.position == 'short') {
+            if (totalBought < 0) {
+                dispatch({
+                    type: 'set',
+                    payload: { name: 'totalBought', valid: false, errorText: 'must be greater than 0' }
+                })
+                state = false
+            }
+            if (totalBought == undefined) {
+                dispatch({ type: 'set', payload: { name: 'totalBought', valid: false, errorText: 'required' } })
+                state = false
+            }
+        }
         return state
     }
 
@@ -112,11 +169,14 @@ export default ({ onClose, isOpen, position, close }: CloseDialogProps) => {
                 quantity: quantity ? quantity : position.itemNumber,
                 priceClose: price,
                 brokerInterest: brokerInterest ? brokerInterest : 0,
-                note: note
+                note: note,
+                fees: fees,
+                totalSold: totalSold,
+                totalBought: totalBought
             })
             onClose()
         }
-    }, [price, quantity, date, note, brokerInterest])
+    }, [price, quantity, date, note, brokerInterest, fees, totalSold, totalBought])
 
     return <Dialog
         maxWidth={false}
@@ -144,13 +204,34 @@ export default ({ onClose, isOpen, position, close }: CloseDialogProps) => {
                             value={price}
                             fieldName={'price'}
                             dispatch={dispatch}/>
-                        {position.position == 'short' ?
                         <NumberFieldBox
-                            label={`Broker interest: ${position.currency.name}`}
-                            value={brokerInterest}
-                            fieldName={'brokerInterest'}
-                            zeroAllowed
-                            dispatch={dispatch}/> : <></>}
+                            label={`Fees: ${position.currency.name}`}
+                            valid={isFieldValid('fees', formState)}
+                            errorText={getFieldErrorText('fees', formState)}
+                            value={fees}
+                            fieldName={'fees'}
+                            dispatch={dispatch}/>
+                        {position.position == 'long' ? <NumberFieldBox
+                                label={`Total sold: ${position.currency.name}`}
+                                valid={isFieldValid('totalSold', formState)}
+                                errorText={getFieldErrorText('totalSold', formState)}
+                                value={totalSold}
+                                fieldName={'totalSold'}
+                                dispatch={dispatch}/> :
+                            <NumberFieldBox
+                                label={`Total bought: ${position.currency.name}`}
+                                valid={isFieldValid('totalBought', formState)}
+                                errorText={getFieldErrorText('totalBought', formState)}
+                                value={totalBought}
+                                fieldName={'totalBought'}
+                                dispatch={dispatch}/>}
+                        {position.position == 'short' ?
+                            <NumberFieldBox
+                                label={`Broker interest: ${position.currency.name}`}
+                                value={brokerInterest}
+                                fieldName={'brokerInterest'}
+                                zeroAllowed
+                                dispatch={dispatch}/> : <></>}
                     </Grid>
                 </Grid>
                 <Grid item xs={1}>

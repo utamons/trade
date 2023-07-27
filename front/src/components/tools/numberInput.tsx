@@ -27,12 +27,12 @@ export default ({ color, name, dispatch, label, value, valid, errorText }: Numbe
         const valueNum = Number(event.target.value)
         if (event.target.value != '' && !isNaN(valueNum))
             dispatch({ type: 'set', payload: { name, valueNum } })
-    }, [])
+    }, [name])
 
     const handleValidate =
         useCallback((event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
             validate(event.target.value)
-        }, [valid, value])
+        }, [valid, value, name])
 
     useEffect(() => {
         setValue(value)

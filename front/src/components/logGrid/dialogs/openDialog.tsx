@@ -59,6 +59,16 @@ const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, tic
     const payload: FormActionPayload = {
         valuesNumeric: [
             {
+                name: 'totalSold',
+                valid: true,
+                value: undefined
+            },
+            {
+                name: 'totalBought',
+                valid: true,
+                value: undefined
+            },
+            {
                 name: 'riskRewardPc',
                 valid: true,
                 value: MAX_RISK_REWARD_PC
@@ -168,6 +178,8 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     const [isLoading, setLoading] = useState(false)
     const [technicalStop, setTechicalStop] = useState(false)
 
+    console.log('openDialog', formState)
+
     const theme = useTheme()
     // noinspection TypeScriptUnresolvedVariable
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -195,6 +207,8 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     const atr = getFieldValue('atr', formState) as number
     const volume = getFieldValue('volume', formState) as number
     const gainPc = getFieldValue('gainPc', formState) as number
+    const totalBought = getFieldValue('totalBought', formState) as number
+    const totalSold = getFieldValue('totalSold', formState) as number
     const isShort = () => positionId == '1'
 
     const breakEvenPercentageStr = () => {
@@ -427,9 +441,20 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     }
 
     const validOpen = () => {
+        console.log('validOpen isShort', isShort())
+        console.log('validOpen totalBought', totalBought)
+        console.log('validOpen totalSold', totalSold)
         let state = validEval()
         if (levelPrice == undefined) {
             dispatch({ type: 'set', payload: { name: 'levelPrice', valid: false, errorText: 'required' } })
+            state = false
+        }
+        if (!isShort() && totalBought == undefined) {
+            dispatch({ type: 'set', payload: { name: 'totalBought', valid: false, errorText: 'required' } })
+            state = false
+        }
+        if (isShort() && totalSold == undefined) {
+            dispatch({ type: 'set', payload: { name: 'totalSold', valid: false, errorText: 'required' } })
             state = false
         }
         return state
@@ -459,7 +484,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
             dispatch({ type: 'set', payload: { name: 'volume', valueNum: ev.volume, valid: true } })
             return
         }
-        if (validOpen() && riskPc != undefined && fees != undefined && outcomeExp != undefined && breakEven != undefined && depositPc != undefined) {
+        if (!evaluate && validOpen() && riskPc != undefined && fees != undefined && outcomeExp != undefined && breakEven != undefined && depositPc != undefined) {
             open({
                 position: positionId == '0' ? 'long' : 'short',
                 dateOpen: date.toISOString(),
@@ -478,7 +503,9 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                 depositPc,
                 breakEven,
                 fees,
-                note
+                note,
+                totalBought,
+                totalSold
             })
             onClose()
         }
@@ -498,6 +525,8 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
         breakEven,
         note,
         takeProfit,
+        totalBought,
+        totalSold,
         outcomeExp])
 
     useEffect(() => {
@@ -649,6 +678,21 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                             value={riskRewardPc}
                             dispatch={dispatch}
                         />
+                        {isShort() ? <NumberFieldBox
+                            label={'Total (SLD):'}
+                            fieldName={'totalSold'}
+                            valid={isFieldValid('totalSold', formState)}
+                            errorText={getFieldErrorText('totalSold', formState)}
+                            value={totalSold}
+                            dispatch={dispatch}
+                        /> : <NumberFieldBox
+                            label={'Total (BOT):'}
+                            fieldName={'totalBought'}
+                            valid={isFieldValid('totalBought', formState)}
+                            errorText={getFieldErrorText('totalBought', formState)}
+                            value={totalBought}
+                            dispatch={dispatch}
+                        /> }
                         <ValueFieldBox
                             label={'Out. Exp.:'}
                             value={outcomeExp}/>

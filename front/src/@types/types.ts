@@ -182,6 +182,8 @@ type TradeLog = {
     goal: number | undefined,
     brokerInterest: number | undefined
     parentId: number | undefined
+    totalBought: number | undefined
+    totalSold: number | undefined
 }
 
 type SortType = {
@@ -246,6 +248,8 @@ type PositionOpenType = {
     depositPc: number,
     breakEven: number | undefined,
     fees: number,
+    totalBought: number | undefined,
+    totalSold: number | undefined,
     note: string | undefined
 }
 
@@ -255,6 +259,9 @@ type PositionCloseType = {
     dateClose: string,
     priceClose: number,
     brokerInterest: number,
+    totalBought: number | undefined,
+    totalSold: number | undefined,
+    fees: number,
     note: string | undefined
 }
 

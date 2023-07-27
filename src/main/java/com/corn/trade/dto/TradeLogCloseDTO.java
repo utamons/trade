@@ -3,23 +3,17 @@ package com.corn.trade.dto;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @SuppressWarnings("unused")
-public class TradeLogCloseDTO implements Serializable {
+public record TradeLogCloseDTO(Long id, Integer quantity, LocalDateTime dateClose, Double priceClose, String note,
+                               Double brokerInterest, Double totalSold, Double fees,
+                               Double totalBought) implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = -993985822750284913L;
-	private final Long id;
-
-	private final Integer quantity;
-	private final LocalDateTime dateClose;
-
-	private final Double priceClose;
-
-	private final String note;
-
-	private final Double brokerInterest;
 
 	@JsonCreator
 	public TradeLogCloseDTO(@JsonProperty("id") Long id,
@@ -27,36 +21,20 @@ public class TradeLogCloseDTO implements Serializable {
 	                        @JsonProperty("dateClose") LocalDateTime dateClose,
 	                        @JsonProperty("priceClose") Double priceClose,
 	                        @JsonProperty("note") String note,
-	                        @JsonProperty("brokerInterest") Double brokerInterest) {
+	                        @JsonProperty("brokerInterest") Double brokerInterest,
+	                        @JsonProperty("totalSold") Double totalSold,
+	                        @JsonProperty("fees") Double fees,
+	                        @JsonProperty("totalBought") Double totalBought
+
+	) {
 		this.id = id;
 		this.quantity = quantity;
 		this.dateClose = dateClose;
 		this.priceClose = priceClose;
 		this.note = note;
 		this.brokerInterest = brokerInterest;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public LocalDateTime getDateClose() {
-		return dateClose;
-	}
-
-	public Double getPriceClose() {
-		return priceClose;
-	}
-
-	public String getNote() {
-		return note;
-	}
-
-	public Double getBrokerInterest() {
-		return brokerInterest;
-	}
-
-	public Integer getQuantity() {
-		return quantity;
+		this.totalSold = totalSold;
+		this.fees = fees;
+		this.totalBought = totalBought;
 	}
 }
