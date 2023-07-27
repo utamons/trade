@@ -103,6 +103,12 @@ public class TradeLog implements Serializable {
 	@Column(name="atr")
 	private Double atr;
 
+	@Column(name="total_bought")
+	private Double totalBought;
+
+	@Column(name="total_sold")
+	private Double totalSold;
+
 	public Long getId() {
 		return id;
 	}
@@ -341,6 +347,22 @@ public class TradeLog implements Serializable {
 
 	public void setAtr(Double atr) {
 		this.atr = atr;
+	}
+
+	public Double getTotalBought() {
+		return totalBought;
+	}
+
+	public void setTotalBought(Double totalBought) {
+		this.totalBought = totalBought;
+	}
+
+	public Double getTotalSold() {
+		return totalSold;
+	}
+
+	public void setTotalSold(Double totalSold) {
+		this.totalSold = totalSold;
 	}
 
 	@Transient

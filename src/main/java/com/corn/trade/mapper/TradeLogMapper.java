@@ -17,31 +17,34 @@ public class TradeLogMapper {
 	                                Market market,
 	                                Ticker ticker,
 	                                Double depositAmount) {
+		double realVolume = open.position().equals("long") ? open.totalBought() : open.totalSold();
 		TradeLog e = new TradeLog();
-		e.setPosition(open.getPosition());
-		e.setDateOpen(open.getDateOpen());
+		e.setPosition(open.position());
+		e.setDateOpen(open.dateOpen());
 		e.setBroker(broker);
 		e.setMarket(market);
 		e.setTicker(ticker);
 		e.setCurrency(ticker.getCurrency());
-		e.setItemNumber(open.getItemNumber());
-		e.setPriceOpen(open.getPriceOpen());
-		e.setBreakEven(open.getBreakEven());
+		e.setItemNumber(open.itemNumber());
+		e.setPriceOpen(open.priceOpen());
+		e.setBreakEven(open.breakEven());
 
-		Double volume = open.getPriceOpen()*open.getItemNumber();
-		Double volumeToDeposit = volume/depositAmount*100.0;
+		Double volume = open.priceOpen() * open.itemNumber();
+		Double volumeToDeposit = realVolume/depositAmount*100.0;
 
 		e.setVolume(volume);
 		e.setVolumeToDeposit(volumeToDeposit);
-		e.setStopLoss(open.getStopLoss());
-		e.setTakeProfit(open.getTakeProfit());
-		e.setOutcomeExpected(open.getOutcomeExpected());
-		e.setRisk(open.getRisk());
-		e.setFees(open.getFees() == null ? 0.0 : open.getFees());
-		e.setNote(open.getNote());
-		e.setGoal(open.getGoal());
-		e.setAtr(open.getAtr());
-		e.setLevelPrice(open.getLevelPrice());
+		e.setStopLoss(open.stopLoss());
+		e.setTakeProfit(open.takeProfit());
+		e.setOutcomeExpected(open.outcomeExpected());
+		e.setRisk(open.risk());
+		e.setFees(open.fees() == null ? 0.0 : open.fees());
+		e.setNote(open.note());
+		e.setGoal(open.goal());
+		e.setAtr(open.atr());
+		e.setLevelPrice(open.levelPrice());
+		e.setTotalBought(open.totalBought());
+		e.setTotalSold(open.totalSold());
 
 		return e;
 	}
@@ -89,6 +92,9 @@ public class TradeLogMapper {
 				entity.getBrokerInterest(),
 				parentId,
 				entity.getLevelPrice(),
-				entity.getAtr());
+				entity.getAtr(),
+				entity.getTotalBought(),
+				entity.getTotalSold()
+		);
 	}
 }
