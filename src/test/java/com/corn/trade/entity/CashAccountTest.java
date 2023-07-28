@@ -17,23 +17,24 @@ public class CashAccountTest {
 	@PersistenceContext
 	private EntityManager entityManager;
 
-	private Currency currency;
-	private Broker broker;
+	private Currency        currency;
+	private Broker          broker;
 	private CashAccountType accountType;
 
 	@BeforeEach
 	public void setup() {
-		currency = new Currency("USD");
-		entityManager.persist(currency);
-		broker = new Broker("Broker A");
+		currency = entityManager.find(Currency.class, 1L);
+		broker   = new Broker("Broker A", currency);
 		entityManager.persist(broker);
 		accountType = entityManager.find(CashAccountType.class, 1L);
+		entityManager.flush();
+		entityManager.createQuery("DELETE FROM CashAccount").executeUpdate();
 		entityManager.flush();
 	}
 
 	@Test
 	public void testCreateCashAccount() {
-		String accountName = "Account 1";
+		String      accountName = "Account 1";
 		CashAccount cashAccount = new CashAccount(accountName, currency, broker, accountType);
 		entityManager.persist(cashAccount);
 		entityManager.flush();
@@ -55,7 +56,7 @@ public class CashAccountTest {
 
 	@Test
 	public void testUpdateCashAccount() {
-		String accountName = "Account 2";
+		String      accountName = "Account 2";
 		CashAccount cashAccount = new CashAccount(accountName, currency, broker, accountType);
 		entityManager.persist(cashAccount);
 		entityManager.flush();

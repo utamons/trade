@@ -17,8 +17,12 @@
             <column name="date" type="date">
                 <constraints nullable="false"/>
             </column>
-            <column name="trade_log_id" type="bigint"/>
-            <column name="issue_id" type="bigint"/>
+            <column name="trade_log_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="issue_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
         </createTable>
         <addForeignKeyConstraint
                 baseTableName="trade_issues_link"

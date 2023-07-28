@@ -14,7 +14,7 @@ public class CashAccountDTOTest {
 		Long id = 1L;
 		String name = "Cash Account";
 		CurrencyDTO currency = new CurrencyDTO(1L,"USD");
-		BrokerDTO broker = new BrokerDTO(1L,"Broker");
+		BrokerDTO broker = new BrokerDTO(1L,"Broker", currency);
 		String type = "Type";
 		Double amount = 100.0;
 		LocalDateTime updatedAt = LocalDateTime.now();

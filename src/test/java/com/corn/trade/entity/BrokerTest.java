@@ -1,14 +1,14 @@
 package com.corn.trade.entity;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.annotation.Rollback;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @Transactional
@@ -17,10 +17,16 @@ public class BrokerTest {
 	@PersistenceContext
 	private EntityManager entityManager;
 
+	@BeforeEach
+	public void setup() {
+		entityManager.createQuery("DELETE FROM Broker").executeUpdate();
+		entityManager.flush();
+	}
+
 	@Test
-	@Rollback(false)
 	public void testCreateBroker() {
-		Broker broker = new Broker("Test Broker");
+		Currency currency = entityManager.find(Currency.class, 1L);
+		Broker broker = new Broker("Test Broker", currency);
 		entityManager.persist(broker);
 		entityManager.flush();
 
@@ -30,7 +36,8 @@ public class BrokerTest {
 
 	@Test
 	public void testGetBroker() {
-		Broker broker = new Broker("Test Broker");
+		Currency currency = entityManager.find(Currency.class, 1L);
+		Broker broker = new Broker("Test Broker", currency);
 		entityManager.persist(broker);
 		entityManager.flush();
 
@@ -42,7 +49,8 @@ public class BrokerTest {
 
 	@Test
 	public void testUpdateBroker() {
-		Broker broker = new Broker("Test Broker");
+		Currency currency = entityManager.find(Currency.class, 1L);
+		Broker broker = new Broker("Test Broker", currency);
 		entityManager.persist(broker);
 		entityManager.flush();
 
@@ -58,7 +66,8 @@ public class BrokerTest {
 
 	@Test
 	public void testDeleteBroker() {
-		Broker broker = new Broker("Test Broker");
+		Currency currency = entityManager.find(Currency.class, 1L);
+		Broker broker = new Broker("Test Broker", currency);
 		entityManager.persist(broker);
 		entityManager.flush();
 

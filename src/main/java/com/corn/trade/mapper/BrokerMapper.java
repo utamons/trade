@@ -5,6 +5,6 @@ import com.corn.trade.entity.Broker;
 
 public class BrokerMapper {
 	public static BrokerDTO toDTO(Broker entity) {
-		return new BrokerDTO(entity.getId(), entity.getName());
+		return new BrokerDTO(entity.getId(), entity.getName(), CurrencyMapper.toDTO(entity.getFeeCurrency()));
 	}
 }
