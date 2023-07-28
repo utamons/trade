@@ -74,26 +74,30 @@ public class TradeLogService {
 		final Broker   broker   = open.getBroker();
 		final Currency currency = open.getCurrency();
 
-		double realVolume = isLong ? open.getTotalBought() : open.getTotalSold();
-		double realDelta = isLong ? closeDTO.totalSold() - open.getTotalBought() : open.getTotalSold() - closeDTO.totalBought();
-		double              priceClose     = closeDTO.priceClose();
+		double realOpen = isLong ? open.getTotalBought() : open.getTotalSold();
+		double realClose = isLong ? closeDTO.totalSold() : closeDTO.totalBought();
+		double realDelta = realClose - realOpen;
+
+		double openFees = open.getFees();
+		double closeFees = closeDTO.fees();
+
 		final LocalDateTime dateTimeClose  = closeDTO.dateClose();
-		final String        note           = closeDTO.note();
 		final double        brokerInterest = closeDTO.brokerInterest() == null ? 0.0 : closeDTO.brokerInterest();
-		final double feesUSD = currencyRateService.convertToUSD(currency.getId(), closeDTO.fees(), closeDTO.dateClose().toLocalDate());
+
+		final double closeFeesUSD = currencyRateService.convertToUSD(currency.getId(), closeFees, closeDTO.dateClose().toLocalDate());
 		final double brokerInterestUSD = currencyRateService.convertToUSD(currency.getId(), brokerInterest, closeDTO.dateClose().toLocalDate());
 
-		final double outcome        = realDelta - (closeDTO.fees() + brokerInterest);
-		final double outcomePercent = outcome / realVolume * 100.0;
+		final double outcome        = realDelta - openFees - closeFees - brokerInterest;
+		final double outcomePercent = outcome / realOpen * 100.0;
 
-		cashService.fee(feesUSD, broker, open, dateTimeClose);
+		cashService.fee(closeFeesUSD, broker, open, dateTimeClose);
 		if (brokerInterest != 0)
 			cashService.fee(brokerInterestUSD, broker, open, dateTimeClose);
 
-		double percentToCapital = cashService.percentToCapital(outcome, realVolume, currency);
+		double percentToCapital = cashService.percentToCapital(outcome, realOpen, currency);
 
-		open.setFees(closeDTO.fees());
-		open.setPriceClose(priceClose);
+		open.setFees(openFees + closeFees);
+		open.setPriceClose(closeDTO.priceClose());
 		open.setDateClose(dateTimeClose);
 		open.setOutcome(outcome);
 		open.setOutcomePercent(outcomePercent);
@@ -105,16 +109,16 @@ public class TradeLogService {
 			open.setTotalSold(closeDTO.totalSold());
 		}
 
-		if (note != null)
-			open.setNote(note);
+		if (closeDTO.note() != null)
+			open.setNote(closeDTO.note());
 
 
 		open = tradeLogRepo.save(open);
 
 		if (open.getPosition().equals("long"))
-			cashService.sell(open.getTotalBought(), realVolume, broker, currency, open);
+			cashService.sell(open.getTotalBought(), realOpen, broker, currency, open);
 		else
-			cashService.buyShort(open.getTotalSold(), realVolume, broker, currency, open);
+			cashService.buyShort(open.getTotalSold(), realOpen, broker, currency, open);
 	}
 
 	private TradeLog copyPartial(TradeLogCloseDTO closeDTO, TradeLog open) {

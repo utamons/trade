@@ -432,7 +432,7 @@ public class CashService {
 
 		final double gainPc = outcomeExp / volume * 100;
 
-		return new EvalOutDTO(outcomeExp, gainPc, (feesOpen + feesClose), riskPc, riskRewardPc, breakEven, volume);
+		return new EvalOutDTO(outcomeExp, gainPc, feesOpen, riskPc, riskRewardPc, breakEven, volume);
 	}
 
 	public double getRisk(EvalInDTO evalDTO, String brokerName, CurrencyDTO currencyDTO, double    capital) throws JsonProcessingException {
