@@ -55,7 +55,7 @@ public class CashService {
 		if (account == null) {
 			logger.debug("Account '{}' not found for broker {} and currency {}. Creating...",
 			             type.getName(), broker.getName(), currency.getName());
-			String accountName = type.getName() + "/" + broker.getName() + "/" + currency.getName();
+			String accountName = type.getName() + "/" + broker.getName() + "/" + currency.getName().trim();
 			account = accountRepo.save(new CashAccount(accountName, currency, broker, type));
 		} else {
 			logger.debug("Found {} account for broker {} and currency {}.",
@@ -67,13 +67,13 @@ public class CashService {
 
 	public CashAccountDTO refill(TransferDTO transferDTO) {
 		logger.debug("start");
-		Broker          broker     = brokerRepo.getReferenceById(transferDTO.getBrokerId());
-		Currency        currency   = currencyRepo.getReferenceById(transferDTO.getCurrencyId());
+		Broker          broker     = brokerRepo.getReferenceById(transferDTO.brokerId());
+		Currency        currency   = currencyRepo.getReferenceById(transferDTO.currencyId());
 		CashAccountType toTrade    = accountTypeRepo.findCashAccountTypeByName("trade");
 		CashAccountType fromIncome = accountTypeRepo.findCashAccountTypeByName("income");
 
 		CashAccount trade = transfer(
-				transferDTO.getAmount(),
+				transferDTO.amount(),
 				null,
 				broker,
 				currency,
@@ -526,9 +526,9 @@ public class CashService {
 	}
 
 	public void correction(TransferDTO transferDTO) {
-		Currency currency = currencyRepo.getReferenceById(transferDTO.getCurrencyId());
-		Broker   broker   = brokerRepo.getReferenceById(transferDTO.getBrokerId());
-		double   amount   = transferDTO.getAmount();
+		Currency currency = currencyRepo.getReferenceById(transferDTO.currencyId());
+		Broker   broker   = brokerRepo.getReferenceById(transferDTO.brokerId());
+		double   amount   = transferDTO.amount();
 
 		CashAccountType from, to;
 		if (amount > 0) {
