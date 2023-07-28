@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class BrokerStatsDTOTest {
     private final static CurrencyDTO USD_CURRENCY = new CurrencyDTO(1L, "USD");
-    private final static BrokerDTO     BROKER     = new BrokerDTO(1L, "broker");
+    private final static BrokerDTO     BROKER     = new BrokerDTO(1L, "broker", USD_CURRENCY);
     private final static LocalDateTime UPDATED_AT = LocalDateTime.now();
 
     @Test

@@ -1,6 +1,7 @@
 package com.corn.trade.entity;
 
 import javax.persistence.*;
+import java.io.Serial;
 import java.io.Serializable;
 
 @SuppressWarnings("unused")
@@ -8,13 +9,15 @@ import java.io.Serializable;
 @Table(name = "broker")
 public class Broker implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1612680270274880048L;
 
 	public Broker() {
 	}
 
-	public Broker(String name) {
+	public Broker(String name, Currency feeCurrency) {
 		this.name = name;
+		this.feeCurrency = feeCurrency;
 	}
 
 	@Id
@@ -24,6 +27,9 @@ public class Broker implements Serializable {
 
 	@Column(name = "name", nullable = false)
 	private String name;
+
+	@ManyToOne
+	private Currency feeCurrency;
 
 	public Long getId() {
 		return id;
@@ -39,5 +45,13 @@ public class Broker implements Serializable {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public Currency getFeeCurrency() {
+		return feeCurrency;
+	}
+
+	public void setFeeCurrency(Currency feeCurrency) {
+		this.feeCurrency = feeCurrency;
 	}
 }
