@@ -700,9 +700,14 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
                             label={'Gain:'}
                             variant={'pc'}
                             value={gainPc}/>
-                        <ValueFieldBox
+                        <NumberFieldBox
                             label={'Fees:'}
-                            value={fees}/>
+                            fieldName={'fees'}
+                            valid={isFieldValid('fees', formState)}
+                            errorText={getFieldErrorText('fees', formState)}
+                            value={fees}
+                            dispatch={dispatch}
+                        />
                         <ValueFieldBox
                             label={'Break even:'}
                             value={`${breakEven ?? ''} ${breakEvenPercentageStr()}`}/>
