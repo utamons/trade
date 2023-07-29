@@ -49,13 +49,21 @@ public class CashService {
 		this.currencyRateService = currencyRateService;
 	}
 
+	/**
+	 * Get cash account by broker, currency and type. If account not found, create new one.
+	 *
+	 * @param broker broker
+	 * @param currency currency
+	 * @param type account type
+	 * @return cash account
+	 */
 	public CashAccount getAccount(Broker broker, Currency currency, CashAccountType type) {
 		logger.debug("start");
 		CashAccount account = accountRepo.findCashAccountByBrokerAndCurrencyAndType(broker, currency, type);
 		if (account == null) {
 			logger.debug("Account '{}' not found for broker {} and currency {}. Creating...",
 			             type.getName(), broker.getName(), currency.getName());
-			String accountName = type.getName() + "/" + broker.getName() + "/" + currency.getName().trim();
+			String accountName = type.getName() + "/" + broker.getName() + "/" + currency.getName().trim(); // H2 adds trailing spaces to string
 			account = accountRepo.save(new CashAccount(accountName, currency, broker, type));
 		} else {
 			logger.debug("Found {} account for broker {} and currency {}.",
@@ -65,6 +73,15 @@ public class CashService {
 		return account;
 	}
 
+	/**
+	 * Refills trade account with money.
+	 * <p>
+	 * Creates a cash flow record for the refill.
+	 * <p>
+	 * see {@link #transfer(double, TradeLog, Broker, Currency, CashAccountType, CashAccountType, LocalDateTime)}
+	 * @param transferDTO transfer data
+	 * @return trade account
+	 */
 	public CashAccountDTO refill(TransferDTO transferDTO) {
 		logger.debug("start");
 		Broker          broker     = brokerRepo.getReferenceById(transferDTO.brokerId());
@@ -84,6 +101,21 @@ public class CashService {
 		return CashAccountMapper.toDTO(trade);
 	}
 
+	/**
+	 * Transfer money from one account to another.
+	 * Both accounts must be of the same broker and currency.
+	 * <p>
+	 * Creates a cash flow record for the transfer.
+	 *
+	 * @param transfer amount to transfer
+	 * @param tradeLog trade log (optional)
+	 * @param broker broker
+	 * @param currency currency
+	 * @param fromType account type to transfer from
+	 * @param toType account type to transfer to
+	 * @param dateTime date and time of transfer
+	 * @return account to transfer to
+	 */
 	public CashAccount transfer(double transfer,
 	                            TradeLog tradeLog,
 	                            Broker broker,
@@ -112,6 +144,15 @@ public class CashService {
 		return to;
 	}
 
+	/**
+	 * Transfers money from one trade account to another with a different currency.
+	 * A currency conversion rate is calculated based on transfer sums.
+	 * <p>
+	 * Creates a cash flow record for the transfer.
+	 *
+	 * @param exchangeDTO exchange data
+	 * @return trade account
+	 */
 	public CashAccountDTO exchange(ExchangeDTO exchangeDTO) {
 		logger.debug("start");
 		Broker          broker       = brokerRepo.getReferenceById(exchangeDTO.getBrokerId());
@@ -158,7 +199,7 @@ public class CashService {
 		logger.debug("start");
 		CashAccountType fromTrade = accountTypeRepo.findCashAccountTypeByName("trade");
 		CashAccountType toFee     = accountTypeRepo.findCashAccountTypeByName("fee");
-		Currency        currency  = currencyRepo.findCurrencyByName("USD");
+		Currency        currency  = broker.getFeeCurrency();
 
 		transfer(amount, tradeLog, broker, currency, fromTrade, toFee, dateTime);
 		logger.debug("finish");
@@ -525,19 +566,24 @@ public class CashService {
 		return new Fees(fixed, fly, amount);
 	}
 
+	/**
+	 * Performs a correction of the trade account.
+	 * <p>
+	 * Creates a cash flow record for the operation.
+	 *
+	 * @param transferDTO transfer data
+	 */
 	public void correction(TransferDTO transferDTO) {
 		Currency currency = currencyRepo.getReferenceById(transferDTO.currencyId());
 		Broker   broker   = brokerRepo.getReferenceById(transferDTO.brokerId());
 		double   amount   = transferDTO.amount();
 
-		CashAccountType from, to;
-		if (amount > 0) {
-			from = accountTypeRepo.findCashAccountTypeByName("correction");
-			to = accountTypeRepo.findCashAccountTypeByName("trade");
-		} else {
-			from = accountTypeRepo.findCashAccountTypeByName("trade");
-			to = accountTypeRepo.findCashAccountTypeByName("correction");
-		}
+		CashAccountType correctionType = accountTypeRepo.findCashAccountTypeByName("correction");
+		CashAccountType tradeType = accountTypeRepo.findCashAccountTypeByName("trade");
+
+		CashAccountType from = amount > 0 ? correctionType : tradeType;
+		CashAccountType to = amount > 0 ? tradeType : correctionType;
+
 		transfer(Math.abs(amount), null, broker, currency, from, to, LocalDateTime.now());
 	}
 

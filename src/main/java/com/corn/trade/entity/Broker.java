@@ -4,6 +4,9 @@ import javax.persistence.*;
 import java.io.Serial;
 import java.io.Serializable;
 
+/**
+ * Broker entity
+ */
 @SuppressWarnings("unused")
 @Entity
 @Table(name = "broker")
@@ -25,9 +28,15 @@ public class Broker implements Serializable {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	/**
+	 * Name of the broker
+	 */
 	@Column(name = "name", nullable = false)
 	private String name;
 
+	/**
+	 * Currency used for fees to the broker
+	 */
 	@ManyToOne
 	private Currency feeCurrency;
 
