@@ -96,6 +96,11 @@ public class TradeLogService {
 
 		double percentToCapital = cashService.percentToCapital(outcome, realOpen, currency);
 
+		if (open.getPosition().equals("long"))
+			cashService.sell(realClose, closeFees, broker, open);
+		else
+			cashService.buyShort(open.getTotalSold(), realOpen, broker, currency, open);
+
 		open.setFees(openFees + closeFees);
 		open.setPriceClose(closeDTO.priceClose());
 		open.setDateClose(dateTimeClose);
@@ -113,12 +118,7 @@ public class TradeLogService {
 			open.setNote(closeDTO.note());
 
 
-		open = tradeLogRepo.save(open);
-
-		if (open.getPosition().equals("long"))
-			cashService.sell(open.getTotalBought(), realOpen, broker, currency, open);
-		else
-			cashService.buyShort(open.getTotalSold(), realOpen, broker, currency, open);
+		tradeLogRepo.save(open);
 	}
 
 	private TradeLog copyPartial(TradeLogCloseDTO closeDTO, TradeLog open) {

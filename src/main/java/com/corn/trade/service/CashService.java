@@ -195,6 +195,17 @@ public class CashService {
 		return CashAccountMapper.toDTO(tradeTo);
 	}
 
+	/**
+	 * Withdraws broker fee from trade account.
+	 * <p>
+	 * <b>The trade account must be of the same currency as the broker fee.</b>
+	 * <p>
+	 * Creates a cash flow record for the transfer.
+	 * @param amount amount to withdraw
+	 * @param broker broker
+	 * @param tradeLog trade record related to the fee (optional)
+	 * @param dateTime date and time of withdrawal
+	 */
 	public void fee(Double amount, Broker broker, TradeLog tradeLog, LocalDateTime dateTime) {
 		logger.debug("start");
 		CashAccountType fromTrade = accountTypeRepo.findCashAccountTypeByName("trade");
@@ -214,31 +225,74 @@ public class CashService {
 		logger.debug("finish");
 	}
 
+	/**
+	 * Selling a short position (opening a short position).
+	 * <p>
+	 * Transfers money from trade account to borrowed account.
+	 * <p>
+	 * Creates a cash flow record for the transfer.
+	 * @param amount amount to transfer
+	 * @param broker broker
+	 * @param currency currency
+	 * @param tradeLog trade record related to the transfer (required)
+	 */
 	public void sellShort(Double amount, Broker broker, Currency currency, TradeLog tradeLog) {
 		logger.debug("start");
+		if (tradeLog == null) {
+			throw new IllegalArgumentException("Trade log record is required");
+		}
 		CashAccountType fromBorrowed = accountTypeRepo.findCashAccountTypeByName("borrowed");
 		CashAccountType toOpen       = accountTypeRepo.findCashAccountTypeByName("open");
+		if (fromBorrowed == null || toOpen == null) {
+			throw new IllegalStateException("Account types are not found");
+		}
 
 		transfer(amount, tradeLog, broker, currency, fromBorrowed, toOpen, tradeLog.getDateOpen());
 		logger.debug("finish");
 	}
 
-	public void sell(double openAmount, double closeAmount, Broker broker, Currency currency, TradeLog tradeLog) {
+	/**
+	 * Selling a long position (closing a long position).
+	 * <p>
+	 * Transfers open amount (total bought) back from open account to trade account.
+	 * Any profit is transferred from profit account to trade account.
+	 * Any loss is transferred from trade account to loss account.
+	 * <p>
+	 * Creates a cash flow record for each transfer.
+	 * @param closeAmount amount to close (total sold)
+	 * @param closeFees broker's fees for closing the position (commission, exchange fees, etc.)
+	 * @param broker broker
+	 * @param tradeLog trade record related to the transfer (required)
+	 */
+	public void sell(double closeAmount, double closeFees, Broker broker, TradeLog tradeLog) {
 		logger.debug("start");
+		if (tradeLog == null) {
+			throw new IllegalArgumentException("Trade log record is required");
+		}
 		CashAccountType tradeType  = accountTypeRepo.findCashAccountTypeByName("trade");
 		CashAccountType openType   = accountTypeRepo.findCashAccountTypeByName("open");
 		CashAccountType profitType = accountTypeRepo.findCashAccountTypeByName("profit");
 		CashAccountType lossType   = accountTypeRepo.findCashAccountTypeByName("loss");
 
+		if (tradeType == null || openType == null || profitType == null || lossType == null) {
+			throw new IllegalStateException("Account types are not found");
+		}
+
+		double openAmount = tradeLog.getTotalBought();
+		// todo In what currency are the fees stored in the trade log?
+		// todo What currency should we use for the fees in all calculations?
+		double openFees   = tradeLog.getFees();
+		Currency currency = tradeLog.getCurrency();
+
 		transfer(openAmount, tradeLog, broker, currency, openType, tradeType, tradeLog.getDateClose());
 
-		if (closeAmount > openAmount) {
-			double profit = closeAmount - openAmount;
+		if (closeAmount - closeFees - openFees > openAmount) {
+			double profit = closeAmount - openAmount - closeFees - openFees;
 			transfer(profit, tradeLog, broker, currency, profitType, tradeType, tradeLog.getDateClose());
 		}
 
-		if (closeAmount < openAmount) {
-			double loss = openAmount - closeAmount;
+		if (closeAmount - closeFees - openFees < openAmount) {
+			double loss = openAmount - closeAmount + closeFees + openFees;
 			transfer(loss, tradeLog, broker, currency, tradeType, lossType, tradeLog.getDateClose());
 		}
 
