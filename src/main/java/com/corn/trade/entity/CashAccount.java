@@ -1,7 +1,6 @@
 package com.corn.trade.entity;
 
 import javax.persistence.*;
-import java.time.LocalDateTime;
 
 @SuppressWarnings("unused")
 @Entity
@@ -15,9 +14,7 @@ public class CashAccount {
 		this.name = name;
 		this.currency = currency;
 		this.broker = broker;
-		this.amount = 0.0;
 		this.type = type;
-		this.updatedAt = LocalDateTime.now();
 	}
 
 	@Id
@@ -37,12 +34,6 @@ public class CashAccount {
 	@ManyToOne
 	private CashAccountType type;
 
-	@Column(name = "amount", nullable = false)
-	private Double amount;
-
-	@Column(name = "updated_at", nullable = false)
-	private LocalDateTime updatedAt;
-
 	public void setId(Long id) {
 		this.id = id;
 	}
@@ -57,22 +48,6 @@ public class CashAccount {
 
 	public String getName() {
 		return name;
-	}
-
-	public void setAmount(Double amount) {
-		this.amount = amount;
-	}
-
-	public Double getAmount() {
-		return amount;
-	}
-
-	public void setUpdatedAt(LocalDateTime updatedAt) {
-		this.updatedAt = updatedAt;
-	}
-
-	public LocalDateTime getUpdatedAt() {
-		return updatedAt;
 	}
 
 	public Currency getCurrency() {

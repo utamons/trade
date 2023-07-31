@@ -125,13 +125,9 @@ public class CashService {
 	                            LocalDateTime dateTime) {
 		CashAccount from    = getAccount(broker, currency, fromType);
 		CashAccount to      = getAccount(broker, currency, toType);
-		Double      fromSum = from.getAmount();
-		Double      toSum   = to.getAmount();
 
 		CashFlow record = new CashFlow(from, to, tradeLog, transfer, transfer, null, dateTime);
 		cashFlowRepo.save(record);
-		from.setAmount(fromSum - transfer);
-		to.setAmount(toSum + transfer);
 
 		to = accountRepo.save(to);
 		accountRepo.save(from);
@@ -164,8 +160,6 @@ public class CashService {
 		CashAccount tradeTo      = getAccount(broker, currencyTo, tradeType);
 		double      transferFrom = exchangeDTO.getAmountFrom();
 		double      transferTo   = exchangeDTO.getAmountTo();
-		double      tradeFromSum = tradeFrom.getAmount();
-		double      tradeToSum   = tradeTo.getAmount();
 		double      rate         = transferFrom / transferTo;
 
 		CashFlow record = new CashFlow(
@@ -178,8 +172,6 @@ public class CashService {
 				LocalDateTime.now()
 		);
 		cashFlowRepo.save(record);
-		tradeFrom.setAmount(tradeFromSum - transferFrom);
-		tradeTo.setAmount(tradeToSum + transferTo);
 
 		tradeTo = accountRepo.save(tradeTo);
 		accountRepo.save(tradeFrom);
@@ -236,8 +228,10 @@ public class CashService {
 	 * @param currency currency
 	 * @param tradeLog trade record related to the transfer (required)
 	 */
-	public void sellShort(Double amount, Broker broker, Currency currency, TradeLog tradeLog) {
+	public void sellShort(Double amount, double openFees, Broker broker, Currency currency, TradeLog tradeLog) {
 		logger.debug("start");
+		// todo re-check and re-test
+		// todo fix docs
 		if (tradeLog == null) {
 			throw new IllegalArgumentException("Trade log record is required");
 		}
@@ -248,6 +242,7 @@ public class CashService {
 		}
 
 		transfer(amount, tradeLog, broker, currency, fromBorrowed, toOpen, tradeLog.getDateOpen());
+		fee(openFees, broker, tradeLog, tradeLog.getDateClose());
 		logger.debug("finish");
 	}
 
@@ -264,7 +259,7 @@ public class CashService {
 	 * @param broker broker
 	 * @param tradeLog trade record related to the transfer (required)
 	 */
-	public void sell(double closeAmount, double closeFees, Broker broker, TradeLog tradeLog) {
+	public void sell(double closeAmount, double closeFees, Broker broker, TradeLog tradeLog) throws JsonProcessingException {
 		logger.debug("start");
 		if (tradeLog == null) {
 			throw new IllegalArgumentException("Trade log record is required");
@@ -279,21 +274,24 @@ public class CashService {
 		}
 
 		double openAmount = tradeLog.getTotalBought();
-		// todo In what currency are the fees stored in the trade log?
-		// todo What currency should we use for the fees in all calculations?
-		double openFees   = tradeLog.getFees();
-		Currency currency = tradeLog.getCurrency();
+		Currency tradeCurrency = tradeLog.getCurrency();
+		Currency feeCurrency   = broker.getFeeCurrency();
 
-		transfer(openAmount, tradeLog, broker, currency, openType, tradeType, tradeLog.getDateClose());
+		double openFeesConverted   = currencyRateService.convert(feeCurrency, tradeCurrency, tradeLog.getFees(), tradeLog.getDateClose().toLocalDate());
+		double closeFeesConverted = currencyRateService.convert(feeCurrency, tradeCurrency, closeFees, tradeLog.getDateClose().toLocalDate());
 
-		if (closeAmount - closeFees - openFees > openAmount) {
-			double profit = closeAmount - openAmount - closeFees - openFees;
-			transfer(profit, tradeLog, broker, currency, profitType, tradeType, tradeLog.getDateClose());
+		transfer(openAmount, tradeLog, broker, tradeCurrency, openType, tradeType, tradeLog.getDateClose());
+		fee(closeFees, broker, tradeLog, tradeLog.getDateClose());
+
+		if (closeAmount - closeFeesConverted - openFeesConverted > openAmount) {
+			// todo Re-think well again if we should use fees here
+			double profit = closeAmount - openAmount - closeFeesConverted - openFeesConverted;
+			transfer(profit, tradeLog, broker, tradeCurrency, profitType, tradeType, tradeLog.getDateClose());
 		}
 
-		if (closeAmount - closeFees - openFees < openAmount) {
-			double loss = openAmount - closeAmount + closeFees + openFees;
-			transfer(loss, tradeLog, broker, currency, tradeType, lossType, tradeLog.getDateClose());
+		if (closeAmount - closeFeesConverted - openFeesConverted < openAmount) {
+			double loss = openAmount - closeAmount + closeFeesConverted + openFeesConverted;
+			transfer(loss, tradeLog, broker, tradeCurrency, tradeType, lossType, tradeLog.getDateClose());
 		}
 
 		logger.debug("finish");
@@ -301,6 +299,7 @@ public class CashService {
 
 	public void buyShort(double openAmount, double closeAmount, Broker broker, Currency currency, TradeLog tradeLog) {
 		logger.debug("start");
+		// todo include all fees operations with broker interest
 		CashAccountType tradeType    = accountTypeRepo.findCashAccountTypeByName("trade");
 		CashAccountType borrowedType = accountTypeRepo.findCashAccountTypeByName("borrowed");
 		CashAccountType openType     = accountTypeRepo.findCashAccountTypeByName("open");
@@ -325,7 +324,7 @@ public class CashService {
 	public double lastDepositAmount(Broker broker, Currency currency) {
 		CashAccountType tradeType = accountTypeRepo.findCashAccountTypeByName("trade");
 		CashAccount     trade     = getAccount(broker, currency, tradeType);
-		return trade.getAmount();
+		return getAccountTotal(trade);
 	}
 
 	public double percentToCapital(double outcome,
@@ -359,13 +358,31 @@ public class CashService {
 		double            capital   = 0.0;
 		LocalDate         today     = LocalDate.now();
 		for (CashAccount account : accounts) {
+			double amount = getAccountTotal(account);
 			capital = capital + currencyRateService.convertToUSD(
 					account.getCurrency().getId(),
-					account.getAmount(),
+					amount,
 					today);
 		}
 
 		return capital + getAssetsDepositUSD();
+	}
+
+	public double getAccountTotal(CashAccount account) {
+		Double sumFrom = cashFlowRepo.getSumFromByAccount(account);
+		Double sumTo   = cashFlowRepo.getSumToByAccount(account);
+		if (sumFrom == null) {
+			sumFrom = 0.0;
+		}
+		if (sumTo == null) {
+			sumTo = 0.0;
+		}
+		return sumTo - sumFrom;
+	}
+
+	public double getAccountTotal(CashAccountDTO accountDTO) {
+		CashAccount account = accountRepo.getReferenceById(accountDTO.id());
+		return getAccountTotal(account);
 	}
 
 	public double getRiskBase(double capital) {
