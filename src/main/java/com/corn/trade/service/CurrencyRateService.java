@@ -100,10 +100,21 @@ public class CurrencyRateService {
 		return amount / currencyRateDTO.rate();
 	}
 
+	public Double convert(Currency fromCurrency, Currency toCurrency, Double amount, LocalDate dateTime) throws JsonProcessingException {
+		long fromCurrencyId = fromCurrency.getId();
+		long toCurrencyId = toCurrency.getId();
+		if (fromCurrencyId == toCurrencyId)
+			return amount;
+		CurrencyRateDTO fromCurrencyRateDTO = findByDate(fromCurrencyId, dateTime);
+		CurrencyRateDTO toCurrencyRateDTO = findByDate(toCurrencyId, dateTime);
+		return amount * toCurrencyRateDTO.rate() / fromCurrencyRateDTO.rate();
+	}
+
+
 	private CurrencyRateDTO getExternalRate(Long currencyId, LocalDate date) throws JsonProcessingException {
 		IS_EXTERNAL_STARTED = true;
 		List<CurrencyRateDTO> rates = currencyAPI.getRatesAt(date);
-		if (rates.size() == 0) {
+		if (rates.isEmpty()) {
 			IS_EXTERNAL_STARTED = false;
 			return null;
 		}

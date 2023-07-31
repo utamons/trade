@@ -59,14 +59,12 @@ public class TradeLogService {
 		if (openDTO.position().equals("long"))
 			cashService.buy(tradeLog.getTotalBought(), broker, ticker.getCurrency(), tradeLog);
 		else
-			cashService.sellShort(tradeLog.getTotalSold(), broker, ticker.getCurrency(), tradeLog);
-		if (openDTO.fees() != 0.0)
-			cashService.fee(openDTO.fees(), broker, tradeLog, tradeLog.getDateOpen());
+			cashService.sellShort(tradeLog.getTotalSold(), openDTO.fees(), broker, ticker.getCurrency(), tradeLog);
 	}
 
 	public void close(TradeLogCloseDTO closeDTO) throws JsonProcessingException {
-		TradeLog open = tradeLogRepo.getReferenceById(closeDTO.id());
-		boolean isLong = open.getPosition().equals("long");
+		TradeLog open   = tradeLogRepo.getReferenceById(closeDTO.id());
+		boolean  isLong = open.getPosition().equals("long");
 
 		if (closeDTO.quantity() != null && closeDTO.quantity() < open.getItemNumber())
 			open = copyPartial(closeDTO, open);
@@ -74,23 +72,24 @@ public class TradeLogService {
 		final Broker   broker   = open.getBroker();
 		final Currency currency = open.getCurrency();
 
-		double realOpen = isLong ? open.getTotalBought() : open.getTotalSold();
+		double realOpen  = isLong ? open.getTotalBought() : open.getTotalSold();
 		double realClose = isLong ? closeDTO.totalSold() : closeDTO.totalBought();
 		double realDelta = realClose - realOpen;
 
-		double openFees = open.getFees();
+		double openFees  = open.getFees();
 		double closeFees = closeDTO.fees();
 
 		final LocalDateTime dateTimeClose  = closeDTO.dateClose();
 		final double        brokerInterest = closeDTO.brokerInterest() == null ? 0.0 : closeDTO.brokerInterest();
 
-		final double closeFeesUSD = currencyRateService.convertToUSD(currency.getId(), closeFees, closeDTO.dateClose().toLocalDate());
-		final double brokerInterestUSD = currencyRateService.convertToUSD(currency.getId(), brokerInterest, closeDTO.dateClose().toLocalDate());
+		final double closeFeesUSD      =
+				currencyRateService.convertToUSD(currency.getId(), closeFees, closeDTO.dateClose().toLocalDate());
+		final double brokerInterestUSD =
+				currencyRateService.convertToUSD(currency.getId(), brokerInterest, closeDTO.dateClose().toLocalDate());
 
 		final double outcome        = realDelta - openFees - closeFees - brokerInterest;
 		final double outcomePercent = outcome / realOpen * 100.0;
 
-		cashService.fee(closeFeesUSD, broker, open, dateTimeClose);
 		if (brokerInterest != 0)
 			cashService.fee(brokerInterestUSD, broker, open, dateTimeClose);
 
@@ -122,9 +121,9 @@ public class TradeLogService {
 	}
 
 	private TradeLog copyPartial(TradeLogCloseDTO closeDTO, TradeLog open) {
-		Double   depositAmount = cashService.lastDepositAmount(open.getBroker(), open.getCurrency());
-		Double volume = open.getPriceOpen()*closeDTO.quantity();
-		Double volumeToDeposit = volume/depositAmount*100.0;
+		Double depositAmount   = cashService.lastDepositAmount(open.getBroker(), open.getCurrency());
+		Double volume          = open.getPriceOpen() * closeDTO.quantity();
+		Double volumeToDeposit = volume / depositAmount * 100.0;
 
 		TradeLog partial = new TradeLog();
 		partial.setPosition(open.getPosition());
@@ -185,7 +184,7 @@ public class TradeLogService {
 
 	public void update(TradeLogOpenDTO openDTO) throws JsonProcessingException {
 		TradeLog tradeLog = tradeLogRepo.getReferenceById(openDTO.id());
-		double capital = cashService.getCapital();
+		double   capital  = cashService.getCapital();
 
 		EvalInDTO evalInDTO = new EvalInDTO(
 				tradeLog.getBroker().getId(),
@@ -199,7 +198,10 @@ public class TradeLogService {
 				tradeLog.isShort()
 		);
 
-		double risk = cashService.getRisk(evalInDTO, tradeLog.getBroker().getName(), CurrencyMapper.toDTO(tradeLog.getCurrency()), capital);
+		double risk = cashService.getRisk(evalInDTO,
+		                                  tradeLog.getBroker().getName(),
+		                                  CurrencyMapper.toDTO(tradeLog.getCurrency()),
+		                                  capital);
 
 		tradeLog.setStopLoss(openDTO.stopLoss());
 		tradeLog.setTakeProfit(openDTO.takeProfit());

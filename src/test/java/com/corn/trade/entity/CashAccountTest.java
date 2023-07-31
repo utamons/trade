@@ -6,7 +6,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,8 +49,6 @@ public class CashAccountTest {
 		assertThat(found.get().getCurrency().getId()).isEqualTo(currency.getId());
 		assertThat(found.get().getBroker().getId()).isEqualTo(broker.getId());
 		assertThat(found.get().getType().getId()).isEqualTo(accountType.getId());
-		assertThat(found.get().getAmount()).isEqualTo(0.0);
-		assertThat(found.get().getUpdatedAt()).isNotNull();
 	}
 
 	@Test
@@ -69,10 +66,7 @@ public class CashAccountTest {
 				.findFirst();
 
 		assertThat(found.isPresent()).isTrue();
-		assertThat(found.get().getAmount()).isEqualTo(0.0);
 
-		found.get().setAmount(100.0);
-		found.get().setUpdatedAt(LocalDateTime.now());
 		entityManager.persist(found.get());
 		entityManager.flush();
 
@@ -84,8 +78,6 @@ public class CashAccountTest {
 				.findFirst();
 
 		assertThat(updated.isPresent()).isTrue();
-		assertThat(updated.get().getAmount()).isEqualTo(100.0);
-		assertThat(updated.get().getUpdatedAt()).isNotNull();
 	}
 }
 

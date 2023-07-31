@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -63,13 +62,14 @@ public class BrokerService {
 		double borrowed = 0.0;
 
 		for (CashAccountDTO b : borrowedAccounts) {
-			borrowed += currencyRateService.convertToUSD(b.getCurrency().getId(),
-			                                             b.getAmountDouble(),
+			double amount = cashService.getAccountTotal(b);
+			borrowed += currencyRateService.convertToUSD(b.currency().getId(),
+			                                             amount,
 			                                             LocalDate.now());
 		}
 
-		double avgOutcome = dtos.size() > 0 ? outcome / dtos.size() : 0.0;
-		avgProfit = dtos.size() > 0 ? avgProfit / dtos.size() : 0.0;
+		double avgOutcome = !dtos.isEmpty() ? outcome / dtos.size() : 0.0;
+		avgProfit = !dtos.isEmpty() ? avgProfit / dtos.size() : 0.0;
 
 		long open = tradeLogService.getOpenCountByBroker(brokerId);
 

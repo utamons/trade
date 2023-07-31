@@ -10,9 +10,7 @@ public class CashAccountMapper {
 				entity.getName(),
 				CurrencyMapper.toDTO(entity.getCurrency()),
 				BrokerMapper.toDTO(entity.getBroker()),
-				entity.getType().getName(),
-				entity.getAmount(),
-				entity.getUpdatedAt()
+				entity.getType().getName()
 				);
 	}
 }
