@@ -319,7 +319,7 @@ public class CashService {
 
 		Currency tradeCurrency = tradeLog.getCurrency();
 
-		// we transfer the sum of the open position back to the trade account (maybe partially)
+		// we transfer the sum of the open position back to the trade account (maybe partially, based on the number of items sold)
 		transfer(amountToClose, tradeLog, broker, tradeCurrency, openType, tradeType, dateTime);
 		// we transfer the selling commission from the trade account
 		fee(sellingCommission, broker, tradeLog, tradeLog.getDateClose());
@@ -335,11 +335,15 @@ public class CashService {
 		double closeCommission = tradeLog.getCloseCommission() == null ? 0 : tradeLog.getCloseCommission();
 		long itemSoldPreviously = tradeLog.getItemSold() == null ? 0 : tradeLog.getItemSold();
 
+		if (itemSoldPreviously + itemSold > itemBought) {
+			throw new IllegalStateException("Item sold number is greater than item bought number");
+		}
+
 		tradeLog.setTotalSold(totalSold + amountSold);
 		tradeLog.setCloseCommission(closeCommission + sellingCommission);
 		tradeLog.setItemSold(itemSoldPreviously + itemSold);
 
-		if (tradeLog.getItemSold().equals(tradeLog.getItemBought())) {
+		if (tradeLog.getItemSold() == itemBought) {
 			tradeLog.setDateClose(dateTime);
 		}
 
