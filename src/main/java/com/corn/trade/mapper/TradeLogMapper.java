@@ -26,16 +26,16 @@ public class TradeLogMapper {
 		e.setTicker(ticker);
 		e.setCurrency(ticker.getCurrency());
 		e.setItemNumber(open.itemNumber());
-		e.setPriceOpen(open.priceOpen());
-		e.setBreakEven(open.breakEven());
+		e.setEstimatedPriceOpen(open.priceOpen());
+		e.setEstimatedBreakEven(open.breakEven());
 
 		Double volume = open.priceOpen() * open.itemNumber();
 		Double volumeToDeposit = realVolume/depositAmount*100.0;
 
 		e.setVolume(volume);
 		e.setVolumeToDeposit(volumeToDeposit);
-		e.setStopLoss(open.stopLoss());
-		e.setTakeProfit(open.takeProfit());
+		e.setOpenStopLoss(open.stopLoss());
+		e.setOpenTakeProfit(open.takeProfit());
 		e.setOutcomeExpected(open.outcomeExpected());
 		e.setRisk(open.risk());
 		e.setFees(open.fees() == null ? 0.0 : open.fees());
@@ -72,15 +72,15 @@ public class TradeLogMapper {
 				TickerMapper.toDTO(entity.getTicker()),
 				CurrencyMapper.toDTO(entity.getCurrency()),
 				entity.getItemNumber(),
-				entity.getPriceOpen(),
-				entity.getPriceClose(),
+				entity.getEstimatedPriceOpen(),
+				entity.getAveragePriceClose(),
 				entity.getVolume(),
 				entity.getVolumeToDeposit(),
-				entity.getStopLoss(),
-				entity.getTakeProfit(),
+				entity.getOpenStopLoss(),
+				entity.getOpenTakeProfit(),
 				entity.getOutcomeExpected(),
 				entity.getRisk(),
-				entity.getBreakEven(),
+				entity.getEstimatedBreakEven(),
 				entity.getFees(),
 				outcome,
 				entity.getOutcomePercent(),

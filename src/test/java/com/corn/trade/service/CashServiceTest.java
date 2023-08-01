@@ -64,13 +64,19 @@ public class CashServiceTest {
 
 	private Broker brokerUSD, brokerEUR;
 
-	private CashAccountType savingsType, tradeType, correctionType, borrowedType, openType, incomeType;
-	private CashAccount tradeAccount, correctionAccount, borrowedAccount, openAccount, incomeAccount;
+	private CashAccountType savingType, tradeType, correctionType, borrowedType, openType, incomeType, feeType;
+	private CashAccount tradeAccountUSD,
+			tradeAccountEUR,
+			correctionAccount,
+			borrowedAccount,
+			openAccount,
+			incomeAccountUSD,
+			feeAccountUSD,
+			feeAccountEUR;
 
 	@BeforeEach
 	public void setup() {
 		entityManager.createQuery("DELETE FROM Broker").executeUpdate();
-		entityManager.createQuery("DELETE FROM CashAccountType").executeUpdate();
 		entityManager.flush();
 
 		currencyEUR = currencyRepository.getReferenceById(2L);
@@ -82,26 +88,19 @@ public class CashServiceTest {
 		brokerEUR = new Broker("Test Broker", currencyEUR);
 		brokerEUR = brokerRepository.save(brokerEUR);
 
-		savingsType = new CashAccountType("Savings", "Savings Account");
-		savingsType = cashAccountTypeRepository.save(savingsType);
+		savingType = cashAccountTypeRepository.findCashAccountTypeByName("saving");
+		tradeType = cashAccountTypeRepository.findCashAccountTypeByName("trade");
+		correctionType = cashAccountTypeRepository.findCashAccountTypeByName("correction");
+		borrowedType = cashAccountTypeRepository.findCashAccountTypeByName("borrowed");
+		openType = cashAccountTypeRepository.findCashAccountTypeByName("open");
+		incomeType = cashAccountTypeRepository.findCashAccountTypeByName("income");
+		feeType = cashAccountTypeRepository.findCashAccountTypeByName("fee");
 
-		tradeType = new CashAccountType("trade", "Trade");
-		cashAccountTypeRepository.save(tradeType);
+		tradeAccountUSD = new CashAccount("trade/Test Broker/USD", currencyUSD, brokerUSD, tradeType);
+		tradeAccountUSD = cashAccountRepository.save(tradeAccountUSD);
 
-		correctionType = new CashAccountType("correction", "Correction");
-		correctionType = cashAccountTypeRepository.save(correctionType);
-
-		borrowedType = new CashAccountType("borrowed", "Borrowed");
-		borrowedType = cashAccountTypeRepository.save(borrowedType);
-
-		openType = new CashAccountType("open", "Open");
-		openType = cashAccountTypeRepository.save(openType);
-
-		incomeType = new CashAccountType("income", "Income");
-		incomeType = cashAccountTypeRepository.save(incomeType);
-
-		tradeAccount = new CashAccount("trade/Test Broker/USD", currencyUSD, brokerUSD, tradeType);
-		tradeAccount = cashAccountRepository.save(tradeAccount);
+		tradeAccountEUR = new CashAccount("trade/Test Broker/EUR", currencyEUR, brokerEUR, tradeType);
+		tradeAccountEUR = cashAccountRepository.save(tradeAccountEUR);
 
 		correctionAccount = new CashAccount("correction/Test Broker/USD", currencyUSD, brokerUSD, correctionType);
 		correctionAccount = cashAccountRepository.save(correctionAccount);
@@ -112,27 +111,33 @@ public class CashServiceTest {
 		openAccount = new CashAccount("open/Test Broker/USD", currencyUSD, brokerUSD, openType);
 		openAccount = cashAccountRepository.save(openAccount);
 
-		incomeAccount = new CashAccount("income/Test Broker/USD", currencyUSD, brokerUSD, incomeType);
-		incomeAccount = cashAccountRepository.save(incomeAccount);
+		incomeAccountUSD = new CashAccount("income/Test Broker/USD", currencyUSD, brokerUSD, incomeType);
+		incomeAccountUSD = cashAccountRepository.save(incomeAccountUSD);
+
+		feeAccountUSD = new CashAccount("fee/Test Broker/USD", currencyUSD, brokerUSD, feeType);
+		feeAccountUSD = cashAccountRepository.save(feeAccountUSD);
+
+		feeAccountEUR = new CashAccount("fee/Test Broker/EUR", currencyEUR, brokerEUR, feeType);
+		feeAccountEUR = cashAccountRepository.save(feeAccountEUR);
 	}
 
 	@Test
 	public void testGetAccount_AccountNotFound_CreateNew() {
 		// Act
 		CashAccount savedAccount =
-				cashAccountRepository.findCashAccountByBrokerAndCurrencyAndType(brokerUSD, currencyUSD, savingsType);
+				cashAccountRepository.findCashAccountByBrokerAndCurrencyAndType(brokerUSD, currencyUSD, savingType);
 		assertNull(savedAccount);
 
-		CashAccount result = cashService.getAccount(brokerUSD, currencyUSD, savingsType);
+		CashAccount result = cashService.getAccount(brokerUSD, currencyUSD, savingType);
 
 		// Assert
 		assertNotNull(result);
-		assertEquals("Savings/Test Broker/USD", result.getName());
+		assertEquals("saving/Test Broker/USD", result.getName());
 		assertEquals(brokerUSD, result.getBroker());
 		assertEquals(currencyUSD, result.getCurrency());
-		assertEquals(savingsType, result.getType());
+		assertEquals(savingType, result.getType());
 
-		savedAccount = cashAccountRepository.findCashAccountByBrokerAndCurrencyAndType(brokerUSD, currencyUSD, savingsType);
+		savedAccount = cashAccountRepository.findCashAccountByBrokerAndCurrencyAndType(brokerUSD, currencyUSD, savingType);
 		assertNotNull(savedAccount);
 		assertEquals(result, savedAccount);
 	}
@@ -140,11 +145,11 @@ public class CashServiceTest {
 	@Test
 	public void testGetAccount_AccountFound_ReturnExisting() {
 		// Arrange
-		CashAccount existingAccount = new CashAccount("TestAccount", currencyUSD, brokerUSD, savingsType);
+		CashAccount existingAccount = new CashAccount("TestAccount", currencyUSD, brokerUSD, savingType);
 		existingAccount = cashAccountRepository.save(existingAccount);
 
 		// Act
-		CashAccount result = cashService.getAccount(brokerUSD, currencyUSD, savingsType);
+		CashAccount result = cashService.getAccount(brokerUSD, currencyUSD, savingType);
 
 		// Assert
 		assertNotNull(result);
@@ -154,36 +159,24 @@ public class CashServiceTest {
 	@Test
 	public void testTransfer_Successful_Transfer() {
 		// Arrange
-		CashAccountType fromType = new CashAccountType("FromType", "From Account");
-		fromType = cashAccountTypeRepository.save(fromType);
-
-		CashAccountType toType = new CashAccountType("ToType", "To Account");
-		toType = cashAccountTypeRepository.save(toType);
-
-		CashAccount fromAccount = new CashAccount("FromAccount", currencyUSD, brokerUSD, fromType);
-		fromAccount = cashAccountRepository.save(fromAccount);
-
-		CashAccount toAccount = new CashAccount("ToAccount", currencyUSD, brokerUSD, toType);
-		toAccount = cashAccountRepository.save(toAccount);
-
 		LocalDateTime dateTime       = LocalDateTime.now();
 		double        transferAmount = 200.0;
 
 		// Act
 		CashAccount result = cashService.transfer(
-				transferAmount, null, brokerUSD, currencyUSD, fromType, toType, dateTime
+				transferAmount, null, brokerUSD, currencyUSD, incomeType, tradeType, dateTime
 		);
 
 		// Assert
 		assertNotNull(result);
-		assertEquals(toAccount, result);
-		assertEquals(-200.0, cashService.getAccountTotal(fromAccount));
-		assertEquals(200.0, cashService.getAccountTotal(toAccount));
+		assertEquals(tradeAccountUSD, result);
+		assertEquals(-200.0, cashService.getAccountTotal(incomeAccountUSD));
+		assertEquals(200.0, cashService.getAccountTotal(tradeAccountUSD));
 
 		CashFlow record = cashFlowRepository.findAll().get(0);
 		assertNotNull(record);
-		assertEquals(fromAccount, record.getAccountFrom());
-		assertEquals(toAccount, record.getAccountTo());
+		assertEquals(incomeAccountUSD, record.getAccountFrom());
+		assertEquals(tradeAccountUSD, record.getAccountTo());
 		assertEquals(transferAmount, record.getSumFrom());
 		assertEquals(transferAmount, record.getSumTo());
 		assertThat(dateTime).isCloseTo(record.getCommittedAt(), new TemporalUnitWithinOffset(100, ChronoUnit.MILLIS));
@@ -220,7 +213,7 @@ public class CashServiceTest {
 	@Test
 	public void testExchange_Successful_Exchange() {
 		// Arrange
-		CashAccount tradeFrom = tradeAccount;
+		CashAccount tradeFrom = tradeAccountUSD;
 		tradeFrom = cashAccountRepository.save(tradeFrom);
 
 		CashAccount tradeTo = new CashAccount("TradeTo", currencyEUR, brokerUSD, tradeType);
@@ -265,13 +258,13 @@ public class CashServiceTest {
 		cashService.correction(transferDTO);
 
 		// Assert
-		assertEquals(transferAmount, cashFlowRepository.getSumToByAccount(tradeAccount));
+		assertEquals(transferAmount, cashFlowRepository.getSumToByAccount(tradeAccountUSD));
 		assertEquals(transferAmount, cashFlowRepository.getSumFromByAccount(correctionAccount));
 
 		CashFlow record = cashFlowRepository.findAll().get(0);
 		assertNotNull(record);
 		assertEquals(correctionAccount, record.getAccountFrom());
-		assertEquals(tradeAccount, record.getAccountTo());
+		assertEquals(tradeAccountUSD, record.getAccountTo());
 		assertEquals(transferAmount, record.getSumFrom());
 		assertEquals(transferAmount, record.getSumTo());
 		assertThat(dateTime).isCloseTo(record.getCommittedAt(), new TemporalUnitWithinOffset(100, ChronoUnit.MILLIS));
@@ -289,12 +282,12 @@ public class CashServiceTest {
 		cashService.correction(transferDTO);
 
 		// Assert
-		assertEquals(-200.0, cashService.getAccountTotal(tradeAccount));
+		assertEquals(-200.0, cashService.getAccountTotal(tradeAccountUSD));
 		assertEquals(200.0, cashService.getAccountTotal(correctionAccount));
 
 		CashFlow record = cashFlowRepository.findAll().get(0);
 		assertNotNull(record);
-		assertEquals(tradeAccount, record.getAccountFrom());
+		assertEquals(tradeAccountUSD, record.getAccountFrom());
 		assertEquals(correctionAccount, record.getAccountTo());
 		assertEquals(transferAmount * (-1), record.getSumFrom());
 		assertEquals(transferAmount * (-1), record.getSumTo());
@@ -318,13 +311,13 @@ public class CashServiceTest {
 
 		// Assert
 		assertNotNull(correctionAccount);
-		assertEquals(200.0, cashService.getAccountTotal(tradeAccount));
-		assertEquals(-200.0,  cashService.getAccountTotal(correctionAccount));
+		assertEquals(200.0, cashService.getAccountTotal(tradeAccountUSD));
+		assertEquals(-200.0, cashService.getAccountTotal(correctionAccount));
 
 		CashFlow record = cashFlowRepository.findAll().get(0);
 		assertNotNull(record);
 		assertEquals(correctionAccount, record.getAccountFrom());
-		assertEquals(tradeAccount, record.getAccountTo());
+		assertEquals(tradeAccountUSD, record.getAccountTo());
 		assertEquals(transferAmount, record.getSumFrom());
 		assertEquals(transferAmount, record.getSumTo());
 		assertThat(dateTime).isCloseTo(record.getCommittedAt(), new TemporalUnitWithinOffset(100, ChronoUnit.MILLIS));
@@ -333,13 +326,9 @@ public class CashServiceTest {
 	@Test
 	public void testSuccessful_Fee_SameCurrency() {
 		// Arrange
-		CashAccountType feeType = new CashAccountType("fee", "Fee");
-		feeType = cashAccountTypeRepository.save(feeType);
 
-		CashAccount feeAccount = new CashAccount("fee/Test Broker/USD", currencyUSD, brokerUSD, feeType);
-		feeAccount = cashAccountRepository.save(feeAccount);
 
-		CashFlow toTrade = new CashFlow(incomeAccount, tradeAccount, null, 500.0, 500.0, null, LocalDateTime.now());
+		CashFlow toTrade = new CashFlow(incomeAccountUSD, tradeAccountUSD, null, 500.0, 500.0, null, LocalDateTime.now());
 		cashFlowRepository.save(toTrade);
 
 		LocalDateTime dateTime = LocalDateTime.now();
@@ -354,13 +343,13 @@ public class CashServiceTest {
 		cashService.fee(transferAmount, brokerUSD, tradeLog, dateTime);
 
 		// Assert
-		assertEquals(500.0 - transferAmount, cashService.getAccountTotal(tradeAccount));
-		assertEquals(transferAmount, cashService.getAccountTotal(feeAccount));
+		assertEquals(500.0 - transferAmount, cashService.getAccountTotal(tradeAccountUSD));
+		assertEquals(transferAmount, cashService.getAccountTotal(feeAccountUSD));
 
 		CashFlow record = cashFlowRepository.findCashFlowByTradeLog(tradeLog);
 		assertNotNull(record);
-		assertEquals(tradeAccount, record.getAccountFrom());
-		assertEquals(feeAccount, record.getAccountTo());
+		assertEquals(tradeAccountUSD, record.getAccountFrom());
+		assertEquals(feeAccountUSD, record.getAccountTo());
 		assertEquals(tradeLog, record.getTradeLog());
 		assertEquals(transferAmount, record.getSumFrom());
 		assertEquals(transferAmount, record.getSumTo());
@@ -370,22 +359,11 @@ public class CashServiceTest {
 	@Test
 	public void testSuccessful_Fee_DifferentCurrency() {
 		// Arrange
-		CashAccountType feeType = new CashAccountType("fee", "Fee");
-		feeType = cashAccountTypeRepository.save(feeType);
-
-		CashAccount tradeAccount = new CashAccount("trade/Test Broker/USD", currencyUSD, brokerEUR, tradeType);
-		tradeAccount = cashAccountRepository.save(tradeAccount);
-
-		CashAccount tradeAccountEUR = new CashAccount("trade/Test Broker/EUR", currencyEUR, brokerEUR, tradeType);
-		tradeAccountEUR = cashAccountRepository.save(tradeAccountEUR);
-
-		CashAccount feeAccount = new CashAccount("fee/Test Broker/EUR", currencyEUR, brokerEUR, feeType);
-		feeAccount = cashAccountRepository.save(feeAccount);
-
 		CashAccount incomeAccountEUR = new CashAccount("income/Test Broker/EUR", currencyEUR, brokerEUR, incomeType);
 		incomeAccountEUR = cashAccountRepository.save(incomeAccountEUR);
 
-		CashFlow toTradeEuro = new CashFlow(incomeAccountEUR, tradeAccountEUR, null, 500.0, 500.0, null, LocalDateTime.now());
+		CashFlow toTradeEuro =
+				new CashFlow(incomeAccountEUR, tradeAccountEUR, null, 500.0, 500.0, null, LocalDateTime.now());
 		cashFlowRepository.save(toTradeEuro);
 
 		LocalDateTime dateTime = LocalDateTime.now();
@@ -401,13 +379,13 @@ public class CashServiceTest {
 
 		// Assert
 		assertEquals(500.0 - transferAmount, cashService.getAccountTotal(tradeAccountEUR));
-		assertEquals(0.0, cashService.getAccountTotal(tradeAccount));
-		assertEquals(transferAmount, cashService.getAccountTotal(feeAccount));
+		assertEquals(0.0, cashService.getAccountTotal(tradeAccountUSD));
+		assertEquals(transferAmount, cashService.getAccountTotal(feeAccountEUR));
 
 		CashFlow record = cashFlowRepository.findCashFlowByTradeLog(tradeLog);
 		assertNotNull(record);
 		assertEquals(tradeAccountEUR, record.getAccountFrom());
-		assertEquals(feeAccount, record.getAccountTo());
+		assertEquals(feeAccountEUR, record.getAccountTo());
 		assertEquals(tradeLog, record.getTradeLog());
 		assertEquals(transferAmount, record.getSumFrom());
 		assertEquals(transferAmount, record.getSumTo());
@@ -417,9 +395,6 @@ public class CashServiceTest {
 	@Test
 	public void testSuccessful_Fee_Account_Creation() {
 		// Arrange
-		CashAccountType feeType = new CashAccountType("fee", "Fee");
-		feeType = cashAccountTypeRepository.save(feeType);
-
 		LocalDateTime dateTime = LocalDateTime.now();
 
 		Ticker ticker = tickerRepository.getReferenceById(1L);
@@ -427,7 +402,7 @@ public class CashServiceTest {
 
 		TradeLog tradeLog = getTradeLog(brokerUSD, ticker, market, currencyUSD);
 
-		CashFlow toTrade = new CashFlow(incomeAccount, tradeAccount, null, 500.0, 500.0, null, LocalDateTime.now());
+		CashFlow toTrade = new CashFlow(incomeAccountUSD, tradeAccountUSD, null, 500.0, 500.0, null, LocalDateTime.now());
 		cashFlowRepository.save(toTrade);
 
 		double transferAmount = 2.01;
@@ -440,12 +415,12 @@ public class CashServiceTest {
 		// Assert
 		assertNotNull(feeAccount);
 		assertEquals("fee/Test Broker/USD", feeAccount.getName());
-		assertEquals(500.0 - transferAmount, cashService.getAccountTotal(tradeAccount));
+		assertEquals(500.0 - transferAmount, cashService.getAccountTotal(tradeAccountUSD));
 		assertEquals(transferAmount, cashService.getAccountTotal(feeAccount));
 
 		CashFlow record = cashFlowRepository.findCashFlowByTradeLog(tradeLog);
 		assertNotNull(record);
-		assertEquals(tradeAccount, record.getAccountFrom());
+		assertEquals(tradeAccountUSD, record.getAccountFrom());
 		assertEquals(feeAccount, record.getAccountTo());
 		assertEquals(tradeLog, record.getTradeLog());
 		assertEquals(transferAmount, record.getSumFrom());
@@ -462,11 +437,11 @@ public class CashServiceTest {
 		tradeLog.setMarket(market);
 		tradeLog.setCurrency(currency);
 		tradeLog.setItemNumber(1L);
-		tradeLog.setPriceOpen(1.0);
+		tradeLog.setEstimatedPriceOpen(1.0);
 		tradeLog.setVolume(1.0);
 		tradeLog.setVolumeToDeposit(1.0);
-		tradeLog.setStopLoss(1.0);
-		tradeLog.setTakeProfit(1.0);
+		tradeLog.setOpenStopLoss(1.0);
+		tradeLog.setOpenTakeProfit(1.0);
 		tradeLog.setOutcome(1.0);
 		tradeLog.setOutcomeExpected(1.0);
 		tradeLog.setLevelPrice(1.0);

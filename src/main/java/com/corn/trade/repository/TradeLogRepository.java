@@ -26,11 +26,11 @@ public interface TradeLogRepository extends JpaRepository<TradeLog, Long>, JpaSp
 	@Query("select t from TradeLog t where t.dateClose is not null")
 	List<TradeLog> findAllClosed();
 
-	@Query("select new com.corn.trade.dto.CurrencySumDTO(t.currency.id, sum(t.stopLoss * t.itemNumber - t.fees * 2))" +
+	@Query("select new com.corn.trade.dto.CurrencySumDTO(t.currency.id, sum(t.openStopLoss * t.itemNumber - t.fees * 2))" +
 	       " from TradeLog t where t.broker=:broker and t.dateClose is null group by t.currency")
 	List<CurrencySumDTO> openSumsByBroker(@Param("broker") Broker broker);
 
-	@Query("select new com.corn.trade.dto.CurrencySumDTO(t.currency.id, sum(t.stopLoss * t.itemNumber - t.fees * 2))" +
+	@Query("select new com.corn.trade.dto.CurrencySumDTO(t.currency.id, sum(t.openStopLoss * t.itemNumber - t.fees * 2))" +
 	       " from TradeLog t where t.position='long' and t.dateClose is null group by t.currency")
 	List<CurrencySumDTO> openLongSums();
 

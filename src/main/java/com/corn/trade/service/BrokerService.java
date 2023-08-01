@@ -53,7 +53,7 @@ public class BrokerService {
 
 		for (TradeLogDTO dto : dtos) {
 			outcome += currencyRateService.convertToUSD(
-					dto.getCurrency().getId(),
+					dto.currency().getId(),
 					dto.getOutcomeDouble(),
 					currentDate);
 			avgProfit += dto.getOutcomePercentDouble();
