@@ -73,6 +73,9 @@
             <column name="risk_to_capital_pc" type="decimal(10,2)">
                 <constraints nullable="false"/>
             </column>
+            <column name="risk" type="decimal(10,2)">
+                <constraints nullable="false"/>
+            </column>
             <column name="open_take_profit" type="decimal(10,2)">
                 <constraints nullable="false"/>
             </column>

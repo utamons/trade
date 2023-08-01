@@ -446,6 +446,7 @@ public class CashServiceTest {
 		tradeLog.setTotalBought(1.0);
 		tradeLog.setOpenCommission(1.0);
 		tradeLog.setRiskToCapitalPc(1.0);
+		tradeLog.setRisk(1.0);
 		tradeLog.setEstimatedFees(1.0);
 		tradeLog.setEstimatedBreakEven(1.0);
 
