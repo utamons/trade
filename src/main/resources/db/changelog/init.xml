@@ -74,7 +74,9 @@
                 <constraints nullable="false"/>
             </column>
             <column name="outcome_to_capital_pc" type="decimal(10,2)"/>
-            <column name="open_take_profit" type="decimal(10,2)"/>
+            <column name="open_take_profit" type="decimal(10,2)">
+                <constraints nullable="false"/>
+            </column>
             <column name="estimated_fees" type="decimal(10,2)">
                 <constraints nullable="false"/>
             </column>
@@ -96,12 +98,6 @@
             <column name="close_commission" type="decimal(10,2)"/>
             <column name="note" type="text"/>
         </createTable>
-        <addForeignKeyConstraint
-                baseTableName="deposit"
-                baseColumnNames="currency_id"
-                constraintName="deposit_currency_fk"
-                referencedTableName="currency"
-                referencedColumnNames="id" />
         <addForeignKeyConstraint
                 baseTableName="ticker"
                 baseColumnNames="currency_id"

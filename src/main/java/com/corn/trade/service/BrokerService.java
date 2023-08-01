@@ -42,43 +42,6 @@ public class BrokerService {
 	}
 
 	public BrokerStatsDTO getStats(Long brokerId) throws JsonProcessingException {
-		List<CashAccountDTO> accounts         = cashService.getTradeAccounts(brokerId);
-		List<CashAccountDTO> borrowedAccounts = cashService.getBorrowedAccounts(brokerId);
-		List<TradeLogDTO>    dtos             = tradeLogService.getAllClosedByBroker(brokerId);
-
-		double outcome   = 0.0;
-		double avgProfit = 0.0;
-
-		LocalDate currentDate = LocalDate.now();
-
-		for (TradeLogDTO dto : dtos) {
-			outcome += currencyRateService.convertToUSD(
-					dto.currency().getId(),
-					dto.getOutcomeDouble(),
-					currentDate);
-			avgProfit += dto.getOutcomePercentDouble();
-		}
-
-		double borrowed = 0.0;
-
-		for (CashAccountDTO b : borrowedAccounts) {
-			double amount = cashService.getAccountTotal(b);
-			borrowed += currencyRateService.convertToUSD(b.currency().getId(),
-			                                             amount,
-			                                             LocalDate.now());
-		}
-
-		double avgOutcome = !dtos.isEmpty() ? outcome / dtos.size() : 0.0;
-		avgProfit = !dtos.isEmpty() ? avgProfit / dtos.size() : 0.0;
-
-		long open = tradeLogService.getOpenCountByBroker(brokerId);
-
-		return new BrokerStatsDTO(
-				accounts,
-				outcome,
-				avgOutcome,
-				avgProfit,
-				open,
-				borrowed);
+		throw new UnsupportedOperationException("Not implemented yet");
 	}
 }

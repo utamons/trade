@@ -66,9 +66,6 @@ public class TradeLogService {
 		TradeLog open   = tradeLogRepo.getReferenceById(closeDTO.id());
 		boolean  isLong = open.getPosition().equals("long");
 
-		if (closeDTO.quantity() != null && closeDTO.quantity() < open.getItemNumber())
-			open = copyPartial(closeDTO, open);
-
 		final Broker   broker   = open.getBroker();
 		final Currency currency = open.getCurrency();
 
@@ -76,7 +73,7 @@ public class TradeLogService {
 		double realClose = isLong ? closeDTO.totalSold() : closeDTO.totalBought();
 		double realDelta = realClose - realOpen;
 
-		double openFees  = open.getFees();
+		double openFees  = open.getOpenCommission();
 		double closeFees = closeDTO.fees();
 
 		final LocalDateTime dateTimeClose  = closeDTO.dateClose();
@@ -100,12 +97,8 @@ public class TradeLogService {
 		else
 			cashService.buyShort(open.getTotalSold(), realOpen, broker, currency, open);
 
-		open.setFees(openFees + closeFees);
-		open.setAveragePriceClose(closeDTO.priceClose());
+		open.setCloseCommission(open.getCloseCommission() + closeFees);
 		open.setDateClose(dateTimeClose);
-		open.setOutcome(outcome);
-		open.setOutcomePercent(outcomePercent);
-		open.setProfit(percentToCapital);
 		if (open.isShort()) {
 			open.setBrokerInterest(brokerInterest);
 			open.setTotalBought(closeDTO.totalBought());
@@ -118,44 +111,6 @@ public class TradeLogService {
 
 
 		tradeLogRepo.save(open);
-	}
-
-	private TradeLog copyPartial(TradeLogCloseDTO closeDTO, TradeLog open) {
-		Double depositAmount   = cashService.lastDepositAmount(open.getBroker(), open.getCurrency());
-		Double volume          = open.getEstimatedPriceOpen() * closeDTO.quantity();
-		Double volumeToDeposit = volume / depositAmount * 100.0;
-
-		TradeLog partial = new TradeLog();
-		partial.setPosition(open.getPosition());
-		partial.setDateOpen(open.getDateOpen());
-		partial.setBroker(open.getBroker());
-		partial.setMarket(open.getMarket());
-		partial.setTicker(open.getTicker());
-		partial.setCurrency(open.getCurrency());
-		partial.setItemNumber(closeDTO.quantity().longValue());
-		partial.setEstimatedPriceOpen(open.getEstimatedPriceOpen());
-		partial.setVolume(volume);
-		partial.setVolumeToDeposit(volumeToDeposit);
-		partial.setOpenStopLoss(open.getOpenStopLoss());
-		partial.setOpenTakeProfit(open.getOpenTakeProfit());
-		partial.setOutcomeExpected(open.getOutcomeExpected());
-		partial.setRisk(open.getRisk());
-		partial.setFees(open.getFees());
-		partial.setNote(open.getNote());
-		partial.setEstimatedBreakEven(open.getEstimatedBreakEven());
-		partial.setBrokerInterest(open.getBrokerInterest());
-		partial.setParent(open);
-		partial.setTotalBought(open.getTotalBought());
-		partial.setTotalSold(open.getTotalSold());
-
-		partial = tradeLogRepo.save(partial);
-
-		open.setItemNumber(open.getItemNumber() - closeDTO.quantity());
-		open.setVolume(open.getVolume() - volume);
-
-		tradeLogRepo.save(open);
-
-		return partial;
 	}
 
 	public Page<TradeLogDTO> getPage(TradeLogPageReqDTO pageReqDTO) throws JsonProcessingException {
@@ -191,7 +146,7 @@ public class TradeLogService {
 				tradeLog.getTicker().getId(),
 				tradeLog.getEstimatedPriceOpen(),
 				tradeLog.getAtr(),
-				tradeLog.getItemNumber(),
+				tradeLog.isLong()? tradeLog.getItemSold() : tradeLog.getItemBought(),
 				openDTO.stopLoss(),
 				openDTO.takeProfit(),
 				LocalDate.now(),
@@ -206,7 +161,7 @@ public class TradeLogService {
 		tradeLog.setOpenStopLoss(openDTO.stopLoss());
 		tradeLog.setOpenTakeProfit(openDTO.takeProfit());
 		tradeLog.setNote(openDTO.note());
-		tradeLog.setRisk(risk);
+		tradeLog.setRiskToCapitalPc(risk);
 
 		tradeLogRepo.save(tradeLog);
 	}

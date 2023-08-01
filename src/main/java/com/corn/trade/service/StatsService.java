@@ -40,40 +40,6 @@ public class StatsService {
 	}
 
 	public StatsData getStats(List<TradeLog> tradeLogs) throws JsonProcessingException {
-		final Integer totalTrades = tradeLogs.size();
-		final Integer shorts = (int) tradeLogs.stream().filter(TradeLog::isShort).count();
-		final Integer longs = (int) tradeLogs.stream().filter(TradeLog::isLong).count();
-
-		final Double volumeUSD = tradeLogs.stream().mapToDouble(t-> {
-			try {
-				return currencyRateService.convertToUSD(
-						t.getCurrency().getId(),
-						t.getVolume(),
-						LocalDate.now()
-				);
-			} catch (JsonProcessingException e) {
-				e.printStackTrace();
-				return 0;
-			}
-		}).sum();
-
-		final Double profitUSD = tradeLogs.stream().mapToDouble(t-> {
-			try {
-				return currencyRateService.convertToUSD(
-						t.getCurrency().getId(),
-						t.getProfit(),
-						LocalDate.now()
-				);
-			} catch (JsonProcessingException e) {
-				e.printStackTrace();
-				return 0;
-			}
-		}).sum();
-
-		final Double performance = profitUSD / volumeUSD * 100.0;
-
-		final Double capital = cashService.getCapital();
-
-		return null;
+		throw new UnsupportedOperationException("Not implemented yet");
 	}
 }

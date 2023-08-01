@@ -11,7 +11,6 @@
     <include file="db/changelog/changelog-23-01-21.xml" relativeToChangelogFile="false" />
     <include file="db/changelog/changelog-23-01-27.xml" relativeToChangelogFile="false" />
     <include file="db/changelog/changelog-23-01-31.xml" relativeToChangelogFile="false" />
-    <include file="db/changelog/changelog-23-03-22.xml" relativeToChangelogFile="false" />
     <include file="db/changelog/changelog-23-05-22.xml" relativeToChangelogFile="false" />
     <include file="/db/changelog/changelog-23-07-26.xml" relativeToChangelogFile="false" />
     <include file="/db/changelog/changelog-23-07-28.xml" relativeToChangelogFile="false" />

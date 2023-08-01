@@ -436,18 +436,18 @@ public class CashServiceTest {
 		tradeLog.setTicker(ticker);
 		tradeLog.setMarket(market);
 		tradeLog.setCurrency(currency);
-		tradeLog.setItemNumber(1L);
+		tradeLog.setItemBought(1L);
 		tradeLog.setEstimatedPriceOpen(1.0);
-		tradeLog.setVolume(1.0);
-		tradeLog.setVolumeToDeposit(1.0);
+		tradeLog.setTotalBought(1.0);
 		tradeLog.setOpenStopLoss(1.0);
 		tradeLog.setOpenTakeProfit(1.0);
-		tradeLog.setOutcome(1.0);
-		tradeLog.setOutcomeExpected(1.0);
 		tradeLog.setLevelPrice(1.0);
 		tradeLog.setAtr(1.0);
 		tradeLog.setTotalBought(1.0);
-		tradeLog.setFees(1.0);
+		tradeLog.setOpenCommission(1.0);
+		tradeLog.setRiskToCapitalPc(1.0);
+		tradeLog.setEstimatedFees(1.0);
+		tradeLog.setEstimatedBreakEven(1.0);
 
 		tradeLog = tradeLogRepository.save(tradeLog);
 		return tradeLog;
