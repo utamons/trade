@@ -2,9 +2,9 @@ id;name;description
 1;income;From where I refill deposits
 2;trade;Trade account
 3;fee;Fees
-4;profit;Profit
-5;loss;Loss
+4;outcome;Outcome
+5;withdraw;Withdrawal
 6;saving;Saving account
 7;correction;An account for corrections
-8;open;Open positions
+8;open;Open long positions
 9;borrowed;Borrowed funds

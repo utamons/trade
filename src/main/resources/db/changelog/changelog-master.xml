@@ -9,16 +9,10 @@
     <include file="db/changelog/changelog-23-01-17-1.xml" relativeToChangelogFile="false" />
     <include file="db/changelog/changelog-23-01-19.xml" relativeToChangelogFile="false" />
     <include file="db/changelog/changelog-23-01-21.xml" relativeToChangelogFile="false" />
-    <include file="db/changelog/changelog-23-01-24.xml" relativeToChangelogFile="false" />
     <include file="db/changelog/changelog-23-01-27.xml" relativeToChangelogFile="false" />
     <include file="db/changelog/changelog-23-01-31.xml" relativeToChangelogFile="false" />
-    <include file="db/changelog/changelog-23-02-04.xml" relativeToChangelogFile="false" />
-    <include file="db/changelog/changelog-23-02-28.xml" relativeToChangelogFile="false" />
-    <include file="db/changelog/changelog-23-03-12.xml" relativeToChangelogFile="false" />
     <include file="db/changelog/changelog-23-03-22.xml" relativeToChangelogFile="false" />
     <include file="db/changelog/changelog-23-05-22.xml" relativeToChangelogFile="false" />
-    <include file="db/changelog/changelog-26-07-22.xml" relativeToChangelogFile="false" />
-    <include file="db/changelog/changelog-26-07-22-1.xml" relativeToChangelogFile="false" />
-    <include file="db/changelog/changelog-26-07-28.xml" relativeToChangelogFile="false" />
-    <include file="db/changelog/changelog-31-07-24.xml" relativeToChangelogFile="false" />
+    <include file="/db/changelog/changelog-23-07-26.xml" relativeToChangelogFile="false" />
+    <include file="/db/changelog/changelog-23-07-28.xml" relativeToChangelogFile="false" />
  </databaseChangeLog>

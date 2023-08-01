@@ -675,9 +675,9 @@ public class CashService {
 			                                tradeLog.getBroker().getName(),
 			                                CurrencyMapper.toDTO(tradeLog.getTicker().getCurrency()),
 			                                tradeLog.getItemNumber(),
-			                                tradeLog.getPriceOpen(),
+			                                tradeLog.getEstimatedPriceOpen(),
 			                                interest);
-			tradeLog.setBreakEven(breakEven);
+			tradeLog.setEstimatedBreakEven(breakEven);
 			tradeLogRepo.save(tradeLog);
 		}
 	}

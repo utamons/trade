@@ -101,7 +101,7 @@ public class TradeLogService {
 			cashService.buyShort(open.getTotalSold(), realOpen, broker, currency, open);
 
 		open.setFees(openFees + closeFees);
-		open.setPriceClose(closeDTO.priceClose());
+		open.setAveragePriceClose(closeDTO.priceClose());
 		open.setDateClose(dateTimeClose);
 		open.setOutcome(outcome);
 		open.setOutcomePercent(outcomePercent);
@@ -122,7 +122,7 @@ public class TradeLogService {
 
 	private TradeLog copyPartial(TradeLogCloseDTO closeDTO, TradeLog open) {
 		Double depositAmount   = cashService.lastDepositAmount(open.getBroker(), open.getCurrency());
-		Double volume          = open.getPriceOpen() * closeDTO.quantity();
+		Double volume          = open.getEstimatedPriceOpen() * closeDTO.quantity();
 		Double volumeToDeposit = volume / depositAmount * 100.0;
 
 		TradeLog partial = new TradeLog();
@@ -133,16 +133,16 @@ public class TradeLogService {
 		partial.setTicker(open.getTicker());
 		partial.setCurrency(open.getCurrency());
 		partial.setItemNumber(closeDTO.quantity().longValue());
-		partial.setPriceOpen(open.getPriceOpen());
+		partial.setEstimatedPriceOpen(open.getEstimatedPriceOpen());
 		partial.setVolume(volume);
 		partial.setVolumeToDeposit(volumeToDeposit);
-		partial.setStopLoss(open.getStopLoss());
-		partial.setTakeProfit(open.getTakeProfit());
+		partial.setOpenStopLoss(open.getOpenStopLoss());
+		partial.setOpenTakeProfit(open.getOpenTakeProfit());
 		partial.setOutcomeExpected(open.getOutcomeExpected());
 		partial.setRisk(open.getRisk());
 		partial.setFees(open.getFees());
 		partial.setNote(open.getNote());
-		partial.setBreakEven(open.getBreakEven());
+		partial.setEstimatedBreakEven(open.getEstimatedBreakEven());
 		partial.setBrokerInterest(open.getBrokerInterest());
 		partial.setParent(open);
 		partial.setTotalBought(open.getTotalBought());
@@ -189,7 +189,7 @@ public class TradeLogService {
 		EvalInDTO evalInDTO = new EvalInDTO(
 				tradeLog.getBroker().getId(),
 				tradeLog.getTicker().getId(),
-				tradeLog.getPriceOpen(),
+				tradeLog.getEstimatedPriceOpen(),
 				tradeLog.getAtr(),
 				tradeLog.getItemNumber(),
 				openDTO.stopLoss(),
@@ -203,8 +203,8 @@ public class TradeLogService {
 		                                  CurrencyMapper.toDTO(tradeLog.getCurrency()),
 		                                  capital);
 
-		tradeLog.setStopLoss(openDTO.stopLoss());
-		tradeLog.setTakeProfit(openDTO.takeProfit());
+		tradeLog.setOpenStopLoss(openDTO.stopLoss());
+		tradeLog.setOpenTakeProfit(openDTO.takeProfit());
 		tradeLog.setNote(openDTO.note());
 		tradeLog.setRisk(risk);
 

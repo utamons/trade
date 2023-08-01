@@ -54,7 +54,7 @@ public class CashController {
 
 		for (TradeLogDTO dto : closed) {
 			sumOutcomes = sumOutcomes +
-			              currencyRateService.convertToUSD(dto.getCurrency().getId(),
+			              currencyRateService.convertToUSD(dto.currency().getId(),
 			                                               dto.getOutcomeDouble(),
 			                                               today);
 		}

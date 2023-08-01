@@ -1,6 +1,7 @@
 package com.corn.trade.entity;
 
 import javax.persistence.*;
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 @Table(name = "trade_log")
 public class TradeLog implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	@Id
@@ -16,6 +18,13 @@ public class TradeLog implements Serializable {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	/*
+	 * Basic data *********************************************************************************************************
+	 */
+
+	/**
+	 * Long or Short
+	 */
 	@Column(name = "position", nullable = false)
 	private String position;
 
@@ -25,77 +34,33 @@ public class TradeLog implements Serializable {
 	@Column(name = "date_close")
 	private LocalDateTime dateClose;
 
-	@ManyToOne
+	@ManyToOne(optional = false)
 	private Broker broker;
 
-	@ManyToOne
+	@ManyToOne(optional = false)
 	private Market market;
 
-	@ManyToOne
+	@ManyToOne(optional = false)
 	private Ticker ticker;
 
-	@ManyToOne
+	@ManyToOne(optional = false)
 	private Currency currency;
 
-	@ManyToOne
-	private TradeLog parent;
+	/*
+	 * Estimated data *********************************************************************************************************
+	 */
 
-	@Column(name = "item_number", nullable = false)
-	private Long itemNumber;
+	@Column(name = "estimated_price_open", nullable = false)
+	private Double estimatedPriceOpen;
 
-	@Column(name = "price_open", nullable = false)
-	private Double priceOpen;
+	@Column(name = "estimated_fees", nullable = false)
+	private Double estimatedFees;
 
-	@Column(name = "price_close")
-	private Double priceClose;
+	@Column(name = "estimated_break_even", nullable = false)
+	private Double estimatedBreakEven;
 
-	@Column(name = "volume", nullable = false)
-	private Double volume;
-
-	@Column(name = "volume_to_deposit")
-	private Double volumeToDeposit;
-
-	@Column(name = "stop_loss")
-	private Double stopLoss;
-
-	@Column(name = "take_profit")
-	private Double takeProfit;
-
-	@Column(name = "outcome_expected")
-	private Double outcomeExpected;
-
-	@Column(name = "risk")
-	private Double risk;
-
-	@Column(name = "fees", nullable = false)
-	private Double fees;
-
-	@Column(name = "break_even", nullable = false)
-	private Double breakEven;
-
-	@Column(name = "outcome")
-	private Double outcome;
-
-	@Column(name = "outcome_percent")
-	private Double outcomePercent;
-
-	@Column(name = "profit")
-	private Double profit;
-
-	@Column(name = "note")
-	private String note;
-
-	@Column(name = "grade")
-	private String grade;
-
-	@Column(name = "goal")
-	private Double goal;
-
-	@Column(name = "chart")
-	private byte[] chart;
-
-	@Column(name="broker_interest")
-	private Double brokerInterest;
+	@Column(name = "risk_to_capital_pc", nullable = false)
+	private Double riskToCapitalPc;
 
 	@Column(name="level_price")
 	private Double levelPrice;
@@ -103,11 +68,52 @@ public class TradeLog implements Serializable {
 	@Column(name="atr")
 	private Double atr;
 
+	/*
+	 * Real trade data *********************************************************************************************************
+	 */
+
+	@Column(name = "open_stop_loss", nullable = false)
+	private Double openStopLoss;
+
+	@Column(name = "open_take_profit")
+	private Double openTakeProfit;
+
+	@Column(name = "outcome_to_capital_pc")
+	private Double outcomeToCapitalPc;
+
+	@Column(name="broker_interest")
+	private Double brokerInterest;
+
 	@Column(name="total_bought")
 	private Double totalBought;
 
 	@Column(name="total_sold")
 	private Double totalSold;
+
+	@Column(name = "item_bought")
+	private Long itemBought;
+
+	@Column(name = "item_sold")
+	private Long itemSold;
+
+	@Column(name="final_stop_loss")
+	private Double finalStopLoss;
+
+	@Column(name="final_take_profit")
+	private Double finalTakeProfit;
+
+	@Column(name="open_commission", nullable = false)
+	private Double openCommission;
+
+	@Column(name="close_commission")
+	private Double closeCommission;
+
+	@Column(name = "note")
+	private String note;
+
+	/*
+	 * Getters and Setters *********************************************************************************************************
+	 */
 
 	public Long getId() {
 		return id;
@@ -173,164 +179,36 @@ public class TradeLog implements Serializable {
 		this.currency = currency;
 	}
 
-	public Long getItemNumber() {
-		return itemNumber;
+	public Double getEstimatedPriceOpen() {
+		return estimatedPriceOpen;
 	}
 
-	public void setItemNumber(Long itemNumber) {
-		this.itemNumber = itemNumber;
+	public void setEstimatedPriceOpen(Double estimatedPriceOpen) {
+		this.estimatedPriceOpen = estimatedPriceOpen;
 	}
 
-	public Double getPriceOpen() {
-		return priceOpen;
+	public Double getEstimatedFees() {
+		return estimatedFees;
 	}
 
-	public void setPriceOpen(Double priceOpen) {
-		this.priceOpen = priceOpen;
+	public void setEstimatedFees(Double estimatedFees) {
+		this.estimatedFees = estimatedFees;
 	}
 
-	public Double getPriceClose() {
-		return priceClose;
+	public Double getEstimatedBreakEven() {
+		return estimatedBreakEven;
 	}
 
-	public void setPriceClose(Double priceClose) {
-		this.priceClose = priceClose;
+	public void setEstimatedBreakEven(Double estimatedBreakEven) {
+		this.estimatedBreakEven = estimatedBreakEven;
 	}
 
-	public Double getVolume() {
-		return volume;
+	public Double getRiskToCapitalPc() {
+		return riskToCapitalPc;
 	}
 
-	public void setVolume(Double volume) {
-		this.volume = volume;
-	}
-
-	public Double getVolumeToDeposit() {
-		return volumeToDeposit;
-	}
-
-	public void setVolumeToDeposit(Double volumeToDeposit) {
-		this.volumeToDeposit = volumeToDeposit;
-	}
-
-	public Double getStopLoss() {
-		return stopLoss;
-	}
-
-	public void setStopLoss(Double stopLoss) {
-		this.stopLoss = stopLoss;
-	}
-
-	public Double getTakeProfit() {
-		return takeProfit;
-	}
-
-	public void setTakeProfit(Double takeProfit) {
-		this.takeProfit = takeProfit;
-	}
-
-	public Double getOutcomeExpected() {
-		return outcomeExpected;
-	}
-
-	public void setOutcomeExpected(Double outcomeExpected) {
-		this.outcomeExpected = outcomeExpected;
-	}
-
-	public Double getRisk() {
-		return risk;
-	}
-
-	public void setRisk(Double risk) {
-		this.risk = risk;
-	}
-
-	public Double getFees() {
-		return fees;
-	}
-
-	public void setFees(Double fees) {
-		this.fees = fees;
-	}
-
-	public Double getOutcome() {
-		return outcome;
-	}
-
-	public void setOutcome(Double outcome) {
-		this.outcome = outcome;
-	}
-
-	public Double getOutcomePercent() {
-		return outcomePercent;
-	}
-
-	public void setOutcomePercent(Double outcomePercent) {
-		this.outcomePercent = outcomePercent;
-	}
-
-	public Double getProfit() {
-		return profit;
-	}
-
-	public void setProfit(Double profit) {
-		this.profit = profit;
-	}
-
-	public String getNote() {
-		return note;
-	}
-
-	public void setNote(String note) {
-		this.note = note;
-	}
-
-	public byte[] getChart() {
-		return chart;
-	}
-
-	public void setChart(byte[] chart) {
-		this.chart = chart;
-	}
-
-	public String getGrade() {
-		return grade;
-	}
-
-	public void setGrade(String grade) {
-		this.grade = grade;
-	}
-
-	public Double getGoal() {
-		return goal;
-	}
-
-	public void setGoal(Double goal) {
-		this.goal = goal;
-	}
-
-	public Double getBreakEven() {
-		return breakEven;
-	}
-
-	public void setBreakEven(Double breakEven) {
-		this.breakEven = breakEven;
-	}
-
-	public Double getBrokerInterest() {
-		return brokerInterest;
-	}
-
-	public void setBrokerInterest(Double brokerInterest) {
-		this.brokerInterest = brokerInterest;
-	}
-
-	public TradeLog getParent() {
-		return parent;
-	}
-
-	public void setParent(TradeLog parent) {
-		this.parent = parent;
+	public void setRiskToCapitalPc(Double riskToCapitalPc) {
+		this.riskToCapitalPc = riskToCapitalPc;
 	}
 
 	public Double getLevelPrice() {
@@ -349,6 +227,38 @@ public class TradeLog implements Serializable {
 		this.atr = atr;
 	}
 
+	public Double getOpenStopLoss() {
+		return openStopLoss;
+	}
+
+	public void setOpenStopLoss(Double openStopLoss) {
+		this.openStopLoss = openStopLoss;
+	}
+
+	public Double getOpenTakeProfit() {
+		return openTakeProfit;
+	}
+
+	public void setOpenTakeProfit(Double openTakeProfit) {
+		this.openTakeProfit = openTakeProfit;
+	}
+
+	public Double getOutcomeToCapitalPc() {
+		return outcomeToCapitalPc;
+	}
+
+	public void setOutcomeToCapitalPc(Double outcomeToCapitalPc) {
+		this.outcomeToCapitalPc = outcomeToCapitalPc;
+	}
+
+	public Double getBrokerInterest() {
+		return brokerInterest;
+	}
+
+	public void setBrokerInterest(Double brokerInterest) {
+		this.brokerInterest = brokerInterest;
+	}
+
 	public Double getTotalBought() {
 		return totalBought;
 	}
@@ -363,6 +273,46 @@ public class TradeLog implements Serializable {
 
 	public void setTotalSold(Double totalSold) {
 		this.totalSold = totalSold;
+	}
+
+	public Double getFinalStopLoss() {
+		return finalStopLoss;
+	}
+
+	public void setFinalStopLoss(Double finalStopLoss) {
+		this.finalStopLoss = finalStopLoss;
+	}
+
+	public Double getFinalTakeProfit() {
+		return finalTakeProfit;
+	}
+
+	public void setFinalTakeProfit(Double finalTakeProfit) {
+		this.finalTakeProfit = finalTakeProfit;
+	}
+
+	public Double getOpenCommission() {
+		return openCommission;
+	}
+
+	public void setOpenCommission(Double openCommission) {
+		this.openCommission = openCommission;
+	}
+
+	public Double getCloseCommission() {
+		return closeCommission;
+	}
+
+	public void setCloseCommission(Double closeCommission) {
+		this.closeCommission = closeCommission;
+	}
+
+	public String getNote() {
+		return note;
+	}
+
+	public void setNote(String note) {
+		this.note = note;
 	}
 
 	@Transient

@@ -26,12 +26,6 @@
                 <constraints nullable="false"/>
             </column>
             <column name="broker_id" type="bigint"/>
-            <column name="amount" type="decimal(12,2)" defaultValue="0.00">
-                <constraints nullable="false"/>
-            </column>
-            <column name="updated_at" type="datetime" >
-                <constraints nullable="false"/>
-            </column>
         </createTable>
         <createTable tableName="cash_flow">
             <column name="id" type="bigint" autoIncrement="true">
