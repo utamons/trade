@@ -78,9 +78,6 @@ public class TradeLog implements Serializable {
 	@Column(name = "open_take_profit", nullable = false)
 	private Double openTakeProfit;
 
-	@Column(name = "outcome_to_capital_pc")
-	private Double outcomeToCapitalPc;
-
 	@Column(name="broker_interest")
 	private Double brokerInterest;
 
@@ -241,14 +238,6 @@ public class TradeLog implements Serializable {
 
 	public void setOpenTakeProfit(Double openTakeProfit) {
 		this.openTakeProfit = openTakeProfit;
-	}
-
-	public Double getOutcomeToCapitalPc() {
-		return outcomeToCapitalPc;
-	}
-
-	public void setOutcomeToCapitalPc(Double outcomeToCapitalPc) {
-		this.outcomeToCapitalPc = outcomeToCapitalPc;
 	}
 
 	public Double getBrokerInterest() {
