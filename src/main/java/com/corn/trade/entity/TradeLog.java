@@ -62,6 +62,9 @@ public class TradeLog implements Serializable {
 	@Column(name = "risk_to_capital_pc", nullable = false)
 	private Double riskToCapitalPc;
 
+	@Column(name = "risk", nullable = false)
+	private Double risk;
+
 	@Column(name="level_price")
 	private Double levelPrice;
 
@@ -318,6 +321,14 @@ public class TradeLog implements Serializable {
 
 	public void setItemSold(Long itemSold) {
 		this.itemSold = itemSold;
+	}
+
+	public Double getRisk() {
+		return risk;
+	}
+
+	public void setRisk(Double risk) {
+		this.risk = risk;
 	}
 
 	@Transient
