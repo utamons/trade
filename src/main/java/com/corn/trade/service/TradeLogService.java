@@ -93,7 +93,7 @@ public class TradeLogService {
 		double percentToCapital = cashService.percentToCapital(outcome, realOpen, currency);
 
 		if (open.getPosition().equals("long"))
-			cashService.sell(realClose, closeFees, broker, open);
+			cashService.sell(closeDTO.quantity(), realClose, closeFees, closeDTO.dateClose(), broker, open);
 		else
 			cashService.buyShort(open.getTotalSold(), realOpen, broker, currency, open);
 

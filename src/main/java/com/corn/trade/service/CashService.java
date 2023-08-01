@@ -52,9 +52,9 @@ public class CashService {
 	/**
 	 * Get cash account by broker, currency and type. If account not found, create new one.
 	 *
-	 * @param broker broker
+	 * @param broker   broker
 	 * @param currency currency
-	 * @param type account type
+	 * @param type     account type
 	 * @return cash account
 	 */
 	public CashAccount getAccount(Broker broker, Currency currency, CashAccountType type) {
@@ -63,7 +63,11 @@ public class CashService {
 		if (account == null) {
 			logger.debug("Account '{}' not found for broker {} and currency {}. Creating...",
 			             type.getName(), broker.getName(), currency.getName());
-			String accountName = type.getName() + "/" + broker.getName() + "/" + currency.getName().trim(); // H2 adds trailing spaces to string
+			String accountName = type.getName() +
+			                     "/" +
+			                     broker.getName() +
+			                     "/" +
+			                     currency.getName().trim(); // H2 adds trailing spaces to string
 			account = accountRepo.save(new CashAccount(accountName, currency, broker, type));
 		} else {
 			logger.debug("Found {} account for broker {} and currency {}.",
@@ -79,6 +83,7 @@ public class CashService {
 	 * Creates a cash flow record for the refill.
 	 * <p>
 	 * see {@link #transfer(double, TradeLog, Broker, Currency, CashAccountType, CashAccountType, LocalDateTime)}
+	 *
 	 * @param transferDTO transfer data
 	 * @return trade account
 	 */
@@ -109,10 +114,10 @@ public class CashService {
 	 *
 	 * @param transfer amount to transfer
 	 * @param tradeLog trade log (optional)
-	 * @param broker broker
+	 * @param broker   broker
 	 * @param currency currency
 	 * @param fromType account type to transfer from
-	 * @param toType account type to transfer to
+	 * @param toType   account type to transfer to
 	 * @param dateTime date and time of transfer
 	 * @return account to transfer to
 	 */
@@ -123,8 +128,24 @@ public class CashService {
 	                            CashAccountType fromType,
 	                            CashAccountType toType,
 	                            LocalDateTime dateTime) {
-		CashAccount from    = getAccount(broker, currency, fromType);
-		CashAccount to      = getAccount(broker, currency, toType);
+		if (broker == null) {
+			throw new IllegalArgumentException("Broker is null");
+		}
+		if (currency == null) {
+			throw new IllegalArgumentException("Currency is null");
+		}
+		if (fromType == null) {
+			throw new IllegalArgumentException("From type is null");
+		}
+		if (toType == null) {
+			throw new IllegalArgumentException("To type is null");
+		}
+		if (dateTime == null) {
+			throw new IllegalArgumentException("Date and time is null");
+		}
+
+		CashAccount from = getAccount(broker, currency, fromType);
+		CashAccount to   = getAccount(broker, currency, toType);
 
 		CashFlow record = new CashFlow(from, to, tradeLog, transfer, transfer, null, dateTime);
 		cashFlowRepo.save(record);
@@ -193,8 +214,9 @@ public class CashService {
 	 * <b>The trade account must be of the same currency as the broker fee.</b>
 	 * <p>
 	 * Creates a cash flow record for the transfer.
-	 * @param amount amount to withdraw
-	 * @param broker broker
+	 *
+	 * @param amount   amount to withdraw
+	 * @param broker   broker
 	 * @param tradeLog trade record related to the fee (optional)
 	 * @param dateTime date and time of withdrawal
 	 */
@@ -203,6 +225,15 @@ public class CashService {
 		CashAccountType fromTrade = accountTypeRepo.findCashAccountTypeByName("trade");
 		CashAccountType toFee     = accountTypeRepo.findCashAccountTypeByName("fee");
 		Currency        currency  = broker.getFeeCurrency();
+		if (currency == null) {
+			throw new IllegalArgumentException("Broker fee currency is null");
+		}
+		if (fromTrade == null) {
+			throw new IllegalArgumentException("trade type is null");
+		}
+		if (toFee == null) {
+			throw new IllegalArgumentException("fee type is null");
+		}
 
 		transfer(amount, tradeLog, broker, currency, fromTrade, toFee, dateTime);
 		logger.debug("finish");
@@ -220,18 +251,19 @@ public class CashService {
 	/**
 	 * Selling a short position (opening a short position).
 	 * <p>
-	 * Transfers money from trade account to borrowed account.
+	 * Transfers money from borrowed account to open account.
+	 * Transfers fee from trade account to fee account.
+	 * Updates trade log record with open commission and total sold sum.
 	 * <p>
-	 * Creates a cash flow record for the transfer.
-	 * @param amount amount to transfer
-	 * @param broker broker
+	 * Creates cash flow records for transfers.
+	 *
+	 * @param amount   amount to transfer
+	 * @param broker   broker
 	 * @param currency currency
 	 * @param tradeLog trade record related to the transfer (required)
 	 */
-	public void sellShort(Double amount, double openFees, Broker broker, Currency currency, TradeLog tradeLog) {
+	public void sellShort(Double amount, double openCommission, Broker broker, Currency currency, TradeLog tradeLog) {
 		logger.debug("start");
-		// todo re-check and re-test
-		// todo fix docs
 		if (tradeLog == null) {
 			throw new IllegalArgumentException("Trade log record is required");
 		}
@@ -240,58 +272,75 @@ public class CashService {
 		if (fromBorrowed == null || toOpen == null) {
 			throw new IllegalStateException("Account types are not found");
 		}
-
 		transfer(amount, tradeLog, broker, currency, fromBorrowed, toOpen, tradeLog.getDateOpen());
-		fee(openFees, broker, tradeLog, tradeLog.getDateClose());
+		fee(openCommission, broker, tradeLog, tradeLog.getDateOpen());
+		tradeLog.setTotalSold(amount);
+		tradeLog.setOpenCommission(openCommission);
 		logger.debug("finish");
 	}
 
 	/**
-	 * Selling a long position (closing a long position).
-	 * <p>
-	 * Transfers open amount (total bought) back from open account to trade account.
-	 * Any profit is transferred from profit account to trade account.
-	 * Any loss is transferred from trade account to loss account.
+	 * Selling a long position (closing or partially selling).
 	 * <p>
 	 * Creates a cash flow record for each transfer.
-	 * @param closeAmount amount to close (total sold)
-	 * @param closeFees broker's fees for closing the position (commission, exchange fees, etc.)
-	 * @param broker broker
-	 * @param tradeLog trade record related to the transfer (required)
+	 * <p>
+	 * We transfer the sum of the open position back to the trade account (maybe partially).<br>
+	 * We transfer the selling commission from the trade account<br>
+	 * We transfer the outcome to or from the trade account<br>
+	 * We update the trade log record with the selling data. If item sold number is equal to the bought item number,
+	 * then we close the position.
+	 *
+	 * @param itemSold          number of items sold
+	 * @param amountSold        amount sold
+	 * @param sellingCommission selling commission
+	 * @param dateTime          date and time of selling
+	 * @param broker            broker
+	 * @param tradeLog          trade record related to the transfer (required)
 	 */
-	public void sell(double closeAmount, double closeFees, Broker broker, TradeLog tradeLog) throws JsonProcessingException {
+	public void sell(long itemSold, double amountSold, double sellingCommission, LocalDateTime dateTime,
+	                 Broker broker, TradeLog tradeLog) throws JsonProcessingException {
 		logger.debug("start");
 		if (tradeLog == null) {
 			throw new IllegalArgumentException("Trade log record is required");
 		}
-		CashAccountType tradeType  = accountTypeRepo.findCashAccountTypeByName("trade");
-		CashAccountType openType   = accountTypeRepo.findCashAccountTypeByName("open");
-		CashAccountType profitType = accountTypeRepo.findCashAccountTypeByName("profit");
-		CashAccountType lossType   = accountTypeRepo.findCashAccountTypeByName("loss");
+		CashAccountType tradeType   = accountTypeRepo.findCashAccountTypeByName("trade");
+		CashAccountType openType    = accountTypeRepo.findCashAccountTypeByName("open");
+		CashAccountType outcomeType = accountTypeRepo.findCashAccountTypeByName("outcome");
 
-		if (tradeType == null || openType == null || profitType == null || lossType == null) {
+		if (tradeType == null || openType == null || outcomeType == null) {
 			throw new IllegalStateException("Account types are not found");
 		}
 
-		double openAmount = tradeLog.getTotalBought();
+		double openAmount    = tradeLog.getTotalBought();
+		double itemBought    = tradeLog.getItemBought();
+		double avgPriceOpen  = openAmount / itemBought;
+		double amountToClose = itemSold * avgPriceOpen;
+		double outcome       = amountSold - amountToClose;
+
 		Currency tradeCurrency = tradeLog.getCurrency();
-		Currency feeCurrency   = broker.getFeeCurrency();
 
-		double openFeesConverted   = currencyRateService.convert(feeCurrency, tradeCurrency, tradeLog.getOpenCommission(), tradeLog.getDateClose().toLocalDate());
-		double closeFeesConverted = currencyRateService.convert(feeCurrency, tradeCurrency, closeFees, tradeLog.getDateClose().toLocalDate());
-
-		transfer(openAmount, tradeLog, broker, tradeCurrency, openType, tradeType, tradeLog.getDateClose());
-		fee(closeFees, broker, tradeLog, tradeLog.getDateClose());
-
-		if (closeAmount - closeFeesConverted - openFeesConverted > openAmount) {
-			// todo Re-think well again if we should use fees here
-			double profit = closeAmount - openAmount - closeFeesConverted - openFeesConverted;
-			transfer(profit, tradeLog, broker, tradeCurrency, profitType, tradeType, tradeLog.getDateClose());
+		// we transfer the sum of the open position back to the trade account (maybe partially)
+		transfer(amountToClose, tradeLog, broker, tradeCurrency, openType, tradeType, dateTime);
+		// we transfer the selling commission from the trade account
+		fee(sellingCommission, broker, tradeLog, tradeLog.getDateClose());
+		// we transfer the outcome to or from the trade account
+		if (outcome > 0) { // we have profit
+			transfer(outcome, tradeLog, broker, tradeCurrency, outcomeType, tradeType, dateTime);
+		} else if (outcome < 0) { // we have loss
+			transfer(-outcome, tradeLog, broker, tradeCurrency, tradeType, outcomeType, dateTime);
 		}
 
-		if (closeAmount - closeFeesConverted - openFeesConverted < openAmount) {
-			double loss = openAmount - closeAmount + closeFeesConverted + openFeesConverted;
-			transfer(loss, tradeLog, broker, tradeCurrency, tradeType, lossType, tradeLog.getDateClose());
+		// we update the trade log record
+		double totalSold = tradeLog.getTotalSold() == null ? 0 : tradeLog.getTotalSold();
+		double closeCommission = tradeLog.getCloseCommission() == null ? 0 : tradeLog.getCloseCommission();
+		long itemSoldPreviously = tradeLog.getItemSold() == null ? 0 : tradeLog.getItemSold();
+
+		tradeLog.setTotalSold(totalSold + amountSold);
+		tradeLog.setCloseCommission(closeCommission + sellingCommission);
+		tradeLog.setItemSold(itemSoldPreviously + itemSold);
+
+		if (tradeLog.getItemSold().equals(tradeLog.getItemBought())) {
+			tradeLog.setDateClose(dateTime);
 		}
 
 		logger.debug("finish");
@@ -408,9 +457,9 @@ public class CashService {
 	}
 
 	public long getMaxItems(Currency currency, double depositPc, double price) throws JsonProcessingException {
-		double     capital      = getCapital();
-		double     maxVolumeUSD = capital * depositPc / 100.0;
-		double     priceUSD     = currencyRateService.convertToUSD(currency.getId(), price, LocalDate.now());
+		double capital      = getCapital();
+		double maxVolumeUSD = capital * depositPc / 100.0;
+		double priceUSD     = currencyRateService.convertToUSD(currency.getId(), price, LocalDate.now());
 		return (long) (maxVolumeUSD / priceUSD);
 	}
 
@@ -420,15 +469,15 @@ public class CashService {
 	                                 Double stopLoss,
 	                                 Double takeProfit,
 	                                 double price,
-									 double capital) throws JsonProcessingException {
-		double     volumePc;
-		EvalOutDTO eval;
-		long items = getMaxItems(currency, evalDTO.depositPc(), price);
-		final Broker broker     = brokerRepo.getReferenceById(evalDTO.brokerId());
-		final Ticker ticker     = tickerRepo.getReferenceById(evalDTO.tickerId());
-		final String brokerName = broker.getName();
+	                                 double capital) throws JsonProcessingException {
+		double            volumePc;
+		EvalOutDTO        eval;
+		long              items       = getMaxItems(currency, evalDTO.depositPc(), price);
+		final Broker      broker      = brokerRepo.getReferenceById(evalDTO.brokerId());
+		final Ticker      ticker      = tickerRepo.getReferenceById(evalDTO.tickerId());
+		final String      brokerName  = broker.getName();
 		final CurrencyDTO currencyDTO = CurrencyMapper.toDTO(ticker.getCurrency());
-		EvalInDTO dto;
+		EvalInDTO         dto;
 		do {
 			double volume    = price * items;
 			double volumeUSD = currencyRateService.convertToUSD(currency.getId(), volume, LocalDate.now());
@@ -456,7 +505,7 @@ public class CashService {
 		Double    atr        = evalDTO.atr();
 		Currency  currency   = tickerRepo.getReferenceById(evalDTO.tickerId()).getCurrency();
 		double    price      = levelPrice + (shortC * 0.05);
-		double capital = getCapital();
+		double    capital    = getCapital();
 		double stopLoss =
 				evalDTO.stopLoss() == null ? levelPrice - (shortC * levelPrice / 100 * 0.2) : evalDTO.stopLoss();
 		double takeProfit = price + (shortC * atr * 0.7);
@@ -497,9 +546,9 @@ public class CashService {
 	                                double stopLoss,
 	                                double takeProfit) throws JsonProcessingException {
 		EvalToFitRecord evalToFitRecord;
-		long            ms   = System.currentTimeMillis();
-		double          rrPC = 0;
-		double capital = getCapital();
+		long            ms      = System.currentTimeMillis();
+		double          rrPC    = 0;
+		double          capital = getCapital();
 		while (rrPC <= evalDTO.riskRewardPc()) {
 			stopLoss = stopLoss - (shortC * 0.01);
 			evalToFitRecord = evalToFit(evalDTO, currency, atr, stopLoss, takeProfit, price, capital);
@@ -511,16 +560,19 @@ public class CashService {
 	}
 
 	public EvalOutDTO eval(EvalInDTO evalDTO) throws JsonProcessingException {
-		final Broker broker     = brokerRepo.getReferenceById(evalDTO.brokerId());
-		final Ticker ticker     = tickerRepo.getReferenceById(evalDTO.tickerId());
-		final String brokerName = broker.getName();
+		final Broker      broker      = brokerRepo.getReferenceById(evalDTO.brokerId());
+		final Ticker      ticker      = tickerRepo.getReferenceById(evalDTO.tickerId());
+		final String      brokerName  = broker.getName();
 		final CurrencyDTO currencyDTO = CurrencyMapper.toDTO(ticker.getCurrency());
-		final double capital = getCapital();
+		final double      capital     = getCapital();
 		return eval(evalDTO, brokerName, currencyDTO, capital);
 	}
 
 
-	public EvalOutDTO eval(EvalInDTO evalDTO, String brokerName, CurrencyDTO currencyDTO, double capital) throws JsonProcessingException {
+	public EvalOutDTO eval(EvalInDTO evalDTO,
+	                       String brokerName,
+	                       CurrencyDTO currencyDTO,
+	                       double capital) throws JsonProcessingException {
 		final long   items      = evalDTO.items();
 		final double priceOpen  = evalDTO.price();
 		final double volume     = priceOpen * items;
@@ -547,7 +599,10 @@ public class CashService {
 		return new EvalOutDTO(outcomeExp, gainPc, feesOpen, riskPc, riskRewardPc, breakEven, volume);
 	}
 
-	public double getRisk(EvalInDTO evalDTO, String brokerName, CurrencyDTO currencyDTO, double    capital) throws JsonProcessingException {
+	public double getRisk(EvalInDTO evalDTO,
+	                      String brokerName,
+	                      CurrencyDTO currencyDTO,
+	                      double capital) throws JsonProcessingException {
 		final LocalDate date       = evalDTO.date();
 		final double    priceOpen  = evalDTO.price();
 		final long      currencyId = currencyDTO.getId();
@@ -650,10 +705,10 @@ public class CashService {
 		double   amount   = transferDTO.amount();
 
 		CashAccountType correctionType = accountTypeRepo.findCashAccountTypeByName("correction");
-		CashAccountType tradeType = accountTypeRepo.findCashAccountTypeByName("trade");
+		CashAccountType tradeType      = accountTypeRepo.findCashAccountTypeByName("trade");
 
 		CashAccountType from = amount > 0 ? correctionType : tradeType;
-		CashAccountType to = amount > 0 ? tradeType : correctionType;
+		CashAccountType to   = amount > 0 ? tradeType : correctionType;
 
 		transfer(Math.abs(amount), null, broker, currency, from, to, LocalDateTime.now());
 	}
