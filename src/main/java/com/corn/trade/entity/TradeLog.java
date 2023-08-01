@@ -75,7 +75,7 @@ public class TradeLog implements Serializable {
 	@Column(name = "open_stop_loss", nullable = false)
 	private Double openStopLoss;
 
-	@Column(name = "open_take_profit")
+	@Column(name = "open_take_profit", nullable = false)
 	private Double openTakeProfit;
 
 	@Column(name = "outcome_to_capital_pc")
@@ -313,6 +313,22 @@ public class TradeLog implements Serializable {
 
 	public void setNote(String note) {
 		this.note = note;
+	}
+
+	public Long getItemBought() {
+		return itemBought;
+	}
+
+	public void setItemBought(Long itemBought) {
+		this.itemBought = itemBought;
+	}
+
+	public Long getItemSold() {
+		return itemSold;
+	}
+
+	public void setItemSold(Long itemSold) {
+		this.itemSold = itemSold;
 	}
 
 	@Transient

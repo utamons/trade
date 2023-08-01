@@ -277,7 +277,7 @@ public class CashService {
 		Currency tradeCurrency = tradeLog.getCurrency();
 		Currency feeCurrency   = broker.getFeeCurrency();
 
-		double openFeesConverted   = currencyRateService.convert(feeCurrency, tradeCurrency, tradeLog.getFees(), tradeLog.getDateClose().toLocalDate());
+		double openFeesConverted   = currencyRateService.convert(feeCurrency, tradeCurrency, tradeLog.getOpenCommission(), tradeLog.getDateClose().toLocalDate());
 		double closeFeesConverted = currencyRateService.convert(feeCurrency, tradeCurrency, closeFees, tradeLog.getDateClose().toLocalDate());
 
 		transfer(openAmount, tradeLog, broker, tradeCurrency, openType, tradeType, tradeLog.getDateClose());
@@ -667,14 +667,14 @@ public class CashService {
 		LocalDate currentDate = LocalDate.now();
 		long      daysBetween = ChronoUnit.DAYS.between(openDate, currentDate);
 		if (tradeLog.getBroker().getName().equals("FreedomFN")) {
-			double interest = (tradeLog.getVolume() / 100.0 * 12.0 / 365.0) * daysBetween;
+			double interest = (tradeLog.getTotalSold() / 100.0 * 12.0 / 365.0) * daysBetween;
 			double interestUSD =
 					currencyRateService.convertToUSD(tradeLog.getTicker().getCurrency().getId(), interest, currentDate);
 			tradeLog.setBrokerInterest(interestUSD);
 			double breakEven = getBreakEven(-1,
 			                                tradeLog.getBroker().getName(),
 			                                CurrencyMapper.toDTO(tradeLog.getTicker().getCurrency()),
-			                                tradeLog.getItemNumber(),
+			                                tradeLog.getItemSold(),
 			                                tradeLog.getEstimatedPriceOpen(),
 			                                interest);
 			tradeLog.setEstimatedBreakEven(breakEven);
