@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 @SuppressWarnings("unused")
 public record TradeLogOpenDTO(Long id, String position, LocalDateTime dateOpen, Long brokerId, Long marketId, Long tickerId,
-                              Long itemNumber, Double priceOpen, Double stopLoss, Double takeProfit, Double outcomeExpected,
+                              Long estimatedItems, Long realItems, Double priceOpen, Double stopLoss, Double takeProfit, Double outcomeExpected,
                               Double risk, Double breakEven, Double fees, String note, Double levelPrice, Double atr,
                               Double goal, Double totalBought, Double totalSold) implements Serializable {
 
@@ -24,7 +24,8 @@ public record TradeLogOpenDTO(Long id, String position, LocalDateTime dateOpen, 
 	                       @JsonProperty("brokerId") Long brokerId,
 	                       @JsonProperty("marketId") Long marketId,
 	                       @JsonProperty("tickerId") Long tickerId,
-	                       @JsonProperty("itemNumber") Long itemNumber,
+	                       @JsonProperty("estimatedItems") Long estimatedItems,
+	                       @JsonProperty("realItems") Long realItems,
 	                       @JsonProperty("priceOpen") Double priceOpen,
 	                       @JsonProperty("stopLoss") Double stopLoss,
 	                       @JsonProperty("takeProfit") Double takeProfit,
@@ -45,7 +46,7 @@ public record TradeLogOpenDTO(Long id, String position, LocalDateTime dateOpen, 
 		this.brokerId = brokerId;
 		this.marketId = marketId;
 		this.tickerId = tickerId;
-		this.itemNumber = itemNumber;
+		this.estimatedItems = estimatedItems;
 		this.priceOpen = priceOpen;
 		this.stopLoss = stopLoss;
 		this.takeProfit = takeProfit;
@@ -59,6 +60,7 @@ public record TradeLogOpenDTO(Long id, String position, LocalDateTime dateOpen, 
 		this.goal = goal;
 		this.totalBought = totalBought;
 		this.totalSold = totalSold;
+		this.realItems = realItems;
 	}
 
 

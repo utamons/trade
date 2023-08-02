@@ -59,6 +59,9 @@ public class TradeLog implements Serializable {
 	@Column(name = "estimated_break_even", nullable = false)
 	private Double estimatedBreakEven;
 
+	@Column(name = "estimated_items", nullable = false)
+	private Double estimatedItems;
+
 	@Column(name = "risk_to_capital_pc", nullable = false)
 	private Double riskToCapitalPc;
 
@@ -329,6 +332,14 @@ public class TradeLog implements Serializable {
 
 	public void setRisk(Double risk) {
 		this.risk = risk;
+	}
+
+	public Double getEstimatedItems() {
+		return estimatedItems;
+	}
+
+	public void setEstimatedItems(Double estimatedItems) {
+		this.estimatedItems = estimatedItems;
 	}
 
 	@Transient
