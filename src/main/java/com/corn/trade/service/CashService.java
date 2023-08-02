@@ -253,16 +253,25 @@ public class CashService {
 	 * <p>
 	 * Transfers money from borrowed account to open account.
 	 * Transfers fee from trade account to fee account.
-	 * Updates trade log record with open commission and total sold sum.
+	 * Updates trade log record with the trade data.
 	 * <p>
 	 * Creates cash flow records for transfers.
 	 *
-	 * @param amount   amount to transfer
-	 * @param broker   broker
-	 * @param currency currency
-	 * @param tradeLog trade record related to the transfer (required)
+	 * @param itemSold       item sold
+	 * @param amountSold     amount to transfer
+	 * @param openCommission commission for opening a position
+	 * @param dateOpen       date and time of opening a position
+	 * @param broker         broker
+	 * @param currency       currency
+	 * @param tradeLog       trade record related to the transfer (required)
 	 */
-	public void sellShort(Double amount, double openCommission, Broker broker, Currency currency, TradeLog tradeLog) {
+	public void sellShort(long itemSold,
+	                      double amountSold,
+	                      double openCommission,
+	                      LocalDateTime dateOpen,
+	                      Broker broker,
+	                      Currency currency,
+	                      TradeLog tradeLog) {
 		logger.debug("start");
 		if (tradeLog == null) {
 			throw new IllegalArgumentException("Trade log record is required");
@@ -272,10 +281,14 @@ public class CashService {
 		if (fromBorrowed == null || toOpen == null) {
 			throw new IllegalStateException("Account types are not found");
 		}
-		transfer(amount, tradeLog, broker, currency, fromBorrowed, toOpen, tradeLog.getDateOpen());
-		fee(openCommission, broker, tradeLog, tradeLog.getDateOpen());
-		tradeLog.setTotalSold(amount);
+		transfer(amountSold, tradeLog, broker, currency, fromBorrowed, toOpen, dateOpen);
+		fee(openCommission, broker, tradeLog, dateOpen);
+
+		tradeLog.setDateOpen(dateOpen);
+		tradeLog.setItemSold(itemSold);
+		tradeLog.setTotalSold(amountSold);
 		tradeLog.setOpenCommission(openCommission);
+
 		logger.debug("finish");
 	}
 
@@ -298,7 +311,7 @@ public class CashService {
 	 * @param tradeLog          trade record related to the transfer (required)
 	 */
 	public void sell(long itemSold, double amountSold, double sellingCommission, LocalDateTime dateTime,
-	                 Broker broker, TradeLog tradeLog) throws JsonProcessingException {
+	                 Broker broker, TradeLog tradeLog) {
 		logger.debug("start");
 		if (tradeLog == null) {
 			throw new IllegalArgumentException("Trade log record is required");
@@ -319,10 +332,11 @@ public class CashService {
 
 		Currency tradeCurrency = tradeLog.getCurrency();
 
-		// we transfer the sum of the open position back to the trade account (maybe partially, based on the number of items sold)
+		// we transfer the sum of the open position back to the trade account (maybe partially, based on the number of
+		// items sold)
 		transfer(amountToClose, tradeLog, broker, tradeCurrency, openType, tradeType, dateTime);
 		// we transfer the selling commission from the trade account
-		fee(sellingCommission, broker, tradeLog, tradeLog.getDateClose());
+		fee(sellingCommission, broker, tradeLog, dateTime);
 		// we transfer the outcome to or from the trade account
 		if (outcome > 0) { // we have profit
 			transfer(outcome, tradeLog, broker, tradeCurrency, outcomeType, tradeType, dateTime);
@@ -331,9 +345,9 @@ public class CashService {
 		}
 
 		// we update the trade log record
-		double totalSold = tradeLog.getTotalSold() == null ? 0 : tradeLog.getTotalSold();
-		double closeCommission = tradeLog.getCloseCommission() == null ? 0 : tradeLog.getCloseCommission();
-		long itemSoldPreviously = tradeLog.getItemSold() == null ? 0 : tradeLog.getItemSold();
+		double totalSold          = tradeLog.getTotalSold() == null ? 0 : tradeLog.getTotalSold();
+		double closeCommission    = tradeLog.getCloseCommission() == null ? 0 : tradeLog.getCloseCommission();
+		long   itemSoldPreviously = tradeLog.getItemSold() == null ? 0 : tradeLog.getItemSold();
 
 		if (itemSoldPreviously + itemSold > itemBought) {
 			throw new IllegalStateException("Item sold number is greater than item bought number");

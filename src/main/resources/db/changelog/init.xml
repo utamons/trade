@@ -82,6 +82,9 @@
             <column name="estimated_fees" type="decimal(10,2)">
                 <constraints nullable="false"/>
             </column>
+            <column name="estimated_items" type="decimal(10,2)">
+                <constraints nullable="false"/>
+            </column>
             <column name="estimated_break_even" type="decimal(10,2)">
                 <constraints nullable="false"/>
             </column>

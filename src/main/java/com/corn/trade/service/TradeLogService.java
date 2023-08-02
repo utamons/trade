@@ -59,7 +59,7 @@ public class TradeLogService {
 		if (openDTO.position().equals("long"))
 			cashService.buy(tradeLog.getTotalBought(), broker, ticker.getCurrency(), tradeLog);
 		else
-			cashService.sellShort(tradeLog.getTotalSold(), openDTO.fees(), broker, ticker.getCurrency(), tradeLog);
+			cashService.sellShort(openDTO.realItems(), tradeLog.getTotalSold(), openDTO.fees(), openDTO.dateOpen(), broker, ticker.getCurrency(), tradeLog);
 	}
 
 	public void close(TradeLogCloseDTO closeDTO) throws JsonProcessingException {
