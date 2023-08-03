@@ -69,6 +69,8 @@ public class CashServiceTest {
 	private CashAccountType correctionType;
 	private CashAccountType openType;
 	private CashAccountType incomeType;
+
+	private CashAccountType conversionType;
 	private CashAccountType feeType;
 
 	private CashAccount tradeAccountUSD,
@@ -79,6 +81,8 @@ public class CashServiceTest {
 			outcomeAccount,
 			incomeAccountUSD,
 			feeAccountUSD,
+			conversionAccountUSD,
+			conversionAccountEUR,
 			feeAccountEUR;
 	private CashAccountType borrowedType;
 
@@ -103,6 +107,7 @@ public class CashServiceTest {
 		openType = cashAccountTypeRepository.findCashAccountTypeByName("open");
 		incomeType = cashAccountTypeRepository.findCashAccountTypeByName("income");
 		feeType = cashAccountTypeRepository.findCashAccountTypeByName("fee");
+		conversionType = cashAccountTypeRepository.findCashAccountTypeByName("conversion");
 		CashAccountType outcomeType = cashAccountTypeRepository.findCashAccountTypeByName("outcome");
 
 		tradeAccountUSD = new CashAccount("trade/Test Broker/USD", currencyUSD, brokerUSD, tradeType);
@@ -131,6 +136,12 @@ public class CashServiceTest {
 
 		outcomeAccount = new CashAccount("outcome/Test Broker/USD", currencyUSD, brokerUSD, outcomeType);
 		outcomeAccount = cashAccountRepository.save(outcomeAccount);
+
+		conversionAccountUSD = new CashAccount("conversion/Test Broker/USD", currencyUSD, brokerUSD, conversionType);
+		conversionAccountUSD = cashAccountRepository.save(conversionAccountUSD);
+
+		conversionAccountEUR = new CashAccount("conversion/Test Broker/EUR", currencyEUR, brokerUSD, conversionType);
+		conversionAccountEUR = cashAccountRepository.save(conversionAccountEUR);
 	}
 
 	@Test
@@ -230,20 +241,22 @@ public class CashServiceTest {
 	public void testExchange_Successful_Exchange() {
 		// Arrange
 		CashAccount tradeFrom = tradeAccountUSD;
-		tradeFrom = cashAccountRepository.save(tradeFrom);
 
 		CashAccount tradeTo = new CashAccount("TradeTo", currencyEUR, brokerUSD, tradeType);
 		tradeTo = cashAccountRepository.save(tradeTo);
 
+		CashAccount conversionTo = conversionAccountEUR;
+
 		ExchangeDTO exchangeDTO = new ExchangeDTO(brokerUSD.getId(), currencyUSD.getId(), currencyEUR.getId(), 800.0,
 		                                          700.0);
 
+		double delta = exchangeDTO.getAmountFrom() - exchangeDTO.getAmountTo();
+
 		LocalDateTime dateTime = LocalDateTime.now();
 		// Act
-		CashAccountDTO result = cashService.exchange(exchangeDTO);
+		cashService.exchange(exchangeDTO);
 
 		// Assert
-		assertNotNull(result);
 		assertEquals(-800.0, cashService.getAccountTotal(tradeFrom));
 		assertEquals(700.0, cashService.getAccountTotal(tradeTo));
 
@@ -254,12 +267,62 @@ public class CashServiceTest {
 		assertEquals(tradeFrom, cashFlow.getAccountFrom());
 		assertEquals(tradeTo, cashFlow.getAccountTo());
 		assertEquals(exchangeDTO.getAmountFrom(), cashFlow.getSumFrom());
-		assertEquals(exchangeDTO.getAmountTo(), cashFlow.getSumTo());
+		assertEquals(exchangeDTO.getAmountFrom(), cashFlow.getSumTo());
 		assertThat(dateTime).isCloseTo(cashFlow.getCommittedAt(), new TemporalUnitWithinOffset(100, ChronoUnit.MILLIS));
 
-		// Verify the CashFlow rate calculation
-		double rate = exchangeDTO.getAmountFrom() / exchangeDTO.getAmountTo();
-		assertEquals(rate, cashFlow.getExchangeRate());
+		CashFlow conversion = cashFlowRepository.findAll().get(1);
+		assertNotNull(conversion);
+		assertNull(conversion.getTradeLog());
+		assertEquals(tradeTo, conversion.getAccountFrom());
+		assertEquals(conversionTo, conversion.getAccountTo());
+		assertEquals(delta, conversion.getSumFrom());
+		assertEquals(delta, conversion.getSumTo());
+		assertThat(dateTime).isCloseTo(conversion.getCommittedAt(), new TemporalUnitWithinOffset(100, ChronoUnit.MILLIS));
+
+		assertEquals(0.0, cashFlowRepository.getCashFlowBalance());
+	}
+
+	@Test
+	public void testExchange_Successful_ExchangeBack() {
+		// Arrange
+		CashAccount tradeTo = tradeAccountUSD;
+
+		CashAccount tradeFrom = new CashAccount("TradeTo", currencyEUR, brokerUSD, tradeType);
+		tradeFrom = cashAccountRepository.save(tradeFrom);
+
+		CashAccount conversionTo = conversionAccountUSD;
+
+		ExchangeDTO exchangeDTO = new ExchangeDTO(brokerUSD.getId(), currencyEUR.getId(), currencyUSD.getId(), 700.0,
+		                                          800.0);
+
+		double delta = exchangeDTO.getAmountFrom() - exchangeDTO.getAmountTo();
+
+		LocalDateTime dateTime = LocalDateTime.now();
+		// Act
+		cashService.exchange(exchangeDTO);
+
+		// Assert
+		assertEquals(-700.0, cashService.getAccountTotal(tradeFrom));
+		assertEquals(800.0, cashService.getAccountTotal(tradeTo));
+
+		// Verify the CashFlow record is added
+		CashFlow cashFlow = cashFlowRepository.findAll().get(0);
+		assertNotNull(cashFlow);
+		assertNull(cashFlow.getTradeLog());
+		assertEquals(tradeFrom, cashFlow.getAccountFrom());
+		assertEquals(tradeTo, cashFlow.getAccountTo());
+		assertEquals(exchangeDTO.getAmountFrom(), cashFlow.getSumFrom());
+		assertEquals(exchangeDTO.getAmountFrom(), cashFlow.getSumTo());
+		assertThat(dateTime).isCloseTo(cashFlow.getCommittedAt(), new TemporalUnitWithinOffset(100, ChronoUnit.MILLIS));
+
+		CashFlow conversion = cashFlowRepository.findAll().get(1);
+		assertNotNull(conversion);
+		assertNull(conversion.getTradeLog());
+		assertEquals(tradeTo, conversion.getAccountFrom());
+		assertEquals(conversionTo, conversion.getAccountTo());
+		assertEquals(delta, conversion.getSumFrom());
+		assertEquals(delta, conversion.getSumTo());
+		assertThat(dateTime).isCloseTo(conversion.getCommittedAt(), new TemporalUnitWithinOffset(100, ChronoUnit.MILLIS));
 
 		assertEquals(0.0, cashFlowRepository.getCashFlowBalance());
 	}
@@ -1068,11 +1131,11 @@ public class CashServiceTest {
 	@Test
 	public void testBuyShort_TradeLogRequiredException() {
 		// Arrange
-		long     itemBought          = 110;
-		double   amountBought        = 550.0;
-		double   buyingCommission    = 1.0;
-		double   borrowingCommission = 1.0;
-		Broker   broker              = brokerUSD;
+		long   itemBought          = 110;
+		double amountBought        = 550.0;
+		double buyingCommission    = 1.0;
+		double borrowingCommission = 1.0;
+		Broker broker              = brokerUSD;
 
 		LocalDateTime dateTime = LocalDateTime.now();
 

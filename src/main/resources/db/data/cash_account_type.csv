@@ -8,3 +8,4 @@ id;name;description
 7;correction;An account for corrections
 8;open;Open long positions
 9;borrowed;Borrowed funds
+10;conversion;Currency conversion

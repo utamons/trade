@@ -39,10 +39,9 @@ public class CashController {
 		service.correction(transferDTO);
 	}
 
-	@PostMapping(value = "/exchange", consumes = MediaType.APPLICATION_JSON_VALUE, produces =
-			MediaType.APPLICATION_JSON_VALUE)
-	public CashAccountDTO exchange(@RequestBody ExchangeDTO exchangeDTO) {
-		return service.exchange(exchangeDTO);
+	@PostMapping(value = "/exchange", consumes = MediaType.APPLICATION_JSON_VALUE)
+	public void exchange(@RequestBody ExchangeDTO exchangeDTO) {
+		service.exchange(exchangeDTO);
 	}
 
 	@GetMapping("/state")

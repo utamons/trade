@@ -175,42 +175,50 @@ public class CashService {
 	 * @param exchangeDTO exchange data
 	 * @return trade account
 	 */
-	public CashAccountDTO exchange(ExchangeDTO exchangeDTO) {
+	public void exchange(ExchangeDTO exchangeDTO) {
 		logger.debug("start");
 		Broker          broker       = brokerRepo.getReferenceById(exchangeDTO.getBrokerId());
 		Currency        currencyFrom = currencyRepo.getReferenceById(exchangeDTO.getCurrencyFromId());
 		Currency        currencyTo   = currencyRepo.getReferenceById(exchangeDTO.getCurrencyToId());
 		CashAccountType tradeType    = accountTypeRepo.findCashAccountTypeByName("trade");
+		CashAccountType conversionType = accountTypeRepo.findCashAccountTypeByName("conversion");
 
 		CashAccount tradeFrom    = getAccount(broker, currencyFrom, tradeType);
 		CashAccount tradeTo      = getAccount(broker, currencyTo, tradeType);
+		CashAccount conversionTo = getAccount(broker, currencyTo, conversionType);
 		double      transferFrom = exchangeDTO.getAmountFrom();
 		double      transferTo   = exchangeDTO.getAmountTo();
-		double      rate         = transferFrom / transferTo;
+		double      delta        = transferFrom - transferTo;
 
 		CashFlow record = new CashFlow(
 				tradeFrom,
 				tradeTo,
 				null,
 				transferFrom,
-				transferTo,
-				rate,
+				transferFrom,
+				null,
 				LocalDateTime.now()
 		);
 		cashFlowRepo.save(record);
 
-		tradeTo = accountRepo.save(tradeTo);
-		accountRepo.save(tradeFrom);
+		CashFlow conversion = new CashFlow(
+				tradeTo,
+				conversionTo,
+				null,
+				delta,
+				delta,
+				null,
+				LocalDateTime.now()
+		);
+		cashFlowRepo.save(conversion);
 
 		cashFlowRepo.flush();
-		accountRepo.flush();
 
 		logger.debug("Exchange for amount from {}, to {}, broker {} and currency from {}, to {} is finished",
 		             transferFrom, transferTo, broker.getName(), currencyFrom.getName(),
 		             currencyTo.getName());
 
 		logger.debug("finish");
-		return CashAccountMapper.toDTO(tradeTo);
 	}
 
 	/**
@@ -419,18 +427,18 @@ public class CashService {
 	 * We transfer the outcome to or from the trade account.<br>
 	 * We update the trade log record with the trade data. If item bought is equal to item sold, we close the position.
 	 *
-	 * @param itemBought item bought
-	 * @param amountBought amount bought
-	 * @param buyingCommission buying commission
+	 * @param itemBought          item bought
+	 * @param amountBought        amount bought
+	 * @param buyingCommission    buying commission
 	 * @param borrowingCommission borrowing commission
-	 * @param dateTime date and time of buying
-	 * @param broker broker
-	 * @param tradeLog trade record related to the transfer (required)
+	 * @param dateTime            date and time of buying
+	 * @param broker              broker
+	 * @param tradeLog            trade record related to the transfer (required)
 	 */
 	public void buyShort(long itemBought,
 	                     double amountBought,
 	                     double buyingCommission,
-						 double borrowingCommission,
+	                     double borrowingCommission,
 	                     LocalDateTime dateTime,
 	                     Broker broker,
 	                     TradeLog tradeLog) {
@@ -441,17 +449,17 @@ public class CashService {
 		CashAccountType tradeType    = accountTypeRepo.findCashAccountTypeByName("trade");
 		CashAccountType borrowedType = accountTypeRepo.findCashAccountTypeByName("borrowed");
 		CashAccountType openType     = accountTypeRepo.findCashAccountTypeByName("open");
-		CashAccountType outcomeType   = accountTypeRepo.findCashAccountTypeByName("outcome");
+		CashAccountType outcomeType  = accountTypeRepo.findCashAccountTypeByName("outcome");
 
 		if (tradeType == null || borrowedType == null || openType == null || outcomeType == null) {
 			throw new IllegalStateException("Account types are not found");
 		}
 
-		double openAmount = tradeLog.getTotalSold();
-		double itemSold   = tradeLog.getItemSold();
-		double avgPriceOpen = openAmount / itemSold;
+		double openAmount    = tradeLog.getTotalSold();
+		double itemSold      = tradeLog.getItemSold();
+		double avgPriceOpen  = openAmount / itemSold;
 		double amountToClose = avgPriceOpen * itemBought;
-		double outcome = amountToClose - amountBought;
+		double outcome       = amountToClose - amountBought;
 
 		Currency tradeCurrency = tradeLog.getCurrency();
 
@@ -468,11 +476,11 @@ public class CashService {
 			transfer(-outcome, tradeLog, broker, tradeCurrency, tradeType, outcomeType, dateTime);
 		}
 
-		double totalBought = tradeLog.getTotalBought() == null ? 0 : tradeLog.getTotalBought();
-		double closeCommission = tradeLog.getCloseCommission() == null ? 0 : tradeLog.getCloseCommission();
-		long itemBoughtPreviously = tradeLog.getItemBought() == null ? 0 : tradeLog.getItemBought();
+		double totalBought          = tradeLog.getTotalBought() == null ? 0 : tradeLog.getTotalBought();
+		double closeCommission      = tradeLog.getCloseCommission() == null ? 0 : tradeLog.getCloseCommission();
+		long   itemBoughtPreviously = tradeLog.getItemBought() == null ? 0 : tradeLog.getItemBought();
 
-		if(itemBoughtPreviously + itemBought > itemSold) {
+		if (itemBoughtPreviously + itemBought > itemSold) {
 			throw new IllegalStateException("Item bought number is greater than item sold number");
 		}
 
@@ -481,7 +489,7 @@ public class CashService {
 		tradeLog.setBrokerInterest(borrowingCommission);
 		tradeLog.setItemBought(itemBoughtPreviously + itemBought);
 
-		if(tradeLog.getItemBought() == itemSold) {
+		if (tradeLog.getItemBought() == itemSold) {
 			tradeLog.setDateClose(dateTime);
 		}
 
