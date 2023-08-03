@@ -57,9 +57,16 @@ public class TradeLogService {
 		tradeLog = tradeLogRepo.save(tradeLog);
 		tradeLogRepo.flush();
 		if (openDTO.position().equals("long"))
-			cashService.buy(tradeLog.getTotalBought(), broker, ticker.getCurrency(), tradeLog);
+			cashService.buy(openDTO.realItems(), tradeLog.getTotalBought(), openDTO.fees(),
+			                openDTO.dateOpen(), broker, ticker.getCurrency(), tradeLog);
 		else
-			cashService.sellShort(openDTO.realItems(), tradeLog.getTotalSold(), openDTO.fees(), openDTO.dateOpen(), broker, ticker.getCurrency(), tradeLog);
+			cashService.sellShort(openDTO.realItems(),
+			                      tradeLog.getTotalSold(),
+			                      openDTO.fees(),
+			                      openDTO.dateOpen(),
+			                      broker,
+			                      ticker.getCurrency(),
+			                      tradeLog);
 	}
 
 	public void close(TradeLogCloseDTO closeDTO) throws JsonProcessingException {
@@ -79,7 +86,7 @@ public class TradeLogService {
 		final LocalDateTime dateTimeClose  = closeDTO.dateClose();
 		final double        brokerInterest = closeDTO.brokerInterest() == null ? 0.0 : closeDTO.brokerInterest();
 
-		final double closeFeesUSD      =
+		final double closeFeesUSD =
 				currencyRateService.convertToUSD(currency.getId(), closeFees, closeDTO.dateClose().toLocalDate());
 		final double brokerInterestUSD =
 				currencyRateService.convertToUSD(currency.getId(), brokerInterest, closeDTO.dateClose().toLocalDate());
@@ -95,7 +102,8 @@ public class TradeLogService {
 		if (open.getPosition().equals("long"))
 			cashService.sell(closeDTO.quantity(), realClose, closeFees, closeDTO.dateClose(), broker, open);
 		else
-			cashService.buyShort(open.getTotalSold(), realOpen, broker, currency, open);
+			cashService.buyShort(closeDTO.quantity(), open.getTotalBought(),
+			                     open.getCloseCommission(), open.getBrokerInterest(), open.getDateClose(),broker, open);
 
 		open.setCloseCommission(open.getCloseCommission() + closeFees);
 		open.setDateClose(dateTimeClose);
@@ -146,7 +154,7 @@ public class TradeLogService {
 				tradeLog.getTicker().getId(),
 				tradeLog.getEstimatedPriceOpen(),
 				tradeLog.getAtr(),
-				tradeLog.isLong()? tradeLog.getItemSold() : tradeLog.getItemBought(),
+				tradeLog.isLong() ? tradeLog.getItemSold() : tradeLog.getItemBought(),
 				openDTO.stopLoss(),
 				openDTO.takeProfit(),
 				LocalDate.now(),

@@ -143,6 +143,14 @@ public class CashService {
 		if (dateTime == null) {
 			throw new IllegalArgumentException("Date and time is null");
 		}
+		if (transfer < 0) {
+			throw new IllegalArgumentException("Transfer amount must be greater than zero");
+		}
+		if (transfer == 0) {
+			logger.debug("Transfer amount is zero. Nothing to do.");
+			return null;
+		}
+
 
 		CashAccount from = getAccount(broker, currency, fromType);
 		CashAccount to   = getAccount(broker, currency, toType);
@@ -220,11 +228,15 @@ public class CashService {
 	 * @param tradeLog trade record related to the fee (optional)
 	 * @param dateTime date and time of withdrawal
 	 */
-	public void fee(Double amount, Broker broker, TradeLog tradeLog, LocalDateTime dateTime) {
+	public void fee(double amount, Broker broker, TradeLog tradeLog, LocalDateTime dateTime) {
 		logger.debug("start");
 		CashAccountType fromTrade = accountTypeRepo.findCashAccountTypeByName("trade");
 		CashAccountType toFee     = accountTypeRepo.findCashAccountTypeByName("fee");
 		Currency        currency  = broker.getFeeCurrency();
+		if (amount == 0) {
+			logger.debug("Fee amount is zero. Nothing to do.");
+			return;
+		}
 		if (currency == null) {
 			throw new IllegalArgumentException("Broker fee currency is null");
 		}
@@ -236,15 +248,6 @@ public class CashService {
 		}
 
 		transfer(amount, tradeLog, broker, currency, fromTrade, toFee, dateTime);
-		logger.debug("finish");
-	}
-
-	public void buy(Double amount, Broker broker, Currency currency, TradeLog tradeLog) {
-		logger.debug("start");
-		CashAccountType fromTrade = accountTypeRepo.findCashAccountTypeByName("trade");
-		CashAccountType toOpen    = accountTypeRepo.findCashAccountTypeByName("open");
-
-		transfer(amount, tradeLog, broker, currency, fromTrade, toOpen, tradeLog.getDateOpen());
 		logger.debug("finish");
 	}
 
@@ -364,25 +367,124 @@ public class CashService {
 		logger.debug("finish");
 	}
 
-	public void buyShort(double openAmount, double closeAmount, Broker broker, Currency currency, TradeLog tradeLog) {
+	/**
+	 * Buying a long position (opening).
+	 * <p>
+	 * Transfers money from trade account to open account.<br>
+	 * Transfers the commission from the trade account to fee account.<br>
+	 * Updates the trade log record with the trade data.
+	 * <p>
+	 * Creates a cash flow record for each transfer.
+	 *
+	 * @param itemBought     item bought
+	 * @param amountBought   amount bought
+	 * @param openCommission open commission
+	 * @param dateOpen       date and time of buying
+	 * @param broker         broker
+	 * @param currency       currency
+	 * @param tradeLog       trade record related to the transfer (required)
+	 */
+	public void buy(long itemBought,
+	                double amountBought,
+	                double openCommission,
+	                LocalDateTime dateOpen,
+	                Broker broker,
+	                Currency currency,
+	                TradeLog tradeLog) {
 		logger.debug("start");
-		// todo include all fees operations with broker interest
+		if (tradeLog == null) {
+			throw new IllegalArgumentException("Trade log record is required");
+		}
+		CashAccountType fromTrade = accountTypeRepo.findCashAccountTypeByName("trade");
+		CashAccountType toOpen    = accountTypeRepo.findCashAccountTypeByName("open");
+		if (fromTrade == null || toOpen == null) {
+			throw new IllegalStateException("Account types are not found");
+		}
+		transfer(amountBought, tradeLog, broker, currency, fromTrade, toOpen, tradeLog.getDateOpen());
+		fee(openCommission, broker, tradeLog, dateOpen);
+
+		tradeLog.setItemBought(itemBought);
+		tradeLog.setTotalBought(amountBought);
+		tradeLog.setOpenCommission(openCommission);
+		tradeLog.setDateOpen(dateOpen);
+
+		logger.debug("finish");
+	}
+
+	/**
+	 * Buying a short position (closing or partially buying).
+	 * <p>
+	 * Creates a cash flow record for each transfer.
+	 * <p>
+	 * We transfer the sum of the open position back to the trade account (maybe partially).<br>
+	 * We transfer the buying commission from the trade account.<br>
+	 * We transfer the borrowing commission from the trade account.<br>
+	 * We transfer the outcome to or from the trade account.<br>
+	 * We update the trade log record with the trade data. If item bought is equal to item sold, we close the position.
+	 *
+	 * @param itemBought item bought
+	 * @param amountBought amount bought
+	 * @param buyingCommission buying commission
+	 * @param borrowingCommission borrowing commission
+	 * @param dateTime date and time of buying
+	 * @param broker broker
+	 * @param tradeLog trade record related to the transfer (required)
+	 */
+	public void buyShort(long itemBought,
+	                     double amountBought,
+	                     double buyingCommission,
+						 double borrowingCommission,
+	                     LocalDateTime dateTime,
+	                     Broker broker,
+	                     TradeLog tradeLog) {
+		logger.debug("start");
+		if (tradeLog == null) {
+			throw new IllegalArgumentException("Trade log record is required");
+		}
 		CashAccountType tradeType    = accountTypeRepo.findCashAccountTypeByName("trade");
 		CashAccountType borrowedType = accountTypeRepo.findCashAccountTypeByName("borrowed");
 		CashAccountType openType     = accountTypeRepo.findCashAccountTypeByName("open");
-		CashAccountType profitType   = accountTypeRepo.findCashAccountTypeByName("profit");
-		CashAccountType lossType     = accountTypeRepo.findCashAccountTypeByName("loss");
+		CashAccountType outcomeType   = accountTypeRepo.findCashAccountTypeByName("outcome");
 
-		transfer(openAmount, tradeLog, broker, currency, openType, borrowedType, tradeLog.getDateClose());
-
-		if (closeAmount < openAmount) {
-			double profit = openAmount - closeAmount;
-			transfer(profit, tradeLog, broker, currency, profitType, tradeType, tradeLog.getDateClose());
+		if (tradeType == null || borrowedType == null || openType == null || outcomeType == null) {
+			throw new IllegalStateException("Account types are not found");
 		}
 
-		if (closeAmount > openAmount) {
-			double loss = closeAmount - openAmount;
-			transfer(loss, tradeLog, broker, currency, tradeType, lossType, tradeLog.getDateClose());
+		double openAmount = tradeLog.getTotalSold();
+		double itemSold   = tradeLog.getItemSold();
+		double avgPriceOpen = openAmount / itemSold;
+		double amountToClose = avgPriceOpen * itemBought;
+		double outcome = amountToClose - amountBought;
+
+		Currency tradeCurrency = tradeLog.getCurrency();
+
+		// we transfer the sum of the open position back to the trade account (maybe partially)
+		transfer(amountToClose, tradeLog, broker, tradeCurrency, openType, tradeType, dateTime);
+		// we transfer the buying commission from the trade account
+		fee(buyingCommission, broker, tradeLog, dateTime);
+		// we transfer the borrowing commission from the trade account
+		fee(borrowingCommission, broker, tradeLog, dateTime);
+		// we transfer the outcome to or from the trade account
+		if (outcome > 0) { // we have profit
+			transfer(outcome, tradeLog, broker, tradeCurrency, outcomeType, tradeType, dateTime);
+		} else if (outcome < 0) { // we have loss
+			transfer(-outcome, tradeLog, broker, tradeCurrency, tradeType, outcomeType, dateTime);
+		}
+
+		double totalBought = tradeLog.getTotalBought() == null ? 0 : tradeLog.getTotalBought();
+		double closeCommission = tradeLog.getCloseCommission() == null ? 0 : tradeLog.getCloseCommission();
+		long itemBoughtPreviously = tradeLog.getItemBought() == null ? 0 : tradeLog.getItemBought();
+
+		if(itemBoughtPreviously + itemBought > itemSold) {
+			throw new IllegalStateException("Item bought number is greater than item sold number");
+		}
+
+		tradeLog.setTotalBought(totalBought + amountBought);
+		tradeLog.setCloseCommission(closeCommission + buyingCommission + borrowingCommission);
+		tradeLog.setItemBought(itemBoughtPreviously + itemBought);
+
+		if(tradeLog.getItemBought() == itemSold) {
+			tradeLog.setDateClose(dateTime);
 		}
 
 		logger.debug("finish");
