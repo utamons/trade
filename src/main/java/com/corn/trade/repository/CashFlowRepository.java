@@ -15,5 +15,8 @@ public interface CashFlowRepository extends JpaRepository<CashFlow, Long>, JpaSp
 	@Query("select sum(cf.sumFrom) from CashFlow cf where cf.accountFrom = ?1")
 	Double getSumFromByAccount(CashAccount accountFrom);
 
+	@Query("select sum(cf.sumFrom - cf.sumTo) from CashFlow cf")
+	Double getCashFlowBalance();
+
 	CashFlow findCashFlowByTradeLog(TradeLog tradeLog);
 }
