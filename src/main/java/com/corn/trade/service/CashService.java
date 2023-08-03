@@ -143,9 +143,6 @@ public class CashService {
 		if (dateTime == null) {
 			throw new IllegalArgumentException("Date and time is null");
 		}
-		if (transfer < 0) {
-			throw new IllegalArgumentException("Transfer amount must be greater than zero");
-		}
 		if (transfer == 0) {
 			logger.debug("Transfer amount is zero. Nothing to do.");
 			return null;
@@ -458,8 +455,8 @@ public class CashService {
 
 		Currency tradeCurrency = tradeLog.getCurrency();
 
-		// we transfer the sum of the open position back to the trade account (maybe partially)
-		transfer(amountToClose, tradeLog, broker, tradeCurrency, openType, tradeType, dateTime);
+		// we transfer the sum of the open position back to the borrowed account (maybe partially)
+		transfer(amountToClose, tradeLog, broker, tradeCurrency, openType, borrowedType, dateTime);
 		// we transfer the buying commission from the trade account
 		fee(buyingCommission, broker, tradeLog, dateTime);
 		// we transfer the borrowing commission from the trade account
@@ -480,7 +477,8 @@ public class CashService {
 		}
 
 		tradeLog.setTotalBought(totalBought + amountBought);
-		tradeLog.setCloseCommission(closeCommission + buyingCommission + borrowingCommission);
+		tradeLog.setCloseCommission(closeCommission + buyingCommission);
+		tradeLog.setBrokerInterest(borrowingCommission);
 		tradeLog.setItemBought(itemBoughtPreviously + itemBought);
 
 		if(tradeLog.getItemBought() == itemSold) {
