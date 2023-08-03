@@ -12,17 +12,35 @@ import org.slf4j.LoggerFactory;
 public class TradeLogMapper {
 	public static Logger logger = LoggerFactory.getLogger(TradeLogMapper.class);
 
-	public static TradeLog toEntity(TradeLogOpenDTO open,
-	                                Broker broker,
-	                                Market market,
-	                                Ticker ticker,
-	                                Double depositAmount) {
-		double realVolume = open.position().equals("long") ? open.totalBought() : open.totalSold();
+	public static TradeLog toOpen(TradeLogOpenDTO open,
+	                              Broker broker,
+	                              Market market,
+	                              Ticker ticker) {
+
 		TradeLog e = new TradeLog();
 
-		throw new RuntimeException("Not implemented");
+		// Basic data
+		e.setBroker(broker);
+		e.setMarket(market);
+		e.setTicker(ticker);
+		e.setPosition(open.position());
 
-		//return e;
+		// Estimated data
+		e.setEstimatedPriceOpen(open.estimatedPriceOpen());
+		e.setEstimatedFees(open.estimatedFees());
+		e.setEstimatedBreakEven(open.estimatedBreakEven());
+		e.setEstimatedItems(open.estimatedItems());
+		e.setRiskToCapitalPc(open.riskToCapitalPc());
+		e.setRisk(open.risk());
+		e.setLevelPrice(open.levelPrice());
+		e.setAtr(open.atr());
+
+		// Actual data
+		e.setOpenStopLoss(open.openStopLoss());
+		e.setOpenTakeProfit(open.openTakeProfit());
+		e.setNote(open.note());
+
+		return e;
 	}
 
 	public static Double roundZeroOutcome(Double outcome) {
