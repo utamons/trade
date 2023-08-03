@@ -24,11 +24,6 @@ public class TradeLogController {
 		service.open(openDTO);
 	}
 
-	@PutMapping(value = "/open", consumes= MediaType.APPLICATION_JSON_VALUE)
-	public void update(@RequestBody TradeLogOpenDTO openDTO) throws JsonProcessingException {
-		service.update(openDTO);
-	}
-
 	@PostMapping(value = "/close", consumes=MediaType.APPLICATION_JSON_VALUE)
 	public void close(@RequestBody TradeLogCloseDTO closeDTO) throws JsonProcessingException {
 		service.close(closeDTO);

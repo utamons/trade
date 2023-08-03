@@ -1173,7 +1173,7 @@ public class CashServiceTest {
 		tradeLog.setRisk(1.0);
 		tradeLog.setEstimatedFees(1.0);
 		tradeLog.setEstimatedBreakEven(1.0);
-		tradeLog.setEstimatedItems(1.0);
+		tradeLog.setEstimatedItems(1L);
 
 		tradeLog = tradeLogRepository.save(tradeLog);
 		return tradeLog;

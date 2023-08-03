@@ -173,7 +173,6 @@ public class CashService {
 	 * Creates a cash flow record for the transfer.
 	 *
 	 * @param exchangeDTO exchange data
-	 * @return trade account
 	 */
 	public void exchange(ExchangeDTO exchangeDTO) {
 		logger.debug("start");

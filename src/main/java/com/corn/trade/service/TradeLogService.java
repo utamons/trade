@@ -47,26 +47,50 @@ public class TradeLogService {
 	}
 
 
+	/**
+	 * Opening a position
+	 *
+	 * @param openDTO DTO containing the data to open a position
+	 */
 	public void open(TradeLogOpenDTO openDTO) {
 		Broker   broker        = brokerRepo.getReferenceById(openDTO.brokerId());
 		Market   market        = marketRepo.getReferenceById(openDTO.marketId());
 		Ticker   ticker        = tickerRepo.getReferenceById(openDTO.tickerId());
-		Double   depositAmount = cashService.lastDepositAmount(broker, ticker.getCurrency());
-		TradeLog tradeLog      = TradeLogMapper.toEntity(openDTO, broker, market, ticker, depositAmount);
 
+		boolean isLong        = openDTO.position().equals("long");
+
+		validateOpen(openDTO, isLong);
+
+		TradeLog tradeLog      = TradeLogMapper.toOpen(openDTO, broker, market, ticker);
 		tradeLog = tradeLogRepo.save(tradeLog);
 		tradeLogRepo.flush();
-		if (openDTO.position().equals("long"))
-			cashService.buy(openDTO.realItems(), tradeLog.getTotalBought(), openDTO.fees(),
+
+		if (isLong)
+			cashService.buy(openDTO.itemBought(), openDTO.totalBought(), openDTO.openCommission(),
 			                openDTO.dateOpen(), broker, ticker.getCurrency(), tradeLog);
 		else
-			cashService.sellShort(openDTO.realItems(),
-			                      tradeLog.getTotalSold(),
-			                      openDTO.fees(),
+			cashService.sellShort(openDTO.itemSold(),
+			                      openDTO.totalSold(),
+			                      openDTO.openCommission(),
 			                      openDTO.dateOpen(),
 			                      broker,
 			                      ticker.getCurrency(),
 			                      tradeLog);
+	}
+
+	public void validateOpen(TradeLogOpenDTO openDTO, boolean isLong) {
+		if (isLong && openDTO.totalBought() == null)
+			throw new IllegalArgumentException("Total bought must not be null");
+		if (isLong && openDTO.itemBought() == null)
+			throw new IllegalArgumentException("Items bought must not be null");
+		if (isLong && openDTO.totalBought() <= 0)
+			throw new IllegalArgumentException("Total bought must be greater than 0");
+		if (!isLong && openDTO.totalSold() == null)
+			throw new IllegalArgumentException("Total sold must not be null");
+		if (!isLong && openDTO.itemSold() == null)
+			throw new IllegalArgumentException("Items sold must not be null");
+		if (!isLong && openDTO.totalSold() <= 0)
+			throw new IllegalArgumentException("Total sold must be greater than 0");
 	}
 
 	public void close(TradeLogCloseDTO closeDTO) throws JsonProcessingException {
@@ -143,34 +167,5 @@ public class TradeLogService {
 
 	public List<TradeLogDTO> getAllClosed() {
 		return tradeLogRepo.findAllClosed().stream().map(TradeLogMapper::toDTO).collect(Collectors.toList());
-	}
-
-	public void update(TradeLogOpenDTO openDTO) throws JsonProcessingException {
-		TradeLog tradeLog = tradeLogRepo.getReferenceById(openDTO.id());
-		double   capital  = cashService.getCapital();
-
-		EvalInDTO evalInDTO = new EvalInDTO(
-				tradeLog.getBroker().getId(),
-				tradeLog.getTicker().getId(),
-				tradeLog.getEstimatedPriceOpen(),
-				tradeLog.getAtr(),
-				tradeLog.isLong() ? tradeLog.getItemSold() : tradeLog.getItemBought(),
-				openDTO.stopLoss(),
-				openDTO.takeProfit(),
-				LocalDate.now(),
-				tradeLog.isShort()
-		);
-
-		double risk = cashService.getRisk(evalInDTO,
-		                                  tradeLog.getBroker().getName(),
-		                                  CurrencyMapper.toDTO(tradeLog.getCurrency()),
-		                                  capital);
-
-		tradeLog.setOpenStopLoss(openDTO.stopLoss());
-		tradeLog.setOpenTakeProfit(openDTO.takeProfit());
-		tradeLog.setNote(openDTO.note());
-		tradeLog.setRiskToCapitalPc(risk);
-
-		tradeLogRepo.save(tradeLog);
 	}
 }
