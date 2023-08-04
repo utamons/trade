@@ -162,28 +162,29 @@ type TradeLog = {
     market: MarketType,
     ticker: TickerType,
     currency: ItemType,
-    itemNumber: number,
-    priceOpen: number,
-    priceClose: number | undefined,
-    volume: number,
-    volumeToDeposit: number,
-    stopLoss: number,
-    takeProfit: number | undefined,
-    outcomeExpected: number | undefined,
-    risk: number | undefined,
-    breakEven: number | undefined,
-    fees: number,
-    outcome: number | undefined,
-    outcomePercent: number | undefined,
-    profit: number | undefined,
-    note: string | undefined,
-    chart: string | undefined,
-    grade: string | undefined,
-    goal: number | undefined,
-    brokerInterest: number | undefined
-    parentId: number | undefined
+    //-----------------------
+    estimatedPriceOpen: number,
+    estimatedFees: number,
+    estimatedBreakEven: number,
+    estimatedItems: number,
+    riskToCapitalPc: number,
+    risk: number,
+    levelPrice: number | undefined,
+    atr: number | undefined,
+    //-----------------------
+    openStopLoss: number,
+    openTakeProfit: number,
+    brokerInterest: number | undefined,
     totalBought: number | undefined
     totalSold: number | undefined
+    itemBought: number | undefined,
+    itemSold: number | undefined,
+    finalStopLoss: number | undefined,
+    finalTakeProfit: number | undefined,
+    openCommission: number | undefined,
+    closeCommission: number | undefined,
+    note: string | undefined,
+    totalFeesInCurrency: number | undefined
 }
 
 type SortType = {

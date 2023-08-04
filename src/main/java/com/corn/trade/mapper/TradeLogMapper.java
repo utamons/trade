@@ -2,15 +2,23 @@ package com.corn.trade.mapper;
 
 import com.corn.trade.dto.TradeLogDTO;
 import com.corn.trade.dto.TradeLogOpenDTO;
-import com.corn.trade.entity.Broker;
-import com.corn.trade.entity.Market;
-import com.corn.trade.entity.Ticker;
-import com.corn.trade.entity.TradeLog;
+import com.corn.trade.entity.*;
+import com.corn.trade.service.CurrencyRateService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
+import static com.corn.trade.util.Util.round;
+
+@Service
 public class TradeLogMapper {
-	public static Logger logger = LoggerFactory.getLogger(TradeLogMapper.class);
+	public static Logger              logger = LoggerFactory.getLogger(TradeLogMapper.class);
+	private final CurrencyRateService currencyRateService;
+
+	public TradeLogMapper(CurrencyRateService currencyRateService) {
+		this.currencyRateService = currencyRateService;
+	}
 
 	public static TradeLog toOpen(TradeLogOpenDTO open,
 	                              Broker broker,
@@ -43,17 +51,58 @@ public class TradeLogMapper {
 		return e;
 	}
 
-	public static Double roundZeroOutcome(Double outcome) {
-		if (outcome == null)
-			return null;
-		if (outcome <= 0.01 && outcome > 0)
-			return 0.0;
-		if (outcome >= -0.01 && outcome < 0)
-			return 0.0;
-		return outcome;
-	}
+	public TradeLogDTO toDTO(TradeLog entity) throws JsonProcessingException {
+		double   openCommission  = entity.getOpenCommission() == null ? 0 : entity.getOpenCommission();
+		double   closeCommission = entity.getCloseCommission() == null ? 0 : entity.getCloseCommission();
+		double   brokerInterest  = entity.getBrokerInterest() == null ? 0 : entity.getBrokerInterest();
+		Currency currency        = entity.getCurrency();
+		Broker   broker          = entity.getBroker();
+		Currency brokerCurrency  = broker.getFeeCurrency();
 
-	public static TradeLogDTO toDTO(TradeLog entity) {
-		throw new RuntimeException("Not implemented");
+		double totalFees = openCommission + closeCommission + brokerInterest;
+		double totalFeesConverted =
+				currencyRateService.convert(brokerCurrency, currency, totalFees, entity.getDateClose().toLocalDate());
+
+		double outcome = entity.isLong() ? entity.getTotalSold() - entity.getTotalBought() :
+		                 entity.getTotalBought() - entity.getTotalSold();
+		outcome = outcome - totalFeesConverted;
+
+		double outcomePc = (entity.isLong() ? outcome / entity.getTotalBought() :
+		                   outcome / entity.getTotalSold()) * 100;
+
+		return new TradeLogDTO(
+				entity.getId(),
+				entity.getPosition(),
+				entity.getDateOpen(),
+				entity.getDateClose(),
+				BrokerMapper.toDTO(broker),
+				MarketMapper.toDTO(entity.getMarket()),
+				TickerMapper.toDTO(entity.getTicker()),
+				CurrencyMapper.toDTO(currency),
+				//-----------------------------
+				round(entity.getEstimatedPriceOpen()),
+				round(entity.getEstimatedFees()),
+				round(entity.getEstimatedBreakEven()),
+				entity.getEstimatedItems(),
+				round(entity.getRiskToCapitalPc()),
+				round(entity.getRisk()),
+				round(entity.getLevelPrice()),
+				round(entity.getAtr()),
+				//------------------------------
+				round(entity.getOpenStopLoss()),
+				round(entity.getOpenTakeProfit()),
+				round(brokerInterest),
+				round(entity.getTotalBought()),
+				round(entity.getTotalSold()),
+				entity.getItemBought(),
+				entity.getItemSold(),
+				round(entity.getFinalStopLoss()),
+				round(entity.getFinalTakeProfit()),
+				round(openCommission),
+				round(closeCommission),
+				entity.getNote(),
+				//------------------------------
+				round(outcome),
+				round(outcomePc));
 	}
 }

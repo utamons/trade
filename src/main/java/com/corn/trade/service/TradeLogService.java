@@ -1,14 +1,21 @@
 package com.corn.trade.service;
 
-import com.corn.trade.dto.*;
-import com.corn.trade.entity.*;
-import com.corn.trade.mapper.CurrencyMapper;
+import com.corn.trade.dto.TradeLogCloseDTO;
+import com.corn.trade.dto.TradeLogDTO;
+import com.corn.trade.dto.TradeLogOpenDTO;
+import com.corn.trade.dto.TradeLogPageReqDTO;
+import com.corn.trade.entity.Broker;
+import com.corn.trade.entity.Market;
+import com.corn.trade.entity.Ticker;
+import com.corn.trade.entity.TradeLog;
 import com.corn.trade.mapper.TradeLogMapper;
 import com.corn.trade.repository.BrokerRepository;
 import com.corn.trade.repository.MarketRepository;
 import com.corn.trade.repository.TickerRepository;
 import com.corn.trade.repository.TradeLogRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -16,14 +23,15 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
 @Transactional
 public class TradeLogService {
+
+	private final static Logger logger = LoggerFactory.getLogger(TradeLogService.class);
 
 	private final TradeLogRepository tradeLogRepo;
 	private final BrokerRepository   brokerRepo;
@@ -31,19 +39,19 @@ public class TradeLogService {
 	private final TickerRepository   tickerRepo;
 	private final CashService        cashService;
 
-	private final CurrencyRateService currencyRateService;
+	private final TradeLogMapper tradeLogMapper;
 
 	public TradeLogService(TradeLogRepository tradeLogRepo,
 	                       BrokerRepository brokerRepo,
 	                       MarketRepository marketRepo,
 	                       TickerRepository tickerRepo,
-	                       CashService cashService, CurrencyRateService currencyRateService) {
+	                       CashService cashService, TradeLogMapper tradeLogMapper) {
 		this.tradeLogRepo = tradeLogRepo;
 		this.brokerRepo = brokerRepo;
 		this.marketRepo = marketRepo;
 		this.tickerRepo = tickerRepo;
 		this.cashService = cashService;
-		this.currencyRateService = currencyRateService;
+		this.tradeLogMapper = tradeLogMapper;
 	}
 
 
@@ -128,7 +136,7 @@ public class TradeLogService {
 
 		validateClose(closeDTO, isLong);
 
-		final Broker   broker   = open.getBroker();
+		final Broker broker = open.getBroker();
 
 		if (isLong)
 			cashService.sell(closeDTO.itemSold(),
@@ -163,15 +171,25 @@ public class TradeLogService {
 		Pageable pageable = PageRequest.of(pageReqDTO.getPageNumber(), pageReqDTO.getPageSize(),
 		                                   Sort.by("dateOpen").descending());
 		Page<TradeLog> page = tradeLogRepo.findAll(pageable);
-		for (TradeLog log : page) {
-			cashService.applyBorrowInterest(log);
-		}
-		return page.map(TradeLogMapper::toDTO);
+		return page.map(getMappingTradeLogToTradeLogDTO());
+	}
+
+	private Function<TradeLog, TradeLogDTO> getMappingTradeLogToTradeLogDTO() {
+		return (log) -> {
+			try {
+				return tradeLogMapper.toDTO(log);
+			} catch (JsonProcessingException e) {
+				logger.error("Error mapping TradeLog to TradeLogDTO", e);
+			}
+			return null;
+		};
 	}
 
 	public List<TradeLogDTO> getAllClosedByBroker(Long brokerId) {
 		Broker broker = brokerRepo.getReferenceById(brokerId);
-		return tradeLogRepo.findAllClosedByBroker(broker).stream().map(TradeLogMapper::toDTO).collect(Collectors.toList());
+		return tradeLogRepo.findAllClosedByBroker(broker).stream().map(
+				getMappingTradeLogToTradeLogDTO()
+		).collect(Collectors.toList());
 	}
 
 	public long getOpenCountByBroker(Long brokerId) {
@@ -180,6 +198,6 @@ public class TradeLogService {
 	}
 
 	public List<TradeLogDTO> getAllClosed() {
-		return tradeLogRepo.findAllClosed().stream().map(TradeLogMapper::toDTO).collect(Collectors.toList());
+		return tradeLogRepo.findAllClosed().stream().map(getMappingTradeLogToTradeLogDTO()).collect(Collectors.toList());
 	}
 }
