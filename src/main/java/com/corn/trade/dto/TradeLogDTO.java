@@ -1,14 +1,18 @@
 package com.corn.trade.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import static com.corn.trade.util.Util.round;
-
 public record TradeLogDTO(Long id, String position, LocalDateTime dateOpen, LocalDateTime dateClose, BrokerDTO broker,
-                          MarketDTO market, TickerDTO ticker, CurrencyDTO currency, Long itemNumber,
-                          Double estimatedPriceOpen, Double estimatedStopLoss, Double estimatedTakeProfit,
-                          Double estimatedFees, Double estimatedBreakEven, Double levelPrice, Double atr,
-                          Double averagePriceClose, String note, Double brokerInterest, Double totalBought, Double totalSold,
-                          Double stopLoss, Double takeProfit, Double openCommission, Double closeCommission) {
-
-}
+                          MarketDTO market, TickerDTO ticker, CurrencyDTO currency,
+                          //-----------------------------
+                          BigDecimal estimatedPriceOpen, BigDecimal estimatedFees, BigDecimal estimatedBreakEven,
+                          Long estimatedItems, BigDecimal riskToCapitalPc, BigDecimal risk, BigDecimal levelPrice,
+                          BigDecimal atr,
+                          //------------------------------
+                          BigDecimal openStopLoss, BigDecimal openTakeProfit, BigDecimal brokerInterest, BigDecimal totalBought,
+                          BigDecimal totalSold, Long itemBought, Long itemSold, BigDecimal finalStopLoss,
+                          BigDecimal finalTakeProfit, BigDecimal openCommission, BigDecimal closeCommission,
+                          String note,
+                          //------------------------------
+                          BigDecimal outcome, BigDecimal outcomePc) {}

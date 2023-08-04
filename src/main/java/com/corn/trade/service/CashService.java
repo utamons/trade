@@ -845,30 +845,6 @@ public class CashService {
 
 		transfer(Math.abs(amount), null, broker, currency, from, to, LocalDateTime.now());
 	}
-
-
-	public void applyBorrowInterest(TradeLog tradeLog) throws JsonProcessingException {
-		if (tradeLog.isClosed() || tradeLog.isLong()) {
-			return;
-		}
-		LocalDate openDate    = tradeLog.getDateOpen().toLocalDate();
-		LocalDate currentDate = LocalDate.now();
-		long      daysBetween = ChronoUnit.DAYS.between(openDate, currentDate);
-		if (tradeLog.getBroker().getName().equals("FreedomFN")) {
-			double interest = (tradeLog.getTotalSold() / 100.0 * 12.0 / 365.0) * daysBetween;
-			double interestUSD =
-					currencyRateService.convertToUSD(tradeLog.getTicker().getCurrency().getId(), interest, currentDate);
-			tradeLog.setBrokerInterest(interestUSD);
-			double breakEven = getBreakEven(-1,
-			                                tradeLog.getBroker().getName(),
-			                                CurrencyMapper.toDTO(tradeLog.getTicker().getCurrency()),
-			                                tradeLog.getItemSold(),
-			                                tradeLog.getEstimatedPriceOpen(),
-			                                interest);
-			tradeLog.setEstimatedBreakEven(breakEven);
-			tradeLogRepo.save(tradeLog);
-		}
-	}
 }
 
 
