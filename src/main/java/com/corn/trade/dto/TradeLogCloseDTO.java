@@ -8,33 +8,38 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @SuppressWarnings("unused")
-public record TradeLogCloseDTO(Long id, Integer quantity, LocalDateTime dateClose, Double priceClose, String note,
-                               Double brokerInterest, Double totalSold, Double fees,
-                               Double totalBought) implements Serializable {
+public record TradeLogCloseDTO(Long id, Long itemBought, Long itemSold, Double totalBought,  Double totalSold, LocalDateTime dateClose,
+                               String note, Double brokerInterest, Double closeCommission,
+                               Double finalStopLoss, Double finalTakeProfit)
+		implements Serializable {
 
 	@Serial
 	private static final long serialVersionUID = -993985822750284913L;
 
 	@JsonCreator
-	public TradeLogCloseDTO(@JsonProperty("id") Long id,
-	                        @JsonProperty("quantity") Integer quantity,
-	                        @JsonProperty("dateClose") LocalDateTime dateClose,
-	                        @JsonProperty("priceClose") Double priceClose,
-	                        @JsonProperty("note") String note,
-	                        @JsonProperty("brokerInterest") Double brokerInterest,
-	                        @JsonProperty("totalSold") Double totalSold,
-	                        @JsonProperty("fees") Double fees,
-	                        @JsonProperty("totalBought") Double totalBought
-
+	public TradeLogCloseDTO(
+			@JsonProperty("id") Long id,
+			@JsonProperty("itemBought") Long itemBought,
+			@JsonProperty("itemSold") Long itemSold,
+			@JsonProperty("totalBought") Double totalBought,
+			@JsonProperty("totalSold") Double totalSold,
+			@JsonProperty("dateClose") LocalDateTime dateClose,
+			@JsonProperty("note") String note,
+			@JsonProperty("brokerInterest") Double brokerInterest,
+			@JsonProperty("closeCommission") Double closeCommission,
+			@JsonProperty("finalStopLoss") Double finalStopLoss,
+			@JsonProperty("finalTakeProfit") Double finalTakeProfit
 	) {
 		this.id = id;
-		this.quantity = quantity;
+		this.itemBought = itemBought;
+		this.itemSold = itemSold;
+		this.totalBought = totalBought;
+		this.totalSold = totalSold;
 		this.dateClose = dateClose;
-		this.priceClose = priceClose;
 		this.note = note;
 		this.brokerInterest = brokerInterest;
-		this.totalSold = totalSold;
-		this.fees = fees;
-		this.totalBought = totalBought;
+		this.closeCommission = closeCommission;
+		this.finalStopLoss = finalStopLoss;
+		this.finalTakeProfit = finalTakeProfit;
 	}
 }

@@ -53,17 +53,16 @@ public class TradeLogService {
 	 * @param openDTO DTO containing the data to open a position
 	 */
 	public void open(TradeLogOpenDTO openDTO) {
-		Broker   broker        = brokerRepo.getReferenceById(openDTO.brokerId());
-		Market   market        = marketRepo.getReferenceById(openDTO.marketId());
-		Ticker   ticker        = tickerRepo.getReferenceById(openDTO.tickerId());
+		Broker broker = brokerRepo.getReferenceById(openDTO.brokerId());
+		Market market = marketRepo.getReferenceById(openDTO.marketId());
+		Ticker ticker = tickerRepo.getReferenceById(openDTO.tickerId());
 
-		boolean isLong        = openDTO.position().equals("long");
+		boolean isLong = openDTO.position().equals("long");
 
 		validateOpen(openDTO, isLong);
 
-		TradeLog tradeLog      = TradeLogMapper.toOpen(openDTO, broker, market, ticker);
+		TradeLog tradeLog = TradeLogMapper.toOpen(openDTO, broker, market, ticker);
 		tradeLog = tradeLogRepo.save(tradeLog);
-		tradeLogRepo.flush();
 
 		if (isLong)
 			cashService.buy(openDTO.itemBought(), openDTO.totalBought(), openDTO.openCommission(),
@@ -76,6 +75,8 @@ public class TradeLogService {
 			                      broker,
 			                      ticker.getCurrency(),
 			                      tradeLog);
+
+		tradeLogRepo.flush();
 	}
 
 	public void validateOpen(TradeLogOpenDTO openDTO, boolean isLong) {
@@ -85,64 +86,77 @@ public class TradeLogService {
 			throw new IllegalArgumentException("Items bought must not be null");
 		if (isLong && openDTO.totalBought() <= 0)
 			throw new IllegalArgumentException("Total bought must be greater than 0");
+		if (isLong && openDTO.itemBought() <= 0)
+			throw new IllegalArgumentException("Items bought must be greater than 0");
 		if (!isLong && openDTO.totalSold() == null)
 			throw new IllegalArgumentException("Total sold must not be null");
 		if (!isLong && openDTO.itemSold() == null)
 			throw new IllegalArgumentException("Items sold must not be null");
 		if (!isLong && openDTO.totalSold() <= 0)
 			throw new IllegalArgumentException("Total sold must be greater than 0");
+		if (!isLong && openDTO.itemSold() <= 0)
+			throw new IllegalArgumentException("Items sold must be greater than 0");
 	}
 
-	public void close(TradeLogCloseDTO closeDTO) throws JsonProcessingException {
+	public void validateClose(TradeLogCloseDTO closeDTO, boolean isLong) {
+		if (isLong && closeDTO.totalSold() == null)
+			throw new IllegalArgumentException("Total sold must not be null");
+		if (isLong && closeDTO.itemSold() == null)
+			throw new IllegalArgumentException("Items sold must not be null");
+		if (isLong && closeDTO.totalSold() <= 0)
+			throw new IllegalArgumentException("Total sold must be greater than 0");
+		if (isLong && closeDTO.itemSold() <= 0)
+			throw new IllegalArgumentException("Items sold must be greater than 0");
+		if (!isLong && closeDTO.totalBought() == null)
+			throw new IllegalArgumentException("Total bought must not be null");
+		if (!isLong && closeDTO.itemBought() == null)
+			throw new IllegalArgumentException("Items bought must not be null");
+		if (!isLong && closeDTO.totalBought() <= 0)
+			throw new IllegalArgumentException("Total bought must be greater than 0");
+		if (!isLong && closeDTO.itemBought() <= 0)
+			throw new IllegalArgumentException("Items bought must be greater than 0");
+	}
+
+	/**
+	 * Closing a position
+	 *
+	 * @param closeDTO DTO containing the data to close a position
+	 */
+	public void close(TradeLogCloseDTO closeDTO) {
 		TradeLog open   = tradeLogRepo.getReferenceById(closeDTO.id());
 		boolean  isLong = open.getPosition().equals("long");
 
+		validateClose(closeDTO, isLong);
+
 		final Broker   broker   = open.getBroker();
-		final Currency currency = open.getCurrency();
 
-		double realOpen  = isLong ? open.getTotalBought() : open.getTotalSold();
-		double realClose = isLong ? closeDTO.totalSold() : closeDTO.totalBought();
-		double realDelta = realClose - realOpen;
-
-		double openFees  = open.getOpenCommission();
-		double closeFees = closeDTO.fees();
-
-		final LocalDateTime dateTimeClose  = closeDTO.dateClose();
-		final double        brokerInterest = closeDTO.brokerInterest() == null ? 0.0 : closeDTO.brokerInterest();
-
-		final double closeFeesUSD =
-				currencyRateService.convertToUSD(currency.getId(), closeFees, closeDTO.dateClose().toLocalDate());
-		final double brokerInterestUSD =
-				currencyRateService.convertToUSD(currency.getId(), brokerInterest, closeDTO.dateClose().toLocalDate());
-
-		final double outcome        = realDelta - openFees - closeFees - brokerInterest;
-		final double outcomePercent = outcome / realOpen * 100.0;
-
-		if (brokerInterest != 0)
-			cashService.fee(brokerInterestUSD, broker, open, dateTimeClose);
-
-		double percentToCapital = cashService.percentToCapital(outcome, realOpen, currency);
-
-		if (open.getPosition().equals("long"))
-			cashService.sell(closeDTO.quantity(), realClose, closeFees, closeDTO.dateClose(), broker, open);
+		if (isLong)
+			cashService.sell(closeDTO.itemSold(),
+			                 closeDTO.totalSold(),
+			                 closeDTO.closeCommission(),
+			                 closeDTO.dateClose(),
+			                 broker,
+			                 open);
 		else
-			cashService.buyShort(closeDTO.quantity(), open.getTotalBought(),
-			                     open.getCloseCommission(), open.getBrokerInterest(), open.getDateClose(),broker, open);
+			cashService.buyShort(closeDTO.itemBought(),
+			                     closeDTO.totalBought(),
+			                     closeDTO.closeCommission(),
+			                     closeDTO.brokerInterest(),
+			                     closeDTO.dateClose(),
+			                     broker,
+			                     open);
 
-		open.setCloseCommission(open.getCloseCommission() + closeFees);
-		open.setDateClose(dateTimeClose);
-		if (open.isShort()) {
-			open.setBrokerInterest(brokerInterest);
-			open.setTotalBought(closeDTO.totalBought());
-		} else {
-			open.setTotalSold(closeDTO.totalSold());
-		}
 
 		if (closeDTO.note() != null)
 			open.setNote(closeDTO.note());
 
+		if (open.getDateClose() != null) {
+			open.setFinalStopLoss(closeDTO.finalStopLoss());
+			open.setFinalTakeProfit(closeDTO.finalTakeProfit());
+		}
 
 		tradeLogRepo.save(open);
+		tradeLogRepo.flush();
 	}
 
 	public Page<TradeLogDTO> getPage(TradeLogPageReqDTO pageReqDTO) throws JsonProcessingException {

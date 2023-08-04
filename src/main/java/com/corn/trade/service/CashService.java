@@ -296,6 +296,8 @@ public class CashService {
 		tradeLog.setTotalSold(amountSold);
 		tradeLog.setOpenCommission(openCommission);
 
+		tradeLogRepo.save(tradeLog);
+
 		logger.debug("finish");
 	}
 
@@ -368,6 +370,8 @@ public class CashService {
 			tradeLog.setDateClose(dateTime);
 		}
 
+		tradeLogRepo.save(tradeLog);
+
 		logger.debug("finish");
 	}
 
@@ -411,6 +415,8 @@ public class CashService {
 		tradeLog.setTotalBought(amountBought);
 		tradeLog.setOpenCommission(openCommission);
 		tradeLog.setDateOpen(dateOpen);
+
+		tradeLogRepo.save(tradeLog);
 
 		logger.debug("finish");
 	}
@@ -491,6 +497,8 @@ public class CashService {
 		if (tradeLog.getItemBought() == itemSold) {
 			tradeLog.setDateClose(dateTime);
 		}
+
+		tradeLogRepo.save(tradeLog);
 
 		logger.debug("finish");
 	}
