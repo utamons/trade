@@ -1,10 +1,12 @@
 package com.corn.trade.service;
 
 import com.corn.trade.dto.CashAccountDTO;
+import com.corn.trade.dto.CurrencyDTO;
 import com.corn.trade.dto.ExchangeDTO;
 import com.corn.trade.dto.TransferDTO;
 import com.corn.trade.entity.*;
 import com.corn.trade.repository.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.assertj.core.data.TemporalUnitWithinOffset;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,11 +17,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @Transactional
@@ -70,7 +75,6 @@ public class CashServiceTest {
 	private CashAccountType openType;
 	private CashAccountType incomeType;
 
-	private CashAccountType conversionType;
 	private CashAccountType feeType;
 
 	private CashAccount tradeAccountUSD,
@@ -107,7 +111,7 @@ public class CashServiceTest {
 		openType = cashAccountTypeRepository.findCashAccountTypeByName("open");
 		incomeType = cashAccountTypeRepository.findCashAccountTypeByName("income");
 		feeType = cashAccountTypeRepository.findCashAccountTypeByName("fee");
-		conversionType = cashAccountTypeRepository.findCashAccountTypeByName("conversion");
+		CashAccountType conversionType = cashAccountTypeRepository.findCashAccountTypeByName("conversion");
 		CashAccountType outcomeType = cashAccountTypeRepository.findCashAccountTypeByName("outcome");
 
 		tradeAccountUSD = new CashAccount("trade/Test Broker/USD", currencyUSD, brokerUSD, tradeType);
@@ -1178,4 +1182,6 @@ public class CashServiceTest {
 		tradeLog = tradeLogRepository.save(tradeLog);
 		return tradeLog;
 	}
+
+
 }

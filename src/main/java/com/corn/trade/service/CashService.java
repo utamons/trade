@@ -17,6 +17,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static java.lang.Math.abs;
+
 @SuppressWarnings("DuplicatedCode")
 @Service
 @Transactional
@@ -714,18 +716,18 @@ public class CashService {
 		final double stopLoss   = evalDTO.stopLoss();
 		final int    shortC     = evalDTO.isShort() ? -1 : 1;
 
-		final double breakEven = getBreakEven(shortC, brokerName, currencyDTO, items, priceOpen, 0);
+		final double breakEven = getBreakEven(shortC, brokerName, currencyDTO, items, priceOpen);
 
-		final double profit = Math.abs(takeProfit - breakEven) * items;
+		final double profit = abs(takeProfit - breakEven) * items;
 
-		final double riskRewardPc = Math.abs(stopLoss - breakEven) / Math.abs(takeProfit - breakEven) * 100;
+		final double riskRewardPc = abs(stopLoss - breakEven) / abs(takeProfit - breakEven) * 100;
 
 		final double riskPc = getRisk(evalDTO, brokerName, currencyDTO, capital);
 
 		double feesClose = getFees(brokerName, currencyDTO, items, takeProfit * items).getAmount();
 		double taxes     = getTaxes(profit);
 
-		final double outcomeExp = Math.abs(profit - feesOpen - feesClose - taxes);
+		final double outcomeExp = abs(profit - feesOpen - feesClose - taxes);
 
 		final double gainPc = outcomeExp / volume * 100;
 
@@ -761,7 +763,7 @@ public class CashService {
 
 		final double sumLoss = items * stopLossUSD;
 
-		final double losses = Math.abs(sum - sumLoss);
+		final double losses = abs(sum - sumLoss);
 
 		final double feesOpen = getFees(brokerName, currencyDTO, items, sum).getAmount();
 
@@ -774,15 +776,14 @@ public class CashService {
 	                            String brokerName,
 	                            CurrencyDTO currencyDTO,
 	                            long items,
-	                            double priceOpen,
-	                            double interest) throws JsonProcessingException {
+	                            double priceOpen) throws JsonProcessingException {
 		double sumOpen   = items * priceOpen;
 		double feesOpen  = getFees(brokerName, currencyDTO, items, sumOpen).getAmount();
 		double sumClose  = sumOpen;
 		double feesClose = getFees(brokerName, currencyDTO, items, sumClose).getAmount();
-		double taxes     = getTaxes(shortC * sumClose - (shortC * sumOpen));
+		double taxes     = getTaxes(abs(sumClose - sumOpen));
 
-		while (shortC * sumClose - (shortC * sumOpen) < feesOpen + feesClose + taxes + interest) {
+		while (abs(sumClose - sumOpen) < feesOpen + feesClose + taxes) {
 			sumClose = sumClose + (shortC * 0.01);
 			feesClose = getFees(brokerName, currencyDTO, items, sumClose).getAmount();
 			taxes = getTaxes(shortC * sumClose - (shortC * sumOpen));
@@ -843,7 +844,7 @@ public class CashService {
 		CashAccountType from = amount > 0 ? correctionType : tradeType;
 		CashAccountType to   = amount > 0 ? tradeType : correctionType;
 
-		transfer(Math.abs(amount), null, broker, currency, from, to, LocalDateTime.now());
+		transfer(abs(amount), null, broker, currency, from, to, LocalDateTime.now());
 	}
 }
 
