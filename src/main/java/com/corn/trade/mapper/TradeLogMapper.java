@@ -105,4 +105,5 @@ public class TradeLogMapper {
 				round(outcome),
 				round(outcomePc));
 	}
+
 }
