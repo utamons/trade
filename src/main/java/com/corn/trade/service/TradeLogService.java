@@ -167,7 +167,7 @@ public class TradeLogService {
 		tradeLogRepo.flush();
 	}
 
-	public Page<TradeLogDTO> getPage(TradeLogPageReqDTO pageReqDTO) throws JsonProcessingException {
+	public Page<TradeLogDTO> getPage(TradeLogPageReqDTO pageReqDTO) {
 		Pageable pageable = PageRequest.of(pageReqDTO.getPageNumber(), pageReqDTO.getPageSize(),
 		                                   Sort.by("dateOpen").descending());
 		Page<TradeLog> page = tradeLogRepo.findAll(pageable);
