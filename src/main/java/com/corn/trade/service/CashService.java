@@ -13,10 +13,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.corn.trade.util.Util.round;
 import static java.lang.Math.abs;
 
 @SuppressWarnings("DuplicatedCode")
@@ -178,10 +178,10 @@ public class CashService {
 	 */
 	public void exchange(ExchangeDTO exchangeDTO) {
 		logger.debug("start");
-		Broker          broker       = brokerRepo.getReferenceById(exchangeDTO.getBrokerId());
-		Currency        currencyFrom = currencyRepo.getReferenceById(exchangeDTO.getCurrencyFromId());
-		Currency        currencyTo   = currencyRepo.getReferenceById(exchangeDTO.getCurrencyToId());
-		CashAccountType tradeType    = accountTypeRepo.findCashAccountTypeByName("trade");
+		Broker          broker         = brokerRepo.getReferenceById(exchangeDTO.getBrokerId());
+		Currency        currencyFrom   = currencyRepo.getReferenceById(exchangeDTO.getCurrencyFromId());
+		Currency        currencyTo     = currencyRepo.getReferenceById(exchangeDTO.getCurrencyToId());
+		CashAccountType tradeType      = accountTypeRepo.findCashAccountTypeByName("trade");
 		CashAccountType conversionType = accountTypeRepo.findCashAccountTypeByName("conversion");
 
 		CashAccount tradeFrom    = getAccount(broker, currencyFrom, tradeType);
@@ -708,103 +708,135 @@ public class CashService {
 	                       String brokerName,
 	                       CurrencyDTO currencyDTO,
 	                       double capital) throws JsonProcessingException {
-		final long   items      = evalDTO.items();
-		final double priceOpen  = evalDTO.price();
-		final double volume     = priceOpen * items;
-		final double feesOpen   = getFees(brokerName, currencyDTO, items, volume).getAmount();
-		final double takeProfit = evalDTO.takeProfit();
-		final double stopLoss   = evalDTO.stopLoss();
-		final int    shortC     = evalDTO.isShort() ? -1 : 1;
+		final long   items           = evalDTO.items();
+		final double priceOpen       = evalDTO.price();
+		final double volume          = priceOpen * items;
+		final double openCommission  = estimatedCommission(brokerName, currencyDTO, items, volume).getAmount();
+		final double takeProfit      = evalDTO.takeProfit();
+		final double closeCommission = estimatedCommission(brokerName, currencyDTO, items, takeProfit * items).getAmount();
+		final double stopLoss        = evalDTO.stopLoss();
+		final int    shortC          = evalDTO.isShort() ? -1 : 1;
 
 		final double breakEven = getBreakEven(shortC, brokerName, currencyDTO, items, priceOpen);
 
-		final double profit = abs(takeProfit - breakEven) * items;
+		final double profit = abs(takeProfit - priceOpen) * items;
 
-		final double riskRewardPc = abs(stopLoss - breakEven) / abs(takeProfit - breakEven) * 100;
+		final double loss = abs(stopLoss - breakEven) * items;
 
-		final double riskPc = getRisk(evalDTO, brokerName, currencyDTO, capital);
+		final double taxes = getTaxes(profit);
 
-		double feesClose = getFees(brokerName, currencyDTO, items, takeProfit * items).getAmount();
-		double taxes     = getTaxes(profit);
+		final double outcomeExp = abs(profit - openCommission - closeCommission - taxes);
 
-		final double outcomeExp = abs(profit - feesOpen - feesClose - taxes);
+		final double riskRewardPc = round(loss / outcomeExp * 100, 2);
 
-		final double gainPc = outcomeExp / volume * 100;
+		final double riskPc = round(getRiskPc(items,
+		                                      stopLoss,
+		                                      breakEven,
+		                                      capital,
+		                                      evalDTO.date(),
+		                                      currencyDTO
+		), 2);
 
-		return new EvalOutDTO(outcomeExp, gainPc, feesOpen, riskPc, riskRewardPc, breakEven, volume);
+		final double gainPc = round(outcomeExp / volume * 100, 2);
+
+		return new EvalOutDTO(outcomeExp, gainPc, openCommission, riskPc, riskRewardPc, breakEven, volume);
 	}
 
-	public double getRisk(EvalInDTO evalDTO,
-	                      String brokerName,
-	                      CurrencyDTO currencyDTO,
-	                      double capital) throws JsonProcessingException {
-		final LocalDate date       = evalDTO.date();
-		final double    priceOpen  = evalDTO.price();
-		final long      currencyId = currencyDTO.getId();
-		final double    stopLoss   = evalDTO.stopLoss();
+	/**
+	 * Estimation of risk per trade in percent.
+	 * Calculates a maximum loss in percent to a risk base.
+	 * The risk base is the capital or less.
+	 *
+	 * @param items       number of securities
+	 * @param stopLoss    stop loss
+	 * @param breakEven   break even point
+	 * @param capital     the capital
+	 * @param openDate    the date of opening position
+	 * @param currencyDTO currency
+	 * @return estimated risk per trade in percent
+	 * @throws JsonProcessingException exception
+	 */
+	public double getRiskPc(long items,
+	                        double stopLoss,
+	                        double breakEven,
+	                        double capital,
+	                        LocalDate openDate,
+	                        CurrencyDTO currencyDTO) throws JsonProcessingException {
+		final long   currencyId = currencyDTO.getId();
+		final double riskBase   = getRiskBase(capital);
 
-		final double riskBase = getRiskBase(capital);
-
-		final long items = evalDTO.items();
-
-		final double priceUSD =
+		final double breakEvenUSD =
 				currencyRateService.convertToUSD(
 						currencyId,
-						priceOpen,
-						date);
+						breakEven,
+						openDate);
 
 		final double stopLossUSD =
 				currencyRateService.convertToUSD(
 						currencyId,
 						stopLoss,
-						date);
+						openDate);
 
-		final double sum = items * priceUSD;
+		final double breakEvenSum = items * breakEvenUSD;
 
 		final double sumLoss = items * stopLossUSD;
 
-		final double losses = abs(sum - sumLoss);
+		final double losses = abs(breakEvenSum - sumLoss);
 
-		final double feesOpen = getFees(brokerName, currencyDTO, items, sum).getAmount();
-
-		final double feesLoss = getFees(brokerName, currencyDTO, items, sumLoss).getAmount();
-
-		return (losses + feesOpen + feesLoss) / (riskBase) * 100.0;
+		return losses / riskBase * 100.0;
 	}
 
-	private double getBreakEven(int shortC,
-	                            String brokerName,
-	                            CurrencyDTO currencyDTO,
-	                            long items,
-	                            double priceOpen) throws JsonProcessingException {
-		double sumOpen   = items * priceOpen;
-		double feesOpen  = getFees(brokerName, currencyDTO, items, sumOpen).getAmount();
-		double sumClose  = sumOpen;
-		double feesClose = getFees(brokerName, currencyDTO, items, sumClose).getAmount();
-		double taxes     = getTaxes(abs(sumClose - sumOpen));
+	/**
+	 * Estimation of a break even point
+	 *
+	 * @param shortC      -1 is short, +1 if long
+	 * @param brokerName  a broker name
+	 * @param currencyDTO currency
+	 * @param items       number of securities
+	 * @param priceOpen   the price of opening the trade
+	 * @return estimated break even point
+	 */
+	public double getBreakEven(int shortC,
+	                           String brokerName,
+	                           CurrencyDTO currencyDTO,
+	                           long items,
+	                           double priceOpen) {
+		double sumOpen         = items * priceOpen;
+		double openCommission  = estimatedCommission(brokerName, currencyDTO, items, sumOpen).getAmount();
+		double sumClose        = sumOpen;
+		double closeCommission = estimatedCommission(brokerName, currencyDTO, items, sumClose).getAmount();
+		double taxes           = getTaxes(abs(sumClose - sumOpen));
 
-		while (abs(sumClose - sumOpen) < feesOpen + feesClose + taxes) {
+		while (abs(sumClose - sumOpen) < openCommission + closeCommission + taxes) {
 			sumClose = sumClose + (shortC * 0.01);
-			feesClose = getFees(brokerName, currencyDTO, items, sumClose).getAmount();
-			taxes = getTaxes(shortC * sumClose - (shortC * sumOpen));
+			closeCommission = estimatedCommission(brokerName, currencyDTO, items, sumClose).getAmount();
+			taxes = getTaxes(abs(sumClose - sumOpen));
 		}
 
-		return sumClose / items;
+		return round(sumClose / items, 2);
 	}
 
 	private double getTaxes(double sum) {
-		double leftSum = sum;
-		double ipn     = leftSum * 0.1; // (ИПН)
-		leftSum = leftSum - ipn;
-
-		return sum - leftSum;
+		return sum * 0.1; // ИПН
 	}
 
-
-	public Fees getFees(String brokerName, CurrencyDTO currencyDTO, long items, Double sum) throws JsonProcessingException {
+	/**
+	 * Calculates estimated commission.
+	 * Since this value is used in a trade assessment, we use the currency
+	 * of the trade, although in fact the commission is always paid in
+	 * the currency of a broker.
+	 *
+	 * @param brokerName  the name of the broker
+	 * @param currencyDTO the currency of the trade
+	 * @param items       the number of securities
+	 * @param sum         the sum of the trade
+	 * @return the commission
+	 */
+	public Commission estimatedCommission(String brokerName, CurrencyDTO currencyDTO, long items, Double sum) {
 		double fixed  = 0.0;
 		double fly    = 0.0;
 		double amount = 0.0;
+
 
 		if (brokerName.equals("FreedomFN")) {
 			if (currencyDTO.getName().equals("KZT")) {
@@ -820,10 +852,13 @@ public class CashService {
 				double min = items * 0.005;
 				amount = Math.min(max, min);
 				amount = amount < 1 ? 1 : amount;
+			} else {
+				throw new IllegalArgumentException("Unsupported currency for Interactive broker");
 			}
+		} else {
+			throw new IllegalArgumentException("Unsupported broker");
 		}
-		amount = currencyRateService.convertToUSD(currencyDTO.getId(), amount, LocalDate.now());
-		return new Fees(fixed, fly, amount);
+		return new Commission(fixed, round(fly, 2), round(amount, 2));
 	}
 
 	/**
