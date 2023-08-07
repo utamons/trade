@@ -2,7 +2,6 @@ package com.corn.trade.entity;
 
 import javax.persistence.*;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "currency_rate")

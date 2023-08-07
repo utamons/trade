@@ -28,7 +28,7 @@ public class CurrencyRateService {
 
 	private static List<Currency> currencies;
 
-	public static boolean IS_EXTERNAL_STARTED = false;
+	private static boolean isExternalStarted = false;
 
 	private final CurrencyRateRepository repository;
 
@@ -37,8 +37,10 @@ public class CurrencyRateService {
 	public CurrencyRateService(CurrencyRateRepository repository, CurrencyRepository currencyRepository,
 	                           EntityManager entityManager) {
 		this.repository = repository;
-		currencies = currencyRepository.findAll();
-		currencies.forEach(entityManager::detach);
+		if (currencies == null) {
+			currencies = currencyRepository.findAll();
+			currencies.forEach(entityManager::detach);
+		}
 	}
 
 	public Currency getCurrencyByName(String name) {
@@ -71,9 +73,9 @@ public class CurrencyRateService {
 			rates.add(rateDTO);
 			return rateDTO;
 		} else {
-			if (IS_EXTERNAL_STARTED) {
+			if (isExternalStarted) {
 				logger.info("Waiting for the external API call to finish...");
-				while (IS_EXTERNAL_STARTED) {
+				while (isExternalStarted) {
 					try {
 						TimeUnit.MILLISECONDS.sleep(100);
 					} catch (InterruptedException e) {
@@ -112,10 +114,10 @@ public class CurrencyRateService {
 
 
 	private CurrencyRateDTO getExternalRate(Long currencyId, LocalDate date) throws JsonProcessingException {
-		IS_EXTERNAL_STARTED = true;
+		isExternalStarted = true;
 		List<CurrencyRateDTO> rates = currencyAPI.getRatesAt(date);
 		if (rates.isEmpty()) {
-			IS_EXTERNAL_STARTED = false;
+			isExternalStarted = false;
 			return null;
 		}
 
@@ -134,7 +136,7 @@ public class CurrencyRateService {
 		Currency     currency     = getCurrencyById(currencyId);
 		CurrencyRate currencyRate = repository.findRateByCurrencyAndDate(currency, date);
 
-		IS_EXTERNAL_STARTED = false;
+		isExternalStarted = false;
 		return CurrencyRateMapper.toDTO(currencyRate);
 	}
 }

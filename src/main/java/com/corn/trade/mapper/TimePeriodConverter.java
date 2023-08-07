@@ -13,6 +13,10 @@ import java.time.temporal.TemporalAdjusters;
 @SuppressWarnings("unused")
 public class TimePeriodConverter {
 
+	private TimePeriodConverter() {
+		throw new IllegalStateException("Utility class");
+	}
+
 	public static Pair<LocalDateTime, LocalDateTime> getPreviousTimeRange(Pair<LocalDateTime, LocalDateTime> timeRange) {
 		LocalDateTime start = timeRange.getLeft();
 		LocalDateTime end = timeRange.getRight();
@@ -39,42 +43,41 @@ public class TimePeriodConverter {
 		LocalDateTime now = LocalDateTime.now();
 		LocalDateTime start, end;
 
-		switch (timePeriod) {
-			case CURRENT_WEEK:
+		end = switch (timePeriod) {
+			case CURRENT_WEEK -> {
 				start = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-				end = now.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
-				break;
-			case LAST_WEEK:
+				yield now.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+			}
+			case LAST_WEEK -> {
 				start = now.minusWeeks(1).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-				end = now.minusWeeks(1).with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
-				break;
-			case CURRENT_MONTH:
+				yield now.minusWeeks(1).with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+			}
+			case CURRENT_MONTH -> {
 				start = now.with(TemporalAdjusters.firstDayOfMonth());
-				end = now.with(TemporalAdjusters.lastDayOfMonth());
-				break;
-			case LAST_MONTH:
+				yield now.with(TemporalAdjusters.lastDayOfMonth());
+			}
+			case LAST_MONTH -> {
 				start = now.minusMonths(1).with(TemporalAdjusters.firstDayOfMonth());
-				end = now.minusMonths(1).with(TemporalAdjusters.lastDayOfMonth());
-				break;
-			case CURRENT_QUARTER:
+				yield now.minusMonths(1).with(TemporalAdjusters.lastDayOfMonth());
+			}
+			case CURRENT_QUARTER -> {
 				start = now.with(getQuarterStart());
-				end = now.with(getQuarterEnd());
-				break;
-			case LAST_QUARTER:
+				yield now.with(getQuarterEnd());
+			}
+			case LAST_QUARTER -> {
 				start = now.minusMonths(3).with(getQuarterStart());
-				end = now.minusMonths(3).with(getQuarterEnd());
-				break;
-			case CURRENT_YEAR:
+				yield now.minusMonths(3).with(getQuarterEnd());
+			}
+			case CURRENT_YEAR -> {
 				start = now.with(TemporalAdjusters.firstDayOfYear());
-				end = now.with(TemporalAdjusters.lastDayOfYear());
-				break;
-			case LAST_YEAR:
+				yield now.with(TemporalAdjusters.lastDayOfYear());
+			}
+			case LAST_YEAR -> {
 				start = now.minusYears(1).with(TemporalAdjusters.firstDayOfYear());
-				end = now.minusYears(1).with(TemporalAdjusters.lastDayOfYear());
-				break;
-			default:
-				throw new IllegalArgumentException("Unsupported TimePeriod: " + timePeriod);
-		}
+				yield now.minusYears(1).with(TemporalAdjusters.lastDayOfYear());
+			}
+			default -> throw new IllegalArgumentException("Unsupported TimePeriod: " + timePeriod);
+		};
 
 		return new Pair<>(start, end);
 	}

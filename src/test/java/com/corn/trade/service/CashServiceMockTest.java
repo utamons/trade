@@ -8,6 +8,8 @@ import com.corn.trade.repository.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 
 import java.time.LocalDate;
@@ -18,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class CashServiceMockTest {
+class CashServiceMockTest {
 	private CashService               cashService;
 	@Mock
 	private CurrencyRateService       currencyRateService;
@@ -38,7 +40,7 @@ public class CashServiceMockTest {
 	private TradeLogRepository        tradeLogRepo;
 
 	@BeforeEach
-	public void setup() {
+	void setup() {
 		currencyRateService = mock(CurrencyRateService.class);
 		tradeLogRepo = mock(TradeLogRepository.class);
 		cashService = new CashService(
@@ -54,7 +56,7 @@ public class CashServiceMockTest {
 	}
 
 	@Test
-	public void testEstimatedCommission_FreedomFN_KZT() throws JsonProcessingException {
+	void testEstimatedCommission_FreedomFN_KZT() {
 		// Arrange
 		String      brokerName  = "FreedomFN";
 		CurrencyDTO currencyDTO = new CurrencyDTO(1L, "KZT");
@@ -71,7 +73,7 @@ public class CashServiceMockTest {
 	}
 
 	@Test
-	public void testEstimatedCommission_FreedomFN_USD() throws JsonProcessingException {
+	void testEstimatedCommission_FreedomFN_USD() {
 		// Arrange
 		String      brokerName  = "FreedomFN";
 		CurrencyDTO currencyDTO = new CurrencyDTO(2L, "USD");
@@ -88,7 +90,7 @@ public class CashServiceMockTest {
 	}
 
 	@Test
-	public void testEstimatedCommission_Interactive_USD() {
+	void testEstimatedCommission_Interactive_USD() {
 		// Arrange
 		String      brokerName  = "Interactive";
 		CurrencyDTO currencyDTO = new CurrencyDTO(2L, "USD");
@@ -104,98 +106,31 @@ public class CashServiceMockTest {
 		assertEquals(1.0, commission.getAmount());
 	}
 
-	@Test
-	public void testBreakEven_Interactive_USD_Long() {
+	@ParameterizedTest
+	@CsvSource({
+			"1, Interactive, USD, 200.04",
+			"-1, Interactive, USD, 199.96",
+			"1, FreedomFN, USD, 202.32",
+			"-1, FreedomFN, USD, 197.71",
+			"1, FreedomFN, KZT, 200.38",
+			"-1, FreedomFN, KZT, 199.62",
+
+	})
+	void testBreakEven(int shortC, String brokerName, String currency, Double result) {
 		// Arrange
-		String      brokerName  = "Interactive";
-		CurrencyDTO currencyDTO = new CurrencyDTO(2L, "USD");
+		CurrencyDTO currencyDTO = new CurrencyDTO(1L, currency);
 		long        items       = 50;
 		double      priceOpen   = 200.0;
 
 		// Act
-		double breakEven = cashService.getBreakEven(1, brokerName, currencyDTO, items, priceOpen);
+		double breakEven = cashService.getBreakEven(shortC, brokerName, currencyDTO, items, priceOpen);
 
 		// Assert
-		assertEquals(200.04, breakEven);
+		assertEquals(result, breakEven);
 	}
 
 	@Test
-	public void testBreakEven_Interactive_USD_Short() {
-		// Arrange
-		String      brokerName  = "Interactive";
-		CurrencyDTO currencyDTO = new CurrencyDTO(2L, "USD");
-		long        items       = 50;
-		double      priceOpen   = 200.0;
-
-		// Act
-		double breakEven = cashService.getBreakEven(-1, brokerName, currencyDTO, items, priceOpen);
-
-		// Assert
-		assertEquals(199.96, breakEven);
-	}
-
-	@Test
-	public void testBreakEven_Freedom_USD_Long() {
-		// Arrange
-		String      brokerName  = "FreedomFN";
-		CurrencyDTO currencyDTO = new CurrencyDTO(2L, "USD");
-		long        items       = 50;
-		double      priceOpen   = 200.0;
-
-		// Act
-		double breakEven = cashService.getBreakEven(1, brokerName, currencyDTO, items, priceOpen);
-
-		// Assert
-		assertEquals(202.32, breakEven);
-	}
-
-	@Test
-	public void testBreakEven_Freedom_USD_Short() {
-		// Arrange
-		String      brokerName  = "FreedomFN";
-		CurrencyDTO currencyDTO = new CurrencyDTO(2L, "USD");
-		long        items       = 50;
-		double      priceOpen   = 200.0;
-
-		// Act
-		double breakEven = cashService.getBreakEven(-1, brokerName, currencyDTO, items, priceOpen);
-
-		// Assert
-		assertEquals(197.71, breakEven);
-	}
-
-	@Test
-	public void testBreakEven_Freedom_KZT_Long() {
-		// Arrange
-		String      brokerName  = "FreedomFN";
-		CurrencyDTO currencyDTO = new CurrencyDTO(2L, "KZT");
-		long        items       = 50;
-		double      priceOpen   = 200.0;
-
-		// Act
-		double breakEven = cashService.getBreakEven(1, brokerName, currencyDTO, items, priceOpen);
-
-		// Assert
-		assertEquals(200.38, breakEven);
-	}
-
-	@Test
-	public void testBreakEven_Freedom_KZT_Short() {
-		// Arrange
-		String      brokerName  = "FreedomFN";
-		CurrencyDTO currencyDTO = new CurrencyDTO(2L, "KZT");
-		long        items       = 50;
-		double      priceOpen   = 200.0;
-
-		// Act
-		double breakEven = cashService.getBreakEven(-1, brokerName, currencyDTO, items, priceOpen);
-
-		// Assert
-		assertEquals(199.62, breakEven);
-	}
-
-	@Test
-	public void testGetRiskPc() throws JsonProcessingException {
+	void testGetRiskPc() throws JsonProcessingException {
 		// Arrange
 		long        items       = 100;
 		double      stopLoss    = 80.0;
@@ -216,7 +151,7 @@ public class CashServiceMockTest {
 	}
 
 	@Test
-	public void testEvalLong() throws JsonProcessingException {
+	void testEvalLong() throws JsonProcessingException {
 		// Arrange
 		EvalInDTO dto = new EvalInDTO(
 				1L, 1L, 200.0, 10.0, 50L, 198.0, 210.0,
@@ -244,7 +179,7 @@ public class CashServiceMockTest {
 	}
 
 	@Test
-	public void testEvalShort() throws JsonProcessingException {
+	void testEvalShort() throws JsonProcessingException {
 		// Arrange
 		EvalInDTO dto = new EvalInDTO(
 				1L, 1L, 200.0, 10.0, 50L, 202.0, 190.0,
@@ -272,7 +207,7 @@ public class CashServiceMockTest {
 	}
 
 	@Test
-	public void testGetOpenPositionsUSD() throws JsonProcessingException {
+	void testGetOpenPositionsUSD() throws JsonProcessingException {
 		// Arrange
 		List<CurrencySumDTO> opens = new ArrayList<>();
 		opens.add(new CurrencySumDTO(1L, 100.0)); // Assuming currencyId 1 and sum 100.0
@@ -293,7 +228,7 @@ public class CashServiceMockTest {
 	}
 
 	@Test
-	public void testGetOpenPositionsUSD_EmptyList() throws JsonProcessingException {
+	void testGetOpenPositionsUSD_EmptyList() throws JsonProcessingException {
 		// Arrange
 		List<CurrencySumDTO> opens = new ArrayList<>();
 
