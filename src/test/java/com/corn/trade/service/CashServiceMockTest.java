@@ -1,6 +1,7 @@
 package com.corn.trade.service;
 
 import com.corn.trade.dto.CurrencyDTO;
+import com.corn.trade.dto.CurrencySumDTO;
 import com.corn.trade.dto.EvalInDTO;
 import com.corn.trade.dto.EvalOutDTO;
 import com.corn.trade.repository.*;
@@ -10,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -37,6 +40,7 @@ public class CashServiceMockTest {
 	@BeforeEach
 	public void setup() {
 		currencyRateService = mock(CurrencyRateService.class);
+		tradeLogRepo = mock(TradeLogRepository.class);
 		cashService = new CashService(
 				accountRepo,
 				cashFlowRepo,
@@ -265,5 +269,41 @@ public class CashServiceMockTest {
 		assertEquals(22.77, evalOut.riskRewardPc());
 		assertEquals(199.96, evalOut.breakEven());
 		assertEquals(10000.0, evalOut.volume());
+	}
+
+	@Test
+	public void testGetOpenPositionsUSD() throws JsonProcessingException {
+		// Arrange
+		List<CurrencySumDTO> opens = new ArrayList<>();
+		opens.add(new CurrencySumDTO(1L, 100.0)); // Assuming currencyId 1 and sum 100.0
+		opens.add(new CurrencySumDTO(2L, 200.0)); // Assuming currencyId 2 and sum 200.0
+
+		// Assume currencyRateService.convertToUSD will return the sum from arguments
+		when(currencyRateService.convertToUSD(1L, 100.0, LocalDate.now())).thenReturn(100.0);
+		when(currencyRateService.convertToUSD(2L, 200.0, LocalDate.now())).thenReturn(200.0);
+
+		// Assume tradeLogRepo.openLongSums() returns the list of opens
+		when(tradeLogRepo.openLongSums()).thenReturn(opens);
+
+		// Act
+		double openPositionsUSD = cashService.getOpenPositionsUSD();
+
+		// Assert
+		assertEquals(300.0, openPositionsUSD);
+	}
+
+	@Test
+	public void testGetOpenPositionsUSD_EmptyList() throws JsonProcessingException {
+		// Arrange
+		List<CurrencySumDTO> opens = new ArrayList<>();
+
+		// Assume tradeLogRepo.openLongSums() returns an empty list
+		when(tradeLogRepo.openLongSums()).thenReturn(opens);
+
+		// Act
+		double openPositionsUSD = cashService.getOpenPositionsUSD();
+
+		// Assert
+		assertEquals(0.0, openPositionsUSD);
 	}
 }
