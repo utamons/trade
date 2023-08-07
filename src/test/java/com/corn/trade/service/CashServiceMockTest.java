@@ -212,19 +212,25 @@ class CashServiceMockTest {
 		List<CurrencySumDTO> opens = new ArrayList<>();
 		opens.add(new CurrencySumDTO(1L, 100.0)); // Assuming currencyId 1 and sum 100.0
 		opens.add(new CurrencySumDTO(2L, 200.0)); // Assuming currencyId 2 and sum 200.0
+		List<CurrencySumDTO> shortRisks = new ArrayList<>();
+		shortRisks.add(new CurrencySumDTO(1L, 10.0)); // Assuming currencyId 1 and sum 10.0
+		shortRisks.add(new CurrencySumDTO(2L, 20.0)); // Assuming currencyId 2 and sum 20.0
 
 		// Assume currencyRateService.convertToUSD will return the sum from arguments
 		when(currencyRateService.convertToUSD(1L, 100.0, LocalDate.now())).thenReturn(100.0);
 		when(currencyRateService.convertToUSD(2L, 200.0, LocalDate.now())).thenReturn(200.0);
+		when(currencyRateService.convertToUSD(1L, 10.0, LocalDate.now())).thenReturn(10.0);
+		when(currencyRateService.convertToUSD(2L, 20.0, LocalDate.now())).thenReturn(20.0);
 
 		// Assume tradeLogRepo.openLongSums() returns the list of opens
 		when(tradeLogRepo.openLongSums()).thenReturn(opens);
+		when(tradeLogRepo.openShortRisks()).thenReturn(shortRisks);
 
 		// Act
-		double openPositionsUSD = cashService.getOpenPositionsUSD();
+		double openPositionsUSD = cashService.estimatedPositionsUSD();
 
 		// Assert
-		assertEquals(300.0, openPositionsUSD);
+		assertEquals(270.0, openPositionsUSD);
 	}
 
 	@Test
@@ -236,7 +242,7 @@ class CashServiceMockTest {
 		when(tradeLogRepo.openLongSums()).thenReturn(opens);
 
 		// Act
-		double openPositionsUSD = cashService.getOpenPositionsUSD();
+		double openPositionsUSD = cashService.estimatedPositionsUSD();
 
 		// Assert
 		assertEquals(0.0, openPositionsUSD);

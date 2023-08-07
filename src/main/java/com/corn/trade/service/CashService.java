@@ -547,13 +547,13 @@ public class CashService {
 		LocalDate         today     = LocalDate.now();
 		for (CashAccount account : accounts) {
 			double amount = getAccountTotal(account);
-			capital = capital + currencyRateService.convertToUSD(
+			capital += currencyRateService.convertToUSD(
 					account.getCurrency().getId(),
 					amount,
 					today);
 		}
 
-		return capital + getOpenPositionsUSD();
+		return capital + estimatedPositionsUSD();
 	}
 
 	public double getAccountTotal(CashAccount account) {
@@ -577,13 +577,33 @@ public class CashService {
 		return capital;
 	}
 
-	public double getOpenPositionsUSD() throws JsonProcessingException {
+	/**
+	 * Estimated capital, stored in open positions
+	 * <p>
+	 * We take all long positions at maximum risk (all losses) and
+	 * distract all maximum risks in short positions (all losses).
+	 * <p>
+	 * Thus, we get the capital that is stored in open positions in the worth case.
+	 *
+	 * @return the estimated capital, stored in open positions
+	 * @throws JsonProcessingException if currency rate service fails.
+	 */
+	public double estimatedPositionsUSD() throws JsonProcessingException {
 		List<CurrencySumDTO> opens = tradeLogRepo.openLongSums();
+		List<CurrencySumDTO> shortRisks = tradeLogRepo.openShortRisks();
+
 		double               sum   = 0.0;
 		LocalDate            date  = LocalDate.now();
 
 		for (CurrencySumDTO dto : opens) {
 			sum += currencyRateService.convertToUSD(
+					dto.getCurrencyId(),
+					dto.getSum(),
+					date);
+		}
+
+		for (CurrencySumDTO dto : shortRisks) {
+			sum -= currencyRateService.convertToUSD(
 					dto.getCurrencyId(),
 					dto.getSum(),
 					date);
