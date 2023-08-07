@@ -15,9 +15,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class TradeLogMapperTest {
+class TradeLogMapperTest {
 	@Test
-	public void testToOpen_LongPosition() {
+	void testToOpen_LongPosition() {
 		// Arrange
 		Broker broker = mock(Broker.class);
 		Market market = mock(Market.class);
@@ -69,7 +69,7 @@ public class TradeLogMapperTest {
 	}
 
 	@Test
-	public void testToDTO() throws JsonProcessingException {
+	void testToDTO() throws JsonProcessingException {
 		// Arrange
 		TradeLog entity   = mock(TradeLog.class);
 		Ticker  ticker   = mock(Ticker.class);

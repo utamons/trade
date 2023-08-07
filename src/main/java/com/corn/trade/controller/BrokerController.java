@@ -3,7 +3,6 @@ package com.corn.trade.controller;
 import com.corn.trade.dto.BrokerDTO;
 import com.corn.trade.dto.BrokerStatsDTO;
 import com.corn.trade.service.BrokerService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -28,7 +27,7 @@ public class BrokerController {
 	}
 
 	@GetMapping("/stats")
-	public BrokerStatsDTO getStats(@RequestParam("brokerId") Long brokerId) throws JsonProcessingException {
+	public BrokerStatsDTO getStats(@RequestParam("brokerId") Long brokerId) {
 		return service.getStats(brokerId);
 	}
 

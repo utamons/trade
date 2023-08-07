@@ -51,13 +51,6 @@ public class CashController {
 		double            sumOutcomes = 0.0;
 		final LocalDate   today       = LocalDate.now();
 
-		/* for (TradeLogDTO dto : closed) {
-			sumOutcomes = sumOutcomes +
-			              currencyRateService.convertToUSD(dto.currency().getId(),
-			                                               dto.getOutcomeDouble(),
-			                                               today);
-		}*/
-
 		double profit = capital == 0 ? 0.0 : sumOutcomes / capital * 100.0;
 
 		double riskBase = service.getRiskBase(capital);

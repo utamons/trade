@@ -6,7 +6,6 @@ import com.corn.trade.repository.TickerRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class TickerService {
@@ -18,7 +17,7 @@ public class TickerService {
 	}
 
 	public List<TickerDTO> getAll() {
-		return repository.findAll().stream().map(TickerMapper::toDTO).collect(Collectors.toList());
+		return repository.findAll().stream().map(TickerMapper::toDTO).toList();
 	}
 
 }

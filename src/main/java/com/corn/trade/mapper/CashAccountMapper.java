@@ -4,6 +4,11 @@ import com.corn.trade.dto.CashAccountDTO;
 import com.corn.trade.entity.CashAccount;
 
 public class CashAccountMapper {
+
+	private CashAccountMapper() {
+		throw new IllegalStateException("Utility class");
+	}
+
 	public static CashAccountDTO toDTO(CashAccount entity) {
 		return new CashAccountDTO(
 				entity.getId(),

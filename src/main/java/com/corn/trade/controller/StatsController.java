@@ -3,7 +3,6 @@ package com.corn.trade.controller;
 import com.corn.trade.dto.StatsData;
 import com.corn.trade.service.StatsService;
 import com.corn.trade.service.TimePeriod;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,7 +21,7 @@ public class StatsController {
 	}
 
 	@GetMapping(produces=MediaType.APPLICATION_JSON_VALUE)
-	public StatsData getStats(@RequestParam TimePeriod timePeriod) throws JsonProcessingException {
+	public StatsData getStats(@RequestParam TimePeriod timePeriod) {
 		return service.getStats(timePeriod);
 	}
 }

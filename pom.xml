@@ -22,7 +22,8 @@
 		<sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
 		<sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
 		<sonar.language>java</sonar.language>
-		<sonar.coverage.exclusions>src/main/java/com/corn/trade/TradeApplication.java,src/test/java/**/*.*,src/main/java/com/corn/trade/dto/**/*.*,src/main/java/com/corn/trade/entity/**/*.*,src/main/java/com/corn/trade/exception/**/*.*,src/main/java/com/corn/trade/repository/**/*.*,src/main/java/com/corn/trade/configuration/**/*.*,,src/main/java/com/corn/trade/controller/**/*.*</sonar.coverage.exclusions>
+		<sonar.exclusions>src/test/java/**/*.*</sonar.exclusions>
+		<sonar.coverage.exclusions>src/main/java/com/corn/trade/TradeApplication.java,src/main/java/com/corn/trade/dto/**/*.*,src/main/java/com/corn/trade/entity/**/*.*,src/main/java/com/corn/trade/exception/**/*.*,src/main/java/com/corn/trade/repository/**/*.*,src/main/java/com/corn/trade/configuration/**/*.*,src/main/java/com/corn/trade/controller/**/*.*,src/main/java/com/corn/trade/api/**/*.*</sonar.coverage.exclusions>
 	</properties>
 	<dependencies>
 		<dependency>

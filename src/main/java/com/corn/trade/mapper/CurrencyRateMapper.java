@@ -5,6 +5,11 @@ import com.corn.trade.entity.Currency;
 import com.corn.trade.entity.CurrencyRate;
 
 public class CurrencyRateMapper {
+
+	private CurrencyRateMapper() {
+		throw new IllegalStateException("Utility class");
+	}
+
 	public static CurrencyRateDTO toDTO(CurrencyRate entity) {
 		if (entity == null)
 			return null;

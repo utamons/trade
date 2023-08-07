@@ -16,6 +16,7 @@ import java.util.List;
 public class CurrencyAPI {
 
 	public static final Logger logger = LoggerFactory.getLogger(CurrencyAPI.class);
+	public static final String VALUE = "value";
 	private final RestTemplate restTemplate = new RestTemplate();
 
 	public List<CurrencyRateDTO> getRatesAt(LocalDate date) throws JsonProcessingException {
@@ -46,19 +47,19 @@ public class CurrencyAPI {
 			result.add(new CurrencyRateDTO(null,
 			                               date,
 			                               new CurrencyDTO(null, "KZT"),
-			                               data.get("KZT").get("value").doubleValue()));
+			                               data.get("KZT").get(VALUE).doubleValue()));
 			result.add(new CurrencyRateDTO(null,
 			                               date,
 			                               new CurrencyDTO(null, "EUR"),
-			                               data.get("EUR").get("value").doubleValue()));
+			                               data.get("EUR").get(VALUE).doubleValue()));
 			result.add(new CurrencyRateDTO(null,
 			                               date,
 			                               new CurrencyDTO(null, "GBP"),
-			                               data.get("GBP").get("value").doubleValue()));
+			                               data.get("GBP").get(VALUE).doubleValue()));
 			result.add(new CurrencyRateDTO(null,
 			                               date,
 			                               new CurrencyDTO(null, "HKD"),
-			                               data.get("HKD").get("value").doubleValue()));
+			                               data.get("HKD").get(VALUE).doubleValue()));
 
 		}
 		return result;

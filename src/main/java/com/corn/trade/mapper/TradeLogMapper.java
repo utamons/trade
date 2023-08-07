@@ -13,7 +13,7 @@ import static com.corn.trade.util.Util.round;
 
 @Service
 public class TradeLogMapper {
-	public static Logger              logger = LoggerFactory.getLogger(TradeLogMapper.class);
+	public static final Logger              logger = LoggerFactory.getLogger(TradeLogMapper.class);
 	private final CurrencyRateService currencyRateService;
 
 	public TradeLogMapper(CurrencyRateService currencyRateService) {

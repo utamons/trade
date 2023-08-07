@@ -6,7 +6,6 @@ import com.corn.trade.repository.MarketRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class MarketService {
@@ -18,7 +17,7 @@ public class MarketService {
 	}
 
 	public List<MarketDTO> getAll() {
-		return repository.findAll().stream().map(MarketMapper::toDTO).collect(Collectors.toList());
+		return repository.findAll().stream().map(MarketMapper::toDTO).toList();
 	}
 
 }

@@ -5,27 +5,20 @@ import com.corn.trade.entity.TradeLog;
 import com.corn.trade.mapper.TimePeriodConverter;
 import com.corn.trade.repository.TradeLogRepository;
 import com.corn.trade.util.Pair;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class StatsService {
-
-	private final CashService cashService;
-	private final CurrencyRateService currencyRateService;
 	private final TradeLogRepository tradeLogRepo;
 
-	public StatsService(CashService cashService, CurrencyRateService currencyRateService, TradeLogRepository tradeLogRepo) {
-		this.cashService = cashService;
-		this.currencyRateService = currencyRateService;
+	public StatsService(TradeLogRepository tradeLogRepo) {
 		this.tradeLogRepo = tradeLogRepo;
 	}
 
-	public StatsData getStats(TimePeriod timePeriod) throws JsonProcessingException {
+	public StatsData getStats(TimePeriod timePeriod) {
 		final Pair<LocalDateTime,LocalDateTime> period = TimePeriodConverter.getDateTimeRange(timePeriod);
 		final Pair<LocalDateTime,LocalDateTime> periodPrev = TimePeriodConverter.getPreviousTimeRange(period);
 
@@ -39,7 +32,7 @@ public class StatsService {
 		return stats;
 	}
 
-	public StatsData getStats(List<TradeLog> tradeLogs) throws JsonProcessingException {
+	public StatsData getStats(List<TradeLog> tradeLogs) {
 		throw new UnsupportedOperationException("Not implemented yet");
 	}
 }

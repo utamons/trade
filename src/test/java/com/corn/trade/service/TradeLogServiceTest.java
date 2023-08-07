@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class TradeLogServiceTest {
+class TradeLogServiceTest {
 
 	@Mock
 	private BrokerRepository brokerRepo;
@@ -42,13 +42,13 @@ public class TradeLogServiceTest {
 	private TradeLogService tradeServiceSpy;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 		MockitoAnnotations.openMocks(this);
 		tradeServiceSpy = spy(tradeService);
 	}
 
 	@Test
-	public void testOpen_LongPosition() {
+	void testOpen_LongPosition() {
 		// Arrange
 		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
 				"long",
@@ -101,7 +101,7 @@ public class TradeLogServiceTest {
 	}
 
 	@Test
-	public void testOpen_ShortPosition() {
+	void testOpen_ShortPosition() {
 		// Arrange
 		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
 				"short",
@@ -154,7 +154,7 @@ public class TradeLogServiceTest {
 	}
 
 	@Test
-	public void testValidateOpen_ValidLongPosition() {
+	void testValidateOpen_ValidLongPosition() {
 		// Arrange
 		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
 				"long",
@@ -185,7 +185,7 @@ public class TradeLogServiceTest {
 	}
 
 	@Test
-	public void testValidateOpen_InvalidLongPosition_TotalBoughtNull() {
+	void testValidateOpen_InvalidLongPosition_TotalBoughtNull() {
 		// Arrange
 		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
 				"long",
@@ -216,7 +216,7 @@ public class TradeLogServiceTest {
 	}
 
 	@Test
-	public void testValidateOpen_InvalidLongPosition_ItemBoughtNull() {
+	void testValidateOpen_InvalidLongPosition_ItemBoughtNull() {
 		// Arrange
 		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
 				"long",
@@ -247,7 +247,7 @@ public class TradeLogServiceTest {
 	}
 
 	@Test
-	public void testValidateOpen_InvalidLongPosition_TotalBoughtZero() {
+	void testValidateOpen_InvalidLongPosition_TotalBoughtZero() {
 		// Arrange
 		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
 				"long",
@@ -278,7 +278,7 @@ public class TradeLogServiceTest {
 	}
 
 	@Test
-	public void testValidateOpen_ValidShortPosition() {
+	void testValidateOpen_ValidShortPosition() {
 		// Arrange
 		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
 				"short",
@@ -309,7 +309,7 @@ public class TradeLogServiceTest {
 	}
 
 	@Test
-	public void testValidateOpen_InvalidShortPosition_TotalSoldNull() {
+	void testValidateOpen_InvalidShortPosition_TotalSoldNull() {
 		// Arrange
 		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
 				"short",
@@ -340,7 +340,7 @@ public class TradeLogServiceTest {
 	}
 
 	@Test
-	public void testValidateOpen_InvalidShortPosition_ItemSoldNull() {
+	void testValidateOpen_InvalidShortPosition_ItemSoldNull() {
 		// Arrange
 		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
 				"short",
@@ -371,7 +371,7 @@ public class TradeLogServiceTest {
 	}
 
 	@Test
-	public void testValidateOpen_InvalidShortPosition_TotalSoldZero() {
+	void testValidateOpen_InvalidShortPosition_TotalSoldZero() {
 		// Arrange
 		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
 				"short",
@@ -402,7 +402,7 @@ public class TradeLogServiceTest {
 	}
 
 	@Test
-	public void testClose_LongPosition() {
+	void testClose_LongPosition() {
 		// Arrange
 		TradeLogCloseDTO closeDTO = new TradeLogCloseDTO(
 				1L,
@@ -446,7 +446,7 @@ public class TradeLogServiceTest {
 	}
 
 	@Test
-	public void testClose_ShortPosition() {
+	void testClose_ShortPosition() {
 		// Arrange
 		TradeLogCloseDTO closeDTO = new TradeLogCloseDTO(
 				1L,
@@ -515,7 +515,7 @@ public class TradeLogServiceTest {
 	}
 
 	@Test
-	public void testValidateClose_InvalidLongPosition_TotalSoldNull() {
+	void testValidateClose_InvalidLongPosition_TotalSoldNull() {
 		// Arrange
 		TradeLogCloseDTO closeDTO = new TradeLogCloseDTO(
 				1L,
@@ -536,7 +536,7 @@ public class TradeLogServiceTest {
 	}
 
 	@Test
-	public void testValidateClose_InvalidLongPosition_ItemSoldNull() {
+	void testValidateClose_InvalidLongPosition_ItemSoldNull() {
 		// Arrange
 		TradeLogCloseDTO closeDTO = new TradeLogCloseDTO(
 				1L,
@@ -557,7 +557,7 @@ public class TradeLogServiceTest {
 	}
 
 	@Test
-	public void testValidateClose_InvalidLongPosition_TotalSoldSoldLessThanZero() {
+	void testValidateClose_InvalidLongPosition_TotalSoldSoldLessThanZero() {
 		// Arrange
 		TradeLogCloseDTO closeDTO = new TradeLogCloseDTO(
 				1L,
@@ -578,7 +578,7 @@ public class TradeLogServiceTest {
 	}
 
 	@Test
-	public void testValidateClose_InvalidLongPosition_ItemSoldSoldLessThanZero() {
+	void testValidateClose_InvalidLongPosition_ItemSoldSoldLessThanZero() {
 		// Arrange
 		TradeLogCloseDTO closeDTO = new TradeLogCloseDTO(
 				1L,
@@ -599,7 +599,7 @@ public class TradeLogServiceTest {
 	}
 
 	@Test
-	public void testValidateClose_InvalidShortPosition_TotalBoughtNull() {
+	void testValidateClose_InvalidShortPosition_TotalBoughtNull() {
 		// Arrange
 		TradeLogCloseDTO closeDTO = new TradeLogCloseDTO(
 				1L,
@@ -620,7 +620,7 @@ public class TradeLogServiceTest {
 	}
 
 	@Test
-	public void testValidateClose_InvalidShortPosition_ItemBoughtNull() {
+	void testValidateClose_InvalidShortPosition_ItemBoughtNull() {
 		// Arrange
 		TradeLogCloseDTO closeDTO = new TradeLogCloseDTO(
 				1L,
@@ -641,7 +641,7 @@ public class TradeLogServiceTest {
 	}
 
 	@Test
-	public void testValidateClose_InvalidShortPosition_TotalBoughtLessThanZero() {
+	void testValidateClose_InvalidShortPosition_TotalBoughtLessThanZero() {
 		// Arrange
 		TradeLogCloseDTO closeDTO = new TradeLogCloseDTO(
 				1L,
@@ -662,7 +662,7 @@ public class TradeLogServiceTest {
 	}
 
 	@Test
-	public void testValidateClose_InvalidShortPosition_ItemBoughtLessThanZero() {
+	void testValidateClose_InvalidShortPosition_ItemBoughtLessThanZero() {
 		// Arrange
 		TradeLogCloseDTO closeDTO = new TradeLogCloseDTO(
 				1L,

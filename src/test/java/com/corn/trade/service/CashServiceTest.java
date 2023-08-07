@@ -1,12 +1,10 @@
 package com.corn.trade.service;
 
 import com.corn.trade.dto.CashAccountDTO;
-import com.corn.trade.dto.CurrencyDTO;
 import com.corn.trade.dto.ExchangeDTO;
 import com.corn.trade.dto.TransferDTO;
 import com.corn.trade.entity.*;
 import com.corn.trade.repository.*;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.assertj.core.data.TemporalUnitWithinOffset;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,19 +15,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @Transactional
 @ActiveProfiles(value = "test")
-public class CashServiceTest {
+class CashServiceTest {
 
 	@Autowired
 	private CashAccountRepository cashAccountRepository;
@@ -91,7 +86,7 @@ public class CashServiceTest {
 	private CashAccountType borrowedType;
 
 	@BeforeEach
-	public void setup() {
+	void setup() {
 		entityManager.createQuery("DELETE FROM Broker").executeUpdate();
 		entityManager.flush();
 
@@ -149,7 +144,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testGetAccount_AccountNotFound_CreateNew() {
+	void testGetAccount_AccountNotFound_CreateNew() {
 		// Act
 		CashAccount savedAccount =
 				cashAccountRepository.findCashAccountByBrokerAndCurrencyAndType(brokerUSD, currencyUSD, savingType);
@@ -170,7 +165,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testGetAccount_AccountFound_ReturnExisting() {
+	void testGetAccount_AccountFound_ReturnExisting() {
 		// Arrange
 		CashAccount existingAccount = new CashAccount("TestAccount", currencyUSD, brokerUSD, savingType);
 		existingAccount = cashAccountRepository.save(existingAccount);
@@ -184,7 +179,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testTransfer_Successful_Transfer() {
+	void testTransfer_Successful_Transfer() {
 		// Arrange
 		LocalDateTime dateTime       = LocalDateTime.now();
 		double        transferAmount = 200.0;
@@ -212,7 +207,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testRefill_Successful_Refill() {
+	void testRefill_Successful_Refill() {
 		// Arrange
 		TransferDTO transferDTO = new TransferDTO(brokerUSD.getId(), currencyUSD.getId(), 1000.0);
 
@@ -242,7 +237,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testExchange_Successful_Exchange() {
+	void testExchange_Successful_Exchange() {
 		// Arrange
 		CashAccount tradeFrom = tradeAccountUSD;
 
@@ -287,7 +282,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testExchange_Successful_ExchangeBack() {
+	void testExchange_Successful_ExchangeBack() {
 		// Arrange
 		CashAccount tradeTo = tradeAccountUSD;
 
@@ -332,7 +327,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testCorrection_Successful_Positive_Correction() {
+	void testCorrection_Successful_Positive_Correction() {
 		// Arrange
 		LocalDateTime dateTime       = LocalDateTime.now();
 		double        transferAmount = 200.0;
@@ -358,7 +353,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testCorrection_Successful_Negative_Correction() {
+	void testCorrection_Successful_Negative_Correction() {
 		// Arrange
 		LocalDateTime dateTime       = LocalDateTime.now();
 		double        transferAmount = -200.0;
@@ -384,7 +379,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testCorrection_Successful_CorrectionAccount_Creation() {
+	void testCorrection_Successful_CorrectionAccount_Creation() {
 		// Arrange
 		LocalDateTime dateTime       = LocalDateTime.now();
 		double        transferAmount = 200.0;
@@ -415,7 +410,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testSuccessful_Fee_SameCurrency() {
+	void testSuccessful_Fee_SameCurrency() {
 		// Arrange
 
 
@@ -450,7 +445,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testSuccessful_Fee_DifferentCurrency() {
+	void testSuccessful_Fee_DifferentCurrency() {
 		// Arrange
 		CashAccount incomeAccountEUR = new CashAccount("income/Test Broker/EUR", currencyEUR, brokerEUR, incomeType);
 		incomeAccountEUR = cashAccountRepository.save(incomeAccountEUR);
@@ -488,7 +483,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testSuccessful_Fee_Account_Creation() {
+	void testSuccessful_Fee_Account_Creation() {
 		// Arrange
 		LocalDateTime dateTime = LocalDateTime.now();
 
@@ -526,7 +521,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testSellShort_Successful_Sell() {
+	void testSellShort_Successful_Sell() {
 		// Arrange
 		long     itemSold       = 100;
 		double   amountSold     = 1000.0;
@@ -558,7 +553,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testSellShort_NoTradeLog_Exception() {
+	void testSellShort_NoTradeLog_Exception() {
 		// Arrange
 		long     itemSold       = 100;
 		double   amountSold     = 1000.0;
@@ -573,7 +568,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testSell_Successful_CloseProfit() {
+	void testSell_Successful_CloseProfit() {
 		// Arrange
 		long     itemSold          = 100;
 		double   amountSold        = 1000.0;
@@ -611,7 +606,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testSell_Successful_CloseLoss() {
+	void testSell_Successful_CloseLoss() {
 		// Arrange
 		long     itemSold          = 100;
 		double   amountSold        = 900.0;
@@ -651,7 +646,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testSell_Successful_Partial_CloseProfit() {
+	void testSell_Successful_Partial_CloseProfit() {
 		// Arrange
 		long     itemSold          = 10;
 		double   amountSold        = 100.0;
@@ -690,7 +685,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testSell_Successful_Partial_CloseLoss() {
+	void testSell_Successful_Partial_CloseLoss() {
 		// Arrange
 		long     itemSold          = 10;
 		double   amountSold        = 80.0;
@@ -729,7 +724,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testSell_Successful_Close2Parts() {
+	void testSell_Successful_Close2Parts() {
 		// Arrange
 		long     itemSold          = 50;
 		double   amountSold        = 500.0;
@@ -768,7 +763,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testSell_EmptyTradeLog_Exception() {
+	void testSell_EmptyTradeLog_Exception() {
 		// Arrange
 		long   itemSold          = 100;
 		double amountSold        = 1000.0;
@@ -788,7 +783,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testSell_IllegalBoughtAndSold_Exception() {
+	void testSell_IllegalBoughtAndSold_Exception() {
 		// Arrange
 		long     itemSold          = 50;
 		double   amountSold        = 500.0;
@@ -825,7 +820,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testBuy_Successful_Buy() {
+	void testBuy_Successful_Buy() {
 		// Arrange
 		long     itemBought     = 100;
 		double   amountBought   = 1000.0;
@@ -857,7 +852,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testBuy_NoTradeLog_Exception() {
+	void testBuy_NoTradeLog_Exception() {
 		// Arrange
 		long     itemBought     = 100;
 		double   amountBought   = 1000.0;
@@ -879,7 +874,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testBuyShort_Successful_CloseProfit() {
+	void testBuyShort_Successful_CloseProfit() {
 		// Arrange
 		long     itemBought          = 100;
 		double   amountBought        = 1000.0;
@@ -922,7 +917,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testBuyShort_Successful_CloseLoss() {
+	void testBuyShort_Successful_CloseLoss() {
 		// Arrange
 		long     itemBought          = 100;
 		double   amountBought        = 1000.0;
@@ -965,7 +960,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testBuyShort_Successful_Close2Parts() {
+	void testBuyShort_Successful_Close2Parts() {
 		// Arrange
 		long     itemBought          = 50;
 		double   amountBought        = 500.0;
@@ -1010,7 +1005,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testBuyShort_Successful_PartialCloseProfit() {
+	void testBuyShort_Successful_PartialCloseProfit() {
 		// Arrange
 		long     itemBought          = 50;
 		double   amountBought        = 500.0;
@@ -1053,7 +1048,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testBuyShort_Successful_PartialCloseLoss() {
+	void testBuyShort_Successful_PartialCloseLoss() {
 		// Arrange
 		long     itemBought          = 50;
 		double   amountBought        = 550.0;
@@ -1096,7 +1091,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testBuyShort_IllegalBoughtAndSoldException() {
+	void testBuyShort_IllegalBoughtAndSoldException() {
 		// Arrange
 		long     itemBought          = 110;
 		double   amountBought        = 550.0;
@@ -1133,7 +1128,7 @@ public class CashServiceTest {
 	}
 
 	@Test
-	public void testBuyShort_TradeLogRequiredException() {
+	void testBuyShort_TradeLogRequiredException() {
 		// Arrange
 		long   itemBought          = 110;
 		double amountBought        = 550.0;

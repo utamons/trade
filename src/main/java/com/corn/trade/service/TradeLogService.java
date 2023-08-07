@@ -25,13 +25,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
 public class TradeLogService {
 
-	private final static Logger logger = LoggerFactory.getLogger(TradeLogService.class);
+	private static final Logger logger = LoggerFactory.getLogger(TradeLogService.class);
 
 	private final TradeLogRepository tradeLogRepo;
 	private final BrokerRepository   brokerRepo;
@@ -88,14 +87,11 @@ public class TradeLogService {
 	}
 
 	public void validateOpen(TradeLogOpenDTO openDTO, boolean isLong) {
-		if (isLong && openDTO.totalBought() == null)
-			throw new IllegalArgumentException("Total bought must not be null");
-		if (isLong && openDTO.itemBought() == null)
-			throw new IllegalArgumentException("Items bought must not be null");
-		if (isLong && openDTO.totalBought() <= 0)
-			throw new IllegalArgumentException("Total bought must be greater than 0");
-		if (isLong && openDTO.itemBought() <= 0)
-			throw new IllegalArgumentException("Items bought must be greater than 0");
+		validateOpenLong(openDTO, isLong);
+		validateOpenShort(openDTO, isLong);
+	}
+
+	private static void validateOpenShort(TradeLogOpenDTO openDTO, boolean isLong) {
 		if (!isLong && openDTO.totalSold() == null)
 			throw new IllegalArgumentException("Total sold must not be null");
 		if (!isLong && openDTO.itemSold() == null)
@@ -106,15 +102,23 @@ public class TradeLogService {
 			throw new IllegalArgumentException("Items sold must be greater than 0");
 	}
 
+	private static void validateOpenLong(TradeLogOpenDTO openDTO, boolean isLong) {
+		if (isLong && openDTO.totalBought() == null)
+			throw new IllegalArgumentException("Total bought must not be null");
+		if (isLong && openDTO.itemBought() == null)
+			throw new IllegalArgumentException("Items bought must not be null");
+		if (isLong && openDTO.totalBought() <= 0)
+			throw new IllegalArgumentException("Total bought must be greater than 0");
+		if (isLong && openDTO.itemBought() <= 0)
+			throw new IllegalArgumentException("Items bought must be greater than 0");
+	}
+
 	public void validateClose(TradeLogCloseDTO closeDTO, boolean isLong) {
-		if (isLong && closeDTO.totalSold() == null)
-			throw new IllegalArgumentException("Total sold must not be null");
-		if (isLong && closeDTO.itemSold() == null)
-			throw new IllegalArgumentException("Items sold must not be null");
-		if (isLong && closeDTO.totalSold() <= 0)
-			throw new IllegalArgumentException("Total sold must be greater than 0");
-		if (isLong && closeDTO.itemSold() <= 0)
-			throw new IllegalArgumentException("Items sold must be greater than 0");
+		validateCloseLong(closeDTO, isLong);
+		validateCloseShort(closeDTO, isLong);
+	}
+
+	private static void validateCloseShort(TradeLogCloseDTO closeDTO, boolean isLong) {
 		if (!isLong && closeDTO.totalBought() == null)
 			throw new IllegalArgumentException("Total bought must not be null");
 		if (!isLong && closeDTO.itemBought() == null)
@@ -123,6 +127,17 @@ public class TradeLogService {
 			throw new IllegalArgumentException("Total bought must be greater than 0");
 		if (!isLong && closeDTO.itemBought() <= 0)
 			throw new IllegalArgumentException("Items bought must be greater than 0");
+	}
+
+	private static void validateCloseLong(TradeLogCloseDTO closeDTO, boolean isLong) {
+		if (isLong && closeDTO.totalSold() == null)
+			throw new IllegalArgumentException("Total sold must not be null");
+		if (isLong && closeDTO.itemSold() == null)
+			throw new IllegalArgumentException("Items sold must not be null");
+		if (isLong && closeDTO.totalSold() <= 0)
+			throw new IllegalArgumentException("Total sold must be greater than 0");
+		if (isLong && closeDTO.itemSold() <= 0)
+			throw new IllegalArgumentException("Items sold must be greater than 0");
 	}
 
 	/**
@@ -175,7 +190,7 @@ public class TradeLogService {
 	}
 
 	private Function<TradeLog, TradeLogDTO> getMappingTradeLogToTradeLogDTO() {
-		return (log) -> {
+		return log -> {
 			try {
 				return tradeLogMapper.toDTO(log);
 			} catch (JsonProcessingException e) {
@@ -189,7 +204,7 @@ public class TradeLogService {
 		Broker broker = brokerRepo.getReferenceById(brokerId);
 		return tradeLogRepo.findAllClosedByBroker(broker).stream().map(
 				getMappingTradeLogToTradeLogDTO()
-		).collect(Collectors.toList());
+		).toList();
 	}
 
 	public long getOpenCountByBroker(Long brokerId) {
@@ -198,6 +213,6 @@ public class TradeLogService {
 	}
 
 	public List<TradeLogDTO> getAllClosed() {
-		return tradeLogRepo.findAllClosed().stream().map(getMappingTradeLogToTradeLogDTO()).collect(Collectors.toList());
+		return tradeLogRepo.findAllClosed().stream().map(getMappingTradeLogToTradeLogDTO()).toList();
 	}
 }

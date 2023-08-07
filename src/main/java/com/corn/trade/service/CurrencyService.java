@@ -6,7 +6,6 @@ import com.corn.trade.repository.CurrencyRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class CurrencyService {
@@ -18,7 +17,7 @@ public class CurrencyService {
 	}
 
 	public List<CurrencyDTO> getAll() {
-		return repository.findAll().stream().map(CurrencyMapper::toDTO).collect(Collectors.toList());
+		return repository.findAll().stream().map(CurrencyMapper::toDTO).toList();
 	}
 
 }

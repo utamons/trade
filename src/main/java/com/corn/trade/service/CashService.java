@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.corn.trade.util.Util.round;
 import static java.lang.Math.abs;
@@ -23,7 +22,14 @@ import static java.lang.Math.abs;
 @Service
 @Transactional
 public class CashService {
-	private final static Logger                    logger = LoggerFactory.getLogger(CashService.class);
+	private static final Logger logger = LoggerFactory.getLogger(CashService.class);
+	public static final String START = "start";
+	public static final String FINISH = "finish";
+	public static final String TRADE = "trade";
+	public static final String TRADE_LOG_RECORD_IS_REQUIRED = "Trade log record is required";
+	public static final String BORROWED = "borrowed";
+	public static final String ACCOUNT_TYPES_ARE_NOT_FOUND = "Account types are not found";
+	public static final String OPEN = "open";
 	private final        CashAccountRepository     accountRepo;
 	private final        CashFlowRepository        cashFlowRepo;
 	private final        BrokerRepository          brokerRepo;
@@ -60,7 +66,7 @@ public class CashService {
 	 * @return cash account
 	 */
 	public CashAccount getAccount(Broker broker, Currency currency, CashAccountType type) {
-		logger.debug("start");
+		logger.debug(START);
 		CashAccount account = accountRepo.findCashAccountByBrokerAndCurrencyAndType(broker, currency, type);
 		if (account == null) {
 			logger.debug("Account '{}' not found for broker {} and currency {}. Creating...",
@@ -75,7 +81,7 @@ public class CashService {
 			logger.debug("Found {} account for broker {} and currency {}.",
 			             type.getName(), broker.getName(), currency.getName());
 		}
-		logger.debug("finish");
+		logger.debug(FINISH);
 		return account;
 	}
 
@@ -90,10 +96,10 @@ public class CashService {
 	 * @return trade account
 	 */
 	public CashAccountDTO refill(TransferDTO transferDTO) {
-		logger.debug("start");
+		logger.debug(START);
 		Broker          broker     = brokerRepo.getReferenceById(transferDTO.brokerId());
 		Currency        currency   = currencyRepo.getReferenceById(transferDTO.currencyId());
-		CashAccountType toTrade    = accountTypeRepo.findCashAccountTypeByName("trade");
+		CashAccountType toTrade    = accountTypeRepo.findCashAccountTypeByName(TRADE);
 		CashAccountType fromIncome = accountTypeRepo.findCashAccountTypeByName("income");
 
 		CashAccount trade = transfer(
@@ -104,7 +110,7 @@ public class CashService {
 				fromIncome,
 				toTrade,
 				LocalDateTime.now());
-		logger.debug("finish");
+		logger.debug(FINISH);
 		return CashAccountMapper.toDTO(trade);
 	}
 
@@ -154,8 +160,8 @@ public class CashService {
 		CashAccount from = getAccount(broker, currency, fromType);
 		CashAccount to   = getAccount(broker, currency, toType);
 
-		CashFlow record = new CashFlow(from, to, tradeLog, transfer, transfer, null, dateTime);
-		cashFlowRepo.save(record);
+		CashFlow cashFlow = new CashFlow(from, to, tradeLog, transfer, transfer, null, dateTime);
+		cashFlowRepo.save(cashFlow);
 
 		to = accountRepo.save(to);
 		accountRepo.save(from);
@@ -177,11 +183,11 @@ public class CashService {
 	 * @param exchangeDTO exchange data
 	 */
 	public void exchange(ExchangeDTO exchangeDTO) {
-		logger.debug("start");
+		logger.debug(START);
 		Broker          broker         = brokerRepo.getReferenceById(exchangeDTO.getBrokerId());
 		Currency        currencyFrom   = currencyRepo.getReferenceById(exchangeDTO.getCurrencyFromId());
 		Currency        currencyTo     = currencyRepo.getReferenceById(exchangeDTO.getCurrencyToId());
-		CashAccountType tradeType      = accountTypeRepo.findCashAccountTypeByName("trade");
+		CashAccountType tradeType      = accountTypeRepo.findCashAccountTypeByName(TRADE);
 		CashAccountType conversionType = accountTypeRepo.findCashAccountTypeByName("conversion");
 
 		CashAccount tradeFrom    = getAccount(broker, currencyFrom, tradeType);
@@ -191,7 +197,7 @@ public class CashService {
 		double      transferTo   = exchangeDTO.getAmountTo();
 		double      delta        = transferFrom - transferTo;
 
-		CashFlow record = new CashFlow(
+		CashFlow cashFlow = new CashFlow(
 				tradeFrom,
 				tradeTo,
 				null,
@@ -200,7 +206,7 @@ public class CashService {
 				null,
 				LocalDateTime.now()
 		);
-		cashFlowRepo.save(record);
+		cashFlowRepo.save(cashFlow);
 
 		CashFlow conversion = new CashFlow(
 				tradeTo,
@@ -219,7 +225,7 @@ public class CashService {
 		             transferFrom, transferTo, broker.getName(), currencyFrom.getName(),
 		             currencyTo.getName());
 
-		logger.debug("finish");
+		logger.debug(FINISH);
 	}
 
 	/**
@@ -235,8 +241,8 @@ public class CashService {
 	 * @param dateTime date and time of withdrawal
 	 */
 	public void fee(double amount, Broker broker, TradeLog tradeLog, LocalDateTime dateTime) {
-		logger.debug("start");
-		CashAccountType fromTrade = accountTypeRepo.findCashAccountTypeByName("trade");
+		logger.debug(START);
+		CashAccountType fromTrade = accountTypeRepo.findCashAccountTypeByName(TRADE);
 		CashAccountType toFee     = accountTypeRepo.findCashAccountTypeByName("fee");
 		Currency        currency  = broker.getFeeCurrency();
 		if (amount == 0) {
@@ -254,7 +260,7 @@ public class CashService {
 		}
 
 		transfer(amount, tradeLog, broker, currency, fromTrade, toFee, dateTime);
-		logger.debug("finish");
+		logger.debug(FINISH);
 	}
 
 	/**
@@ -281,14 +287,14 @@ public class CashService {
 	                      Broker broker,
 	                      Currency currency,
 	                      TradeLog tradeLog) {
-		logger.debug("start");
+		logger.debug(START);
 		if (tradeLog == null) {
-			throw new IllegalArgumentException("Trade log record is required");
+			throw new IllegalArgumentException(TRADE_LOG_RECORD_IS_REQUIRED);
 		}
-		CashAccountType fromBorrowed = accountTypeRepo.findCashAccountTypeByName("borrowed");
-		CashAccountType toOpen       = accountTypeRepo.findCashAccountTypeByName("open");
+		CashAccountType fromBorrowed = accountTypeRepo.findCashAccountTypeByName(BORROWED);
+		CashAccountType toOpen       = accountTypeRepo.findCashAccountTypeByName(OPEN);
 		if (fromBorrowed == null || toOpen == null) {
-			throw new IllegalStateException("Account types are not found");
+			throw new IllegalStateException(ACCOUNT_TYPES_ARE_NOT_FOUND);
 		}
 		transfer(amountSold, tradeLog, broker, currency, fromBorrowed, toOpen, dateOpen);
 		fee(openCommission, broker, tradeLog, dateOpen);
@@ -300,7 +306,7 @@ public class CashService {
 
 		tradeLogRepo.save(tradeLog);
 
-		logger.debug("finish");
+		logger.debug(FINISH);
 	}
 
 	/**
@@ -323,16 +329,16 @@ public class CashService {
 	 */
 	public void sell(long itemSold, double amountSold, double sellingCommission, LocalDateTime dateTime,
 	                 Broker broker, TradeLog tradeLog) {
-		logger.debug("start");
+		logger.debug(START);
 		if (tradeLog == null) {
-			throw new IllegalArgumentException("Trade log record is required");
+			throw new IllegalArgumentException(TRADE_LOG_RECORD_IS_REQUIRED);
 		}
-		CashAccountType tradeType   = accountTypeRepo.findCashAccountTypeByName("trade");
-		CashAccountType openType    = accountTypeRepo.findCashAccountTypeByName("open");
+		CashAccountType tradeType   = accountTypeRepo.findCashAccountTypeByName(TRADE);
+		CashAccountType openType    = accountTypeRepo.findCashAccountTypeByName(OPEN);
 		CashAccountType outcomeType = accountTypeRepo.findCashAccountTypeByName("outcome");
 
 		if (tradeType == null || openType == null || outcomeType == null) {
-			throw new IllegalStateException("Account types are not found");
+			throw new IllegalStateException(ACCOUNT_TYPES_ARE_NOT_FOUND);
 		}
 
 		double openAmount    = tradeLog.getTotalBought();
@@ -374,7 +380,7 @@ public class CashService {
 
 		tradeLogRepo.save(tradeLog);
 
-		logger.debug("finish");
+		logger.debug(FINISH);
 	}
 
 	/**
@@ -401,14 +407,14 @@ public class CashService {
 	                Broker broker,
 	                Currency currency,
 	                TradeLog tradeLog) {
-		logger.debug("start");
+		logger.debug(START);
 		if (tradeLog == null) {
-			throw new IllegalArgumentException("Trade log record is required");
+			throw new IllegalArgumentException(TRADE_LOG_RECORD_IS_REQUIRED);
 		}
-		CashAccountType fromTrade = accountTypeRepo.findCashAccountTypeByName("trade");
-		CashAccountType toOpen    = accountTypeRepo.findCashAccountTypeByName("open");
+		CashAccountType fromTrade = accountTypeRepo.findCashAccountTypeByName(TRADE);
+		CashAccountType toOpen    = accountTypeRepo.findCashAccountTypeByName(OPEN);
 		if (fromTrade == null || toOpen == null) {
-			throw new IllegalStateException("Account types are not found");
+			throw new IllegalStateException(ACCOUNT_TYPES_ARE_NOT_FOUND);
 		}
 		transfer(amountBought, tradeLog, broker, currency, fromTrade, toOpen, tradeLog.getDateOpen());
 		fee(openCommission, broker, tradeLog, dateOpen);
@@ -420,7 +426,7 @@ public class CashService {
 
 		tradeLogRepo.save(tradeLog);
 
-		logger.debug("finish");
+		logger.debug(FINISH);
 	}
 
 	/**
@@ -449,17 +455,17 @@ public class CashService {
 	                     LocalDateTime dateTime,
 	                     Broker broker,
 	                     TradeLog tradeLog) {
-		logger.debug("start");
+		logger.debug(START);
 		if (tradeLog == null) {
-			throw new IllegalArgumentException("Trade log record is required");
+			throw new IllegalArgumentException(TRADE_LOG_RECORD_IS_REQUIRED);
 		}
-		CashAccountType tradeType    = accountTypeRepo.findCashAccountTypeByName("trade");
-		CashAccountType borrowedType = accountTypeRepo.findCashAccountTypeByName("borrowed");
-		CashAccountType openType     = accountTypeRepo.findCashAccountTypeByName("open");
+		CashAccountType tradeType    = accountTypeRepo.findCashAccountTypeByName(TRADE);
+		CashAccountType borrowedType = accountTypeRepo.findCashAccountTypeByName(BORROWED);
+		CashAccountType openType     = accountTypeRepo.findCashAccountTypeByName(OPEN);
 		CashAccountType outcomeType  = accountTypeRepo.findCashAccountTypeByName("outcome");
 
 		if (tradeType == null || borrowedType == null || openType == null || outcomeType == null) {
-			throw new IllegalStateException("Account types are not found");
+			throw new IllegalStateException(ACCOUNT_TYPES_ARE_NOT_FOUND);
 		}
 
 		double openAmount    = tradeLog.getTotalSold();
@@ -502,11 +508,11 @@ public class CashService {
 
 		tradeLogRepo.save(tradeLog);
 
-		logger.debug("finish");
+		logger.debug(FINISH);
 	}
 
 	public double lastDepositAmount(Broker broker, Currency currency) {
-		CashAccountType tradeType = accountTypeRepo.findCashAccountTypeByName("trade");
+		CashAccountType tradeType = accountTypeRepo.findCashAccountTypeByName(TRADE);
 		CashAccount     trade     = getAccount(broker, currency, tradeType);
 		return getAccountTotal(trade);
 	}
@@ -520,24 +526,22 @@ public class CashService {
 
 	public List<CashAccountDTO> getTradeAccounts(Long brokerId) {
 		Broker          broker    = brokerRepo.getReferenceById(brokerId);
-		CashAccountType tradeType = accountTypeRepo.findCashAccountTypeByName("trade");
+		CashAccountType tradeType = accountTypeRepo.findCashAccountTypeByName(TRADE);
 		return accountRepo.findAllByBrokerAndType(broker, tradeType)
 		                  .stream()
-		                  .map(CashAccountMapper::toDTO)
-		                  .collect(Collectors.toList());
+		                  .map(CashAccountMapper::toDTO).toList();
 	}
 
 	public List<CashAccountDTO> getBorrowedAccounts(Long brokerId) {
 		Broker          broker    = brokerRepo.getReferenceById(brokerId);
-		CashAccountType tradeType = accountTypeRepo.findCashAccountTypeByName("borrowed");
+		CashAccountType tradeType = accountTypeRepo.findCashAccountTypeByName(BORROWED);
 		return accountRepo.findAllByBrokerAndType(broker, tradeType)
 		                  .stream()
-		                  .map(CashAccountMapper::toDTO)
-		                  .collect(Collectors.toList());
+		                  .map(CashAccountMapper::toDTO).toList();
 	}
 
 	public double getCapital() throws JsonProcessingException {
-		CashAccountType   tradeType = accountTypeRepo.findCashAccountTypeByName("trade");
+		CashAccountType   tradeType = accountTypeRepo.findCashAccountTypeByName(TRADE);
 		List<CashAccount> accounts  = accountRepo.findAllByType(tradeType);
 		double            capital   = 0.0;
 		LocalDate         today     = LocalDate.now();
@@ -641,6 +645,7 @@ public class CashService {
 	 * fits American stock market conditions only. For other markets the calculation must be
 	 * adjusted.
 	 * <p>
+	 *
 	 * @param evalDTO the input data
 	 * @return the evaluation data
 	 * @throws JsonProcessingException if a currency rate is not available
@@ -848,7 +853,7 @@ public class CashService {
 	public Commission estimatedCommission(String brokerName, CurrencyDTO currencyDTO, long items, Double sum) {
 		double fixed  = 0.0;
 		double fly    = 0.0;
-		double amount = 0.0;
+		double amount;
 
 
 		if (brokerName.equals("FreedomFN")) {
@@ -887,7 +892,7 @@ public class CashService {
 		double   amount   = transferDTO.amount();
 
 		CashAccountType correctionType = accountTypeRepo.findCashAccountTypeByName("correction");
-		CashAccountType tradeType      = accountTypeRepo.findCashAccountTypeByName("trade");
+		CashAccountType tradeType      = accountTypeRepo.findCashAccountTypeByName(TRADE);
 
 		CashAccountType from = amount > 0 ? correctionType : tradeType;
 		CashAccountType to   = amount > 0 ? tradeType : correctionType;

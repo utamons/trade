@@ -4,6 +4,11 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 public class Util {
+
+	private Util() {
+		throw new IllegalStateException("Utility class");
+	}
+
 	public static BigDecimal round(Double value) {
 		if (value == null)
 			return null;
