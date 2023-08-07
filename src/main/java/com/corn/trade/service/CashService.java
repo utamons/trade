@@ -549,7 +549,7 @@ public class CashService {
 					today);
 		}
 
-		return capital + getAssetsDepositUSD();
+		return capital + getOpenPositionsUSD();
 	}
 
 	public double getAccountTotal(CashAccount account) {
@@ -573,7 +573,7 @@ public class CashService {
 		return capital;
 	}
 
-	public double getAssetsDepositUSD() throws JsonProcessingException {
+	public double getOpenPositionsUSD() throws JsonProcessingException {
 		List<CurrencySumDTO> opens = tradeLogRepo.openLongSums();
 		double               sum   = 0.0;
 		LocalDate            date  = LocalDate.now();
@@ -634,6 +634,17 @@ public class CashService {
 	}
 
 
+	/**
+	 * Evaluate a position to fit the risk limits
+	 * <p>
+	 * The calculation of price, stop loss and take profit is based on a level and ATR and
+	 * fits American stock market conditions only. For other markets the calculation must be
+	 * adjusted.
+	 * <p>
+	 * @param evalDTO the input data
+	 * @return the evaluation data
+	 * @throws JsonProcessingException if a currency rate is not available
+	 */
 	public EvalOutFitDTO evalToFit(EvalInFitDTO evalDTO) throws JsonProcessingException {
 		final int shortC     = evalDTO.isShort() ? -1 : 1;
 		Double    levelPrice = evalDTO.levelPrice();
@@ -641,13 +652,15 @@ public class CashService {
 		Currency  currency   = tickerRepo.getReferenceById(evalDTO.tickerId()).getCurrency();
 		double    price      = levelPrice + (shortC * 0.05);
 		double    capital    = getCapital();
+		// calculated stop loss is 0.2% of the level price (for US stocks)
 		double stopLoss =
 				evalDTO.stopLoss() == null ? levelPrice - (shortC * levelPrice / 100 * 0.2) : evalDTO.stopLoss();
+		// calculated take profit is 70% of ATR
 		double takeProfit = price + (shortC * atr * 0.7);
 
 		EvalToFitRecord evalToFitRecord;
 
-		if (evalDTO.technicalStop()) {
+		if (evalDTO.technicalStop()) { // if we want a technical stop instead of a calculated one
 			stopLoss = getTechnicalStop(evalDTO, shortC, atr, currency, price, stopLoss, takeProfit);
 			stopLoss = stopLoss + (shortC * 0.01);
 		}
