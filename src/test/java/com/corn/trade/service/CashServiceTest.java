@@ -1,6 +1,7 @@
 package com.corn.trade.service;
 
 import com.corn.trade.dto.CashAccountDTO;
+import com.corn.trade.dto.CurrencyDTO;
 import com.corn.trade.dto.ExchangeDTO;
 import com.corn.trade.dto.TransferDTO;
 import com.corn.trade.entity.*;
@@ -1509,5 +1510,38 @@ class CashServiceTest {
 		return tradeLog;
 	}
 
+	@Test
+	void testEstimatedCommission_UnsupportedBroker() {
+		// Arrange
+		CurrencyDTO currencyDTO          = new CurrencyDTO(1L, "USD");
 
+		// Act
+		Exception exception = assertThrows(IllegalArgumentException.class,
+		                                   () -> cashService.estimatedCommission("Test Broker", currencyDTO, 100L, 100.0));
+
+		assertEquals("Unsupported broker", exception.getMessage());
+	}
+
+	@Test
+	void testEstimatedCommission_UnsupportedCurrency() {
+		// Arrange
+		CurrencyDTO currencyDTO          = new CurrencyDTO(1L, "EUR");
+
+		// Act
+		Exception exception = assertThrows(IllegalArgumentException.class,
+		                                   () -> cashService.estimatedCommission("Interactive", currencyDTO, 100L, 100.0));
+
+		assertEquals("The currency "+currencyDTO.getName()+" is not supported for trades in Interactive broker yet", exception.getMessage());
+	}
+
+	@Test
+	void testEstimatedCommission_AmountMoreThanOne() {
+		// Arrange
+		CurrencyDTO currencyDTO          = new CurrencyDTO(1L, "USD");
+
+		// Act
+		Commission commission = cashService.estimatedCommission("Interactive", currencyDTO, 1000L, 100.0);
+
+		assertEquals(5.0, commission.getAmount());
+	}
 }
