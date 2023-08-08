@@ -107,7 +107,7 @@ class CashServiceTest {
 		incomeType = cashAccountTypeRepository.findCashAccountTypeByName("income");
 		feeType = cashAccountTypeRepository.findCashAccountTypeByName("fee");
 		CashAccountType conversionType = cashAccountTypeRepository.findCashAccountTypeByName("conversion");
-		CashAccountType outcomeType = cashAccountTypeRepository.findCashAccountTypeByName("outcome");
+		CashAccountType outcomeType    = cashAccountTypeRepository.findCashAccountTypeByName("outcome");
 
 		tradeAccountUSD = new CashAccount("trade/Test Broker/USD", currencyUSD, brokerUSD, tradeType);
 		tradeAccountUSD = cashAccountRepository.save(tradeAccountUSD);
@@ -204,6 +204,90 @@ class CashServiceTest {
 		assertThat(dateTime).isCloseTo(record.getCommittedAt(), new TemporalUnitWithinOffset(100, ChronoUnit.MILLIS));
 
 		assertEquals(0.0, cashFlowRepository.getCashFlowBalance());
+	}
+
+	@Test
+	void testTransfer_BrokerIsNull() {
+		// Arrange
+		LocalDateTime   dateTime = LocalDateTime.now();
+		TradeLog       tradeLog = getTradeLog();
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+			cashService.transfer(100.0, tradeLog, null, currencyEUR, incomeType, tradeType, dateTime);
+		});
+
+		assertEquals("Broker is required", exception.getMessage());
+	}
+
+	@Test
+	void testTransfer_CurrencyIsNull() {
+		// Arrange
+		LocalDateTime   dateTime = LocalDateTime.now();
+		TradeLog       tradeLog = getTradeLog();
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+			cashService.transfer(100.0, tradeLog, brokerUSD, null, incomeType, tradeType, dateTime);
+		});
+
+		assertEquals("Currency is required", exception.getMessage());
+	}
+
+	@Test
+	void testTransfer_FromTypeIsNull() {
+		// Arrange
+		LocalDateTime   dateTime = LocalDateTime.now();
+		TradeLog       tradeLog = getTradeLog();
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+			cashService.transfer(100.0, tradeLog, brokerUSD, currencyUSD, null, tradeType, dateTime);
+		});
+
+		assertEquals("From type is required", exception.getMessage());
+	}
+
+	@Test
+	void testTransfer_ToTypeIsNull() {
+		// Arrange
+		LocalDateTime   dateTime = LocalDateTime.now();
+		TradeLog       tradeLog = getTradeLog();
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+			cashService.transfer(100.0, tradeLog, brokerUSD, currencyUSD, incomeType, null, dateTime);
+		});
+
+		assertEquals("To type is required", exception.getMessage());
+	}
+
+
+	@Test
+	void testTransfer_DateIsNull() {
+		// Arrange
+		TradeLog       tradeLog = getTradeLog();
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+			cashService.transfer(100.0, tradeLog, brokerUSD, currencyUSD, incomeType, tradeType, null);
+		});
+
+		assertEquals("Date and time are required", exception.getMessage());
+	}
+
+	@Test
+	void testTransfer_SumIsZero() {
+		// Arrange
+		LocalDateTime   dateTime = LocalDateTime.now();
+		TradeLog       tradeLog = getTradeLog();
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+			cashService.transfer(0.0, tradeLog, brokerUSD, currencyUSD, incomeType, tradeType, dateTime);
+		});
+
+		assertEquals("Transfer amount is zero. Nothing to do", exception.getMessage());
 	}
 
 	@Test
@@ -410,7 +494,7 @@ class CashServiceTest {
 	}
 
 	@Test
-	void testSuccessful_Fee_SameCurrency() {
+	void testFee_Successful_SameCurrency() {
 		// Arrange
 
 
@@ -445,7 +529,7 @@ class CashServiceTest {
 	}
 
 	@Test
-	void testSuccessful_Fee_DifferentCurrency() {
+	void testFee_Successful_DifferentCurrency() {
 		// Arrange
 		CashAccount incomeAccountEUR = new CashAccount("income/Test Broker/EUR", currencyEUR, brokerEUR, incomeType);
 		incomeAccountEUR = cashAccountRepository.save(incomeAccountEUR);
@@ -483,7 +567,7 @@ class CashServiceTest {
 	}
 
 	@Test
-	void testSuccessful_Fee_Account_Creation() {
+	void testFee_Successful_Account_Creation() {
 		// Arrange
 		LocalDateTime dateTime = LocalDateTime.now();
 
@@ -518,6 +602,35 @@ class CashServiceTest {
 		assertThat(dateTime).isCloseTo(record.getCommittedAt(), new TemporalUnitWithinOffset(100, ChronoUnit.MILLIS));
 
 		assertEquals(0.0, cashFlowRepository.getCashFlowBalance());
+	}
+
+	@Test
+	void testFee_AmountIsZero() {
+		// Arrange
+		LocalDateTime   dateTime = LocalDateTime.now();
+		TradeLog       tradeLog = getTradeLog();
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+			cashService.fee(0.0, brokerUSD, tradeLog, dateTime);
+		});
+
+		assertEquals("Fee amount is zero. Nothing to do", exception.getMessage());
+	}
+
+	@Test
+	void testFee_BrokerCurrencyIsNull() {
+		// Arrange
+		LocalDateTime   dateTime = LocalDateTime.now();
+		TradeLog       tradeLog = getTradeLog();
+		Broker broker = new Broker("Test", null);
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+			cashService.fee(100.0, broker, tradeLog, dateTime);
+		});
+
+		assertEquals("Broker fee currency is null", exception.getMessage());
 	}
 
 	@Test
@@ -595,6 +708,44 @@ class CashServiceTest {
 		assertEquals(0, cashService.getAccountTotal(openAccount));
 		assertEquals(99.0, cashService.getAccountTotal(tradeAccountUSD));
 		assertEquals(-100.0, cashService.getAccountTotal(outcomeAccount));
+		assertEquals(1.0, cashService.getAccountTotal(feeAccountUSD));
+
+		assertEquals(1000.0, tradeLog.getTotalSold());
+		assertEquals(100, tradeLog.getItemSold());
+		assertEquals(1.0, tradeLog.getCloseCommission());
+		assertEquals(dateTime, tradeLog.getDateClose());
+
+		assertEquals(0.0, cashFlowRepository.getCashFlowBalance());
+	}
+
+	@Test
+	void testSell_Successful_ZeroOutcome() {
+		// Arrange
+		long     itemSold          = 100;
+		double   amountSold        = 1000.0;
+		double   totalBought       = 1000.0;
+		double   sellingCommission = 1.0;
+		Broker   broker            = brokerUSD;
+		Currency currency          = currencyUSD;
+
+		Ticker ticker = tickerRepository.getReferenceById(1L);
+		Market market = marketRepository.getReferenceById(1L);
+
+		TradeLog tradeLog = getTradeLog(broker, ticker, market, currency);
+		tradeLog.setTotalBought(totalBought);
+		tradeLog.setItemBought(100L);
+
+		LocalDateTime dateTime = LocalDateTime.now();
+
+		cashService.transfer(totalBought, tradeLog, broker, currency, tradeType, openType, dateTime);
+		assertEquals(totalBought, cashService.getAccountTotal(openAccount));
+		// Act
+		cashService.sell(itemSold, amountSold, sellingCommission, dateTime, broker, tradeLog);
+
+		// Assert
+		assertEquals(0, cashService.getAccountTotal(openAccount));
+		assertEquals(-1, cashService.getAccountTotal(tradeAccountUSD));
+		assertEquals(0.0, cashService.getAccountTotal(outcomeAccount));
 		assertEquals(1.0, cashService.getAccountTotal(feeAccountUSD));
 
 		assertEquals(1000.0, tradeLog.getTotalSold());
@@ -917,6 +1068,180 @@ class CashServiceTest {
 	}
 
 	@Test
+	void testBuyShort_Successful_CloseProfitNullBought() {
+		// Arrange
+		long     itemBought          = 100;
+		double   amountBought        = 1000.0;
+		double   totalSold           = 1100.0;
+		double   buyingCommission    = 1.0;
+		double   borrowingCommission = 1.0;
+		Broker   broker              = brokerUSD;
+		Currency currency            = currencyUSD;
+
+		Ticker ticker = tickerRepository.getReferenceById(1L);
+		Market market = marketRepository.getReferenceById(1L);
+
+		TradeLog tradeLog = getTradeLog(broker, ticker, market, currency);
+		tradeLog.setItemBought(0L);
+		tradeLog.setTotalBought(null);
+		tradeLog.setTotalSold(totalSold);
+		tradeLog.setItemSold(itemBought);
+
+		LocalDateTime dateTime = LocalDateTime.now();
+
+		cashService.transfer(totalSold, tradeLog, broker, currency, borrowedType, openType, dateTime);
+		assertEquals(totalSold, cashService.getAccountTotal(openAccount));
+		// Act
+		cashService.buyShort(itemBought, amountBought, buyingCommission, borrowingCommission, dateTime, broker, tradeLog);
+
+		// Assert
+		assertEquals(0, cashService.getAccountTotal(openAccount));
+		assertEquals(0, cashService.getAccountTotal(borrowedAccount));
+		assertEquals(100.0 - borrowingCommission - borrowingCommission, cashService.getAccountTotal(tradeAccountUSD));
+		assertEquals(-100.0, cashService.getAccountTotal(outcomeAccount));
+		assertEquals(2.0, cashService.getAccountTotal(feeAccountUSD));
+
+		assertEquals(1000.0, tradeLog.getTotalBought());
+		assertEquals(100, tradeLog.getItemBought());
+		assertEquals(1.0, tradeLog.getCloseCommission());
+		assertEquals(1.0, tradeLog.getBrokerInterest());
+		assertEquals(dateTime, tradeLog.getDateClose());
+
+		assertEquals(0.0, cashFlowRepository.getCashFlowBalance());
+	}
+
+	@Test
+	void testBuyShort_Successful_CloseProfitNotNullCloseCommission() {
+		// Arrange
+		long     itemBought          = 100;
+		double   amountBought        = 1000.0;
+		double   totalSold           = 1100.0;
+		double   buyingCommission    = 1.0;
+		double   borrowingCommission = 1.0;
+		Broker   broker              = brokerUSD;
+		Currency currency            = currencyUSD;
+
+		Ticker ticker = tickerRepository.getReferenceById(1L);
+		Market market = marketRepository.getReferenceById(1L);
+
+		TradeLog tradeLog = getTradeLog(broker, ticker, market, currency);
+		tradeLog.setItemBought(0L);
+		tradeLog.setTotalBought(0.0);
+		tradeLog.setCloseCommission(1.0);
+		tradeLog.setTotalSold(totalSold);
+		tradeLog.setItemSold(itemBought);
+
+		LocalDateTime dateTime = LocalDateTime.now();
+
+		cashService.transfer(totalSold, tradeLog, broker, currency, borrowedType, openType, dateTime);
+		assertEquals(totalSold, cashService.getAccountTotal(openAccount));
+		// Act
+		cashService.buyShort(itemBought, amountBought, buyingCommission, borrowingCommission, dateTime, broker, tradeLog);
+
+		// Assert
+		assertEquals(0, cashService.getAccountTotal(openAccount));
+		assertEquals(0, cashService.getAccountTotal(borrowedAccount));
+		assertEquals(100.0 - borrowingCommission - borrowingCommission, cashService.getAccountTotal(tradeAccountUSD));
+		assertEquals(-100.0, cashService.getAccountTotal(outcomeAccount));
+		assertEquals(2.0, cashService.getAccountTotal(feeAccountUSD));
+
+		assertEquals(1000.0, tradeLog.getTotalBought());
+		assertEquals(100, tradeLog.getItemBought());
+		assertEquals(2.0, tradeLog.getCloseCommission());
+		assertEquals(1.0, tradeLog.getBrokerInterest());
+		assertEquals(dateTime, tradeLog.getDateClose());
+
+		assertEquals(0.0, cashFlowRepository.getCashFlowBalance());
+	}
+
+	@Test
+	void testBuyShort_Successful_CloseProfitNullItemBought() {
+		// Arrange
+		long     itemBought          = 100;
+		double   amountBought        = 1000.0;
+		double   totalSold           = 1100.0;
+		double   buyingCommission    = 1.0;
+		double   borrowingCommission = 1.0;
+		Broker   broker              = brokerUSD;
+		Currency currency            = currencyUSD;
+
+		Ticker ticker = tickerRepository.getReferenceById(1L);
+		Market market = marketRepository.getReferenceById(1L);
+
+		TradeLog tradeLog = getTradeLog(broker, ticker, market, currency);
+		tradeLog.setItemBought(null);
+		tradeLog.setTotalBought(0.0);
+		tradeLog.setCloseCommission(0.0);
+		tradeLog.setTotalSold(totalSold);
+		tradeLog.setItemSold(itemBought);
+
+		LocalDateTime dateTime = LocalDateTime.now();
+
+		cashService.transfer(totalSold, tradeLog, broker, currency, borrowedType, openType, dateTime);
+		assertEquals(totalSold, cashService.getAccountTotal(openAccount));
+		// Act
+		cashService.buyShort(itemBought, amountBought, buyingCommission, borrowingCommission, dateTime, broker, tradeLog);
+
+		// Assert
+		assertEquals(0, cashService.getAccountTotal(openAccount));
+		assertEquals(0, cashService.getAccountTotal(borrowedAccount));
+		assertEquals(100.0 - borrowingCommission - borrowingCommission, cashService.getAccountTotal(tradeAccountUSD));
+		assertEquals(-100.0, cashService.getAccountTotal(outcomeAccount));
+		assertEquals(2.0, cashService.getAccountTotal(feeAccountUSD));
+
+		assertEquals(1000.0, tradeLog.getTotalBought());
+		assertEquals(100, tradeLog.getItemBought());
+		assertEquals(1.0, tradeLog.getCloseCommission());
+		assertEquals(1.0, tradeLog.getBrokerInterest());
+		assertEquals(dateTime, tradeLog.getDateClose());
+
+		assertEquals(0.0, cashFlowRepository.getCashFlowBalance());
+	}
+
+	@Test
+	void testBuyShort_Successful_ZeroOutcome() {
+		// Arrange
+		long     itemBought          = 100;
+		double   amountBought        = 1000.0;
+		double   totalSold           = 1000.0;
+		double   buyingCommission    = 1.01;
+		double   borrowingCommission = 1.0;
+		Broker   broker              = brokerUSD;
+		Currency currency            = currencyUSD;
+
+		Ticker ticker = tickerRepository.getReferenceById(1L);
+		Market market = marketRepository.getReferenceById(1L);
+
+		TradeLog tradeLog = getTradeLog(broker, ticker, market, currency);
+		tradeLog.setItemBought(0L);
+		tradeLog.setTotalBought(0.0);
+		tradeLog.setTotalSold(totalSold);
+		tradeLog.setItemSold(itemBought);
+
+		LocalDateTime dateTime = LocalDateTime.now();
+
+		cashService.transfer(totalSold, tradeLog, broker, currency, borrowedType, openType, dateTime);
+		assertEquals(totalSold, cashService.getAccountTotal(openAccount));
+		// Act
+		cashService.buyShort(itemBought, amountBought, buyingCommission, borrowingCommission, dateTime, broker, tradeLog);
+
+		// Assert
+		assertEquals(0, cashService.getAccountTotal(openAccount));
+		assertEquals(0, cashService.getAccountTotal(borrowedAccount));
+		assertEquals(-borrowingCommission - buyingCommission, cashService.getAccountTotal(tradeAccountUSD));
+		assertEquals(0.0, cashService.getAccountTotal(outcomeAccount));
+		assertEquals(2.01, cashService.getAccountTotal(feeAccountUSD));
+
+		assertEquals(1000.0, tradeLog.getTotalBought());
+		assertEquals(100, tradeLog.getItemBought());
+		assertEquals(1.01, tradeLog.getCloseCommission());
+		assertEquals(1.0, tradeLog.getBrokerInterest());
+		assertEquals(dateTime, tradeLog.getDateClose());
+
+		assertEquals(0.0, cashFlowRepository.getCashFlowBalance());
+	}
+
+	@Test
 	void testBuyShort_Successful_CloseLoss() {
 		// Arrange
 		long     itemBought          = 100;
@@ -1149,6 +1474,12 @@ class CashServiceTest {
 		                                                              null));
 
 		assertEquals("Trade log record is required", exception.getMessage());
+	}
+
+	private TradeLog getTradeLog() {
+		Ticker ticker = tickerRepository.getReferenceById(1L);
+		Market market = marketRepository.getReferenceById(1L);
+		return getTradeLog(brokerUSD, ticker, market, currencyUSD);
 	}
 
 	private TradeLog getTradeLog(Broker broker, Ticker ticker, Market market, Currency currency) {

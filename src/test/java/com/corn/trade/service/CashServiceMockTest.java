@@ -4,19 +4,28 @@ import com.corn.trade.dto.CurrencyDTO;
 import com.corn.trade.dto.CurrencySumDTO;
 import com.corn.trade.dto.EvalInDTO;
 import com.corn.trade.dto.EvalOutDTO;
+import com.corn.trade.entity.*;
 import com.corn.trade.repository.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
+import static com.corn.trade.service.CashService.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -43,6 +52,7 @@ class CashServiceMockTest {
 	void setup() {
 		currencyRateService = mock(CurrencyRateService.class);
 		tradeLogRepo = mock(TradeLogRepository.class);
+		accountTypeRepo = mock(CashAccountTypeRepository.class);
 		cashService = new CashService(
 				accountRepo,
 				cashFlowRepo,
@@ -246,5 +256,216 @@ class CashServiceMockTest {
 
 		// Assert
 		assertEquals(0.0, openPositionsUSD);
+	}
+
+	@Test
+	void testFee_TradeTypeIsNull() {
+		// Arrange
+		LocalDateTime dateTime = LocalDateTime.now();
+		TradeLog      tradeLog = new TradeLog();
+		Broker 	  broker   = new Broker("Test", new Currency("USD"));
+
+		when(accountTypeRepo.findCashAccountTypeByName("trade")).thenReturn(null);
+		when(accountTypeRepo.findCashAccountTypeByName("fee")).thenReturn(new CashAccountType());
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalStateException.class, () -> {
+			cashService.fee(100.0, broker, tradeLog, dateTime);
+		});
+
+		assertEquals("Trade account type is null", exception.getMessage());
+	}
+
+	@Test
+	void testFee_FeeTypeIsNull() {
+		// Arrange
+		LocalDateTime dateTime = LocalDateTime.now();
+		TradeLog      tradeLog = new TradeLog();
+		Broker 	  broker   = new Broker("Test", new Currency("USD"));
+
+		when(accountTypeRepo.findCashAccountTypeByName("trade")).thenReturn(new CashAccountType());
+		when(accountTypeRepo.findCashAccountTypeByName("fee")).thenReturn(null);
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalStateException.class, () -> {
+			cashService.fee(100.0, broker, tradeLog, dateTime);
+		});
+
+		assertEquals("Fee account type is null", exception.getMessage());
+	}
+	@Test
+	void testSellShort_BorrowedTypeIsNull() {
+		Currency currency = new Currency("USD");
+		// Arrange
+		LocalDateTime dateTime = LocalDateTime.now();
+		TradeLog      tradeLog = new TradeLog();
+		Broker 	  broker   = new Broker("Test", currency);
+
+		when(accountTypeRepo.findCashAccountTypeByName(OPEN)).thenReturn(new CashAccountType());
+		when(accountTypeRepo.findCashAccountTypeByName(BORROWED)).thenReturn(null);
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalStateException.class, () -> {
+			cashService.sellShort(100, 100.0, 1.0,
+			                      dateTime, broker, currency, tradeLog);
+		});
+
+		assertEquals(ACCOUNT_TYPES_ARE_NOT_FOUND, exception.getMessage());
+	}
+
+	@Test
+	void testSellShort_OpenTypeIsNull() {
+		Currency currency = new Currency("USD");
+		// Arrange
+		LocalDateTime dateTime = LocalDateTime.now();
+		TradeLog      tradeLog = new TradeLog();
+		Broker 	  broker   = new Broker("Test", currency);
+
+		when(accountTypeRepo.findCashAccountTypeByName(OPEN)).thenReturn(null);
+		when(accountTypeRepo.findCashAccountTypeByName(BORROWED)).thenReturn(new CashAccountType());
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalStateException.class, () -> {
+			cashService.sellShort(100, 100.0, 1.0,
+			                      dateTime, broker, currency, tradeLog);
+		});
+
+		assertEquals(ACCOUNT_TYPES_ARE_NOT_FOUND, exception.getMessage());
+	}
+
+	@Test
+	void testSell_TradeTypeIsNull() {
+		Currency currency = new Currency("USD");
+		// Arrange
+		LocalDateTime dateTime = LocalDateTime.now();
+		TradeLog      tradeLog = new TradeLog();
+		Broker 	  broker   = new Broker("Test", currency);
+
+		when(accountTypeRepo.findCashAccountTypeByName(TRADE)).thenReturn(null);
+		when(accountTypeRepo.findCashAccountTypeByName(OPEN)).thenReturn(new CashAccountType());
+		when(accountTypeRepo.findCashAccountTypeByName(OUTCOME)).thenReturn(new CashAccountType());
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalStateException.class, () -> {
+			cashService.sell(100, 100.0, 1.0,
+			                      dateTime, broker, tradeLog);
+		});
+
+		assertEquals(ACCOUNT_TYPES_ARE_NOT_FOUND, exception.getMessage());
+	}
+
+	@Test
+	void testSell_OpenTypeIsNull() {
+		Currency currency = new Currency("USD");
+		// Arrange
+		LocalDateTime dateTime = LocalDateTime.now();
+		TradeLog      tradeLog = new TradeLog();
+		Broker 	  broker   = new Broker("Test", currency);
+
+		when(accountTypeRepo.findCashAccountTypeByName(TRADE)).thenReturn(new CashAccountType());
+		when(accountTypeRepo.findCashAccountTypeByName(OPEN)).thenReturn(null);
+		when(accountTypeRepo.findCashAccountTypeByName(OUTCOME)).thenReturn(new CashAccountType());
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalStateException.class, () -> {
+			cashService.sell(100, 100.0, 1.0,
+			                 dateTime, broker, tradeLog);
+		});
+
+		assertEquals(ACCOUNT_TYPES_ARE_NOT_FOUND, exception.getMessage());
+	}
+
+	@Test
+	void testSell_OutcomeTypeIsNull() {
+		Currency currency = new Currency("USD");
+		// Arrange
+		LocalDateTime dateTime = LocalDateTime.now();
+		TradeLog      tradeLog = new TradeLog();
+		Broker 	  broker   = new Broker("Test", currency);
+
+		when(accountTypeRepo.findCashAccountTypeByName(TRADE)).thenReturn(new CashAccountType());
+		when(accountTypeRepo.findCashAccountTypeByName(OPEN)).thenReturn(new CashAccountType());
+		when(accountTypeRepo.findCashAccountTypeByName(OUTCOME)).thenReturn(null);
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalStateException.class, () -> {
+			cashService.sell(100, 100.0, 1.0,
+			                 dateTime, broker, tradeLog);
+		});
+
+		assertEquals(ACCOUNT_TYPES_ARE_NOT_FOUND, exception.getMessage());
+	}
+
+	@Test
+	void testBuy_TradeTypeIsNull() {
+		Currency currency = new Currency("USD");
+		// Arrange
+		LocalDateTime dateTime = LocalDateTime.now();
+		TradeLog      tradeLog = new TradeLog();
+		Broker 	  broker   = new Broker("Test", currency);
+
+		when(accountTypeRepo.findCashAccountTypeByName(TRADE)).thenReturn(null);
+		when(accountTypeRepo.findCashAccountTypeByName(OPEN)).thenReturn(new CashAccountType());
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalStateException.class, () -> {
+			cashService.buy(100, 100.0, 1.0,
+			                 dateTime, broker, currency, tradeLog);
+		});
+
+		assertEquals(ACCOUNT_TYPES_ARE_NOT_FOUND, exception.getMessage());
+	}
+
+	@Test
+	void testBuy_OpenTypeIsNull() {
+		Currency currency = new Currency("USD");
+		// Arrange
+		LocalDateTime dateTime = LocalDateTime.now();
+		TradeLog      tradeLog = new TradeLog();
+		Broker 	  broker   = new Broker("Test", currency);
+
+		when(accountTypeRepo.findCashAccountTypeByName(TRADE)).thenReturn(new CashAccountType());
+		when(accountTypeRepo.findCashAccountTypeByName(OPEN)).thenReturn(null);
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalStateException.class, () -> {
+			cashService.buy(100, 100.0, 1.0,
+			                dateTime, broker, currency, tradeLog);
+		});
+
+		assertEquals(ACCOUNT_TYPES_ARE_NOT_FOUND, exception.getMessage());
+	}
+
+	@ParameterizedTest
+	@CsvSource({"true, false, false, false",
+	            "false, true, false, false",
+	            "false, false, true, false",
+	            "false, false, false, true"})
+	void testBuyShort_AccountTypeIsNull(boolean isTradeTypeNull, boolean isBorrowedTypeNull,
+	                                  boolean isOpenTypeNull, boolean isOutcomeTypeNull) {
+
+		CashAccountType tradeType = isTradeTypeNull ? null : new CashAccountType();
+		CashAccountType borrowedType = isBorrowedTypeNull ? null : new CashAccountType();
+		CashAccountType openType = isOpenTypeNull ? null : new CashAccountType();
+		CashAccountType outcomeType = isOutcomeTypeNull ? null : new CashAccountType();
+
+		Currency currency = new Currency("USD");
+		// Arrange
+		LocalDateTime dateTime = LocalDateTime.now();
+		TradeLog tradeLog = new TradeLog();
+		Broker   broker   = new Broker("Test", currency);
+
+		when(accountTypeRepo.findCashAccountTypeByName(TRADE)).thenReturn(tradeType);
+		when(accountTypeRepo.findCashAccountTypeByName(BORROWED)).thenReturn(borrowedType);
+		when(accountTypeRepo.findCashAccountTypeByName(OPEN)).thenReturn(openType);
+		when(accountTypeRepo.findCashAccountTypeByName(OUTCOME)).thenReturn(outcomeType);
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalStateException.class, () -> {
+			cashService.buyShort(100, 100.0, 1.0,
+			                     1.0, dateTime, broker, tradeLog);
+		});
+
+		assertEquals(ACCOUNT_TYPES_ARE_NOT_FOUND, exception.getMessage());
 	}
 }
