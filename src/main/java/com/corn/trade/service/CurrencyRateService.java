@@ -19,6 +19,8 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import static com.corn.trade.util.Util.round;
+
 @Service
 public class CurrencyRateService {
 
@@ -36,10 +38,13 @@ public class CurrencyRateService {
 
 	public CurrencyRateService(CurrencyRateRepository repository, CurrencyRepository currencyRepository,
 	                           EntityManager entityManager) {
+		logger.info("CurrencyRateService is created...");
 		this.repository = repository;
 		if (currencies == null) {
 			currencies = currencyRepository.findAll();
 			currencies.forEach(entityManager::detach);
+			currencies.forEach(currency -> currency.setName(currency.getName().trim())); // fucking H2!
+			logger.info("{} currencies were loaded", currencies.size());
 		}
 	}
 
@@ -99,7 +104,7 @@ public class CurrencyRateService {
 		if (usd.getId() == currencyId)
 			return amount;
 		CurrencyRateDTO currencyRateDTO = findByDate(currencyId, dateTime);
-		return amount / currencyRateDTO.rate();
+		return round(amount / currencyRateDTO.rate(), 2);
 	}
 
 	public Double convert(Currency fromCurrency, Currency toCurrency, Double amount, LocalDate dateTime) throws JsonProcessingException {

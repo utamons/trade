@@ -22,19 +22,20 @@ import static java.lang.Math.abs;
 @Service
 @Transactional
 public class CashService {
-	private static final Logger logger = LoggerFactory.getLogger(CashService.class);
-	public static final String START = "start";
-	public static final String FINISH = "finish";
-	public static final String TRADE = "trade";
-	public static final String TRADE_LOG_RECORD_IS_REQUIRED = "Trade log record is required";
-	public static final String BORROWED = "borrowed";
-	public static final String ACCOUNT_TYPES_ARE_NOT_FOUND = "Account types are not found";
-	public static final String OPEN = "open";
-	public static final String OUTCOME = "outcome";
-	public static final String FREEDOM_FN = "FreedomFN";
-	public static final String INTERACTIVE = "Interactive";
-	public static final String USD = "USD";
-	public static final String KZT = "KZT";
+	private static final Logger                    logger                       =
+			LoggerFactory.getLogger(CashService.class);
+	public static final  String                    START                        = "start";
+	public static final  String                    FINISH                       = "finish";
+	public static final  String                    TRADE                        = "trade";
+	public static final  String                    TRADE_LOG_RECORD_IS_REQUIRED = "Trade log record is required";
+	public static final  String                    BORROWED                     = "borrowed";
+	public static final  String                    ACCOUNT_TYPES_ARE_NOT_FOUND  = "Account types are not found";
+	public static final  String                    OPEN                         = "open";
+	public static final  String                    OUTCOME                      = "outcome";
+	public static final  String                    FREEDOM_FN                   = "FreedomFN";
+	public static final  String                    INTERACTIVE                  = "Interactive";
+	public static final  String                    USD                          = "USD";
+	public static final  String                    KZT                          = "KZT";
 	private final        CashAccountRepository     accountRepo;
 	private final        CashFlowRepository        cashFlowRepo;
 	private final        BrokerRepository          brokerRepo;
@@ -557,7 +558,7 @@ public class CashService {
 					today);
 		}
 
-		return capital + estimatedPositionsUSD();
+		return capital + openPositionsUSD();
 	}
 
 	public double getAccountTotal(CashAccount account) {
@@ -592,12 +593,12 @@ public class CashService {
 	 * @return the estimated capital, stored in open positions
 	 * @throws JsonProcessingException if currency rate service fails.
 	 */
-	public double estimatedPositionsUSD() throws JsonProcessingException {
-		List<CurrencySumDTO> opens = tradeLogRepo.openLongSums();
+	public double openPositionsUSD() throws JsonProcessingException {
+		List<CurrencySumDTO> opens      = tradeLogRepo.openLongSums();
 		List<CurrencySumDTO> shortRisks = tradeLogRepo.openShortRisks();
 
-		double               sum   = 0.0;
-		LocalDate            date  = LocalDate.now();
+		double    sum  = 0.0;
+		LocalDate date = LocalDate.now();
 
 		for (CurrencySumDTO dto : opens) {
 			sum += currencyRateService.convertToUSD(
@@ -638,7 +639,6 @@ public class CashService {
 		long              items       = getMaxItems(currency, evalDTO.depositPc(), price);
 		final Broker      broker      = brokerRepo.getReferenceById(evalDTO.brokerId());
 		final Ticker      ticker      = tickerRepo.getReferenceById(evalDTO.tickerId());
-		final String      brokerName  = broker.getName();
 		final CurrencyDTO currencyDTO = CurrencyMapper.toDTO(ticker.getCurrency());
 		EvalInDTO         dto;
 		do {
@@ -655,7 +655,7 @@ public class CashService {
 					takeProfit,
 					LocalDate.now(),
 					evalDTO.isShort());
-			eval = eval(dto, brokerName, currencyDTO, capital);
+			eval = eval(dto, broker, currencyDTO, capital);
 			items--;
 		} while (eval.riskPc() > evalDTO.riskPc() && eval.riskRewardPc() < evalDTO.riskRewardPc());
 		return new EvalToFitRecord(items, volumePc, eval);
@@ -739,27 +739,27 @@ public class CashService {
 	public EvalOutDTO eval(EvalInDTO evalDTO) throws JsonProcessingException {
 		final Broker      broker      = brokerRepo.getReferenceById(evalDTO.brokerId());
 		final Ticker      ticker      = tickerRepo.getReferenceById(evalDTO.tickerId());
-		final String      brokerName  = broker.getName();
 		final CurrencyDTO currencyDTO = CurrencyMapper.toDTO(ticker.getCurrency());
 		final double      capital     = getCapital();
-		return eval(evalDTO, brokerName, currencyDTO, capital);
+		return eval(evalDTO, broker, currencyDTO, capital);
 	}
 
 
 	public EvalOutDTO eval(EvalInDTO evalDTO,
-	                       String brokerName,
+	                       Broker broker,
 	                       CurrencyDTO currencyDTO,
 	                       double capital) throws JsonProcessingException {
 		final long   items           = evalDTO.items();
 		final double priceOpen       = evalDTO.price();
 		final double volume          = priceOpen * items;
-		final double openCommission  = estimatedCommission(brokerName, currencyDTO, items, volume).getAmount();
+		final double openCommission  = estimatedCommission(broker.getName(), currencyDTO, items, volume).getAmount();
 		final double takeProfit      = evalDTO.takeProfit();
-		final double closeCommission = estimatedCommission(brokerName, currencyDTO, items, takeProfit * items).getAmount();
+		final double closeCommission =
+				estimatedCommission(broker.getName(), currencyDTO, items, takeProfit * items).getAmount();
 		final double stopLoss        = evalDTO.stopLoss();
 		final int    shortC          = evalDTO.isShort() ? -1 : 1;
 
-		final double breakEven = getBreakEven(shortC, brokerName, currencyDTO, items, priceOpen);
+		final double breakEven = getBreakEven(shortC, broker, currencyDTO, items, priceOpen);
 
 		final double profit = abs(takeProfit - priceOpen) * items;
 
@@ -778,6 +778,8 @@ public class CashService {
 		                                      evalDTO.date(),
 		                                      currencyDTO
 		), 2);
+
+		// todo I need calculation of a risk per trade in the currency of the trade
 
 		final double gainPc = round(outcomeExp / volume * 100, 2);
 
@@ -829,33 +831,59 @@ public class CashService {
 	}
 
 	/**
-	 * Estimation of a break even point
+	 * Estimation of a break even point.
+	 * Uses commissions converted to the currency of the trade.
 	 *
-	 * @param shortC      -1 is short, +1 if long
-	 * @param brokerName  a broker name
-	 * @param currencyDTO currency
-	 * @param items       number of securities
-	 * @param priceOpen   the price of opening the trade
+	 * @param shortC           -1 is short, +1 if long
+	 * @param broker           a broker
+	 * @param tradeCurrencyDTO currency of the trade
+	 * @param items            number of securities
+	 * @param priceOpen        the price of opening the trade
 	 * @return estimated break even point
 	 */
 	public double getBreakEven(int shortC,
-	                           String brokerName,
-	                           CurrencyDTO currencyDTO,
+	                           Broker broker,
+	                           CurrencyDTO tradeCurrencyDTO,
 	                           long items,
-	                           double priceOpen) {
+	                           double priceOpen) throws JsonProcessingException {
 		double sumOpen         = items * priceOpen;
-		double openCommission  = estimatedCommission(brokerName, currencyDTO, items, sumOpen).getAmount();
+		double openCommission  = getConvertedCommission(broker, items, tradeCurrencyDTO, sumOpen);
 		double sumClose        = sumOpen;
-		double closeCommission = estimatedCommission(brokerName, currencyDTO, items, sumClose).getAmount();
+		double closeCommission = openCommission;
 		double taxes           = getTaxes(abs(sumClose - sumOpen));
 
 		while (abs(sumClose - sumOpen) < openCommission + closeCommission + taxes) {
 			sumClose = sumClose + (shortC * 0.01);
-			closeCommission = estimatedCommission(brokerName, currencyDTO, items, sumClose).getAmount();
+			closeCommission = getConvertedCommission(broker, items, tradeCurrencyDTO, sumClose);
 			taxes = getTaxes(abs(sumClose - sumOpen));
 		}
 
 		return round(sumClose / items, 2);
+	}
+
+	/**
+	 * Calculates a commission in the currency of the trade.
+	 *
+	 * @param broker           a broker
+	 * @param items            number of securities
+	 * @param tradeCurrencyDTO currency
+	 * @param sum              the sum of the trade
+	 * @return commission in the currency of the trade
+	 * @throws JsonProcessingException exception
+	 */
+	public double getConvertedCommission(Broker broker,
+	                                     long items,
+	                                     CurrencyDTO tradeCurrencyDTO,
+	                                     double sum) throws JsonProcessingException {
+		String   brokerName     = broker.getName();
+		Currency brokerCurrency = broker.getFeeCurrency();
+		Currency tradeCurrency  = currencyRepo.getReferenceById(tradeCurrencyDTO.getId());
+		double   commission     = estimatedCommission(brokerName, tradeCurrencyDTO, items, sum).getAmount();
+		return currencyRateService.convert(
+				brokerCurrency,
+				tradeCurrency,
+				commission,
+				LocalDate.now());
 	}
 
 	private double getTaxes(double sum) {
@@ -875,10 +903,11 @@ public class CashService {
 	 * @return the commission
 	 */
 	public Commission estimatedCommission(String brokerName, CurrencyDTO currencyDTO, long items, Double sum) {
-		double fixed  = 0.0;
-		double fly    = 0.0;
+		double fixed = 0.0;
+		double fly   = 0.0;
 		double amount;
 
+		// todo So in what currency is the commission calculated?
 
 		if (brokerName.equals(FREEDOM_FN)) {
 			if (currencyDTO.getName().equals(KZT)) {
@@ -895,7 +924,9 @@ public class CashService {
 				amount = Math.min(max, min);
 				amount = amount < 1 ? 1 : amount;
 			} else {
-				throw new IllegalArgumentException("The currency "+currencyDTO.getName()+" is not supported for trades in Interactive broker yet");
+				throw new IllegalArgumentException("The currency " +
+				                                   currencyDTO.getName() +
+				                                   " is not supported for trades in Interactive broker yet");
 			}
 		} else {
 			throw new IllegalArgumentException("Unsupported broker");
