@@ -31,6 +31,10 @@ public class CashService {
 	public static final String ACCOUNT_TYPES_ARE_NOT_FOUND = "Account types are not found";
 	public static final String OPEN = "open";
 	public static final String OUTCOME = "outcome";
+	public static final String FREEDOM_FN = "FreedomFN";
+	public static final String INTERACTIVE = "Interactive";
+	public static final String USD = "USD";
+	public static final String KZT = "KZT";
 	private final        CashAccountRepository     accountRepo;
 	private final        CashFlowRepository        cashFlowRepo;
 	private final        BrokerRepository          brokerRepo;
@@ -876,22 +880,22 @@ public class CashService {
 		double amount;
 
 
-		if (brokerName.equals("FreedomFN")) {
-			if (currencyDTO.getName().equals("KZT")) {
+		if (brokerName.equals(FREEDOM_FN)) {
+			if (currencyDTO.getName().equals(KZT)) {
 				amount = fly = sum / 100.0 * 0.085;
 			} else {
 				fixed = 1.2;
 				fly = sum / 100.0 * 0.5 + items * 0.012;
 				amount = fixed + fly;
 			}
-		} else if (brokerName.equals("Interactive")) {
-			if (currencyDTO.getName().equals("USD")) {
+		} else if (brokerName.equals(INTERACTIVE)) {
+			if (currencyDTO.getName().equals(USD)) {
 				double max = items * sum / 100.0;
 				double min = items * 0.005;
 				amount = Math.min(max, min);
 				amount = amount < 1 ? 1 : amount;
 			} else {
-				throw new IllegalArgumentException("Unsupported currency for Interactive broker");
+				throw new IllegalArgumentException("The currency "+currencyDTO.getName()+" is not supported for trades in Interactive broker yet");
 			}
 		} else {
 			throw new IllegalArgumentException("Unsupported broker");
