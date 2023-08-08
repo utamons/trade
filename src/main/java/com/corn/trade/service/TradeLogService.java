@@ -87,29 +87,59 @@ public class TradeLogService {
 	}
 
 	public void validateOpen(TradeLogOpenDTO openDTO, boolean isLong) {
-		validateOpenLong(openDTO, isLong);
-		validateOpenShort(openDTO, isLong);
+		validateOpenCommon(openDTO);
+		if (isLong)
+			validateOpenLong(openDTO);
+		else
+			validateOpenShort(openDTO);
 	}
 
-	private static void validateOpenShort(TradeLogOpenDTO openDTO, boolean isLong) {
-		if (!isLong && openDTO.totalSold() == null)
+	private static void validateOpenCommon(TradeLogOpenDTO openDTO) {
+		if (openDTO == null)
+			throw new IllegalArgumentException("Open DTO must not be null");
+		if(openDTO.riskToCapitalPc() == null)
+			throw new IllegalArgumentException("Risk to capital must not be null");
+		if (openDTO.risk() == null)
+			throw new IllegalArgumentException("Risk must not be null");
+		if (openDTO.estimatedItems() == null)
+			throw new IllegalArgumentException("Estimated items must not be null");
+		if (openDTO.estimatedBreakEven() == null)
+			throw new IllegalArgumentException("Estimated break even must not be null");
+		if (openDTO.estimatedFees() == null)
+			throw new IllegalArgumentException("Estimated fees must not be null");
+		if (openDTO.estimatedPriceOpen() == null)
+			throw new IllegalArgumentException("Estimated price open must not be null");
+		if (openDTO.position() == null)
+			throw new IllegalArgumentException("Position must not be null");
+		if (openDTO.tickerId() == null)
+			throw new IllegalArgumentException("Ticker id must not be null");
+		if (openDTO.marketId() == null)
+			throw new IllegalArgumentException("Market id must not be null");
+		if (openDTO.dateOpen() == null)
+			throw new IllegalArgumentException("Date open must not be null");
+		if (openDTO.brokerId() == null)
+			throw new IllegalArgumentException("Broker id must not be null");
+	}
+
+	private static void validateOpenShort(TradeLogOpenDTO openDTO) {
+		if (openDTO.totalSold() == null)
 			throw new IllegalArgumentException("Total sold must not be null");
-		if (!isLong && openDTO.itemSold() == null)
+		if (openDTO.itemSold() == null)
 			throw new IllegalArgumentException("Items sold must not be null");
-		if (!isLong && openDTO.totalSold() <= 0)
+		if (openDTO.totalSold() <= 0)
 			throw new IllegalArgumentException("Total sold must be greater than 0");
-		if (!isLong && openDTO.itemSold() <= 0)
+		if (openDTO.itemSold() <= 0)
 			throw new IllegalArgumentException("Items sold must be greater than 0");
 	}
 
-	private static void validateOpenLong(TradeLogOpenDTO openDTO, boolean isLong) {
-		if (isLong && openDTO.totalBought() == null)
+	private static void validateOpenLong(TradeLogOpenDTO openDTO) {
+		if (openDTO.totalBought() == null)
 			throw new IllegalArgumentException("Total bought must not be null");
-		if (isLong && openDTO.itemBought() == null)
+		if (openDTO.itemBought() == null)
 			throw new IllegalArgumentException("Items bought must not be null");
-		if (isLong && openDTO.totalBought() <= 0)
+		if (openDTO.totalBought() <= 0)
 			throw new IllegalArgumentException("Total bought must be greater than 0");
-		if (isLong && openDTO.itemBought() <= 0)
+		if (openDTO.itemBought() <= 0)
 			throw new IllegalArgumentException("Items bought must be greater than 0");
 	}
 

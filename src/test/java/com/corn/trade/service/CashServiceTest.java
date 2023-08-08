@@ -6,6 +6,7 @@ import com.corn.trade.dto.ExchangeDTO;
 import com.corn.trade.dto.TransferDTO;
 import com.corn.trade.entity.*;
 import com.corn.trade.repository.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.assertj.core.data.TemporalUnitWithinOffset;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -57,6 +58,9 @@ class CashServiceTest {
 
 	@Autowired
 	private TickerRepository tickerRepository;
+
+	@Autowired
+	private CurrencyRateRepository currencyRateRepository;
 
 	@PersistenceContext
 	private EntityManager entityManager;
@@ -214,9 +218,7 @@ class CashServiceTest {
 		TradeLog       tradeLog = getTradeLog();
 
 		// Act & Assert
-		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-			cashService.transfer(100.0, tradeLog, null, currencyEUR, incomeType, tradeType, dateTime);
-		});
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> cashService.transfer(100.0, tradeLog, null, currencyEUR, incomeType, tradeType, dateTime));
 
 		assertEquals("Broker is required", exception.getMessage());
 	}
@@ -228,9 +230,7 @@ class CashServiceTest {
 		TradeLog       tradeLog = getTradeLog();
 
 		// Act & Assert
-		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-			cashService.transfer(100.0, tradeLog, brokerUSD, null, incomeType, tradeType, dateTime);
-		});
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> cashService.transfer(100.0, tradeLog, brokerUSD, null, incomeType, tradeType, dateTime));
 
 		assertEquals("Currency is required", exception.getMessage());
 	}
@@ -242,9 +242,7 @@ class CashServiceTest {
 		TradeLog       tradeLog = getTradeLog();
 
 		// Act & Assert
-		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-			cashService.transfer(100.0, tradeLog, brokerUSD, currencyUSD, null, tradeType, dateTime);
-		});
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> cashService.transfer(100.0, tradeLog, brokerUSD, currencyUSD, null, tradeType, dateTime));
 
 		assertEquals("From type is required", exception.getMessage());
 	}
@@ -256,9 +254,7 @@ class CashServiceTest {
 		TradeLog       tradeLog = getTradeLog();
 
 		// Act & Assert
-		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-			cashService.transfer(100.0, tradeLog, brokerUSD, currencyUSD, incomeType, null, dateTime);
-		});
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> cashService.transfer(100.0, tradeLog, brokerUSD, currencyUSD, incomeType, null, dateTime));
 
 		assertEquals("To type is required", exception.getMessage());
 	}
@@ -270,9 +266,7 @@ class CashServiceTest {
 		TradeLog       tradeLog = getTradeLog();
 
 		// Act & Assert
-		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-			cashService.transfer(100.0, tradeLog, brokerUSD, currencyUSD, incomeType, tradeType, null);
-		});
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> cashService.transfer(100.0, tradeLog, brokerUSD, currencyUSD, incomeType, tradeType, null));
 
 		assertEquals("Date and time are required", exception.getMessage());
 	}
@@ -284,9 +278,7 @@ class CashServiceTest {
 		TradeLog       tradeLog = getTradeLog();
 
 		// Act & Assert
-		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-			cashService.transfer(0.0, tradeLog, brokerUSD, currencyUSD, incomeType, tradeType, dateTime);
-		});
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> cashService.transfer(0.0, tradeLog, brokerUSD, currencyUSD, incomeType, tradeType, dateTime));
 
 		assertEquals("Transfer amount is zero. Nothing to do", exception.getMessage());
 	}
@@ -612,9 +604,7 @@ class CashServiceTest {
 		TradeLog       tradeLog = getTradeLog();
 
 		// Act & Assert
-		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-			cashService.fee(0.0, brokerUSD, tradeLog, dateTime);
-		});
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> cashService.fee(0.0, brokerUSD, tradeLog, dateTime));
 
 		assertEquals("Fee amount is zero. Nothing to do", exception.getMessage());
 	}
@@ -627,9 +617,7 @@ class CashServiceTest {
 		Broker broker = new Broker("Test", null);
 
 		// Act & Assert
-		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-			cashService.fee(100.0, broker, tradeLog, dateTime);
-		});
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> cashService.fee(100.0, broker, tradeLog, dateTime));
 
 		assertEquals("Broker fee currency is null", exception.getMessage());
 	}
@@ -1543,5 +1531,77 @@ class CashServiceTest {
 		Commission commission = cashService.estimatedCommission("Interactive", currencyDTO, 1000L, 100.0);
 
 		assertEquals(5.0, commission.getAmount());
+	}
+
+	@Test
+	void testGetCapital_TradeAccountsOnly() throws JsonProcessingException {
+		// Arrange
+		LocalDateTime dateTime = LocalDateTime.now();
+		CurrencyRate euroToUsd = new CurrencyRate(dateTime.toLocalDate(), currencyEUR, 0.8);
+		currencyRateRepository.save(euroToUsd);
+
+		cashService.transfer(1000.0, null, brokerUSD, currencyUSD, incomeType, tradeType, dateTime);
+		cashService.transfer(1000.0, null, brokerEUR, currencyEUR, incomeType, tradeType, dateTime);
+
+		// Act
+		double capital = cashService.getCapital();
+
+		// Assert
+		assertEquals(2250.0, capital);
+	}
+
+	@Test
+	void testGetCapital_LongPositionsUSD() throws JsonProcessingException {
+		// Arrange
+		LocalDateTime dateTime = LocalDateTime.now();
+		CurrencyRate euroToUsd = new CurrencyRate(dateTime.toLocalDate(), currencyEUR, 0.8);
+		currencyRateRepository.save(euroToUsd);
+
+		cashService.transfer(1000.0, null, brokerUSD, currencyUSD, incomeType, tradeType, dateTime);
+		cashService.transfer(1000.0, null, brokerEUR, currencyEUR, incomeType, tradeType, dateTime);
+
+		TradeLog tradeLog = getTradeLog();
+		tradeLog.setTotalBought(1000.0);
+		tradeLog.setRisk(1.0);
+		tradeLogRepository.save(tradeLog);
+
+		tradeLog = getTradeLog();
+		tradeLog.setTotalBought(1000.0);
+		tradeLog.setRisk(3.0);
+		tradeLogRepository.save(tradeLog);
+
+		// Act
+		double capital = cashService.getCapital();
+
+		// Assert
+		assertEquals(4246.0, capital);
+	}
+
+	@Test
+	void testGetCapital_LongPositionsUSD_EUR() throws JsonProcessingException {
+		// Arrange
+		LocalDateTime dateTime = LocalDateTime.now();
+		CurrencyRate euroToUsd = new CurrencyRate(dateTime.toLocalDate(), currencyEUR, 0.8);
+		currencyRateRepository.save(euroToUsd);
+
+		cashService.transfer(1000.0, null, brokerUSD, currencyUSD, incomeType, tradeType, dateTime);
+		cashService.transfer(1000.0, null, brokerEUR, currencyEUR, incomeType, tradeType, dateTime);
+
+		TradeLog tradeLog = getTradeLog();
+		tradeLog.setTotalBought(1000.0);
+		tradeLog.setRisk(1.0);
+		tradeLogRepository.save(tradeLog);
+
+		tradeLog = getTradeLog();
+		tradeLog.setCurrency(currencyEUR);
+		tradeLog.setTotalBought(1000.0);
+		tradeLog.setRisk(3.0);
+		tradeLogRepository.save(tradeLog);
+
+		// Act
+		double capital = cashService.getCapital();
+
+		// Assert
+		assertEquals(4495.25, capital);
 	}
 }

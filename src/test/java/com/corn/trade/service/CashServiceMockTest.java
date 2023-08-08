@@ -2,30 +2,26 @@ package com.corn.trade.service;
 
 import com.corn.trade.dto.CurrencyDTO;
 import com.corn.trade.dto.CurrencySumDTO;
-import com.corn.trade.dto.EvalInDTO;
-import com.corn.trade.dto.EvalOutDTO;
-import com.corn.trade.entity.*;
+import com.corn.trade.entity.Broker;
+import com.corn.trade.entity.CashAccountType;
+import com.corn.trade.entity.Currency;
+import com.corn.trade.entity.TradeLog;
 import com.corn.trade.repository.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
 import static com.corn.trade.service.CashService.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -116,29 +112,6 @@ class CashServiceMockTest {
 		assertEquals(1.0, commission.getAmount());
 	}
 
-	@ParameterizedTest
-	@CsvSource({
-			"1, Interactive, USD, 200.04",
-			"-1, Interactive, USD, 199.96",
-			"1, FreedomFN, USD, 202.32",
-			"-1, FreedomFN, USD, 197.71",
-			"1, FreedomFN, KZT, 200.38",
-			"-1, FreedomFN, KZT, 199.62",
-
-	})
-	void testBreakEven(int shortC, String brokerName, String currency, Double result) {
-		// Arrange
-		CurrencyDTO currencyDTO = new CurrencyDTO(1L, currency);
-		long        items       = 50;
-		double      priceOpen   = 200.0;
-
-		// Act
-		double breakEven = cashService.getBreakEven(shortC, brokerName, currencyDTO, items, priceOpen);
-
-		// Assert
-		assertEquals(result, breakEven);
-	}
-
 	@Test
 	void testGetRiskPc() throws JsonProcessingException {
 		// Arrange
@@ -158,62 +131,6 @@ class CashServiceMockTest {
 
 		// Assert
 		assertEquals(10.0, riskPc);
-	}
-
-	@Test
-	void testEvalLong() throws JsonProcessingException {
-		// Arrange
-		EvalInDTO dto = new EvalInDTO(
-				1L, 1L, 200.0, 10.0, 50L, 198.0, 210.0,
-				LocalDate.now(), false
-		);
-		String      brokerName  = "Interactive";
-		CurrencyDTO currencyDTO = new CurrencyDTO(1L, "USD");
-		double breakEven = cashService.getBreakEven(1, brokerName, currencyDTO, dto.items(), dto.price());
-
-		// Assume currencyRateService.convertToUSD will return amount from arguments
-		when(currencyRateService.convertToUSD(currencyDTO.getId(), breakEven, dto.date())).thenReturn(breakEven);
-		when(currencyRateService.convertToUSD(currencyDTO.getId(), dto.stopLoss(), dto.date())).thenReturn(dto.stopLoss());
-
-		// Act
-		EvalOutDTO evalOut = cashService.eval(dto, brokerName, currencyDTO, 100000.0);
-
-		// Assert
-		assertEquals(448.0, evalOut.outcomeExp());
-		assertEquals(4.48, evalOut.gainPc());
-		assertEquals(1.0, evalOut.fees());
-		assertEquals(0.1, evalOut.riskPc());
-		assertEquals(22.77, evalOut.riskRewardPc());
-		assertEquals(200.04, evalOut.breakEven());
-		assertEquals(10000.0, evalOut.volume());
-	}
-
-	@Test
-	void testEvalShort() throws JsonProcessingException {
-		// Arrange
-		EvalInDTO dto = new EvalInDTO(
-				1L, 1L, 200.0, 10.0, 50L, 202.0, 190.0,
-				LocalDate.now(), true
-		);
-		String      brokerName  = "Interactive";
-		CurrencyDTO currencyDTO = new CurrencyDTO(1L, "USD");
-		double breakEven = cashService.getBreakEven(-1, brokerName, currencyDTO, dto.items(), dto.price());
-
-		// Assume currencyRateService.convertToUSD will return amount from arguments
-		when(currencyRateService.convertToUSD(currencyDTO.getId(), breakEven, dto.date())).thenReturn(breakEven);
-		when(currencyRateService.convertToUSD(currencyDTO.getId(), dto.stopLoss(), dto.date())).thenReturn(dto.stopLoss());
-
-		// Act
-		EvalOutDTO evalOut = cashService.eval(dto, brokerName, currencyDTO, 100000.0);
-
-		// Assert
-		assertEquals(448.0, evalOut.outcomeExp());
-		assertEquals(4.48, evalOut.gainPc());
-		assertEquals(1.0, evalOut.fees());
-		assertEquals(0.1, evalOut.riskPc());
-		assertEquals(22.77, evalOut.riskRewardPc());
-		assertEquals(199.96, evalOut.breakEven());
-		assertEquals(10000.0, evalOut.volume());
 	}
 
 	@Test
@@ -237,7 +154,7 @@ class CashServiceMockTest {
 		when(tradeLogRepo.openShortRisks()).thenReturn(shortRisks);
 
 		// Act
-		double openPositionsUSD = cashService.estimatedPositionsUSD();
+		double openPositionsUSD = cashService.openPositionsUSD();
 
 		// Assert
 		assertEquals(270.0, openPositionsUSD);
@@ -252,7 +169,7 @@ class CashServiceMockTest {
 		when(tradeLogRepo.openLongSums()).thenReturn(opens);
 
 		// Act
-		double openPositionsUSD = cashService.estimatedPositionsUSD();
+		double openPositionsUSD = cashService.openPositionsUSD();
 
 		// Assert
 		assertEquals(0.0, openPositionsUSD);
@@ -269,9 +186,7 @@ class CashServiceMockTest {
 		when(accountTypeRepo.findCashAccountTypeByName("fee")).thenReturn(new CashAccountType());
 
 		// Act & Assert
-		Exception exception = assertThrows(IllegalStateException.class, () -> {
-			cashService.fee(100.0, broker, tradeLog, dateTime);
-		});
+		Exception exception = assertThrows(IllegalStateException.class, () -> cashService.fee(100.0, broker, tradeLog, dateTime));
 
 		assertEquals("Trade account type is null", exception.getMessage());
 	}
@@ -287,9 +202,7 @@ class CashServiceMockTest {
 		when(accountTypeRepo.findCashAccountTypeByName("fee")).thenReturn(null);
 
 		// Act & Assert
-		Exception exception = assertThrows(IllegalStateException.class, () -> {
-			cashService.fee(100.0, broker, tradeLog, dateTime);
-		});
+		Exception exception = assertThrows(IllegalStateException.class, () -> cashService.fee(100.0, broker, tradeLog, dateTime));
 
 		assertEquals("Fee account type is null", exception.getMessage());
 	}
@@ -305,10 +218,8 @@ class CashServiceMockTest {
 		when(accountTypeRepo.findCashAccountTypeByName(BORROWED)).thenReturn(null);
 
 		// Act & Assert
-		Exception exception = assertThrows(IllegalStateException.class, () -> {
-			cashService.sellShort(100, 100.0, 1.0,
-			                      dateTime, broker, currency, tradeLog);
-		});
+		Exception exception = assertThrows(IllegalStateException.class, () -> cashService.sellShort(100, 100.0, 1.0,
+	                                                                                            dateTime, broker, currency, tradeLog));
 
 		assertEquals(ACCOUNT_TYPES_ARE_NOT_FOUND, exception.getMessage());
 	}
@@ -325,10 +236,8 @@ class CashServiceMockTest {
 		when(accountTypeRepo.findCashAccountTypeByName(BORROWED)).thenReturn(new CashAccountType());
 
 		// Act & Assert
-		Exception exception = assertThrows(IllegalStateException.class, () -> {
-			cashService.sellShort(100, 100.0, 1.0,
-			                      dateTime, broker, currency, tradeLog);
-		});
+		Exception exception = assertThrows(IllegalStateException.class, () -> cashService.sellShort(100, 100.0, 1.0,
+	                                                                                            dateTime, broker, currency, tradeLog));
 
 		assertEquals(ACCOUNT_TYPES_ARE_NOT_FOUND, exception.getMessage());
 	}
@@ -346,10 +255,8 @@ class CashServiceMockTest {
 		when(accountTypeRepo.findCashAccountTypeByName(OUTCOME)).thenReturn(new CashAccountType());
 
 		// Act & Assert
-		Exception exception = assertThrows(IllegalStateException.class, () -> {
-			cashService.sell(100, 100.0, 1.0,
-			                      dateTime, broker, tradeLog);
-		});
+		Exception exception = assertThrows(IllegalStateException.class, () -> cashService.sell(100, 100.0, 1.0,
+	                                                                                       dateTime, broker, tradeLog));
 
 		assertEquals(ACCOUNT_TYPES_ARE_NOT_FOUND, exception.getMessage());
 	}
@@ -367,10 +274,8 @@ class CashServiceMockTest {
 		when(accountTypeRepo.findCashAccountTypeByName(OUTCOME)).thenReturn(new CashAccountType());
 
 		// Act & Assert
-		Exception exception = assertThrows(IllegalStateException.class, () -> {
-			cashService.sell(100, 100.0, 1.0,
-			                 dateTime, broker, tradeLog);
-		});
+		Exception exception = assertThrows(IllegalStateException.class, () -> cashService.sell(100, 100.0, 1.0,
+	                                                                                       dateTime, broker, tradeLog));
 
 		assertEquals(ACCOUNT_TYPES_ARE_NOT_FOUND, exception.getMessage());
 	}
@@ -388,10 +293,8 @@ class CashServiceMockTest {
 		when(accountTypeRepo.findCashAccountTypeByName(OUTCOME)).thenReturn(null);
 
 		// Act & Assert
-		Exception exception = assertThrows(IllegalStateException.class, () -> {
-			cashService.sell(100, 100.0, 1.0,
-			                 dateTime, broker, tradeLog);
-		});
+		Exception exception = assertThrows(IllegalStateException.class, () -> cashService.sell(100, 100.0, 1.0,
+	                                                                                       dateTime, broker, tradeLog));
 
 		assertEquals(ACCOUNT_TYPES_ARE_NOT_FOUND, exception.getMessage());
 	}
@@ -408,10 +311,8 @@ class CashServiceMockTest {
 		when(accountTypeRepo.findCashAccountTypeByName(OPEN)).thenReturn(new CashAccountType());
 
 		// Act & Assert
-		Exception exception = assertThrows(IllegalStateException.class, () -> {
-			cashService.buy(100, 100.0, 1.0,
-			                 dateTime, broker, currency, tradeLog);
-		});
+		Exception exception = assertThrows(IllegalStateException.class, () -> cashService.buy(100, 100.0, 1.0,
+	                                                                                      dateTime, broker, currency, tradeLog));
 
 		assertEquals(ACCOUNT_TYPES_ARE_NOT_FOUND, exception.getMessage());
 	}
@@ -428,10 +329,8 @@ class CashServiceMockTest {
 		when(accountTypeRepo.findCashAccountTypeByName(OPEN)).thenReturn(null);
 
 		// Act & Assert
-		Exception exception = assertThrows(IllegalStateException.class, () -> {
-			cashService.buy(100, 100.0, 1.0,
-			                dateTime, broker, currency, tradeLog);
-		});
+		Exception exception = assertThrows(IllegalStateException.class, () -> cashService.buy(100, 100.0, 1.0,
+	                                                                                      dateTime, broker, currency, tradeLog));
 
 		assertEquals(ACCOUNT_TYPES_ARE_NOT_FOUND, exception.getMessage());
 	}
@@ -461,10 +360,8 @@ class CashServiceMockTest {
 		when(accountTypeRepo.findCashAccountTypeByName(OUTCOME)).thenReturn(outcomeType);
 
 		// Act & Assert
-		Exception exception = assertThrows(IllegalStateException.class, () -> {
-			cashService.buyShort(100, 100.0, 1.0,
-			                     1.0, dateTime, broker, tradeLog);
-		});
+		Exception exception = assertThrows(IllegalStateException.class, () -> cashService.buyShort(100, 100.0, 1.0,
+	                                                                                           1.0, dateTime, broker, tradeLog));
 
 		assertEquals(ACCOUNT_TYPES_ARE_NOT_FOUND, exception.getMessage());
 	}
