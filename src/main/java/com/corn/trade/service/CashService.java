@@ -30,6 +30,7 @@ public class CashService {
 	public static final String BORROWED = "borrowed";
 	public static final String ACCOUNT_TYPES_ARE_NOT_FOUND = "Account types are not found";
 	public static final String OPEN = "open";
+	public static final String OUTCOME = "outcome";
 	private final        CashAccountRepository     accountRepo;
 	private final        CashFlowRepository        cashFlowRepo;
 	private final        BrokerRepository          brokerRepo;
@@ -137,23 +138,22 @@ public class CashService {
 	                            CashAccountType toType,
 	                            LocalDateTime dateTime) {
 		if (broker == null) {
-			throw new IllegalArgumentException("Broker is null");
+			throw new IllegalArgumentException("Broker is required");
 		}
 		if (currency == null) {
-			throw new IllegalArgumentException("Currency is null");
+			throw new IllegalArgumentException("Currency is required");
 		}
 		if (fromType == null) {
-			throw new IllegalArgumentException("From type is null");
+			throw new IllegalArgumentException("From type is required");
 		}
 		if (toType == null) {
-			throw new IllegalArgumentException("To type is null");
+			throw new IllegalArgumentException("To type is required");
 		}
 		if (dateTime == null) {
-			throw new IllegalArgumentException("Date and time is null");
+			throw new IllegalArgumentException("Date and time are required");
 		}
 		if (transfer == 0) {
-			logger.debug("Transfer amount is zero. Nothing to do.");
-			return null;
+			throw new IllegalArgumentException("Transfer amount is zero. Nothing to do");
 		}
 
 
@@ -245,18 +245,17 @@ public class CashService {
 		CashAccountType fromTrade = accountTypeRepo.findCashAccountTypeByName(TRADE);
 		CashAccountType toFee     = accountTypeRepo.findCashAccountTypeByName("fee");
 		Currency        currency  = broker.getFeeCurrency();
-		if (amount == 0) {
-			logger.debug("Fee amount is zero. Nothing to do.");
-			return;
+		if (amount == 0.0) {
+			throw new IllegalArgumentException("Fee amount is zero. Nothing to do");
 		}
 		if (currency == null) {
 			throw new IllegalArgumentException("Broker fee currency is null");
 		}
 		if (fromTrade == null) {
-			throw new IllegalArgumentException("trade type is null");
+			throw new IllegalStateException("Trade account type is null");
 		}
 		if (toFee == null) {
-			throw new IllegalArgumentException("fee type is null");
+			throw new IllegalStateException("Fee account type is null");
 		}
 
 		transfer(amount, tradeLog, broker, currency, fromTrade, toFee, dateTime);
@@ -335,7 +334,7 @@ public class CashService {
 		}
 		CashAccountType tradeType   = accountTypeRepo.findCashAccountTypeByName(TRADE);
 		CashAccountType openType    = accountTypeRepo.findCashAccountTypeByName(OPEN);
-		CashAccountType outcomeType = accountTypeRepo.findCashAccountTypeByName("outcome");
+		CashAccountType outcomeType = accountTypeRepo.findCashAccountTypeByName(OUTCOME);
 
 		if (tradeType == null || openType == null || outcomeType == null) {
 			throw new IllegalStateException(ACCOUNT_TYPES_ARE_NOT_FOUND);
@@ -462,7 +461,7 @@ public class CashService {
 		CashAccountType tradeType    = accountTypeRepo.findCashAccountTypeByName(TRADE);
 		CashAccountType borrowedType = accountTypeRepo.findCashAccountTypeByName(BORROWED);
 		CashAccountType openType     = accountTypeRepo.findCashAccountTypeByName(OPEN);
-		CashAccountType outcomeType  = accountTypeRepo.findCashAccountTypeByName("outcome");
+		CashAccountType outcomeType  = accountTypeRepo.findCashAccountTypeByName(OUTCOME);
 
 		if (tradeType == null || borrowedType == null || openType == null || outcomeType == null) {
 			throw new IllegalStateException(ACCOUNT_TYPES_ARE_NOT_FOUND);
@@ -481,7 +480,8 @@ public class CashService {
 		// we transfer the buying commission from the trade account
 		fee(buyingCommission, broker, tradeLog, dateTime);
 		// we transfer the borrowing commission from the trade account
-		fee(borrowingCommission, broker, tradeLog, dateTime);
+		if (borrowingCommission > 0)
+			fee(borrowingCommission, broker, tradeLog, dateTime);
 		// we transfer the outcome to or from the trade account
 		if (outcome > 0) { // we have profit
 			transfer(outcome, tradeLog, broker, tradeCurrency, outcomeType, tradeType, dateTime);
