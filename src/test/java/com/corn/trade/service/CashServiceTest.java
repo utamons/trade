@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
+import static com.corn.trade.util.Util.round;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -63,7 +64,7 @@ class CashServiceTest {
 	@PersistenceContext
 	private EntityManager entityManager;
 
-	private Currency currencyUSD, currencyEUR;
+	private Currency currencyUSD, currencyEUR, currencyKZT;
 
 	private Broker brokerUSD, brokerEUR;
 
@@ -95,6 +96,7 @@ class CashServiceTest {
 
 		currencyEUR = currencyRepository.getReferenceById(2L);
 		currencyUSD = currencyRepository.getReferenceById(1L);
+		currencyKZT = currencyRepository.getReferenceById(4L);
 
 		brokerUSD = new Broker("Test Broker", currencyUSD);
 		brokerUSD = brokerRepository.save(brokerUSD);
@@ -148,6 +150,8 @@ class CashServiceTest {
 		LocalDateTime dateTime = LocalDateTime.now();
 		CurrencyRate euroToUsd = new CurrencyRate(dateTime.toLocalDate(), currencyEUR, 0.8);
 		currencyRateRepository.save(euroToUsd);
+		CurrencyRate kztToUsd = new CurrencyRate(dateTime.toLocalDate(), currencyKZT, 0.0025);
+		currencyRateRepository.save(kztToUsd);
 	}
 
 	@Test
@@ -1664,6 +1668,272 @@ class CashServiceTest {
 		assertEquals(12.45, out.riskRewardPc());
 		assertEquals(99.78, out.breakEven());
 		assertEquals(1000.0, out.volume());
+	}
 
+	@Test
+	void testEval_LongKZT() throws JsonProcessingException {
+		LocalDate date = LocalDate.now();
+		brokerUSD.setName("FreedomFN");
+		EvalInDTO evalInDTO = new EvalInDTO(
+				brokerUSD.getId(),
+				3L,
+				100.0,
+				10.0,
+				10L,
+				99.0,
+				110.0,
+				date,
+				false
+		);
+
+		cashService.transfer(1000.0, null, brokerUSD, currencyKZT, incomeType, tradeType, LocalDateTime.now());
+
+		// Act
+		EvalOutDTO out = cashService.eval(evalInDTO);
+
+		// Assert
+		assertEquals(98.21, out.outcomeExp());
+		assertEquals(9.82, out.gainPc());
+		assertEquals(1.79, out.fees());
+		assertEquals(11.9, out.risk());
+		assertEquals(1.19, out.riskPc());
+		assertEquals(12.12, out.riskRewardPc());
+		assertEquals(100.19, out.breakEven());
+		assertEquals(1000.0, out.volume());
+
+	}
+
+	@Test
+	void testEvalToFit_Long_Calculated_IBKR_USD() throws JsonProcessingException {
+		// Arrange
+		LocalDate date = LocalDate.now();
+		brokerUSD.setName("Interactive");
+		EvalInFitDTO evalInDTO = new EvalInFitDTO(
+				brokerUSD.getId(),
+				1L,
+				100.0,
+				10.0,
+				0.5,
+				33.33,
+				25.0,
+				99.0,
+				date,
+				false,
+				false
+		);
+
+		cashService.transfer(4000.0, null, brokerUSD, currencyUSD, incomeType, tradeType, LocalDateTime.now());
+
+		// Act
+		EvalOutFitDTO out = cashService.evalToFit(evalInDTO);
+
+		// Assert
+		assertEquals(round(2.0), out.getFees());
+        assertEquals(round(100.30), out.getBreakEven());
+		assertEquals(round(107.05), out.getTakeProfit());
+		assertEquals(round(61.0), out.getOutcomeExp());
+		assertEquals(round(99.0), out.getStopLoss());
+		assertEquals(round(100.05), out.getPrice());
+		assertEquals(9L, out.getItems());
+		assertEquals(round(900.45), out.getVolume());
+		assertEquals(round(6.77), out.getGainPc());
+		assertEquals(round(19.18), out.getRiskRewardPc());
+		assertEquals(round(0.29), out.getRiskPc());
+		assertEquals(round(22.51), out.getDepositPc());
+	}
+
+	@Test
+	void testEvalToFit_Long_Calculated_Freedom_KZT() throws JsonProcessingException {
+		// Arrange
+		LocalDate date = LocalDate.now();
+		brokerUSD.setName("FreedomFN");
+		EvalInFitDTO evalInDTO = new EvalInFitDTO(
+				brokerUSD.getId(),
+				3L,
+				100.0,
+				10.0,
+				0.5,
+				33.33,
+				25.0,
+				99.0,
+				date,
+				false,
+				false
+		);
+
+		cashService.transfer(4000.0, null, brokerUSD, currencyKZT, incomeType, tradeType, LocalDateTime.now());
+
+		// Act
+		EvalOutFitDTO out = cashService.evalToFit(evalInDTO);
+
+		// Assert
+		assertEquals(round(1.59), out.getFees());
+		assertEquals(round(100.24), out.getBreakEven());
+		assertEquals(round(107.05), out.getTakeProfit());
+		assertEquals(round(61.41), out.getOutcomeExp());
+		assertEquals(round(99.0), out.getStopLoss());
+		assertEquals(round(100.05), out.getPrice());
+		assertEquals(9L, out.getItems());
+		assertEquals(round(900.45), out.getVolume());
+		assertEquals(round(6.82), out.getGainPc());
+		assertEquals(round(18.17), out.getRiskRewardPc());
+		assertEquals(round(0.28), out.getRiskPc());
+		assertEquals(round(22.51), out.getDepositPc());
+	}
+
+	@Test
+	void testEvalToFit_Short_Calculated_IBKR_USD() throws JsonProcessingException {
+		// Arrange
+		LocalDate date = LocalDate.now();
+		brokerUSD.setName("Interactive");
+		EvalInFitDTO evalInDTO = new EvalInFitDTO(
+				brokerUSD.getId(),
+				1L,
+				100.0,
+				10.0,
+				0.5,
+				33.33,
+				25.0,
+				101.0,
+				date,
+				true,
+				false
+		);
+
+		cashService.transfer(4000.0, null, brokerUSD, currencyUSD, incomeType, tradeType, LocalDateTime.now());
+
+		// Act
+		EvalOutFitDTO out = cashService.evalToFit(evalInDTO);
+
+		// Assert
+		assertEquals(round(2.0), out.getFees());
+		assertEquals(round(99.73), out.getBreakEven());
+		assertEquals(round(92.95), out.getTakeProfit());
+		assertEquals(round(68.0), out.getOutcomeExp());
+		assertEquals(round(101.0), out.getStopLoss());
+		assertEquals(round(99.95), out.getPrice());
+		assertEquals(10L, out.getItems());
+		assertEquals(round(999.50), out.getVolume());
+		assertEquals(round(6.80), out.getGainPc());
+		assertEquals(round(18.68), out.getRiskRewardPc());
+		assertEquals(round(0.32), out.getRiskPc());
+		assertEquals(round(24.99), out.getDepositPc());
+	}
+
+	@Test
+	void testEvalToFit_Long_Technical_Freedom_KZT() throws JsonProcessingException {
+		// Arrange
+		LocalDate date = LocalDate.now();
+		brokerUSD.setName("FreedomFN");
+		EvalInFitDTO evalInDTO = new EvalInFitDTO(
+				brokerUSD.getId(),
+				3L,
+				100.0,
+				10.0,
+				0.5,
+				33.33,
+				25.0,
+				null,
+				date,
+				false,
+				true
+		);
+
+		cashService.transfer(4000.0, null, brokerUSD, currencyKZT, incomeType, tradeType, LocalDateTime.now());
+
+		// Act
+		EvalOutFitDTO out = cashService.evalToFit(evalInDTO);
+
+		// Assert
+		assertEquals(round(1.41), out.getFees());
+		assertEquals(round(100.24), out.getBreakEven());
+		assertEquals(round(107.05), out.getTakeProfit());
+		assertEquals(round(54.59), out.getOutcomeExp());
+		assertEquals(round(97.97), out.getStopLoss());
+		assertEquals(round(100.05), out.getPrice());
+		assertEquals(8L, out.getItems());
+		assertEquals(round(800.40), out.getVolume());
+		assertEquals(round(6.82), out.getGainPc());
+		assertEquals(round(33.27), out.getRiskRewardPc());
+		assertEquals(round(0.45), out.getRiskPc());
+		assertEquals(round(20.01), out.getDepositPc());
+	}
+
+	@Test
+	void testEvalToFit_Long_Technical_IBKR_USD() throws JsonProcessingException {
+		// Arrange
+		LocalDate date = LocalDate.now();
+		brokerUSD.setName("Interactive");
+		EvalInFitDTO evalInDTO = new EvalInFitDTO(
+				brokerUSD.getId(),
+				1L,
+				100.0,
+				10.0,
+				0.5,
+				33.33,
+				25.0,
+				null,
+				date,
+				false,
+				true
+		);
+
+		cashService.transfer(4000.0, null, brokerUSD, currencyUSD, incomeType, tradeType, LocalDateTime.now());
+
+		// Act
+		EvalOutFitDTO out = cashService.evalToFit(evalInDTO);
+
+		// Assert
+		assertEquals(round(2.0), out.getFees());
+		assertEquals(round(100.30), out.getBreakEven());
+		assertEquals(round(107.05), out.getTakeProfit());
+		assertEquals(round(61.0), out.getOutcomeExp());
+		assertEquals(round(98.06), out.getStopLoss());
+		assertEquals(round(100.05), out.getPrice());
+		assertEquals(9L, out.getItems());
+		assertEquals(round(900.45), out.getVolume());
+		assertEquals(round(6.77), out.getGainPc());
+		assertEquals(round(33.05), out.getRiskRewardPc());
+		assertEquals(round(0.5), out.getRiskPc());
+		assertEquals(round(22.51), out.getDepositPc());
+	}
+
+	@Test
+	void testEvalToFit_Short_Technical_IBKR_USD() throws JsonProcessingException {
+		// Arrange
+		LocalDate date = LocalDate.now();
+		brokerUSD.setName("Interactive");
+		EvalInFitDTO evalInDTO = new EvalInFitDTO(
+				brokerUSD.getId(),
+				1L,
+				100.0,
+				10.0,
+				0.5,
+				33.33,
+				25.0,
+				null,
+				date,
+				true,
+				true
+		);
+
+		cashService.transfer(4000.0, null, brokerUSD, currencyUSD, incomeType, tradeType, LocalDateTime.now());
+
+		// Act
+		EvalOutFitDTO out = cashService.evalToFit(evalInDTO);
+
+		// Assert
+		assertEquals(round(2.0), out.getFees());
+		assertEquals(round(99.70), out.getBreakEven());
+		assertEquals(round(92.95), out.getTakeProfit());
+		assertEquals(round(61.0), out.getOutcomeExp());
+		assertEquals(round(101.94), out.getStopLoss());
+		assertEquals(round(99.95), out.getPrice());
+		assertEquals(9L, out.getItems());
+		assertEquals(round(899.55), out.getVolume());
+		assertEquals(round(6.78), out.getGainPc());
+		assertEquals(round(33.05), out.getRiskRewardPc());
+		assertEquals(round(0.5), out.getRiskPc());
+		assertEquals(round(22.49), out.getDepositPc());
 	}
 }

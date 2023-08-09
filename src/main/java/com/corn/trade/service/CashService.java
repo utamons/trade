@@ -545,6 +545,38 @@ public class CashService {
 		                  .map(CashAccountMapper::toDTO).toList();
 	}
 
+	/**
+	 * Estimated capital for a broker.
+	 * <p>
+	 *
+	 * @param broker broker
+	 * @return estimated capital
+	 * @throws JsonProcessingException if currency conversion fails
+	 */
+	public double getCapital(Broker broker) throws JsonProcessingException {
+		CashAccountType   tradeType = accountTypeRepo.findCashAccountTypeByName(TRADE);
+		List<CashAccount> accounts  = accountRepo.findAllByBrokerAndType(broker, tradeType);
+		double            capital   = 0.0;
+		LocalDate         today     = LocalDate.now();
+		for (CashAccount account : accounts) {
+			double amount = getAccountTotal(account);
+			capital += currencyRateService.convertToUSD(
+					account.getCurrency().getId(),
+					amount,
+					today);
+		}
+
+		return capital + openPositionsUSD(broker);
+	}
+
+	/**
+	 * Estimated overall capital.
+	 * <p>
+	 * Is used for statistics only. Risk assessment is made on a per-broker basis.
+	 *
+	 * @return estimated overall capital
+	 * @throws JsonProcessingException if currency conversion fails
+	 */
 	public double getCapital() throws JsonProcessingException {
 		CashAccountType   tradeType = accountTypeRepo.findCashAccountTypeByName(TRADE);
 		List<CashAccount> accounts  = accountRepo.findAllByType(tradeType);
@@ -583,7 +615,7 @@ public class CashService {
 	}
 
 	/**
-	 * Estimated capital, stored in open positions
+	 * Estimated capital, stored in open positions in all brokers.
 	 * <p>
 	 * We take all long positions at maximum risk (all losses) and
 	 * distract all maximum risks in short positions (all losses).
@@ -617,16 +649,76 @@ public class CashService {
 		return sum;
 	}
 
+	/**
+	 * Estimated capital, stored in open positions in a broker.
+	 * <p>
+	 * We take all long positions at maximum risk (all losses) and
+	 * distract all maximum risks in short positions (all losses).
+	 * <p>
+	 * Thus, we get the capital that is stored in open positions in the worth case.
+	 *
+	 * @return the estimated capital, stored in open positions
+	 * @throws JsonProcessingException if currency rate service fails.
+	 */
+	public double openPositionsUSD(Broker broker) throws JsonProcessingException {
+		List<CurrencySumDTO> opens      = tradeLogRepo.openLongSumsByBroker(broker);
+		List<CurrencySumDTO> shortRisks = tradeLogRepo.openShortRisksByBroker(broker);
+
+		double    sum  = 0.0;
+		LocalDate date = LocalDate.now();
+
+		for (CurrencySumDTO dto : opens) {
+			sum += currencyRateService.convertToUSD(
+					dto.getCurrencyId(),
+					dto.getSum(),
+					date);
+		}
+
+		for (CurrencySumDTO dto : shortRisks) {
+			sum -= currencyRateService.convertToUSD(
+					dto.getCurrencyId(),
+					dto.getSum(),
+					date);
+		}
+
+		return sum;
+	}
+
 	public record EvalToFitRecord(long items, double volumePc, EvalOutDTO eval) {
 	}
 
-	public long getMaxItems(Currency currency, double depositPc, double price) throws JsonProcessingException {
-		double capital      = getCapital();
+	/**
+	 * Calculates the maximum number of items per trade for the given capital.
+	 *
+	 * @param capital  capital
+	 * @param depositPc deposit percentage per trade
+	 * @param price   price
+	 * @param currency currency of the trade
+	 *
+	 * @return the maximum number of items per trade
+	 * @throws JsonProcessingException if currency rate service fails.
+	 */
+	public long getMaxItems(double capital, double depositPc, double price, Currency currency) throws JsonProcessingException {
 		double maxVolumeUSD = capital * depositPc / 100.0;
 		double priceUSD     = currencyRateService.convertToUSD(currency.getId(), price, LocalDate.now());
 		return (long) (maxVolumeUSD / priceUSD);
 	}
 
+	/**
+	 * Calculates an optimal number of items for a trade based on
+	 * allowed risk, risk/reward ratio and maximum volume per trade.
+	 *
+	 * @param evalDTO evaluation parameters
+	 * @param currency currency of the trade
+	 * @param atr average true range
+	 * @param stopLoss stop loss
+	 * @param takeProfit take profit
+	 * @param price price
+	 * @param capital capital by a broker
+	 *
+	 * @return calculation results
+	 * @throws JsonProcessingException if currency rate service fails.
+	 */
 	public EvalToFitRecord evalToFit(EvalInFitDTO evalDTO,
 	                                 Currency currency,
 	                                 Double atr,
@@ -636,7 +728,10 @@ public class CashService {
 	                                 double capital) throws JsonProcessingException {
 		double            volumePc;
 		EvalOutDTO        eval;
-		long              items       = getMaxItems(currency, evalDTO.depositPc(), price);
+		long              items       = getMaxItems(capital, evalDTO.depositPc(), price, currency);
+		if (items == 0) {
+			throw new IllegalStateException("No money for trading in the currency " + currency.getName().trim() + "!");
+		}
 		final Broker      broker      = brokerRepo.getReferenceById(evalDTO.brokerId());
 		final Ticker      ticker      = tickerRepo.getReferenceById(evalDTO.tickerId());
 		final CurrencyDTO currencyDTO = CurrencyMapper.toDTO(ticker.getCurrency());
@@ -679,8 +774,12 @@ public class CashService {
 		Double    levelPrice = evalDTO.levelPrice();
 		Double    atr        = evalDTO.atr();
 		Currency  currency   = tickerRepo.getReferenceById(evalDTO.tickerId()).getCurrency();
+		Broker    broker     = brokerRepo.getReferenceById(evalDTO.brokerId());
 		double    price      = levelPrice + (shortC * 0.05);
-		double    capital    = getCapital();
+		double    capital    = getCapital(broker);
+		if (capital == 0.0) {
+			throw new IllegalStateException("No capital for broker " + broker.getName());
+		}
 		// calculated stop loss is 0.2% of the level price (for US stocks)
 		double stopLoss =
 				evalDTO.stopLoss() == null ? levelPrice - (shortC * levelPrice / 100 * 0.2) : evalDTO.stopLoss();
@@ -694,10 +793,6 @@ public class CashService {
 			stopLoss = stopLoss + (shortC * 0.01);
 		}
 		evalToFitRecord = evalToFit(evalDTO, currency, atr, stopLoss, takeProfit, price, capital);
-
-		if (evalToFitRecord == null) {
-			return null;
-		}
 
 		return new EvalOutFitDTO(
 				evalToFitRecord.eval.fees(),
@@ -740,7 +835,7 @@ public class CashService {
 		final Broker      broker      = brokerRepo.getReferenceById(evalDTO.brokerId());
 		final Ticker      ticker      = tickerRepo.getReferenceById(evalDTO.tickerId());
 		final CurrencyDTO currencyDTO = CurrencyMapper.toDTO(ticker.getCurrency());
-		final double      capital     = getCapital();
+		final double      capital     = getCapital(broker);
 		return eval(evalDTO, broker.getName(), currencyDTO, capital);
 	}
 
@@ -764,7 +859,7 @@ public class CashService {
 
 		final double risk = round(abs(stopLoss - breakEven) * items, 2);
 
-		final double netOutcome = abs(grossProfit - openCommission - closeCommission);
+		final double netOutcome = round(abs(grossProfit - openCommission - closeCommission), 2);
 
 		final double riskRewardPc = round(risk / netOutcome * 100, 2);
 
@@ -772,14 +867,21 @@ public class CashService {
 
 		final double gainPc = round(netOutcome / volume * 100, 2);
 
-		return new EvalOutDTO(netOutcome, gainPc, openCommission + closeCommission, risk, riskPc, riskRewardPc, breakEven, volume);
+		return new EvalOutDTO(netOutcome,
+		                      gainPc,
+		                      openCommission + closeCommission,
+		                      risk,
+		                      riskPc,
+		                      riskRewardPc,
+		                      breakEven,
+		                      volume);
 	}
 
 	/**
 	 * Estimation of risk per trade in percent to a risk base.
 	 * The risk base is the capital or less.
 	 *
-	 * @param risk   risk in money
+	 * @param risk        risk in money
 	 * @param capital     the capital
 	 * @param openDate    the date of opening position
 	 * @param currencyDTO currency
