@@ -10,6 +10,6 @@ public class CurrencyMapper {
 	}
 
 	public static CurrencyDTO toDTO(Currency entity) {
-		return new CurrencyDTO(entity.getId(), entity.getName());
+		return new CurrencyDTO(entity.getId(), entity.getName().trim());
 	}
 }

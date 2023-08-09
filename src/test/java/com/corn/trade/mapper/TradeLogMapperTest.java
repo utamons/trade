@@ -110,6 +110,8 @@ class TradeLogMapperTest {
 		when(entity.getFinalTakeProfit()).thenReturn(108.0);
 		when(entity.getNote()).thenReturn("Long trade");
 		when(currencyRateService.convert(any(), any(), any(), any())).thenReturn(100.0);
+		when(broker.getFeeCurrency()).thenReturn(currency);
+		when(currency.getName()).thenReturn("USD");
 
 		// Act
 		TradeLogDTO dto = new TradeLogMapper(currencyRateService).toDTO(entity);

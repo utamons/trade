@@ -762,11 +762,9 @@ public class CashService {
 
 		final double grossProfit = abs(takeProfit - priceOpen) * items;
 
-		final double risk = abs(stopLoss - breakEven) * items;
+		final double risk = round(abs(stopLoss - breakEven) * items, 2);
 
-		final double taxes = getTaxes(grossProfit);
-
-		final double netOutcome = abs(grossProfit - openCommission - closeCommission - taxes);
+		final double netOutcome = abs(grossProfit - openCommission - closeCommission);
 
 		final double riskRewardPc = round(risk / netOutcome * 100, 2);
 
@@ -774,7 +772,7 @@ public class CashService {
 
 		final double gainPc = round(netOutcome / volume * 100, 2);
 
-		return new EvalOutDTO(netOutcome, gainPc, openCommission, risk, riskPc, riskRewardPc, breakEven, volume);
+		return new EvalOutDTO(netOutcome, gainPc, openCommission + closeCommission, risk, riskPc, riskRewardPc, breakEven, volume);
 	}
 
 	/**
