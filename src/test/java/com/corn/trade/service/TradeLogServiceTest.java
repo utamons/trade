@@ -16,6 +16,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDateTime;
 
+import static com.corn.trade.service.TradeLogService.validateOpenCommon;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -278,6 +279,37 @@ class TradeLogServiceTest {
 	}
 
 	@Test
+	void testValidateOpen_InvalidLongPosition_ItemBoughtZero() {
+		// Arrange
+		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
+				"long",
+				LocalDateTime.now(),
+				1L,
+				1L,
+				1L,
+				100.0,
+				2.0,
+				1.0,
+				100L,
+				0.5,
+				10.0,
+				99.0,
+				10.0,
+				98.0,
+				1100.0,
+				0L,
+				null,
+				100.0,
+				null,
+				2.1,
+				"TestComment"
+		);
+
+		// Act & Assert
+		assertThrows(IllegalArgumentException.class, () -> tradeService.validateOpen(openDTO, true));
+	}
+
+	@Test
 	void testValidateOpen_ValidShortPosition() {
 		// Arrange
 		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
@@ -393,6 +425,37 @@ class TradeLogServiceTest {
 				99L,
 				null,
 				0.0,
+				2.1,
+				"TestComment"
+		);
+
+		// Act & Assert
+		assertThrows(IllegalArgumentException.class, () -> tradeService.validateOpen(openDTO, false));
+	}
+
+	@Test
+	void testValidateOpen_InvalidShortPosition_ItemsSoldZero() {
+		// Arrange
+		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
+				"short",
+				LocalDateTime.now(),
+				1L,
+				1L,
+				1L,
+				100.0,
+				2.0,
+				1.0,
+				100L,
+				0.5,
+				10.0,
+				99.0,
+				10.0,
+				98.0,
+				1100.0,
+				null,
+				0L,
+				null,
+				100.0,
 				2.1,
 				"TestComment"
 		);
@@ -682,4 +745,397 @@ class TradeLogServiceTest {
 		assertThrows(IllegalArgumentException.class, () -> tradeService.validateClose(closeDTO, false));
 	}
 
+	@Test
+	void testValidateOpenCommon_OpenDTOisNull() {
+		// Arrange
+		TradeLogOpenDTO openDTO = null;
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> validateOpenCommon(openDTO));
+		assertEquals("OpenDTO must not be null", exception.getMessage());
+	}
+
+	@Test
+	void testValidateOpenCommon_RiskPcNull() {
+		// Arrange
+		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
+				"short",
+				LocalDateTime.now(),
+				1L,
+				1L,
+				1L,
+				100.0,
+				2.0,
+				1.0,
+				100L,
+				null,
+				10.0,
+				99.0,
+				10.0,
+				98.0,
+				1100.0,
+				null,
+				99L,
+				null,
+				0.0,
+				2.1,
+				"TestComment"
+		);
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> tradeService.validateOpen(openDTO, false));
+        assertEquals("Risk to capital must not be null", exception.getMessage());
+	}
+
+	@Test
+	void testValidateOpenCommon_RiskNull() {
+		// Arrange
+		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
+				"short",
+				LocalDateTime.now(),
+				1L,
+				1L,
+				1L,
+				100.0,
+				2.0,
+				1.0,
+				100L,
+				10.0,
+				null,
+				99.0,
+				10.0,
+				98.0,
+				1100.0,
+				null,
+				99L,
+				null,
+				0.0,
+				2.1,
+				"TestComment"
+		);
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> tradeService.validateOpen(openDTO, false));
+		assertEquals("Risk must not be null", exception.getMessage());
+	}
+
+	@Test
+	void testValidateOpenCommon_EstimatedItemsNull() {
+		// Arrange
+		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
+				"short",
+				LocalDateTime.now(),
+				1L,
+				1L,
+				1L,
+				100.0,
+				2.0,
+				1.0,
+				null,
+				10.0,
+				10.0,
+				99.0,
+				10.0,
+				98.0,
+				1100.0,
+				10L,
+				99L,
+				100.0,
+				0.0,
+				2.1,
+				"TestComment"
+		);
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> tradeService.validateOpen(openDTO, false));
+		assertEquals("Estimated items must not be null", exception.getMessage());
+	}
+
+	@Test
+	void testValidateOpenCommon_EstimatedBreakEvenNull() {
+		// Arrange
+		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
+				"short",
+				LocalDateTime.now(),
+				1L,
+				1L,
+				1L,
+				100.0,
+				2.0,
+				null,
+				10L,
+				10.0,
+				10.0,
+				99.0,
+				10.0,
+				98.0,
+				1100.0,
+				10L,
+				99L,
+				100.0,
+				0.0,
+				2.1,
+				"TestComment"
+		);
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> tradeService.validateOpen(openDTO, false));
+		assertEquals("Estimated break even must not be null", exception.getMessage());
+	}
+
+	@Test
+	void testValidateOpenCommon_EstimatedFeesNull() {
+		// Arrange
+		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
+				"short",
+				LocalDateTime.now(),
+				1L,
+				1L,
+				1L,
+				100.0,
+				null,
+				100.0,
+				10L,
+				10.0,
+				10.0,
+				99.0,
+				10.0,
+				98.0,
+				1100.0,
+				10L,
+				99L,
+				100.0,
+				0.0,
+				2.1,
+				"TestComment"
+		);
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> tradeService.validateOpen(openDTO, false));
+		assertEquals("Estimated fees must not be null", exception.getMessage());
+	}
+
+	@Test
+	void testValidateOpenCommon_EstimatedPriceOpenNull() {
+		// Arrange
+		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
+				"short",
+				LocalDateTime.now(),
+				1L,
+				1L,
+				1L,
+				null,
+				10.0,
+				100.0,
+				10L,
+				10.0,
+				10.0,
+				99.0,
+				10.0,
+				98.0,
+				1100.0,
+				10L,
+				99L,
+				100.0,
+				0.0,
+				2.1,
+				"TestComment"
+		);
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> tradeService.validateOpen(openDTO, false));
+		assertEquals("Estimated price open must not be null", exception.getMessage());
+	}
+
+	@Test
+	void testValidateOpenCommon_PositionNull() {
+		// Arrange
+		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
+				null,
+				LocalDateTime.now(),
+				1L,
+				1L,
+				1L,
+				100.0,
+				10.0,
+				100.0,
+				10L,
+				10.0,
+				10.0,
+				99.0,
+				10.0,
+				98.0,
+				1100.0,
+				10L,
+				99L,
+				100.0,
+				0.0,
+				2.1,
+				"TestComment"
+		);
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> tradeService.validateOpen(openDTO, false));
+		assertEquals("Position must not be null", exception.getMessage());
+	}
+
+	@Test
+	void testValidateOpenCommon_PositionUnknown() {
+		// Arrange
+		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
+				"weird",
+				LocalDateTime.now(),
+				1L,
+				1L,
+				1L,
+				100.0,
+				10.0,
+				100.0,
+				10L,
+				10.0,
+				10.0,
+				99.0,
+				10.0,
+				98.0,
+				1100.0,
+				10L,
+				99L,
+				100.0,
+				0.0,
+				2.1,
+				"TestComment"
+		);
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> tradeService.validateOpen(openDTO, false));
+		assertEquals("Unknown position - weird", exception.getMessage());
+	}
+
+	@Test
+	void testValidateOpenCommon_TickerIdNull() {
+		// Arrange
+		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
+				"short",
+				LocalDateTime.now(),
+				1L,
+				1L,
+				null,
+				100.0,
+				10.0,
+				100.0,
+				10L,
+				10.0,
+				10.0,
+				99.0,
+				10.0,
+				98.0,
+				1100.0,
+				10L,
+				99L,
+				100.0,
+				0.0,
+				2.1,
+				"TestComment"
+		);
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> tradeService.validateOpen(openDTO, false));
+		assertEquals("Ticker id must not be null", exception.getMessage());
+	}
+
+	@Test
+	void testValidateOpenCommon_MarketIdNull() {
+		// Arrange
+		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
+				"short",
+				LocalDateTime.now(),
+				1L,
+				null,
+				1L,
+				100.0,
+				10.0,
+				100.0,
+				10L,
+				10.0,
+				10.0,
+				99.0,
+				10.0,
+				98.0,
+				1100.0,
+				10L,
+				99L,
+				100.0,
+				0.0,
+				2.1,
+				"TestComment"
+		);
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> tradeService.validateOpen(openDTO, false));
+		assertEquals("Market id must not be null", exception.getMessage());
+	}
+
+	@Test
+	void testValidateOpenCommon_DateOpenNull() {
+		// Arrange
+		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
+				"short",
+				null,
+				1L,
+				1L,
+				1L,
+				100.0,
+				10.0,
+				100.0,
+				10L,
+				10.0,
+				10.0,
+				99.0,
+				10.0,
+				98.0,
+				1100.0,
+				10L,
+				99L,
+				100.0,
+				0.0,
+				2.1,
+				"TestComment"
+		);
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> tradeService.validateOpen(openDTO, false));
+		assertEquals("Date open must not be null", exception.getMessage());
+	}
+
+	@Test
+	void testValidateOpenCommon_BrokerIdNull() {
+		// Arrange
+		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
+				"short",
+				LocalDateTime.now(),
+				null,
+				1L,
+				1L,
+				100.0,
+				10.0,
+				100.0,
+				10L,
+				10.0,
+				10.0,
+				99.0,
+				10.0,
+				98.0,
+				1100.0,
+				10L,
+				99L,
+				100.0,
+				0.0,
+				2.1,
+				"TestComment"
+		);
+
+		// Act & Assert
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> tradeService.validateOpen(openDTO, false));
+		assertEquals("Broker id must not be null", exception.getMessage());
+	}
 }

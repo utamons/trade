@@ -94,9 +94,9 @@ public class TradeLogService {
 			validateOpenShort(openDTO);
 	}
 
-	private static void validateOpenCommon(TradeLogOpenDTO openDTO) {
+	public static void validateOpenCommon(TradeLogOpenDTO openDTO) {
 		if (openDTO == null)
-			throw new IllegalArgumentException("Open DTO must not be null");
+			throw new IllegalArgumentException("OpenDTO must not be null");
 		if(openDTO.riskToCapitalPc() == null)
 			throw new IllegalArgumentException("Risk to capital must not be null");
 		if (openDTO.risk() == null)
@@ -111,6 +111,8 @@ public class TradeLogService {
 			throw new IllegalArgumentException("Estimated price open must not be null");
 		if (openDTO.position() == null)
 			throw new IllegalArgumentException("Position must not be null");
+		if (!openDTO.position().equals("long") && !openDTO.position().equals("short"))
+			throw new IllegalArgumentException("Unknown position - "+openDTO.position());
 		if (openDTO.tickerId() == null)
 			throw new IllegalArgumentException("Ticker id must not be null");
 		if (openDTO.marketId() == null)

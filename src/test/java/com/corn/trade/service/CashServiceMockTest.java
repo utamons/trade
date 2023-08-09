@@ -112,25 +112,63 @@ class CashServiceMockTest {
 		assertEquals(1.0, commission.getAmount());
 	}
 
-	@Test
-	void testGetRiskPc() throws JsonProcessingException {
+	@ParameterizedTest
+	@CsvSource({
+			"1, Interactive, USD, 200.04",
+			"-1, Interactive, USD, 199.96",
+			"1, FreedomFN, USD, 202.32",
+			"-1, FreedomFN, USD, 197.71",
+			"1, FreedomFN, KZT, 200.38",
+			"-1, FreedomFN, KZT, 199.62",
+
+	})
+	void testBreakEven(int shortC, String brokerName, String currency, Double result) {
 		// Arrange
-		long        items       = 100;
-		double      stopLoss    = 80.0;
-		double      breakEven   = 90.0;
+		CurrencyDTO currencyDTO = new CurrencyDTO(1L, currency);
+		long        items       = 50;
+		double      priceOpen   = 200.0;
+
+		// Act
+		double breakEven = cashService.getBreakEven(shortC, brokerName, currencyDTO, items, priceOpen);
+
+		// Assert
+		assertEquals(result, breakEven);
+	}
+
+	@Test
+	void testGetRiskPcUSD() throws JsonProcessingException {
+		// Arrange
+		double      risk   = 80.0;
 		double      capital     = 10000.0;
 		LocalDate   openDate    = LocalDate.now();
 		CurrencyDTO currencyDTO = new CurrencyDTO(1L, "USD");
 
 		// Assume currencyRateService.convertToUSD will return amount from arguments
-		when(currencyRateService.convertToUSD(currencyDTO.getId(), 90.0, openDate)).thenReturn(90.0);
 		when(currencyRateService.convertToUSD(currencyDTO.getId(), 80.0, openDate)).thenReturn(80.0);
 
 		// Act
-		double riskPc = cashService.getRiskPc(items, stopLoss, breakEven, capital, openDate, currencyDTO);
+		double riskPc = cashService.getRiskPc(risk, capital, openDate, currencyDTO);
 
 		// Assert
-		assertEquals(10.0, riskPc);
+		assertEquals(0.8, riskPc);
+	}
+
+	@Test
+	void testGetRiskPcEUR() throws JsonProcessingException {
+		// Arrange
+		double      risk   = 90.0;
+		double      capital     = 10000.0;
+		LocalDate   openDate    = LocalDate.now();
+		CurrencyDTO currencyDTO = new CurrencyDTO(2L, "EUR");
+
+		// Assume currencyRateService.convertToUSD will return amount from arguments
+		when(currencyRateService.convertToUSD(currencyDTO.getId(), 90.0, openDate)).thenReturn(100.0);
+
+		// Act
+		double riskPc = cashService.getRiskPc(risk, capital, openDate, currencyDTO);
+
+		// Assert
+		assertEquals(1.0, riskPc);
 	}
 
 	@Test
