@@ -1,9 +1,6 @@
 package com.corn.trade.service;
 
-import com.corn.trade.dto.CashAccountDTO;
-import com.corn.trade.dto.CurrencyDTO;
-import com.corn.trade.dto.ExchangeDTO;
-import com.corn.trade.dto.TransferDTO;
+import com.corn.trade.dto.*;
 import com.corn.trade.entity.*;
 import com.corn.trade.repository.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -17,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
@@ -146,6 +144,10 @@ class CashServiceTest {
 
 		conversionAccountEUR = new CashAccount("conversion/Test Broker/EUR", currencyEUR, brokerUSD, conversionType);
 		conversionAccountEUR = cashAccountRepository.save(conversionAccountEUR);
+
+		LocalDateTime dateTime = LocalDateTime.now();
+		CurrencyRate euroToUsd = new CurrencyRate(dateTime.toLocalDate(), currencyEUR, 0.8);
+		currencyRateRepository.save(euroToUsd);
 	}
 
 	@Test
@@ -1537,8 +1539,6 @@ class CashServiceTest {
 	void testGetCapital_TradeAccountsOnly() throws JsonProcessingException {
 		// Arrange
 		LocalDateTime dateTime = LocalDateTime.now();
-		CurrencyRate euroToUsd = new CurrencyRate(dateTime.toLocalDate(), currencyEUR, 0.8);
-		currencyRateRepository.save(euroToUsd);
 
 		cashService.transfer(1000.0, null, brokerUSD, currencyUSD, incomeType, tradeType, dateTime);
 		cashService.transfer(1000.0, null, brokerEUR, currencyEUR, incomeType, tradeType, dateTime);
@@ -1554,8 +1554,6 @@ class CashServiceTest {
 	void testGetCapital_LongPositionsUSD() throws JsonProcessingException {
 		// Arrange
 		LocalDateTime dateTime = LocalDateTime.now();
-		CurrencyRate euroToUsd = new CurrencyRate(dateTime.toLocalDate(), currencyEUR, 0.8);
-		currencyRateRepository.save(euroToUsd);
 
 		cashService.transfer(1000.0, null, brokerUSD, currencyUSD, incomeType, tradeType, dateTime);
 		cashService.transfer(1000.0, null, brokerEUR, currencyEUR, incomeType, tradeType, dateTime);
@@ -1581,8 +1579,6 @@ class CashServiceTest {
 	void testGetCapital_LongPositionsUSD_EUR() throws JsonProcessingException {
 		// Arrange
 		LocalDateTime dateTime = LocalDateTime.now();
-		CurrencyRate euroToUsd = new CurrencyRate(dateTime.toLocalDate(), currencyEUR, 0.8);
-		currencyRateRepository.save(euroToUsd);
 
 		cashService.transfer(1000.0, null, brokerUSD, currencyUSD, incomeType, tradeType, dateTime);
 		cashService.transfer(1000.0, null, brokerEUR, currencyEUR, incomeType, tradeType, dateTime);
@@ -1603,5 +1599,71 @@ class CashServiceTest {
 
 		// Assert
 		assertEquals(4495.25, capital);
+	}
+
+	@Test
+	void testEval_LongUSD() throws JsonProcessingException {
+		LocalDate date = LocalDate.now();
+		brokerUSD.setName("Interactive");
+		EvalInDTO evalInDTO = new EvalInDTO(
+				brokerUSD.getId(),
+				1L,
+				100.0,
+				10.0,
+				10L,
+				99.0,
+				110.0,
+				date,
+				false
+		);
+
+		cashService.transfer(1000.0, null, brokerUSD, currencyUSD, incomeType, tradeType, LocalDateTime.now());
+
+		// Act
+		EvalOutDTO out = cashService.eval(evalInDTO);
+
+		// Assert
+		assertEquals(98.0, out.outcomeExp());
+		assertEquals(9.8, out.gainPc());
+		assertEquals(2.0, out.fees());
+		assertEquals(12.2, out.risk());
+		assertEquals(1.22, out.riskPc());
+		assertEquals(12.45, out.riskRewardPc());
+		assertEquals(100.22, out.breakEven());
+		assertEquals(1000.0, out.volume());
+
+	}
+
+	@Test
+	void testEval_ShortUSD() throws JsonProcessingException {
+		LocalDate date = LocalDate.now();
+		brokerUSD.setName("Interactive");
+		EvalInDTO evalInDTO = new EvalInDTO(
+				brokerUSD.getId(),
+				1L,
+				100.0,
+				10.0,
+				10L,
+				101.0,
+				90.0,
+				date,
+				true
+		);
+
+		cashService.transfer(1000.0, null, brokerUSD, currencyUSD, incomeType, tradeType, LocalDateTime.now());
+
+		// Act
+		EvalOutDTO out = cashService.eval(evalInDTO);
+
+		// Assert
+		assertEquals(98.0, out.outcomeExp());
+		assertEquals(9.8, out.gainPc());
+		assertEquals(2.0, out.fees());
+		assertEquals(12.2, out.risk());
+		assertEquals(1.22, out.riskPc());
+		assertEquals(12.45, out.riskRewardPc());
+		assertEquals(99.78, out.breakEven());
+		assertEquals(1000.0, out.volume());
+
 	}
 }
