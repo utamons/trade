@@ -655,7 +655,7 @@ public class CashService {
 					takeProfit,
 					LocalDate.now(),
 					evalDTO.isShort());
-			eval = eval(dto, broker, currencyDTO, capital);
+			eval = eval(dto, broker.getName(), currencyDTO, capital);
 			items--;
 		} while (eval.riskPc() > evalDTO.riskPc() && eval.riskRewardPc() < evalDTO.riskRewardPc());
 		return new EvalToFitRecord(items, volumePc, eval);
@@ -741,149 +741,92 @@ public class CashService {
 		final Ticker      ticker      = tickerRepo.getReferenceById(evalDTO.tickerId());
 		final CurrencyDTO currencyDTO = CurrencyMapper.toDTO(ticker.getCurrency());
 		final double      capital     = getCapital();
-		return eval(evalDTO, broker, currencyDTO, capital);
+		return eval(evalDTO, broker.getName(), currencyDTO, capital);
 	}
 
-
 	public EvalOutDTO eval(EvalInDTO evalDTO,
-	                       Broker broker,
+	                       String brokerName,
 	                       CurrencyDTO currencyDTO,
 	                       double capital) throws JsonProcessingException {
-		final long   items           = evalDTO.items();
-		final double priceOpen       = evalDTO.price();
-		final double volume          = priceOpen * items;
-		final double openCommission  = estimatedCommission(broker.getName(), currencyDTO, items, volume).getAmount();
-		final double takeProfit      = evalDTO.takeProfit();
+		final long   items          = evalDTO.items();
+		final double priceOpen      = evalDTO.price();
+		final double volume         = priceOpen * items;
+		final double openCommission = estimatedCommission(brokerName, currencyDTO, items, volume).getAmount();
+		final double takeProfit     = evalDTO.takeProfit();
 		final double closeCommission =
-				estimatedCommission(broker.getName(), currencyDTO, items, takeProfit * items).getAmount();
-		final double stopLoss        = evalDTO.stopLoss();
-		final int    shortC          = evalDTO.isShort() ? -1 : 1;
+				estimatedCommission(brokerName, currencyDTO, items, takeProfit * items).getAmount();
+		final double stopLoss = evalDTO.stopLoss();
+		final int    shortC   = evalDTO.isShort() ? -1 : 1;
 
-		final double breakEven = getBreakEven(shortC, broker, currencyDTO, items, priceOpen);
+		final double breakEven = getBreakEven(shortC, brokerName, currencyDTO, items, priceOpen);
 
-		final double profit = abs(takeProfit - priceOpen) * items;
+		final double grossProfit = abs(takeProfit - priceOpen) * items;
 
-		final double loss = abs(stopLoss - breakEven) * items;
+		final double risk = abs(stopLoss - breakEven) * items;
 
-		final double taxes = getTaxes(profit);
+		final double taxes = getTaxes(grossProfit);
 
-		final double outcomeExp = abs(profit - openCommission - closeCommission - taxes);
+		final double netOutcome = abs(grossProfit - openCommission - closeCommission - taxes);
 
-		final double riskRewardPc = round(loss / outcomeExp * 100, 2);
+		final double riskRewardPc = round(risk / netOutcome * 100, 2);
 
-		final double riskPc = round(getRiskPc(items,
-		                                      stopLoss,
-		                                      breakEven,
-		                                      capital,
-		                                      evalDTO.date(),
-		                                      currencyDTO
-		), 2);
+		final double riskPc = round(getRiskPc(risk, capital, evalDTO.date(), currencyDTO), 2);
 
-		// todo I need calculation of a risk per trade in the currency of the trade
+		final double gainPc = round(netOutcome / volume * 100, 2);
 
-		final double gainPc = round(outcomeExp / volume * 100, 2);
-
-		return new EvalOutDTO(outcomeExp, gainPc, openCommission, riskPc, riskRewardPc, breakEven, volume);
+		return new EvalOutDTO(netOutcome, gainPc, openCommission, risk, riskPc, riskRewardPc, breakEven, volume);
 	}
 
 	/**
-	 * Estimation of risk per trade in percent.
-	 * Calculates a maximum loss in percent to a risk base.
+	 * Estimation of risk per trade in percent to a risk base.
 	 * The risk base is the capital or less.
 	 *
-	 * @param items       number of securities
-	 * @param stopLoss    stop loss
-	 * @param breakEven   break even point
+	 * @param risk   risk in money
 	 * @param capital     the capital
 	 * @param openDate    the date of opening position
 	 * @param currencyDTO currency
 	 * @return estimated risk per trade in percent
 	 * @throws JsonProcessingException exception
 	 */
-	public double getRiskPc(long items,
-	                        double stopLoss,
-	                        double breakEven,
+	public double getRiskPc(double risk,
 	                        double capital,
 	                        LocalDate openDate,
 	                        CurrencyDTO currencyDTO) throws JsonProcessingException {
 		final long   currencyId = currencyDTO.getId();
 		final double riskBase   = getRiskBase(capital);
+		final double riskUSD    = currencyRateService.convertToUSD(currencyId, risk, openDate);
 
-		final double breakEvenUSD =
-				currencyRateService.convertToUSD(
-						currencyId,
-						breakEven,
-						openDate);
-
-		final double stopLossUSD =
-				currencyRateService.convertToUSD(
-						currencyId,
-						stopLoss,
-						openDate);
-
-		final double breakEvenSum = items * breakEvenUSD;
-
-		final double sumLoss = items * stopLossUSD;
-
-		final double losses = abs(breakEvenSum - sumLoss);
-
-		return losses / riskBase * 100.0;
+		return riskUSD / riskBase * 100.0;
 	}
 
 	/**
 	 * Estimation of a break even point.
-	 * Uses commissions converted to the currency of the trade.
 	 *
-	 * @param shortC           -1 is short, +1 if long
-	 * @param broker           a broker
-	 * @param tradeCurrencyDTO currency of the trade
-	 * @param items            number of securities
-	 * @param priceOpen        the price of opening the trade
+	 * @param shortC        -1 is short, +1 if long
+	 * @param brokerName    a broker name
+	 * @param tradeCurrency currency of the trade
+	 * @param items         number of securities
+	 * @param priceOpen     the price of opening the trade
 	 * @return estimated break even point
 	 */
 	public double getBreakEven(int shortC,
-	                           Broker broker,
-	                           CurrencyDTO tradeCurrencyDTO,
+	                           String brokerName,
+	                           CurrencyDTO tradeCurrency,
 	                           long items,
-	                           double priceOpen) throws JsonProcessingException {
+	                           double priceOpen) {
 		double sumOpen         = items * priceOpen;
-		double openCommission  = getConvertedCommission(broker, items, tradeCurrencyDTO, sumOpen);
+		double openCommission  = estimatedCommission(brokerName, tradeCurrency, items, sumOpen).getAmount();
 		double sumClose        = sumOpen;
-		double closeCommission = openCommission;
+		double closeCommission = estimatedCommission(brokerName, tradeCurrency, items, sumClose).getAmount();
 		double taxes           = getTaxes(abs(sumClose - sumOpen));
 
 		while (abs(sumClose - sumOpen) < openCommission + closeCommission + taxes) {
 			sumClose = sumClose + (shortC * 0.01);
-			closeCommission = getConvertedCommission(broker, items, tradeCurrencyDTO, sumClose);
+			closeCommission = estimatedCommission(brokerName, tradeCurrency, items, sumClose).getAmount();
 			taxes = getTaxes(abs(sumClose - sumOpen));
 		}
 
 		return round(sumClose / items, 2);
-	}
-
-	/**
-	 * Calculates a commission in the currency of the trade.
-	 *
-	 * @param broker           a broker
-	 * @param items            number of securities
-	 * @param tradeCurrencyDTO currency
-	 * @param sum              the sum of the trade
-	 * @return commission in the currency of the trade
-	 * @throws JsonProcessingException exception
-	 */
-	public double getConvertedCommission(Broker broker,
-	                                     long items,
-	                                     CurrencyDTO tradeCurrencyDTO,
-	                                     double sum) throws JsonProcessingException {
-		String   brokerName     = broker.getName();
-		Currency brokerCurrency = broker.getFeeCurrency();
-		Currency tradeCurrency  = currencyRepo.getReferenceById(tradeCurrencyDTO.getId());
-		double   commission     = estimatedCommission(brokerName, tradeCurrencyDTO, items, sum).getAmount();
-		return currencyRateService.convert(
-				brokerCurrency,
-				tradeCurrency,
-				commission,
-				LocalDate.now());
 	}
 
 	private double getTaxes(double sum) {
@@ -906,8 +849,6 @@ public class CashService {
 		double fixed = 0.0;
 		double fly   = 0.0;
 		double amount;
-
-		// todo So in what currency is the commission calculated?
 
 		if (brokerName.equals(FREEDOM_FN)) {
 			if (currencyDTO.getName().equals(KZT)) {
