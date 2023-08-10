@@ -17,14 +17,9 @@ import java.util.List;
 public class CashController {
 
 	private final CashService     service;
-	private final TradeLogService tradeLogService;
-
-	private final CurrencyRateService currencyRateService;
 
 	public CashController(CashService service, TradeLogService tradeLogService, CurrencyRateService currencyRateService) {
 		this.service = service;
-		this.tradeLogService = tradeLogService;
-		this.currencyRateService = currencyRateService;
 	}
 
 	@PostMapping(value = "/refill", consumes = MediaType.APPLICATION_JSON_VALUE, produces =

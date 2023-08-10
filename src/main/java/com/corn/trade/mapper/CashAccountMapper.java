@@ -5,6 +5,8 @@ import com.corn.trade.dto.CashAccountOutDTO;
 import com.corn.trade.entity.CashAccount;
 import com.corn.trade.util.Generated;
 
+import static com.corn.trade.util.Util.round;
+
 public class CashAccountMapper {
 
 	@Generated
@@ -29,7 +31,7 @@ public class CashAccountMapper {
 				dto.currency(),
 				dto.broker(),
 				dto.type(),
-				amount
+				round(amount)
 				);
 	}
 }

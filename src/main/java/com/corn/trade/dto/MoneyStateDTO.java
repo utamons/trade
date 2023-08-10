@@ -9,12 +9,9 @@ public class MoneyStateDTO {
 	private final Double capital;
 	private final Double profit;
 
-	private final Double riskBase;
-
-	public MoneyStateDTO(Double capital, Double profit, Double riskBase) {
+	public MoneyStateDTO(Double capital, Double profit) {
 		this.capital = capital;
 		this.profit = profit;
-		this.riskBase = riskBase;
 	}
 
 	public BigDecimal getCapital() {
@@ -23,9 +20,5 @@ public class MoneyStateDTO {
 
 	public BigDecimal getProfit() {
 		return round(profit);
-	}
-
-	public BigDecimal getRiskBase() {
-		return round(riskBase);
 	}
 }

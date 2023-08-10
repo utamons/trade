@@ -517,35 +517,6 @@ public class CashService {
 		logger.debug(FINISH);
 	}
 
-	public double lastDepositAmount(Broker broker, Currency currency) {
-		CashAccountType tradeType = accountTypeRepo.findCashAccountTypeByName(TRADE);
-		CashAccount     trade     = getAccount(broker, currency, tradeType);
-		return getAccountTotal(trade);
-	}
-
-	public double percentToCapital(double outcome,
-	                               double openAmount,
-	                               Currency currency) throws JsonProcessingException {
-		double sum = getCapital() + currencyRateService.convertToUSD(currency.getId(), openAmount, LocalDate.now());
-		return currencyRateService.convertToUSD(currency.getId(), outcome, LocalDate.now()) / sum * 100.0;
-	}
-
-	public List<CashAccountDTO> getTradeAccounts(Long brokerId) {
-		Broker          broker    = brokerRepo.getReferenceById(brokerId);
-		CashAccountType tradeType = accountTypeRepo.findCashAccountTypeByName(TRADE);
-		return accountRepo.findAllByBrokerAndType(broker, tradeType)
-		                  .stream()
-		                  .map(CashAccountMapper::toDTO).toList();
-	}
-
-	public List<CashAccountDTO> getBorrowedAccounts(Long brokerId) {
-		Broker          broker    = brokerRepo.getReferenceById(brokerId);
-		CashAccountType tradeType = accountTypeRepo.findCashAccountTypeByName(BORROWED);
-		return accountRepo.findAllByBrokerAndType(broker, tradeType)
-		                  .stream()
-		                  .map(CashAccountMapper::toDTO).toList();
-	}
-
 	/**
 	 * Estimated capital for a broker.
 	 * <p>

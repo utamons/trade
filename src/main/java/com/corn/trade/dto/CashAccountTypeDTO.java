@@ -3,11 +3,11 @@ package com.corn.trade.dto;
 @SuppressWarnings("unused")
 public class CashAccountTypeDTO {
 
-	private Long id;
+	private final Long id;
 
-	private String name;
+	private final String name;
 
-	private String description;
+	private final String description;
 
 	public CashAccountTypeDTO(Long id, String name, String description) {
 		this.id = id;
