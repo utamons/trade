@@ -370,6 +370,7 @@ public class CashService {
 		double totalSold          = tradeLog.getTotalSold() == null ? 0 : tradeLog.getTotalSold();
 		double closeCommission    = tradeLog.getCloseCommission() == null ? 0 : tradeLog.getCloseCommission();
 		long   itemSoldPreviously = tradeLog.getItemSold() == null ? 0 : tradeLog.getItemSold();
+		long   partsClosed        = tradeLog.getPartsClosed();
 
 		if (itemSoldPreviously + itemSold > itemBought) {
 			throw new IllegalStateException("Item sold number is greater than item bought number");
@@ -378,6 +379,7 @@ public class CashService {
 		tradeLog.setTotalSold(totalSold + amountSold);
 		tradeLog.setCloseCommission(closeCommission + sellingCommission);
 		tradeLog.setItemSold(itemSoldPreviously + itemSold);
+		tradeLog.setPartsClosed(partsClosed + 1);
 
 		if (tradeLog.getItemSold() == itemBought) {
 			tradeLog.setDateClose(dateTime);
@@ -498,6 +500,7 @@ public class CashService {
 		double totalBought          = tradeLog.getTotalBought() == null ? 0 : tradeLog.getTotalBought();
 		double closeCommission      = tradeLog.getCloseCommission() == null ? 0 : tradeLog.getCloseCommission();
 		long   itemBoughtPreviously = tradeLog.getItemBought() == null ? 0 : tradeLog.getItemBought();
+		long   partsClosed        = tradeLog.getPartsClosed();
 
 		if (itemBoughtPreviously + itemBought > itemSold) {
 			throw new IllegalStateException("Item bought number is greater than item sold number");
@@ -507,6 +510,7 @@ public class CashService {
 		tradeLog.setCloseCommission(closeCommission + buyingCommission);
 		tradeLog.setBrokerInterest(borrowingCommission);
 		tradeLog.setItemBought(itemBoughtPreviously + itemBought);
+		tradeLog.setPartsClosed(partsClosed + 1);
 
 		if (tradeLog.getItemBought() == itemSold) {
 			tradeLog.setDateClose(dateTime);

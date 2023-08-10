@@ -655,6 +655,7 @@ class CashServiceTest {
 		assertEquals(1000.0, tradeLog.getTotalSold());
 		assertEquals(100, tradeLog.getItemSold());
 		assertEquals(1.0, tradeLog.getOpenCommission());
+		assertEquals(0L, tradeLog.getPartsClosed());
 		assertEquals(dateTime, tradeLog.getDateOpen());
 
 		assertEquals(0.0, cashFlowRepository.getCashFlowBalance());
@@ -708,6 +709,7 @@ class CashServiceTest {
 		assertEquals(1000.0, tradeLog.getTotalSold());
 		assertEquals(100, tradeLog.getItemSold());
 		assertEquals(1.0, tradeLog.getCloseCommission());
+		assertEquals(1L, tradeLog.getPartsClosed());
 		assertEquals(dateTime, tradeLog.getDateClose());
 
 		assertEquals(0.0, cashFlowRepository.getCashFlowBalance());
@@ -746,6 +748,7 @@ class CashServiceTest {
 		assertEquals(1000.0, tradeLog.getTotalSold());
 		assertEquals(100, tradeLog.getItemSold());
 		assertEquals(1.0, tradeLog.getCloseCommission());
+		assertEquals(1L, tradeLog.getPartsClosed());
 		assertEquals(dateTime, tradeLog.getDateClose());
 
 		assertEquals(0.0, cashFlowRepository.getCashFlowBalance());
@@ -786,6 +789,7 @@ class CashServiceTest {
 		assertEquals(900.0, tradeLog.getTotalSold());
 		assertEquals(100, tradeLog.getItemSold());
 		assertEquals(1.0, tradeLog.getCloseCommission());
+		assertEquals(1L, tradeLog.getPartsClosed());
 		assertEquals(dateTime, tradeLog.getDateClose());
 
 		assertEquals(0.0, cashFlowRepository.getCashFlowBalance());
@@ -825,6 +829,7 @@ class CashServiceTest {
 		assertEquals(amountSold, tradeLog.getTotalSold());
 		assertEquals(itemSold, tradeLog.getItemSold());
 		assertEquals(sellingCommission, tradeLog.getCloseCommission());
+		assertEquals(1L, tradeLog.getPartsClosed());
 		assertNull(tradeLog.getDateClose());
 
 		assertEquals(0.0, cashFlowRepository.getCashFlowBalance());
@@ -864,6 +869,7 @@ class CashServiceTest {
 		assertEquals(amountSold, tradeLog.getTotalSold());
 		assertEquals(itemSold, tradeLog.getItemSold());
 		assertEquals(sellingCommission, tradeLog.getCloseCommission());
+		assertEquals(1L, tradeLog.getPartsClosed());
 		assertNull(tradeLog.getDateClose());
 
 		assertEquals(0.0, cashFlowRepository.getCashFlowBalance());
@@ -903,6 +909,7 @@ class CashServiceTest {
 		assertEquals(amountSold * 2, tradeLog.getTotalSold());
 		assertEquals(itemSold * 2, tradeLog.getItemSold());
 		assertEquals(sellingCommission * 2, tradeLog.getCloseCommission());
+		assertEquals(2L, tradeLog.getPartsClosed());
 		assertEquals(dateTime, tradeLog.getDateClose());
 
 		assertEquals(0.0, cashFlowRepository.getCashFlowBalance());
@@ -992,6 +999,7 @@ class CashServiceTest {
 		assertEquals(amountBought, tradeLog.getTotalBought());
 		assertEquals(itemBought, tradeLog.getItemBought());
 		assertEquals(openCommission, tradeLog.getOpenCommission());
+		assertEquals(0L, tradeLog.getPartsClosed());
 		assertEquals(dateTime, tradeLog.getDateOpen());
 
 		assertEquals(0.0, cashFlowRepository.getCashFlowBalance());
@@ -1057,6 +1065,7 @@ class CashServiceTest {
 		assertEquals(100, tradeLog.getItemBought());
 		assertEquals(1.0, tradeLog.getCloseCommission());
 		assertEquals(1.0, tradeLog.getBrokerInterest());
+		assertEquals(1L, tradeLog.getPartsClosed());
 		assertEquals(dateTime, tradeLog.getDateClose());
 
 		assertEquals(0.0, cashFlowRepository.getCashFlowBalance());
@@ -1100,6 +1109,7 @@ class CashServiceTest {
 		assertEquals(100, tradeLog.getItemBought());
 		assertEquals(1.0, tradeLog.getCloseCommission());
 		assertEquals(1.0, tradeLog.getBrokerInterest());
+		assertEquals(1L, tradeLog.getPartsClosed());
 		assertEquals(dateTime, tradeLog.getDateClose());
 
 		assertEquals(0.0, cashFlowRepository.getCashFlowBalance());
@@ -1144,6 +1154,7 @@ class CashServiceTest {
 		assertEquals(100, tradeLog.getItemBought());
 		assertEquals(2.0, tradeLog.getCloseCommission());
 		assertEquals(1.0, tradeLog.getBrokerInterest());
+		assertEquals(1L, tradeLog.getPartsClosed());
 		assertEquals(dateTime, tradeLog.getDateClose());
 
 		assertEquals(0.0, cashFlowRepository.getCashFlowBalance());
@@ -1188,6 +1199,7 @@ class CashServiceTest {
 		assertEquals(100, tradeLog.getItemBought());
 		assertEquals(1.0, tradeLog.getCloseCommission());
 		assertEquals(1.0, tradeLog.getBrokerInterest());
+		assertEquals(1L, tradeLog.getPartsClosed());
 		assertEquals(dateTime, tradeLog.getDateClose());
 
 		assertEquals(0.0, cashFlowRepository.getCashFlowBalance());
@@ -1231,6 +1243,7 @@ class CashServiceTest {
 		assertEquals(100, tradeLog.getItemBought());
 		assertEquals(1.01, tradeLog.getCloseCommission());
 		assertEquals(1.0, tradeLog.getBrokerInterest());
+		assertEquals(1L, tradeLog.getPartsClosed());
 		assertEquals(dateTime, tradeLog.getDateClose());
 
 		assertEquals(0.0, cashFlowRepository.getCashFlowBalance());
@@ -1274,6 +1287,7 @@ class CashServiceTest {
 		assertEquals(100, tradeLog.getItemBought());
 		assertEquals(1.0, tradeLog.getCloseCommission());
 		assertEquals(1.0, tradeLog.getBrokerInterest());
+		assertEquals(1L, tradeLog.getPartsClosed());
 		assertEquals(dateTime, tradeLog.getDateClose());
 
 		assertEquals(0.0, cashFlowRepository.getCashFlowBalance());
@@ -1319,6 +1333,7 @@ class CashServiceTest {
 		assertEquals(100, tradeLog.getItemBought());
 		assertEquals(2.0, tradeLog.getCloseCommission());
 		assertEquals(1.0, tradeLog.getBrokerInterest());
+		assertEquals(2L, tradeLog.getPartsClosed());
 		assertEquals(dateTime, tradeLog.getDateClose());
 
 		assertEquals(0.0, cashFlowRepository.getCashFlowBalance());
@@ -1362,6 +1377,7 @@ class CashServiceTest {
 		assertEquals(50, tradeLog.getItemBought());
 		assertEquals(1.0, tradeLog.getCloseCommission());
 		assertEquals(1.0, tradeLog.getBrokerInterest());
+		assertEquals(1L, tradeLog.getPartsClosed());
 		assertNull(tradeLog.getDateClose());
 
 		assertEquals(0.0, cashFlowRepository.getCashFlowBalance());
@@ -1405,6 +1421,7 @@ class CashServiceTest {
 		assertEquals(50, tradeLog.getItemBought());
 		assertEquals(1.0, tradeLog.getCloseCommission());
 		assertEquals(1.0, tradeLog.getBrokerInterest());
+		assertEquals(1L, tradeLog.getPartsClosed());
 		assertNull(tradeLog.getDateClose());
 
 		assertEquals(0.0, cashFlowRepository.getCashFlowBalance());
@@ -1499,6 +1516,7 @@ class CashServiceTest {
 		tradeLog.setEstimatedFees(1.0);
 		tradeLog.setEstimatedBreakEven(1.0);
 		tradeLog.setEstimatedItems(1L);
+		tradeLog.setPartsClosed(0L);
 
 		tradeLog = tradeLogRepository.save(tradeLog);
 		return tradeLog;
