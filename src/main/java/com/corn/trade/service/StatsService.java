@@ -102,7 +102,7 @@ public class StatsService {
 
 		long open = tradeLogRepo.opensCountByBroker(broker);
 
-		List<CashAccountOutDTO> tradeAccountsOutDTO = tradeAccounts.stream().map((acc) -> {
+		List<CashAccountOutDTO> tradeAccountsOutDTO = tradeAccounts.stream().map(acc -> {
 			double total = cashService.getAccountTotal(acc);
 			return CashAccountMapper.toOutDTO(CashAccountMapper.toDTO(acc), total);
 		}).toList();

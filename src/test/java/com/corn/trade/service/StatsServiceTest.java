@@ -14,7 +14,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +22,7 @@ import static com.corn.trade.util.Util.round;
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class StatsServiceTest {
+class StatsServiceTest {
 	private TradeLogRepository        tradeLogRepo;
 	private CashService               cashService;
 	private CashAccountTypeRepository accountTypeRepo;
@@ -71,8 +70,8 @@ public class StatsServiceTest {
 		accounts.add(new CashAccount("USD", usdCurrency, null, outcomeType));
 		accounts.add(new CashAccount("EUR", eurCurrency, null, outcomeType));
 
-		when(cashService.getAccountTotal(eq(accounts.get(0)))).thenReturn(-1000.0);
-		when(cashService.getAccountTotal(eq(accounts.get(1)))).thenReturn(-2000.0);
+		when(cashService.getAccountTotal(accounts.get(0))).thenReturn(-1000.0);
+		when(cashService.getAccountTotal(accounts.get(1))).thenReturn(-2000.0);
 		when(cashService.getCapital()).thenReturn(capital);
 		when(accountTypeRepo.findCashAccountTypeByName(OUTCOME)).thenReturn(outcomeType);
 		when(cashAccountRepo.findAllByType(outcomeType)).thenReturn(accounts);
@@ -88,7 +87,7 @@ public class StatsServiceTest {
 	}
 
 	@Test
-	public void testGetStats() throws JsonProcessingException {
+	void testGetStats() throws JsonProcessingException {
 		// Arrange
 
 		double            capital         = 10000.0; // Mocked capital value
@@ -105,11 +104,11 @@ public class StatsServiceTest {
 
 		when(cashService.getCapital(broker)).thenReturn(capital);
 		when(cashService.getRiskBase(capital)).thenReturn(capital);
-		when(cashService.getAccountTotal(eq(outcomeAccounts.get(0)))).thenReturn(-1000.0);
-		when(cashService.getAccountTotal(eq(outcomeAccounts.get(1)))).thenReturn(-2000.0);
+		when(cashService.getAccountTotal(outcomeAccounts.get(0))).thenReturn(-1000.0);
+		when(cashService.getAccountTotal(outcomeAccounts.get(1))).thenReturn(-2000.0);
 
-		when(cashService.getAccountTotal(eq(tradeAccounts.get(0)))).thenReturn(1000.0);
-		when(cashService.getAccountTotal(eq(tradeAccounts.get(1)))).thenReturn(2000.0);
+		when(cashService.getAccountTotal(tradeAccounts.get(0))).thenReturn(1000.0);
+		when(cashService.getAccountTotal(tradeAccounts.get(1))).thenReturn(2000.0);
 
 		when(accountTypeRepo.findCashAccountTypeByName(OUTCOME)).thenReturn(outcomeType);
 		when(accountTypeRepo.findCashAccountTypeByName(TRADE)).thenReturn(tradeType);

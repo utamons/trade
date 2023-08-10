@@ -23,7 +23,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.function.Function;
 
 @Service
@@ -215,7 +214,7 @@ public class TradeLogService {
 	}
 
 	public Page<TradeLogDTO> getPage(TradeLogPageReqDTO pageReqDTO) {
-		Pageable pageable = PageRequest.of(pageReqDTO.getPageNumber(), pageReqDTO.getPageSize(),
+		Pageable pageable = PageRequest.of(pageReqDTO.pageNumber(), pageReqDTO.pageSize(),
 		                                   Sort.by("dateOpen").descending());
 		Page<TradeLog> page = tradeLogRepo.findAll(pageable);
 		return page.map(getMappingTradeLogToTradeLogDTO());
@@ -230,21 +229,5 @@ public class TradeLogService {
 			}
 			return null;
 		};
-	}
-
-	public List<TradeLogDTO> getAllClosedByBroker(Long brokerId) {
-		Broker broker = brokerRepo.getReferenceById(brokerId);
-		return tradeLogRepo.findAllClosedByBroker(broker).stream().map(
-				getMappingTradeLogToTradeLogDTO()
-		).toList();
-	}
-
-	public long getOpenCountByBroker(Long brokerId) {
-		Broker broker = brokerRepo.getReferenceById(brokerId);
-		return tradeLogRepo.opensCountByBroker(broker);
-	}
-
-	public List<TradeLogDTO> getAllClosed() {
-		return tradeLogRepo.findAllClosed().stream().map(getMappingTradeLogToTradeLogDTO()).toList();
 	}
 }

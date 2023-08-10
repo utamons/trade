@@ -73,9 +73,9 @@ class CashServiceMockTest {
 		Commission commission = cashService.estimatedCommission(brokerName, currencyDTO, items, sum);
 
 		// Assert
-		assertEquals(0.0, commission.getFixed());
-		assertEquals(4.25, commission.getFly());
-		assertEquals(4.25, commission.getAmount());
+		assertEquals(0.0, commission.fixed());
+		assertEquals(4.25, commission.fly());
+		assertEquals(4.25, commission.amount());
 	}
 
 	@Test
@@ -90,9 +90,9 @@ class CashServiceMockTest {
 		Commission commission = cashService.estimatedCommission(brokerName, currencyDTO, items, sum);
 
 		// Assert
-		assertEquals(1.2, commission.getFixed());
-		assertEquals(1.6, commission.getFly());
-		assertEquals(2.8, commission.getAmount());
+		assertEquals(1.2, commission.fixed());
+		assertEquals(1.6, commission.fly());
+		assertEquals(2.8, commission.amount());
 	}
 
 	@Test
@@ -107,9 +107,9 @@ class CashServiceMockTest {
 		Commission commission = cashService.estimatedCommission(brokerName, currencyDTO, items, sum);
 
 		// Assert
-		assertEquals(0.0, commission.getFixed());
-		assertEquals(0.0, commission.getFly());
-		assertEquals(1.0, commission.getAmount());
+		assertEquals(0.0, commission.fixed());
+		assertEquals(0.0, commission.fly());
+		assertEquals(1.0, commission.amount());
 	}
 
 	@ParameterizedTest
@@ -144,7 +144,7 @@ class CashServiceMockTest {
 		CurrencyDTO currencyDTO = new CurrencyDTO(1L, "USD");
 
 		// Assume currencyRateService.convertToUSD will return amount from arguments
-		when(currencyRateService.convertToUSD(currencyDTO.getId(), 80.0, openDate)).thenReturn(80.0);
+		when(currencyRateService.convertToUSD(currencyDTO.id(), 80.0, openDate)).thenReturn(80.0);
 
 		// Act
 		double riskPc = cashService.getRiskPc(risk, capital, openDate, currencyDTO);
@@ -162,7 +162,7 @@ class CashServiceMockTest {
 		CurrencyDTO currencyDTO = new CurrencyDTO(2L, "EUR");
 
 		// Assume currencyRateService.convertToUSD will return amount from arguments
-		when(currencyRateService.convertToUSD(currencyDTO.getId(), 90.0, openDate)).thenReturn(100.0);
+		when(currencyRateService.convertToUSD(currencyDTO.id(), 90.0, openDate)).thenReturn(100.0);
 
 		// Act
 		double riskPc = cashService.getRiskPc(risk, capital, openDate, currencyDTO);

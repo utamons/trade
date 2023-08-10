@@ -1,7 +1,6 @@
 package com.corn.trade.service;
 
 import com.corn.trade.dto.BrokerDTO;
-import com.corn.trade.dto.BrokerStatsDTO;
 import com.corn.trade.mapper.BrokerMapper;
 import com.corn.trade.repository.BrokerRepository;
 import org.slf4j.Logger;

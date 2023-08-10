@@ -190,17 +190,17 @@ public class CashService {
 	 */
 	public void exchange(ExchangeDTO exchangeDTO) {
 		logger.debug(START);
-		Broker          broker         = brokerRepo.getReferenceById(exchangeDTO.getBrokerId());
-		Currency        currencyFrom   = currencyRepo.getReferenceById(exchangeDTO.getCurrencyFromId());
-		Currency        currencyTo     = currencyRepo.getReferenceById(exchangeDTO.getCurrencyToId());
+		Broker          broker         = brokerRepo.getReferenceById(exchangeDTO.brokerId());
+		Currency        currencyFrom   = currencyRepo.getReferenceById(exchangeDTO.currencyFromId());
+		Currency        currencyTo     = currencyRepo.getReferenceById(exchangeDTO.currencyToId());
 		CashAccountType tradeType      = accountTypeRepo.findCashAccountTypeByName(TRADE);
 		CashAccountType conversionType = accountTypeRepo.findCashAccountTypeByName("conversion");
 
 		CashAccount tradeFrom    = getAccount(broker, currencyFrom, tradeType);
 		CashAccount tradeTo      = getAccount(broker, currencyTo, tradeType);
 		CashAccount conversionTo = getAccount(broker, currencyTo, conversionType);
-		double      transferFrom = exchangeDTO.getAmountFrom();
-		double      transferTo   = exchangeDTO.getAmountTo();
+		double      transferFrom = exchangeDTO.amountFrom();
+		double      transferTo   = exchangeDTO.amountTo();
 		double      delta        = transferFrom - transferTo;
 
 		CashFlow cashFlow = new CashFlow(
@@ -606,15 +606,15 @@ public class CashService {
 
 		for (CurrencySumDTO dto : opens) {
 			sum += currencyRateService.convertToUSD(
-					dto.getCurrencyId(),
-					dto.getSum(),
+					dto.currencyId(),
+					dto.sum(),
 					date);
 		}
 
 		for (CurrencySumDTO dto : shortRisks) {
 			sum -= currencyRateService.convertToUSD(
-					dto.getCurrencyId(),
-					dto.getSum(),
+					dto.currencyId(),
+					dto.sum(),
 					date);
 		}
 
@@ -641,15 +641,15 @@ public class CashService {
 
 		for (CurrencySumDTO dto : opens) {
 			sum += currencyRateService.convertToUSD(
-					dto.getCurrencyId(),
-					dto.getSum(),
+					dto.currencyId(),
+					dto.sum(),
 					date);
 		}
 
 		for (CurrencySumDTO dto : shortRisks) {
 			sum -= currencyRateService.convertToUSD(
-					dto.getCurrencyId(),
-					dto.getSum(),
+					dto.currencyId(),
+					dto.sum(),
 					date);
 		}
 
@@ -818,10 +818,10 @@ public class CashService {
 		final long   items          = evalDTO.items();
 		final double priceOpen      = evalDTO.price();
 		final double volume         = priceOpen * items;
-		final double openCommission = estimatedCommission(brokerName, currencyDTO, items, volume).getAmount();
+		final double openCommission = estimatedCommission(brokerName, currencyDTO, items, volume).amount();
 		final double takeProfit     = evalDTO.takeProfit();
 		final double closeCommission =
-				estimatedCommission(brokerName, currencyDTO, items, takeProfit * items).getAmount();
+				estimatedCommission(brokerName, currencyDTO, items, takeProfit * items).amount();
 		final double stopLoss = evalDTO.stopLoss();
 		final int    shortC   = evalDTO.isShort() ? -1 : 1;
 
@@ -864,7 +864,7 @@ public class CashService {
 	                        double capital,
 	                        LocalDate openDate,
 	                        CurrencyDTO currencyDTO) throws JsonProcessingException {
-		final long   currencyId = currencyDTO.getId();
+		final long   currencyId = currencyDTO.id();
 		final double riskBase   = getRiskBase(capital);
 		final double riskUSD    = currencyRateService.convertToUSD(currencyId, risk, openDate);
 
@@ -887,14 +887,14 @@ public class CashService {
 	                           long items,
 	                           double priceOpen) {
 		double sumOpen         = items * priceOpen;
-		double openCommission  = estimatedCommission(brokerName, tradeCurrency, items, sumOpen).getAmount();
+		double openCommission  = estimatedCommission(brokerName, tradeCurrency, items, sumOpen).amount();
 		double sumClose        = sumOpen;
-		double closeCommission = estimatedCommission(brokerName, tradeCurrency, items, sumClose).getAmount();
+		double closeCommission = estimatedCommission(brokerName, tradeCurrency, items, sumClose).amount();
 		double taxes           = getTaxes(abs(sumClose - sumOpen));
 
 		while (abs(sumClose - sumOpen) < openCommission + closeCommission + taxes) {
 			sumClose = sumClose + (shortC * 0.01);
-			closeCommission = estimatedCommission(brokerName, tradeCurrency, items, sumClose).getAmount();
+			closeCommission = estimatedCommission(brokerName, tradeCurrency, items, sumClose).amount();
 			taxes = getTaxes(abs(sumClose - sumOpen));
 		}
 
@@ -923,7 +923,7 @@ public class CashService {
 		double amount;
 
 		if (brokerName.equals(FREEDOM_FN)) {
-			if (currencyDTO.getName().equals(KZT)) {
+			if (currencyDTO.name().equals(KZT)) {
 				amount = fly = sum / 100.0 * 0.085;
 			} else {
 				fixed = 1.2;
@@ -931,14 +931,14 @@ public class CashService {
 				amount = fixed + fly;
 			}
 		} else if (brokerName.equals(INTERACTIVE)) {
-			if (currencyDTO.getName().equals(USD)) {
+			if (currencyDTO.name().equals(USD)) {
 				double max = items * sum / 100.0;
 				double min = items * 0.005;
 				amount = Math.min(max, min);
 				amount = amount < 1 ? 1 : amount;
 			} else {
 				throw new IllegalArgumentException("The currency " +
-				                                   currencyDTO.getName() +
+				                                   currencyDTO.name() +
 				                                   " is not supported for trades in Interactive broker yet");
 			}
 		} else {

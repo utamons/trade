@@ -3,19 +3,16 @@ package com.corn.trade.dto;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 @SuppressWarnings("unused")
-public class TickerDTO implements Serializable {
+public record TickerDTO(Long id, String longName, String name, CurrencyDTO currency) implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 5581176346440601454L;
-	private final Long id;
 
-	private final String      longName;
-	private final String      name;
-	private final CurrencyDTO currency;
-
-    @JsonCreator
+	@JsonCreator
 	public TickerDTO(
 			@JsonProperty("id") Long id,
 			@JsonProperty("longName") String longName,
@@ -27,19 +24,5 @@ public class TickerDTO implements Serializable {
 		this.currency = currency;
 	}
 
-	public Long getId() {
-		return id;
-	}
 
-	public String getLongName() {
-		return longName;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public CurrencyDTO getCurrency() {
-		return currency;
-	}
 }
