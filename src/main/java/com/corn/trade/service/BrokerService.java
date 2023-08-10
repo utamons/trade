@@ -24,8 +24,4 @@ public class BrokerService {
 		logger.debug("Invoke");
 		return repository.findAll().stream().map(BrokerMapper::toDTO).toList();
 	}
-
-	public BrokerStatsDTO getStats(Long brokerId) {
-		throw new UnsupportedOperationException("Not implemented yet");
-	}
 }

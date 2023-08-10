@@ -25,10 +25,4 @@ public class BrokerController {
 	public List<BrokerDTO> getAll() {
 		return service.getAll();
 	}
-
-	@GetMapping("/stats")
-	public BrokerStatsDTO getStats(@RequestParam("brokerId") Long brokerId) {
-		return service.getStats(brokerId);
-	}
-
 }

@@ -1,5 +1,6 @@
 package com.corn.trade.service;
 
+import com.corn.trade.dto.BrokerStatsDTO;
 import com.corn.trade.dto.MoneyStateDTO;
 import com.corn.trade.dto.StatsData;
 import com.corn.trade.entity.CashAccount;
@@ -74,5 +75,9 @@ public class StatsService {
 		double riskBase = cashService.getRiskBase(capital);
 
 		return new MoneyStateDTO(capital, profit, riskBase);
+	}
+
+	public BrokerStatsDTO getStats(Long brokerId) {
+		throw new UnsupportedOperationException("Not implemented yet");
 	}
 }

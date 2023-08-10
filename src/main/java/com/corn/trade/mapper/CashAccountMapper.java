@@ -1,6 +1,7 @@
 package com.corn.trade.mapper;
 
 import com.corn.trade.dto.CashAccountDTO;
+import com.corn.trade.dto.CashAccountOutDTO;
 import com.corn.trade.entity.CashAccount;
 import com.corn.trade.util.Generated;
 
@@ -18,6 +19,17 @@ public class CashAccountMapper {
 				CurrencyMapper.toDTO(entity.getCurrency()),
 				BrokerMapper.toDTO(entity.getBroker()),
 				entity.getType().getName()
+				);
+	}
+
+	public static CashAccountOutDTO toOutDTO(CashAccountDTO dto, double amount) {
+		return new CashAccountOutDTO(
+				dto.id(),
+				dto.name(),
+				dto.currency(),
+				dto.broker(),
+				dto.type(),
+				amount
 				);
 	}
 }
