@@ -9,14 +9,16 @@ import static com.corn.trade.util.Util.round;
 public class BrokerStatsDTO {
 	private final List<CashAccountOutDTO> tradeAccounts;
 	private final Double                  outcome;
-	private final long                 open;
+	private final long                    open;
+	private final Double                  riskBase;
 
 	public BrokerStatsDTO(List<CashAccountOutDTO> tradeAccounts,
 	                      Double outcome,
-	                      long open) {
+	                      long open, Double riskBase) {
 		this.tradeAccounts = tradeAccounts;
 		this.outcome = outcome;
 		this.open = open;
+		this.riskBase = riskBase;
 	}
 
 	public List<CashAccountOutDTO> getTradeAccounts() {
@@ -29,5 +31,9 @@ public class BrokerStatsDTO {
 
 	public long getOpen() {
 		return open;
+	}
+
+	public BigDecimal getRiskBase() {
+		return round(riskBase);
 	}
 }

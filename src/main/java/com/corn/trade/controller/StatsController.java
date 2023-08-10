@@ -38,7 +38,7 @@ public class StatsController {
 	}
 
 	@GetMapping("/broker")
-	public BrokerStatsDTO getStats(@RequestParam("brokerId") Long brokerId) {
+	public BrokerStatsDTO getStats(@RequestParam("brokerId") Long brokerId) throws JsonProcessingException {
 		return service.getStats(brokerId);
 	}
 }

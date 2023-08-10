@@ -15,7 +15,6 @@ import java.util.List;
 
 public class CurrencyAPI {
 
-	public static final Logger logger = LoggerFactory.getLogger(CurrencyAPI.class);
 	public static final String VALUE = "value";
 	private final RestTemplate restTemplate = new RestTemplate();
 
