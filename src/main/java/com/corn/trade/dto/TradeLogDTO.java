@@ -13,6 +13,6 @@ public record TradeLogDTO(Long id, String position, LocalDateTime dateOpen, Loca
                           BigDecimal openStopLoss, BigDecimal openTakeProfit, BigDecimal brokerInterest, BigDecimal totalBought,
                           BigDecimal totalSold, Long itemBought, Long itemSold, BigDecimal finalStopLoss,
                           BigDecimal finalTakeProfit, BigDecimal openCommission, BigDecimal closeCommission,
-                          String note,
+                          Long partsClosed, String note,
                           //------------------------------
                           BigDecimal outcome, BigDecimal outcomePc) {}

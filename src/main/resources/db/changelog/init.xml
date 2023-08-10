@@ -97,6 +97,9 @@
             <column name="total_sold" type="decimal(10,2)"/>
             <column name="final_stop_loss" type="decimal(10,2)"/>
             <column name="final_take_profit" type="decimal(10,2)"/>
+            <column name="parts_closed" type="bigint" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
             <column name="open_commission" type="decimal(10,2)">
                 <constraints nullable="false"/>
             </column>

@@ -111,6 +111,9 @@ public class TradeLog implements Serializable {
 	@Column(name="close_commission")
 	private Double closeCommission;
 
+	@Column(name="parts_closed")
+	private Long partsClosed;
+
 	@Column(name = "note")
 	private String note;
 
@@ -340,6 +343,14 @@ public class TradeLog implements Serializable {
 
 	public void setEstimatedItems(Long estimatedItems) {
 		this.estimatedItems = estimatedItems;
+	}
+
+	public Long getPartsClosed() {
+		return partsClosed;
+	}
+
+	public void setPartsClosed(Long partsClosed) {
+		this.partsClosed = partsClosed;
 	}
 
 	@Transient

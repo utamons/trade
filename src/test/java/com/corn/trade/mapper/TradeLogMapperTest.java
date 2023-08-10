@@ -65,6 +65,7 @@ class TradeLogMapperTest {
 		assertEquals(925.0, tradeLog.getAtr());
 		assertEquals(90.0, tradeLog.getOpenStopLoss());
 		assertEquals(80.0, tradeLog.getOpenTakeProfit());
+		assertEquals(0, tradeLog.getPartsClosed());
 		assertEquals("Long trade", tradeLog.getNote());
 	}
 
@@ -108,6 +109,7 @@ class TradeLogMapperTest {
 		when(entity.getTotalSold()).thenReturn(180.0);
 		when(entity.getFinalStopLoss()).thenReturn(87.0);
 		when(entity.getFinalTakeProfit()).thenReturn(108.0);
+		when(entity.getPartsClosed()).thenReturn(2L);
 		when(entity.getNote()).thenReturn("Long trade");
 		when(currencyRateService.convert(any(), any(), any(), any())).thenReturn(100.0);
 		when(broker.getFeeCurrency()).thenReturn(currency);
@@ -138,6 +140,7 @@ class TradeLogMapperTest {
 		assertEquals(round(108.00), dto.finalTakeProfit());
 		assertEquals(round(10.00), dto.openCommission());
 		assertEquals(round(5.00), dto.closeCommission());
+		assertEquals(2L, dto.partsClosed());
 		assertEquals("Long trade", dto.note());
 	}
 

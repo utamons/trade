@@ -46,6 +46,7 @@ public class TradeLogMapper {
 		// Actual data
 		e.setOpenStopLoss(open.openStopLoss());
 		e.setOpenTakeProfit(open.openTakeProfit());
+		e.setPartsClosed(0L);
 		e.setNote(open.note());
 
 		return e;
@@ -100,6 +101,7 @@ public class TradeLogMapper {
 				round(entity.getFinalTakeProfit()),
 				round(openCommission),
 				round(closeCommission),
+				entity.getPartsClosed(),
 				entity.getNote(),
 				//------------------------------
 				round(outcome),
