@@ -57,7 +57,7 @@ const fetchBrokerStats = async (brokerId: number) => {
 }
 
 const fetchMoneyState = async () => {
-    const url = `${baseUrl}/cash/state`
+    const url = `${baseUrl}/stats/state`
     return fetch(url, {
         method: 'get'
     }).then((res) => {

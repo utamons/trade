@@ -2,9 +2,11 @@ package com.corn.trade.mapper;
 
 import com.corn.trade.dto.CashAccountDTO;
 import com.corn.trade.entity.CashAccount;
+import com.corn.trade.util.Generated;
 
 public class CashAccountMapper {
 
+	@Generated
 	private CashAccountMapper() {
 		throw new IllegalStateException("Utility class");
 	}

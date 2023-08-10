@@ -36,6 +36,7 @@ public class CashService {
 	public static final  String                    INTERACTIVE                  = "Interactive";
 	public static final  String                    USD                          = "USD";
 	public static final  String                    KZT                          = "KZT";
+	public static final  String                    EUR                          = "EUR";
 	private final        CashAccountRepository     accountRepo;
 	private final        CashFlowRepository        cashFlowRepo;
 	private final        BrokerRepository          brokerRepo;

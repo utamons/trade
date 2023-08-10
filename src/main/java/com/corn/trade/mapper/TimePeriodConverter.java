@@ -1,7 +1,9 @@
 package com.corn.trade.mapper;
 
 import com.corn.trade.service.TimePeriod;
+import com.corn.trade.util.Generated;
 import com.corn.trade.util.Pair;
+import liquibase.pro.packaged.G;
 
 import java.time.DayOfWeek;
 import java.time.Duration;
@@ -13,13 +15,14 @@ import java.time.temporal.TemporalAdjusters;
 @SuppressWarnings("unused")
 public class TimePeriodConverter {
 
+	@Generated
 	private TimePeriodConverter() {
 		throw new IllegalStateException("Utility class");
 	}
 
 	public static Pair<LocalDateTime, LocalDateTime> getPreviousTimeRange(Pair<LocalDateTime, LocalDateTime> timeRange) {
-		LocalDateTime start = timeRange.getLeft();
-		LocalDateTime end = timeRange.getRight();
+		LocalDateTime start = timeRange.left();
+		LocalDateTime end = timeRange.right();
 		Duration duration = Duration.between(start, end);
 
 		LocalDateTime newStart = start.minus(duration);
@@ -29,8 +32,8 @@ public class TimePeriodConverter {
 	}
 
 	public static Pair<LocalDateTime, LocalDateTime> getNextTimeRange(Pair<LocalDateTime, LocalDateTime> timeRange) {
-		LocalDateTime start = timeRange.getLeft();
-		LocalDateTime end = timeRange.getRight();
+		LocalDateTime start = timeRange.left();
+		LocalDateTime end = timeRange.right();
 		Duration duration = Duration.between(start, end);
 
 		LocalDateTime newStart = start.plus(duration);

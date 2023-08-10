@@ -3,9 +3,11 @@ package com.corn.trade.mapper;
 import com.corn.trade.dto.CurrencyRateDTO;
 import com.corn.trade.entity.Currency;
 import com.corn.trade.entity.CurrencyRate;
+import com.corn.trade.util.Generated;
 
 public class CurrencyRateMapper {
 
+	@Generated
 	private CurrencyRateMapper() {
 		throw new IllegalStateException("Utility class");
 	}

@@ -44,20 +44,6 @@ public class CashController {
 		service.exchange(exchangeDTO);
 	}
 
-	@GetMapping("/state")
-	public MoneyStateDTO state() throws JsonProcessingException {
-		double            capital     = service.getCapital();
-		List<TradeLogDTO> closed      = tradeLogService.getAllClosed();
-		double            sumOutcomes = 0.0;
-		final LocalDate   today       = LocalDate.now();
-
-		double profit = capital == 0 ? 0.0 : sumOutcomes / capital * 100.0;
-
-		double riskBase = service.getRiskBase(capital);
-
-		return new MoneyStateDTO(capital, profit, riskBase);
-	}
-
 	@PostMapping(value = "/eval", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public EvalOutDTO eval(@RequestBody EvalInDTO evalDTO) throws JsonProcessingException {
 		return service.eval(evalDTO);
