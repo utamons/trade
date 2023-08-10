@@ -1,6 +1,7 @@
 package com.corn.trade.entity;
 
 import javax.persistence.*;
+import java.io.Serial;
 import java.io.Serializable;
 
 @SuppressWarnings("unused")
@@ -8,6 +9,7 @@ import java.io.Serializable;
 @Table(name = "ticker")
 public class Ticker implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = -7416079741753396618L;
 
 	@Id

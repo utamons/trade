@@ -2,14 +2,12 @@ package com.corn.trade.controller;
 
 import com.corn.trade.dto.*;
 import com.corn.trade.service.CashService;
-import com.corn.trade.service.CurrencyRateService;
-import com.corn.trade.service.TradeLogService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDate;
-import java.util.List;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @SuppressWarnings("unused")
 @RestController
@@ -18,7 +16,7 @@ public class CashController {
 
 	private final CashService     service;
 
-	public CashController(CashService service, TradeLogService tradeLogService, CurrencyRateService currencyRateService) {
+	public CashController(CashService service) {
 		this.service = service;
 	}
 

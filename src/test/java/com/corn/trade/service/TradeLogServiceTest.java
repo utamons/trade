@@ -747,11 +747,8 @@ class TradeLogServiceTest {
 
 	@Test
 	void testValidateOpenCommon_OpenDTOisNull() {
-		// Arrange
-		TradeLogOpenDTO openDTO = null;
-
 		// Act & Assert
-		Exception exception = assertThrows(IllegalArgumentException.class, () -> validateOpenCommon(openDTO));
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> validateOpenCommon(null));
 		assertEquals("OpenDTO must not be null", exception.getMessage());
 	}
 

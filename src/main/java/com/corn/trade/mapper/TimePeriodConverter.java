@@ -3,7 +3,6 @@ package com.corn.trade.mapper;
 import com.corn.trade.service.TimePeriod;
 import com.corn.trade.util.Generated;
 import com.corn.trade.util.Pair;
-import liquibase.pro.packaged.G;
 
 import java.time.DayOfWeek;
 import java.time.Duration;

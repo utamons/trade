@@ -1,6 +1,7 @@
 package com.corn.trade.entity;
 
 import javax.persistence.*;
+import java.io.Serial;
 import java.io.Serializable;
 
 @SuppressWarnings("unused")
@@ -8,11 +9,12 @@ import java.io.Serializable;
 	@Table(name = "currency")
 	public class Currency implements Serializable {
 
-		private static final long serialVersionUID = 2575710149281146318L;
-		@Id
+	@Serial
+	private static final long serialVersionUID = 2575710149281146318L;
+	@Id
 		@Column(name = "id", nullable = false)
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
-		private Long id;
+		private          Long id;
 
 		@Column(name = "name", nullable = false)
 		private String name;

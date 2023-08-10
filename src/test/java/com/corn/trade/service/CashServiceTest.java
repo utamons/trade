@@ -332,7 +332,7 @@ class CashServiceTest {
 		ExchangeDTO exchangeDTO = new ExchangeDTO(brokerUSD.getId(), currencyUSD.getId(), currencyEUR.getId(), 800.0,
 		                                          700.0);
 
-		double delta = exchangeDTO.getAmountFrom() - exchangeDTO.getAmountTo();
+		double delta = exchangeDTO.amountFrom() - exchangeDTO.amountTo();
 
 		LocalDateTime dateTime = LocalDateTime.now();
 		// Act
@@ -348,8 +348,8 @@ class CashServiceTest {
 		assertNull(cashFlow.getTradeLog());
 		assertEquals(tradeFrom, cashFlow.getAccountFrom());
 		assertEquals(tradeTo, cashFlow.getAccountTo());
-		assertEquals(exchangeDTO.getAmountFrom(), cashFlow.getSumFrom());
-		assertEquals(exchangeDTO.getAmountFrom(), cashFlow.getSumTo());
+		assertEquals(exchangeDTO.amountFrom(), cashFlow.getSumFrom());
+		assertEquals(exchangeDTO.amountFrom(), cashFlow.getSumTo());
 		assertThat(dateTime).isCloseTo(cashFlow.getCommittedAt(), new TemporalUnitWithinOffset(100, ChronoUnit.MILLIS));
 
 		CashFlow conversion = cashFlowRepository.findAll().get(1);
@@ -377,7 +377,7 @@ class CashServiceTest {
 		ExchangeDTO exchangeDTO = new ExchangeDTO(brokerUSD.getId(), currencyEUR.getId(), currencyUSD.getId(), 700.0,
 		                                          800.0);
 
-		double delta = exchangeDTO.getAmountFrom() - exchangeDTO.getAmountTo();
+		double delta = exchangeDTO.amountFrom() - exchangeDTO.amountTo();
 
 		LocalDateTime dateTime = LocalDateTime.now();
 		// Act
@@ -393,8 +393,8 @@ class CashServiceTest {
 		assertNull(cashFlow.getTradeLog());
 		assertEquals(tradeFrom, cashFlow.getAccountFrom());
 		assertEquals(tradeTo, cashFlow.getAccountTo());
-		assertEquals(exchangeDTO.getAmountFrom(), cashFlow.getSumFrom());
-		assertEquals(exchangeDTO.getAmountFrom(), cashFlow.getSumTo());
+		assertEquals(exchangeDTO.amountFrom(), cashFlow.getSumFrom());
+		assertEquals(exchangeDTO.amountFrom(), cashFlow.getSumTo());
 		assertThat(dateTime).isCloseTo(cashFlow.getCommittedAt(), new TemporalUnitWithinOffset(100, ChronoUnit.MILLIS));
 
 		CashFlow conversion = cashFlowRepository.findAll().get(1);
@@ -1525,7 +1525,7 @@ class CashServiceTest {
 		Exception exception = assertThrows(IllegalArgumentException.class,
 		                                   () -> cashService.estimatedCommission("Interactive", currencyDTO, 100L, 100.0));
 
-		assertEquals("The currency "+currencyDTO.getName()+" is not supported for trades in Interactive broker yet", exception.getMessage());
+		assertEquals("The currency " + currencyDTO.name() + " is not supported for trades in Interactive broker yet", exception.getMessage());
 	}
 
 	@Test
@@ -1536,7 +1536,7 @@ class CashServiceTest {
 		// Act
 		Commission commission = cashService.estimatedCommission("Interactive", currencyDTO, 1000L, 100.0);
 
-		assertEquals(5.0, commission.getAmount());
+		assertEquals(5.0, commission.amount());
 	}
 
 	@Test

@@ -63,8 +63,8 @@ public class CurrencyRateService {
 
 		CurrencyRateDTO currencyRateDTO = rates.stream()
 		                                       .filter(rate -> Objects.equals(rate.currency()
-		                                                                          .getId(),
-		                                                                      currencyDTO.getId()))
+		                                                                          .id(),
+		                                                                      currencyDTO.id()))
 		                                       .findFirst()
 		                                       .orElse(null);
 
@@ -128,7 +128,7 @@ public class CurrencyRateService {
 
 		try {
 			for (CurrencyRateDTO dto : rates) {
-				Currency currency = getCurrencyByName(dto.currency().getName());
+				Currency currency = getCurrencyByName(dto.currency().name());
 
 				CurrencyRate rate = CurrencyRateMapper.toEntity(dto, currency);
 				repository.save(rate);
