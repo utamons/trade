@@ -1,5 +1,6 @@
 package com.corn.trade.controller;
 
+import com.corn.trade.dto.BrokerStatsDTO;
 import com.corn.trade.dto.MoneyStateDTO;
 import com.corn.trade.dto.StatsData;
 import com.corn.trade.dto.TradeLogDTO;
@@ -34,5 +35,10 @@ public class StatsController {
 	@GetMapping("/state")
 	public MoneyStateDTO state() throws JsonProcessingException {
 		return service.getMoneyState();
+	}
+
+	@GetMapping("/broker")
+	public BrokerStatsDTO getStats(@RequestParam("brokerId") Long brokerId) {
+		return service.getStats(brokerId);
 	}
 }

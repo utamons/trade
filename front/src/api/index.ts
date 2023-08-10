@@ -48,7 +48,7 @@ const fetchTickers = async () => {
 }
 
 const fetchBrokerStats = async (brokerId: number) => {
-    const url = `${baseUrl}/broker/stats?brokerId=${brokerId}`
+    const url = `${baseUrl}/stats/broker?brokerId=${brokerId}`
     return fetch(url, {
         method: 'get'
     }).then((res) => {

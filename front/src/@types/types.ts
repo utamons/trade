@@ -18,17 +18,13 @@ type BrokerAccount = {
     currency: ItemType,
     broker: ItemType,
     type: string,
-    amount: number,
-    updatedAt: Date
+    amount: number
 }
 
 type BrokerStatsType = {
-    accounts: BrokerAccount[],
+    tradeAccounts: BrokerAccount[],
     outcome: number,
-    avgOutcome: number,
-    avgProfit: number,
-    open: number,
-    borrowed?: number
+    open: number
 }
 
 type MoneyStateType = {
