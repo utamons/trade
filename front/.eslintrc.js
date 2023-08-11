@@ -35,6 +35,7 @@ module.exports = {
         'comma-spacing': 'error',
         'react/display-name': 'off',
         'comma-dangle': ['error', 'never'],
-        'no-use-before-define': 'off'
+        'no-use-before-define': 'off',
+        "@typescript-eslint/no-explicit-any": "off"
     }
 }

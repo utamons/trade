@@ -47,10 +47,10 @@ interface WorkIntProps {
     close: (close: PositionCloseType) => void
 }
 
-const WorkInt = (props: WorkIntProps) => {
+const WorkInt = () => {
     const [isOpen, setOpen] = useState(false)
 
-    const { logPage, currentBroker, tickers, markets, open, close, edit } = props
+    const { logPage, currentBroker, tickers, markets, open, close, edit } = useContext(TradeContext)
 
     const handleOpen = useCallback(() => {
         setOpen(true)
@@ -74,28 +74,14 @@ const WorkInt = (props: WorkIntProps) => {
         </RowStyled>
         <Open
             isOpen={isOpen}
-            open={open}
-            tickers={tickers}
-            markets={markets}
-            currentBroker={currentBroker}
             onClose={handleCloseOpenDialog}/>
     </ContainerStyled>
 }
 
 export default () => {
-    const { all } = useContext(TradeContext)
-    if (!all)
-        return <CircularProgress size={20}/>
-    const { currentBroker, markets, tickers, logPage, open, close, edit } = all
-    if (!logPage || !currentBroker || !markets || !tickers)
+    const { isLoading } = useContext(TradeContext)
+    if (isLoading)
         return <CircularProgress size={20}/>
 
-    return <WorkInt
-        logPage={logPage}
-        open={open}
-        edit={edit}
-        close={close}
-        tickers={tickers}
-        currentBroker={currentBroker}
-        markets={markets}/>
+    return <WorkInt />
 }

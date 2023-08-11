@@ -105,7 +105,7 @@ const postExchange = async (body: ExchangeType) => {
         const body = await res.json()
         return Promise.reject(body.message)
     }
-    return res.json()
+    return Promise.resolve()
 }
 
 const postLogPage = async (body: PageRequest) => {

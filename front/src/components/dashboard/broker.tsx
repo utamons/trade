@@ -1,13 +1,14 @@
-import React, { Dispatch, useCallback, useEffect, useState } from 'react'
+import React, { Dispatch, useCallback, useContext, useEffect, useState } from 'react'
 import { Box, styled } from '@mui/material'
 import { remCalc } from '../../utils/utils'
-import { BrokerProps, FormAction, FormActionPayload, FormState } from 'types'
+import { FormAction, FormActionPayload, FormState } from 'types'
 import Button from '../tools/button'
 import Refill from '../dialogs/refill'
 import { ButtonContainerStyled } from '../../styles/style'
 import Exchange from '../dialogs/exchange'
 import Select from '../tools/select'
 import { getFieldValue, useForm } from '../dialogs/dialogUtils'
+import { TradeContext } from '../../trade-context'
 
 const ContainerStyled = styled(Box)(({ theme }) => ({
     borderRight: `solid ${remCalc(1)}`,
@@ -46,7 +47,14 @@ const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, bro
     dispatch({ type: 'init', payload })
 }
 
-export default ({ brokers, currencies, currentBroker, setCurrentBrokerId, refill, correction, exchange }: BrokerProps) => {
+export default () => {
+    const { brokers,
+        currencies,
+        currentBroker,
+        setCurrentBrokerId,
+        refill,
+        refreshDashboard,
+        correction } = useContext(TradeContext)
     const { formState, dispatch } = useForm()
     const [refillOpen, setRefillOpen] = useState(false)
     const [correctionOpen, setCorrectionOpen] = useState(false)
@@ -78,15 +86,6 @@ export default ({ brokers, currencies, currentBroker, setCurrentBrokerId, refill
         setCorrectionOpen(false)
     }, [])
 
-    const commitExchange = useCallback((
-        currencyFromId: number,
-        amountFrom: number,
-        currencyToId: number,
-        amountTo: number) => {
-        exchange(currencyFromId, amountFrom, currencyToId, amountTo)
-        setExchangeOpen(false)
-    }, [])
-
     const openExchangeDialog = useCallback(() => {
         setExchangeOpen(true)
     }, [])
@@ -99,8 +98,9 @@ export default ({ brokers, currencies, currentBroker, setCurrentBrokerId, refill
         setCorrectionOpen(false)
     }, [])
 
-    const cancelExchange = useCallback(() => {
+    const exchangeClose = useCallback(() => {
         setExchangeOpen(false)
+        refreshDashboard()
     }, [])
 
     return <ContainerStyled>
@@ -121,7 +121,7 @@ export default ({ brokers, currencies, currentBroker, setCurrentBrokerId, refill
                 currencies={currencies}/>
         <Refill open={correctionOpen} negativeAllowed={true} title="Correction" onSubmit={commitCorrection}
                 onCancel={cancelCorrection} currencies={currencies}/>
-        <Exchange open={exchangeOpen} onExchange={commitExchange} onCancel={cancelExchange} currencies={currencies}/>
+        <Exchange open={exchangeOpen} onClose={exchangeClose} currencies={currencies}/>
     </ContainerStyled>
 
 }
