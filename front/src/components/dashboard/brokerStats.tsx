@@ -20,8 +20,8 @@ const BoxStyled = styled(Box)(() => ({
     justifyContent: 'space-between'
 }))
 
-export default ({ accounts, open, outcome, avgOutcome, avgProfit, borrowed }: BrokerStatsType) => {
-    const width = accounts.length>0?remCalc(337):remCalc(164)
+export default ({ tradeAccounts, riskBase, open, outcome }: BrokerStatsType) => {
+    const width = tradeAccounts.length>0?remCalc(337):remCalc(164)
 
     const theme = useTheme()
     // noinspection TypeScriptUnresolvedVariable
@@ -30,23 +30,17 @@ export default ({ accounts, open, outcome, avgOutcome, avgProfit, borrowed }: Br
     const defaultColor = theme.palette.text.primary
 
     return <ContainerStyled sx={{ width }}>
-        {accounts.map(acc => <BoxStyled key={acc.id}>
+        {tradeAccounts.map(acc => <BoxStyled key={acc.id}>
             <div>{acc.currency.name}:</div> <div>{acc.amount}</div>
         </BoxStyled>)}
         <BoxStyled>
             <div>Outcome:</div> <Box sx={profitColor(outcome, defaultColor)}>{outcome}$</Box>
         </BoxStyled>
         <BoxStyled>
-            <div>Avg. outcome:</div> <Box sx={profitColor(avgOutcome, defaultColor)}>{avgOutcome}$</Box>
-        </BoxStyled>
-        <BoxStyled>
-            <div>Avg. profit:</div> <Box sx={profitColor(avgProfit, defaultColor)}>{avgProfit}%</Box>
-        </BoxStyled>
-        {borrowed?<BoxStyled>
-                <div>Borrowed:</div> <Box >${borrowed}</Box>
-            </BoxStyled>:<></>}
-        <BoxStyled>
             <div>Open:</div> <div>{open}</div>
+        </BoxStyled>
+        <BoxStyled>
+            <div>Risk base:</div> <div>$ {riskBase}</div>
         </BoxStyled>
     </ContainerStyled>
 

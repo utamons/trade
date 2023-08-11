@@ -22,8 +22,6 @@ import static java.lang.Math.abs;
 @Service
 @Transactional
 public class CashService {
-	private static final Logger                    logger                       =
-			LoggerFactory.getLogger(CashService.class);
 	public static final  String                    START                        = "start";
 	public static final  String                    FINISH                       = "finish";
 	public static final  String                    TRADE                        = "trade";
@@ -37,6 +35,8 @@ public class CashService {
 	public static final  String                    USD                          = "USD";
 	public static final  String                    KZT                          = "KZT";
 	public static final  String                    EUR                          = "EUR";
+	private static final Logger                    logger                       =
+			LoggerFactory.getLogger(CashService.class);
 	private final        CashAccountRepository     accountRepo;
 	private final        CashFlowRepository        cashFlowRepo;
 	private final        BrokerRepository          brokerRepo;
@@ -201,6 +201,13 @@ public class CashService {
 		CashAccount conversionTo = getAccount(broker, currencyTo, conversionType);
 		double      transferFrom = exchangeDTO.amountFrom();
 		double      transferTo   = exchangeDTO.amountTo();
+		double      totalFrom    = getAccountTotal(tradeFrom);
+		if (currencyFrom.getId() == currencyTo.getId()) {
+			throw new IllegalArgumentException("Currencies are the same");
+		}
+		if (transferFrom > totalFrom) {
+			throw new IllegalArgumentException("Not enough money to transfer");
+		}
 		double      delta        = transferFrom - transferTo;
 
 		CashFlow cashFlow = new CashFlow(
@@ -500,7 +507,7 @@ public class CashService {
 		double totalBought          = tradeLog.getTotalBought() == null ? 0 : tradeLog.getTotalBought();
 		double closeCommission      = tradeLog.getCloseCommission() == null ? 0 : tradeLog.getCloseCommission();
 		long   itemBoughtPreviously = tradeLog.getItemBought() == null ? 0 : tradeLog.getItemBought();
-		long   partsClosed        = tradeLog.getPartsClosed();
+		long   partsClosed          = tradeLog.getPartsClosed();
 
 		if (itemBoughtPreviously + itemBought > itemSold) {
 			throw new IllegalStateException("Item bought number is greater than item sold number");
@@ -660,21 +667,20 @@ public class CashService {
 		return sum;
 	}
 
-	public record EvalToFitRecord(long items, double volumePc, EvalOutDTO eval) {
-	}
-
 	/**
 	 * Calculates the maximum number of items per trade for the given capital.
 	 *
-	 * @param capital  capital
+	 * @param capital   capital
 	 * @param depositPc deposit percentage per trade
-	 * @param price   price
-	 * @param currency currency of the trade
-	 *
+	 * @param price     price
+	 * @param currency  currency of the trade
 	 * @return the maximum number of items per trade
 	 * @throws JsonProcessingException if currency rate service fails.
 	 */
-	public long getMaxItems(double capital, double depositPc, double price, Currency currency) throws JsonProcessingException {
+	public long getMaxItems(double capital,
+	                        double depositPc,
+	                        double price,
+	                        Currency currency) throws JsonProcessingException {
 		double maxVolumeUSD = capital * depositPc / 100.0;
 		double priceUSD     = currencyRateService.convertToUSD(currency.getId(), price, LocalDate.now());
 		return (long) (maxVolumeUSD / priceUSD);
@@ -684,14 +690,13 @@ public class CashService {
 	 * Calculates an optimal number of items for a trade based on
 	 * allowed risk, risk/reward ratio and maximum volume per trade.
 	 *
-	 * @param evalDTO evaluation parameters
-	 * @param currency currency of the trade
-	 * @param atr average true range
-	 * @param stopLoss stop loss
+	 * @param evalDTO    evaluation parameters
+	 * @param currency   currency of the trade
+	 * @param atr        average true range
+	 * @param stopLoss   stop loss
 	 * @param takeProfit take profit
-	 * @param price price
-	 * @param capital capital by a broker
-	 *
+	 * @param price      price
+	 * @param capital    capital by a broker
 	 * @return calculation results
 	 * @throws JsonProcessingException if currency rate service fails.
 	 */
@@ -702,9 +707,9 @@ public class CashService {
 	                                 Double takeProfit,
 	                                 double price,
 	                                 double capital) throws JsonProcessingException {
-		double            volumePc;
-		EvalOutDTO        eval;
-		long              items       = getMaxItems(capital, evalDTO.depositPc(), price, currency);
+		double     volumePc;
+		EvalOutDTO eval;
+		long       items = getMaxItems(capital, evalDTO.depositPc(), price, currency);
 		if (items == 0) {
 			throw new IllegalStateException("No money for trading in the currency " + currency.getName().trim() + "!");
 		}
@@ -731,7 +736,6 @@ public class CashService {
 		} while (eval.riskPc() > evalDTO.riskPc() && eval.riskRewardPc() < evalDTO.riskRewardPc());
 		return new EvalToFitRecord(items, volumePc, eval);
 	}
-
 
 	/**
 	 * Evaluate a position to fit the risk limits
@@ -970,6 +974,9 @@ public class CashService {
 		CashAccountType to   = amount > 0 ? tradeType : correctionType;
 
 		transfer(abs(amount), null, broker, currency, from, to, LocalDateTime.now());
+	}
+
+	public record EvalToFitRecord(long items, double volumePc, EvalOutDTO eval) {
 	}
 }
 

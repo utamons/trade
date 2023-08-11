@@ -13,8 +13,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -36,13 +36,11 @@ public class CurrencyRateService {
 
 	private final CurrencyAPI currencyAPI = new CurrencyAPI();
 
-	public CurrencyRateService(CurrencyRateRepository repository, CurrencyRepository currencyRepository,
-	                           EntityManager entityManager) {
+	public CurrencyRateService(CurrencyRateRepository repository, CurrencyRepository currencyRepository) {
 		logger.info("CurrencyRateService is created...");
 		this.repository = repository;
 		if (currencies == null) {
 			currencies = currencyRepository.findAll();
-			currencies.forEach(entityManager::detach);
 			currencies.forEach(currency -> currency.setName(currency.getName().trim())); // fucking H2!
 			logger.info("{} currencies were loaded", currencies.size());
 		}
@@ -56,49 +54,55 @@ public class CurrencyRateService {
 		return currencies.stream().filter(currency -> currency.getId() == id).findFirst().orElse(null);
 	}
 
-	public CurrencyRateDTO findByDate(Long currencyId, LocalDate dateTime) throws JsonProcessingException {
-		Currency             currency    = getCurrencyById(currencyId);
-		CurrencyDTO          currencyDTO = CurrencyMapper.toDTO(currency);
-		Set<CurrencyRateDTO> rates       = cache.computeIfAbsent(dateTime, k -> new HashSet<>());
+	public CurrencyRateDTO findInCache(CurrencyDTO currencyDTO, LocalDate date) {
+		Set<CurrencyRateDTO> rates = cache.computeIfAbsent(date, k -> new HashSet<>());
 
-		CurrencyRateDTO currencyRateDTO = rates.stream()
-		                                       .filter(rate -> Objects.equals(rate.currency()
-		                                                                          .id(),
-		                                                                      currencyDTO.id()))
-		                                       .findFirst()
-		                                       .orElse(null);
+		return rates.stream()
+		            .filter(rate -> Objects.equals(rate.currency().id(), currencyDTO.id()))
+		            .findFirst()
+		            .orElse(null);
+	}
+
+	public CurrencyRateDTO findByDate(Long currencyId, LocalDate date) throws JsonProcessingException {
+		logger.debug("start");
+		Currency        currency        = getCurrencyById(currencyId);
+		CurrencyDTO     currencyDTO     = CurrencyMapper.toDTO(currency);
+		CurrencyRateDTO currencyRateDTO = findInCache(currencyDTO, date);
 
 		if (currencyRateDTO != null) {
 			return currencyRateDTO;
 		}
 
-		CurrencyRate    currencyRate = repository.findRateByCurrencyAndDate(currency, dateTime);
+		CurrencyRate    currencyRate = repository.findRateByCurrencyAndDate(currency, date);
 		CurrencyRateDTO rateDTO      = CurrencyRateMapper.toDTO(currencyRate);
 		if (rateDTO != null) {
+			Set<CurrencyRateDTO> rates = cache.computeIfAbsent(date, k -> new HashSet<>());
 			rates.add(rateDTO);
+			logger.debug("finish");
 			return rateDTO;
 		} else {
 			if (isExternalStarted) {
 				logger.info("Waiting for the external API call to finish...");
 				while (isExternalStarted) {
 					try {
-						TimeUnit.MILLISECONDS.sleep(100);
+						TimeUnit.MILLISECONDS.sleep(300);
 					} catch (InterruptedException e) {
 						throw new RuntimeException(e);
 					}
 				}
-				currencyRate = repository.findRateByCurrencyAndDate(currency, dateTime);
-				rateDTO      = CurrencyRateMapper.toDTO(currencyRate);
+				rateDTO = findInCache(currencyDTO, date);
 				logger.info("The external API call is finished...");
-
-				rates.add(rateDTO);
+				if (rateDTO == null)
+					throw new IllegalStateException("The external API call is finished, but the rate is still null");
+				logger.debug("finish");
 				return rateDTO;
 			}
-			return getExternalRate(currencyId, dateTime);
+			logger.debug("finish");
+			return getExternalRate(currencyId, date);
 		}
-
 	}
 
+	@Transactional
 	public Double convertToUSD(long currencyId, Double amount, LocalDate dateTime) throws JsonProcessingException {
 		Currency usd = getCurrencyByName("USD");
 		if (usd.getId() == currencyId)
@@ -107,18 +111,20 @@ public class CurrencyRateService {
 		return round(amount / currencyRateDTO.rate(), 2);
 	}
 
-	public Double convert(Currency fromCurrency, Currency toCurrency, Double amount, LocalDate dateTime) throws JsonProcessingException {
+	public Double convert(Currency fromCurrency,
+	                      Currency toCurrency,
+	                      Double amount,
+	                      LocalDate dateTime) throws JsonProcessingException {
 		long fromCurrencyId = fromCurrency.getId();
-		long toCurrencyId = toCurrency.getId();
+		long toCurrencyId   = toCurrency.getId();
 		if (fromCurrencyId == toCurrencyId)
 			return amount;
 		CurrencyRateDTO fromCurrencyRateDTO = findByDate(fromCurrencyId, dateTime);
-		CurrencyRateDTO toCurrencyRateDTO = findByDate(toCurrencyId, dateTime);
+		CurrencyRateDTO toCurrencyRateDTO   = findByDate(toCurrencyId, dateTime);
 		return amount * toCurrencyRateDTO.rate() / fromCurrencyRateDTO.rate();
 	}
 
-
-	private CurrencyRateDTO getExternalRate(Long currencyId, LocalDate date) throws JsonProcessingException {
+	public CurrencyRateDTO getExternalRate(Long currencyId, LocalDate date) throws JsonProcessingException {
 		isExternalStarted = true;
 		List<CurrencyRateDTO> rates = currencyAPI.getRatesAt(date);
 		if (rates.isEmpty()) {
@@ -127,18 +133,22 @@ public class CurrencyRateService {
 		}
 
 		try {
+			Set<CurrencyRateDTO> cacheRates = cache.computeIfAbsent(date, k -> new HashSet<>());
 			for (CurrencyRateDTO dto : rates) {
 				Currency currency = getCurrencyByName(dto.currency().name());
 
 				CurrencyRate rate = CurrencyRateMapper.toEntity(dto, currency);
-				repository.save(rate);
-				repository.flush();
+				rate = repository.save(rate);
+				cacheRates.add(CurrencyRateMapper.toDTO(rate));
 			}
+			repository.flush();
+			logger.debug("{} rates were saved", rates.size());
 		} catch (Exception e) {
 			logger.debug("SQL exception: {}", e.getMessage());
 		}
 
-		Currency     currency     = getCurrencyById(currencyId);
+		Currency currency = getCurrencyById(currencyId);
+		logger.debug("Getting a rate for currency: {}, {}", currency.getId(), currency.getName());
 		CurrencyRate currencyRate = repository.findRateByCurrencyAndDate(currency, date);
 
 		isExternalStarted = false;

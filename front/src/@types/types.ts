@@ -24,13 +24,13 @@ type BrokerAccount = {
 type BrokerStatsType = {
     tradeAccounts: BrokerAccount[],
     outcome: number,
-    open: number
+    open: number,
+    riskBase: number
 }
 
 type MoneyStateType = {
     capital: number,
-    profit: number,
-    riskBase: number
+    profit: number
 }
 
 type RefillType = {
@@ -40,6 +40,7 @@ type RefillType = {
 }
 
 type TradeContextType = {
+    apiError: string | undefined,
     brokers: ItemType[] | undefined,
     currencies: ItemType[] | undefined,
     tickers: TickerType[] | undefined,
