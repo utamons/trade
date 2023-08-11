@@ -1,7 +1,6 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { Box, styled } from '@mui/material'
 import { Loadable, remCalc } from '../../utils/utils'
-import { useContext } from 'react'
 import { TradeContext } from '../../trade-context'
 import Broker from './broker'
 import BrokerStats from './brokerStats'
@@ -21,25 +20,14 @@ const ContainerStyled = styled(Box)(({ theme }) => ({
 }))
 
 export default () => {
-    const { all } = useContext(TradeContext)
-    if (!all)
-        return <></>
-    const { isLoading, currencies, brokers, currentBroker, brokerStats, moneyState,
-        setCurrentBrokerId, refill, exchange, correction } = all
+    const { isLoading } = useContext(TradeContext)
 
     return <Loadable isLoading={isLoading}>
         <ContainerStyled>
-            <Broker
-                brokers={brokers}
-                currentBroker={currentBroker}
-                currencies={currencies}
-                refill={refill}
-                exchange={exchange}
-                correction={correction}
-                setCurrentBrokerId={setCurrentBrokerId}/>
-            {brokerStats? <BrokerStats {...brokerStats}/>:<></>}
-            {moneyState? <MoneyState {...moneyState}/>: <></>}
-            <Markets />
+            <Broker />
+            <BrokerStats />
+            <MoneyState />
+            <Markets/>
         </ContainerStyled>
     </Loadable>
 }

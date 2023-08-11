@@ -66,10 +66,9 @@ const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, cur
 }
 
 
-export default ({ open, onExchange, onCancel, currencies }: ExchangeDialogProps) => {
-    const { all } = useContext(TradeContext)
-    const apiError = all?.apiError
-    const [error, setError] = useState<string | undefined>(undefined)
+export default ({ open, onClose, currencies }: ExchangeDialogProps) => {
+    const [ apiError, setApiError ] = useState<string | undefined>(undefined)
+    const { exchange } = useContext(TradeContext)
     const { formState, dispatch } = useForm()
 
     initFormState(formState, dispatch, currencies ? currencies[0].id : 0)
@@ -81,7 +80,15 @@ export default ({ open, onExchange, onCancel, currencies }: ExchangeDialogProps)
     const currencyFromId = '' + getFieldValue('currencyFromId', formState)
     const currencyToId = '' + getFieldValue('currencyToId', formState)
 
-    const handleExchange = useCallback(() => {
+    const handleClose = useCallback(() => {
+         dispatch({ type: 'set', payload: { name: 'valueTo', valueNum: undefined } })
+         dispatch({ type: 'set', payload: { name: 'valueFrom', valueNum: undefined } })
+         setApiError(undefined)
+         onClose()
+    }, [])
+
+    const handleExchange = useCallback(async () => {
+        console.log('handleExchange, valueTo', valueTo, 'valueFrom', valueFrom, 'isValid', isValid)
         if (valueTo == undefined) {
             dispatch({ type: 'set', payload: { name: 'valueTo', valid: false, errorText: 'required' } })
         }
@@ -96,7 +103,11 @@ export default ({ open, onExchange, onCancel, currencies }: ExchangeDialogProps)
         }
         if (valueTo == undefined || valueFrom == undefined || valueTo <= 0 || valueFrom <= 0 || !isValid)
             return
-        onExchange(Number(currencyFromId), Number(currencyToId), valueFrom, valueTo)
+        exchange(Number(currencyFromId), Number(currencyToId), valueFrom, valueTo).then(() => {
+            handleClose()
+        }).catch((err) => {
+           setApiError(err)
+        })
     }, [valueFrom, valueTo, isValid, currencyFromId, currencyToId])
 
     return <Dialog open={open}>
@@ -136,14 +147,14 @@ export default ({ open, onExchange, onCancel, currencies }: ExchangeDialogProps)
                     dispatch={dispatch}
                     value={valueTo}
                     label="Amount to"/>
-                <Alert severity="error">{error}</Alert>
+                {apiError && <Alert severity="error">{apiError}</Alert>}
             </ContainerStyled>
         </DialogContent>
 
         <DialogActions sx={{ justifyContent: 'center' }}>
             <ButtonContainerStyled>
                 <Button style={{ minWidth: remCalc(101) }} text="Exchange" onClick={handleExchange}/>
-                <Button style={{ minWidth: remCalc(101) }} text="Cancel" onClick={onCancel}/>
+                <Button style={{ minWidth: remCalc(101) }} text="Cancel" onClick={handleClose}/>
             </ButtonContainerStyled>
         </DialogActions>
     </Dialog>

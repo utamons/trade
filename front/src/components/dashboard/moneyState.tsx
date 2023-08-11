@@ -1,10 +1,11 @@
 // noinspection TypeScriptValidateTypes
 
-import React from 'react'
+import React, { useContext } from 'react'
 import { Box, styled } from '@mui/material'
 import { profitColor, remCalc } from '../../utils/utils'
 import { MoneyStateType } from 'types'
 import { useTheme } from '@emotion/react'
+import { TradeContext } from '../../trade-context'
 
 const ContainerStyled = styled(Box)(({ theme }) => ({
     borderRight: `solid ${remCalc(1)}`,
@@ -22,7 +23,9 @@ const BoxStyled = styled(Box)(() => ({
     justifyContent: 'space-between'
 }))
 
-export default ({ capital, profit }: MoneyStateType) => {
+export default () => {
+    const { moneyState } = useContext(TradeContext)
+    const { capital, profit } = moneyState
     const theme = useTheme()
     // noinspection TypeScriptUnresolvedVariable
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment

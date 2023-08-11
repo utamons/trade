@@ -5,7 +5,7 @@ import DialogActions from '@mui/material/DialogActions'
 import Dialog from '@mui/material/Dialog'
 import { BLUE, greaterColor, remCalc, roundTo2, takeColor } from '../../../utils/utils'
 import Button from '../../tools/button'
-import React, { Dispatch, useCallback, useEffect, useState } from 'react'
+import React, { Dispatch, useCallback, useContext, useEffect, useState } from 'react'
 import { ButtonContainerStyled, FieldName, NoteBox, RedSwitch, SwitchBox } from '../../../styles/style'
 import { Grid } from '@mui/material'
 import TextField from '@mui/material/TextField'
@@ -20,6 +20,7 @@ import ValueFieldBox from '../../dialogs/valueFieldBox'
 import DatePickerBox from '../../dialogs/datePickerBox'
 import { MAX_DEPOSIT_PC, MAX_RISK_PC, MAX_RISK_REWARD_PC } from '../../../utils/constants'
 import CheckFieldBox from '../../dialogs/checkFieldBox'
+import { TradeContext } from '../../../trade-context'
 
 
 const positions = [
@@ -171,7 +172,8 @@ const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, tic
     dispatch({ type: 'init', payload })
 }
 
-export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: OpenDialogProps) => {
+export default ({ onClose, isOpen }: OpenDialogProps) => {
+    const { currentBroker, markets, tickers, open } = useContext(TradeContext)
     const { formState, dispatch } = useForm()
     const [currentTicker, setCurrentTicker] = useState<TickerType | undefined>(tickers[0])
     const [evaluate, setEvaluate] = useState(true)
@@ -179,6 +181,9 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
     const [technicalStop, setTechicalStop] = useState(false)
 
     console.log('openDialog', formState)
+
+    if (!currentBroker)
+        return null
 
     const theme = useTheme()
     // noinspection TypeScriptUnresolvedVariable
@@ -540,7 +545,7 @@ export default ({ onClose, isOpen, currentBroker, markets, tickers, open }: Open
         initFormState(formState, dispatch, tickers[0].id, markets[0].id, positions[0].id)
     }, [formState])
 
-    const handleSwitch = useCallback((event: React.SyntheticEvent, checked: boolean) => {
+    const handleSwitch = useCallback((_event: React.SyntheticEvent, checked: boolean) => {
         setEvaluate(!checked)
     }, [])
 

@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useMemo, useState } from 'react'
+import React, { createContext, useEffect, useState } from 'react'
 import { useQuery } from 'react-query'
 import {
     fetchBrokers,
@@ -7,11 +7,13 @@ import {
     fetchMarkets,
     fetchMoneyState,
     fetchTickers,
+    postClose,
+    postCorrection,
+    postEdit,
     postExchange,
     postLogPage,
     postOpen,
-    postClose,
-    postRefill, postCorrection, postEdit
+    postRefill
 } from './api'
 import {
     BrokerStatsType,
@@ -121,7 +123,6 @@ const useTrade = (): TradeContextType => {
     const { brokerStats, isLoadingBrokerStats } = useBrokerStats(currentBrokerId, brokerStatsKey)
     const { moneyState, isLoadingMoneyState } = useMoneyState(moneyStateKey)
     const { logPage, isLoadingLogPage } = useLogPage(pageLogKey, pageNum)
-    const [ apiError, setApiError ] = useState<string | undefined>(undefined)
 
     const currentBroker = (): ItemType | undefined => {
         return isLoadingBrokers ? undefined : brokers.find((elem: ItemType) => {
@@ -136,7 +137,6 @@ const useTrade = (): TradeContextType => {
     })
 
     const refill = (currencyId: number, amount: number) => {
-        setApiError(undefined)
         postRefill({
             brokerId: currentBrokerId,
             currencyId,
@@ -148,7 +148,6 @@ const useTrade = (): TradeContextType => {
     }
 
     const correction = (currencyId: number, amount: number) => {
-        setApiError(undefined)
         postCorrection({
             brokerId: currentBrokerId,
             currencyId,
@@ -164,28 +163,30 @@ const useTrade = (): TradeContextType => {
         setPageLogKey('' + Date.now())
     }
 
-    const exchange = (currencyFromId: number,
+    const exchange = async (currencyFromId: number,
                       currencyToId: number,
                       amountFrom: number,
                       amountTo: number) => {
-        setApiError(undefined)
-        postExchange({
-            brokerId: currentBrokerId,
-            currencyFromId,
-            currencyToId,
-            amountFrom,
-            amountTo
-        }).then(() => {
-            setMoneyStateKey('' + Date.now())
-            setBrokerStatsKey('' + Date.now())
-        }).catch((err) => {
-            setApiError(err.message)
-        })
+        try {
+            await postExchange({
+                brokerId: currentBrokerId,
+                currencyFromId,
+                currencyToId,
+                amountFrom,
+                amountTo
+            })
+            return Promise.resolve()
+        } catch (err: any) {
+            return Promise.reject(err)
+        }
     }
 
+    const refreshDashboard = () => {
+        setMoneyStateKey('' + Date.now())
+        setBrokerStatsKey('' + Date.now())
+    }
 
     const open = (open: PositionOpenType) => {
-        setApiError(undefined)
         postOpen(open).then(
             () => {
                 setMoneyStateKey('' + Date.now())
@@ -196,7 +197,6 @@ const useTrade = (): TradeContextType => {
     }
 
     const close = (close: PositionCloseType) => {
-        setApiError(undefined)
         postClose(close).then(
             () => {
                 setMoneyStateKey('' + Date.now())
@@ -207,7 +207,6 @@ const useTrade = (): TradeContextType => {
     }
 
     const edit = (edit: PositionEditType) => {
-        setApiError(undefined)
         postEdit(edit).then(
             () => {
                 setPageLogKey('' + Date.now())
@@ -216,7 +215,7 @@ const useTrade = (): TradeContextType => {
     }
 
     return {
-        apiError,
+        refreshDashboard,
         brokers,
         currencies,
         tickers,
@@ -238,16 +237,69 @@ const useTrade = (): TradeContextType => {
     }
 }
 
-export const TradeContext = createContext({
-    all: null as TradeContextType | null
-})
+const defaultTradeContext: TradeContextType = {
+    brokers: [],
+    currencies: [],
+    tickers: [],
+    markets: [],
+    brokerStats: {
+        tradeAccounts: [],
+        riskBase: 0,
+        open: 0,
+        outcome: 0
+    },
+    moneyState: {
+        capital: 0,
+        profit: 0
+    },
+    logPage: {
+        content: [],
+        pageable: {
+            offset: 0,
+            pageNumber: 0,
+            pageSize: 0,
+            paged: false,
+            unpaged: false,
+            sort: {
+                sorted: false,
+                unsorted: false,
+                empty: false
+            }
+        },
+        first: false,
+        last: false,
+        totalPages: 0,
+        totalElements: 0,
+        size: 0,
+        number: 0,
+        sort: {
+            sorted: false,
+            unsorted: false,
+            empty: false
+        },
+        numberOfElements: 0,
+        empty: true
+    },
+    open: () => null,
+    close: () => null,
+    edit: () => null,
+    page: () => null,
+    refill: () => null,
+    correction: () => null,
+    exchange: () => Promise.resolve(),
+    isLoading: true,
+    currentBroker: undefined,
+    setCurrentBrokerId: () => null,
+    refreshDashboard: () => null
+}
+
+export const TradeContext = createContext(defaultTradeContext)
 
 export const TradeProvider = ({ children }: { children: JSX.Element }) => {
     const all = useTrade()
-    const value = useMemo(() => ({ all }), [all])
 
     return (
-        <TradeContext.Provider value={value}>
+        <TradeContext.Provider value={all}>
             {children}
         </TradeContext.Provider>
     )

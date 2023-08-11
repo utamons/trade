@@ -1,8 +1,9 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { Box, styled } from '@mui/material'
 import { profitColor, remCalc } from '../../utils/utils'
 import { BrokerStatsType } from 'types'
 import { useTheme } from '@emotion/react'
+import { TradeContext } from '../../trade-context'
 
 const ContainerStyled = styled(Box)(({ theme }) => ({
     borderRight: `solid ${remCalc(1)}`,
@@ -20,7 +21,9 @@ const BoxStyled = styled(Box)(() => ({
     justifyContent: 'space-between'
 }))
 
-export default ({ tradeAccounts, riskBase, open, outcome }: BrokerStatsType) => {
+export default () => {
+    const { brokerStats } = useContext(TradeContext)
+    const { tradeAccounts, riskBase, open, outcome } = brokerStats
     const width = tradeAccounts.length>0?remCalc(337):remCalc(164)
 
     const theme = useTheme()

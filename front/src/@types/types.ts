@@ -40,40 +40,27 @@ type RefillType = {
 }
 
 type TradeContextType = {
-    apiError: string | undefined,
-    brokers: ItemType[] | undefined,
-    currencies: ItemType[] | undefined,
-    tickers: TickerType[] | undefined,
-    markets: MarketType[] | undefined,
-    brokerStats: BrokerStatsType | undefined,
-    moneyState: MoneyStateType | undefined,
-    logPage: TradeLogPageType | undefined,
-    isLoading: boolean,
-    currentBroker: ItemType | undefined,
-    open: (open: PositionOpenType) => void,
-    edit: (edit: PositionEditType) => void,
-    close: (close: PositionCloseType) => void,
-    page: (page: number) => void,
-    setCurrentBrokerId: (id: number) => void,
-    refill: (currencyId: number, amount: number) => void,
-    correction: (currencyId: number, amount: number) => void,
+    brokers: ItemType[] | undefined
+    currencies: ItemType[] | undefined
+    tickers: TickerType[]
+    markets: MarketType[]
+    brokerStats: BrokerStatsType
+    moneyState: MoneyStateType
+    logPage: TradeLogPageType
+    isLoading: boolean
+    currentBroker: ItemType | undefined
+    open: (open: PositionOpenType) => void
+    edit: (edit: PositionEditType) => void
+    close: (close: PositionCloseType) => void
+    page: (page: number) => void
+    setCurrentBrokerId: (id: number) => void
+    refill: (currencyId: number, amount: number) => void
+    correction: (currencyId: number, amount: number) => void
     exchange: (currencyFromId: number,
                currencyToId: number,
                amountFrom: number,
-               amountTo: number) => void
-}
-
-type BrokerProps = {
-    brokers: ItemType[] | undefined,
-    currencies: ItemType[] | undefined,
-    currentBroker: ItemType | undefined,
-    setCurrentBrokerId: (id: number) => void,
-    refill: (currencyId: number, amount: number) => void,
-    correction: (currencyId: number, amount: number) => void,
-    exchange: (currencyFromId: number,
-               currencyToId: number,
-               amountFrom: number,
-               amountTo: number) => void
+               amountTo: number) => Promise<any>,
+    refreshDashboard: () => void
 }
 
 type ButtonProps = {
@@ -93,11 +80,7 @@ type RefillDialogProps = {
 
 type ExchangeDialogProps = {
     open: boolean,
-    onExchange: (currencyFromId: number,
-                 currencyToId: number,
-                 amountFrom: number,
-                 amountTo: number) => void,
-    onCancel: () => void,
+    onClose: () => void,
     currencies: ItemType[] | undefined
 }
 
@@ -320,11 +303,7 @@ type FormAction = {
 }
 
 interface OpenDialogProps {
-    currentBroker: ItemType,
-    markets: MarketType [],
-    tickers: TickerType [],
     isOpen: boolean,
-    open: (open: PositionOpenType) => void,
     onClose: () => void
 }
 
@@ -370,7 +349,6 @@ export {
     MarketType,
     ItemType,
     TradeContextType,
-    BrokerProps,
     BrokerStatsType,
     MoneyStateType,
     RefillType,
