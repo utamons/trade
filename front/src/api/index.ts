@@ -1,5 +1,6 @@
 import {
-    EvalRequest, EvalToFitRequest,
+    EvalRequest,
+    EvalToFitRequest,
     ExchangeType,
     PageRequest,
     PositionCloseType,
@@ -86,20 +87,25 @@ const postCorrection = async (body: RefillType) => {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify(body)
+    }).catch((err) => {
+        throw err
     })
 }
 
 const postExchange = async (body: ExchangeType) => {
     const url = `${baseUrl}/cash/exchange`
-    return fetch(url, {
+    const res = await fetch(url, {
         method: 'post',
         headers: {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify(body)
-    }).then((res) => {
-        return res.json()
     })
+    if (!res.ok) {
+        const body = await res.json()
+        return Promise.reject(body.message)
+    }
+    return res.json()
 }
 
 const postLogPage = async (body: PageRequest) => {

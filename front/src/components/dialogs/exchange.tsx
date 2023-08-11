@@ -5,7 +5,7 @@ import DialogActions from '@mui/material/DialogActions'
 import Dialog from '@mui/material/Dialog'
 import { remCalc } from '../../utils/utils'
 import Button from '../tools/button'
-import React, { Dispatch, useCallback } from 'react'
+import React, { Dispatch, useCallback, useContext, useState } from 'react'
 import { ButtonContainerStyled } from '../../styles/style'
 import { Box, styled } from '@mui/material'
 import { ExchangeDialogProps, FormAction, FormActionPayload, FormState } from 'types'
@@ -13,6 +13,8 @@ import Typography from '@mui/material/Typography'
 import Select from '../tools/select'
 import NumberInput from '../tools/numberInput'
 import { getFieldErrorText, getFieldValue, isFieldValid, useForm } from './dialogUtils'
+import Alert from '@mui/material/Alert'
+import { TradeContext } from '../../trade-context'
 
 const ContainerStyled = styled(Box)(() => ({
     display: 'flex',
@@ -65,6 +67,9 @@ const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, cur
 
 
 export default ({ open, onExchange, onCancel, currencies }: ExchangeDialogProps) => {
+    const { all } = useContext(TradeContext)
+    const apiError = all?.apiError
+    const [error, setError] = useState<string | undefined>(undefined)
     const { formState, dispatch } = useForm()
 
     initFormState(formState, dispatch, currencies ? currencies[0].id : 0)
@@ -131,6 +136,7 @@ export default ({ open, onExchange, onCancel, currencies }: ExchangeDialogProps)
                     dispatch={dispatch}
                     value={valueTo}
                     label="Amount to"/>
+                <Alert severity="error">{error}</Alert>
             </ContainerStyled>
         </DialogContent>
 

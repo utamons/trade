@@ -117,8 +117,10 @@ export default ({ brokers, currencies, currentBroker, setCurrentBrokerId, refill
             <Button style={{ minWidth: remCalc(101) }} text="Correction" onClick={openCorrectionDialog}/>
             <Button style={{ minWidth: remCalc(101) }} text="Exchange" onClick={openExchangeDialog}/>
         </ButtonContainerStyled>
-        <Refill open={refillOpen} negativeAllowed={false} title="Refill" onSubmit={commitRefill} onCancel={cancelRefill} currencies={currencies}/>
-        <Refill open={correctionOpen} negativeAllowed={true} title="Correction" onSubmit={commitCorrection} onCancel={cancelCorrection} currencies={currencies}/>
+        <Refill open={refillOpen} negativeAllowed={false} title="Refill" onSubmit={commitRefill} onCancel={cancelRefill}
+                currencies={currencies}/>
+        <Refill open={correctionOpen} negativeAllowed={true} title="Correction" onSubmit={commitCorrection}
+                onCancel={cancelCorrection} currencies={currencies}/>
         <Exchange open={exchangeOpen} onExchange={commitExchange} onCancel={cancelExchange} currencies={currencies}/>
     </ContainerStyled>
 

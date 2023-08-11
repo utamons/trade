@@ -121,6 +121,7 @@ const useTrade = (): TradeContextType => {
     const { brokerStats, isLoadingBrokerStats } = useBrokerStats(currentBrokerId, brokerStatsKey)
     const { moneyState, isLoadingMoneyState } = useMoneyState(moneyStateKey)
     const { logPage, isLoadingLogPage } = useLogPage(pageLogKey, pageNum)
+    const [ apiError, setApiError ] = useState<string | undefined>(undefined)
 
     const currentBroker = (): ItemType | undefined => {
         return isLoadingBrokers ? undefined : brokers.find((elem: ItemType) => {
@@ -135,6 +136,7 @@ const useTrade = (): TradeContextType => {
     })
 
     const refill = (currencyId: number, amount: number) => {
+        setApiError(undefined)
         postRefill({
             brokerId: currentBrokerId,
             currencyId,
@@ -146,6 +148,7 @@ const useTrade = (): TradeContextType => {
     }
 
     const correction = (currencyId: number, amount: number) => {
+        setApiError(undefined)
         postCorrection({
             brokerId: currentBrokerId,
             currencyId,
@@ -165,6 +168,7 @@ const useTrade = (): TradeContextType => {
                       currencyToId: number,
                       amountFrom: number,
                       amountTo: number) => {
+        setApiError(undefined)
         postExchange({
             brokerId: currentBrokerId,
             currencyFromId,
@@ -174,10 +178,14 @@ const useTrade = (): TradeContextType => {
         }).then(() => {
             setMoneyStateKey('' + Date.now())
             setBrokerStatsKey('' + Date.now())
+        }).catch((err) => {
+            setApiError(err.message)
         })
     }
 
+
     const open = (open: PositionOpenType) => {
+        setApiError(undefined)
         postOpen(open).then(
             () => {
                 setMoneyStateKey('' + Date.now())
@@ -188,6 +196,7 @@ const useTrade = (): TradeContextType => {
     }
 
     const close = (close: PositionCloseType) => {
+        setApiError(undefined)
         postClose(close).then(
             () => {
                 setMoneyStateKey('' + Date.now())
@@ -198,6 +207,7 @@ const useTrade = (): TradeContextType => {
     }
 
     const edit = (edit: PositionEditType) => {
+        setApiError(undefined)
         postEdit(edit).then(
             () => {
                 setPageLogKey('' + Date.now())
@@ -206,6 +216,7 @@ const useTrade = (): TradeContextType => {
     }
 
     return {
+        apiError,
         brokers,
         currencies,
         tickers,

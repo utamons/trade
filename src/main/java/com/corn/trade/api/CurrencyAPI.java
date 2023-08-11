@@ -5,6 +5,7 @@ import com.corn.trade.dto.CurrencyRateDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
@@ -12,11 +13,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CurrencyAPI {
-
+	public static final Logger logger = org.slf4j.LoggerFactory.getLogger(CurrencyAPI.class);
 	public static final String VALUE = "value";
 	private final RestTemplate restTemplate = new RestTemplate();
 
 	public List<CurrencyRateDTO> getRatesAt(LocalDate date) throws JsonProcessingException {
+		logger.debug("start");
 		final boolean today = date.equals(LocalDate.now());
 		final String currencyKey =  System.getProperty("currency.key");
 
@@ -37,6 +39,7 @@ public class CurrencyAPI {
 
 		List<CurrencyRateDTO> result = new ArrayList<>();
 		if (response != null) {
+			logger.debug("response length: {}", response.length());
 			ObjectMapper mapper = new ObjectMapper();
 			JsonNode node = mapper.readTree(response);
 			JsonNode data = node.get("data");
@@ -59,6 +62,7 @@ public class CurrencyAPI {
 			                               data.get("HKD").get(VALUE).doubleValue()));
 
 		}
+		logger.debug("finish");
 		return result;
 	}
 }
