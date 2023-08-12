@@ -3,7 +3,6 @@ package com.corn.trade.dto;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-@SuppressWarnings("unused")
 public record TradeLogPageReqDTO(int pageSize, int pageNumber) {
 	@JsonCreator
 	public TradeLogPageReqDTO(

@@ -34,16 +34,16 @@ export const LogHeader = () => {
             <HeaderBox>Closed</HeaderBox>
         </Grid>
         <Grid item xs={4}>
-            <HeaderBox>Price Open</HeaderBox>
+            <HeaderBox>Items bought</HeaderBox>
         </Grid>
         <Grid item xs={4}>
-            <HeaderBox>Price Close</HeaderBox>
+            <HeaderBox>Items sold</HeaderBox>
         </Grid>
         <Grid item xs={3}>
-            <HeaderBox>Items</HeaderBox>
+            <HeaderBox>Total bought</HeaderBox>
         </Grid>
         <Grid item xs={4}>
-            <HeaderBox>Volume</HeaderBox>
+            <HeaderBox>Total sold</HeaderBox>
         </Grid>
         <Grid item xs={4}>
             <HeaderBox>Outcome</HeaderBox>

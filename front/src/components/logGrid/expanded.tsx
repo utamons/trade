@@ -1,14 +1,11 @@
 import React, { useCallback } from 'react'
-import { useTheme } from '@emotion/react'
 import { Box, Grid, styled } from '@mui/material'
 import { FieldName } from '../../styles/style'
-import { greaterColor, money, profitColor, remCalc, utc2market } from '../../utils/utils'
+import { money, remCalc, utc2market } from '../../utils/utils'
 import ExpandButton from '../tools/expandButton'
-import { EditButton } from '../tools/editButton'
 import { CloseButton } from '../tools/closeButton'
 import { ExpandableProps } from 'types'
 import { Item, RowBox } from './styles'
-import { MAX_RISK_PC } from '../../utils/constants'
 
 const FieldBox = styled(Box)(() => ({
     display: 'flex',
@@ -41,33 +38,17 @@ const ExpandedContainer = styled(Box)(({ theme }) => ({
     padding: `${remCalc(7)} 0 ${remCalc(7)} ${remCalc(10)}`
 }))
 
-export const Expanded = ({ logItem, expandHandler, closeDialog, editDialog }: ExpandableProps) => {
+export const Expanded = ({ logItem, expandHandler, closeDialog }: ExpandableProps) => {
     const {
-        broker, market, ticker, position, dateOpen, dateClose, currency, brokerInterest,
-        priceClose, priceOpen, itemNumber, outcomePercent, fees, volume, outcome,
-        volumeToDeposit, stopLoss, takeProfit, risk, breakEven, profit, note
+        broker, market, ticker, position, dateOpen, dateClose, currency,
+        outcome, totalBought, totalSold, itemBought, risk, itemSold, note
     } = logItem
 
     const closeDialogHandler = useCallback(() => {
         closeDialog(logItem)
     }, [])
 
-    const editDialogHandler = useCallback(() => {
-        editDialog(logItem)
-    }, [])
-
-    const theme = useTheme()
-    // noinspection TypeScriptUnresolvedVariable
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const defaultColor = theme.palette.text.primary
-
     const tz = market.timezone
-
-    const breakEvenPc = () => {
-        if (!breakEven) return '-'
-        return (Math.abs(priceOpen - breakEven) / priceOpen * 100).toFixed(2)
-    }
 
     return <RowBox container columns={53}>
         <Grid item xs={40}>
@@ -97,60 +78,32 @@ export const Expanded = ({ logItem, expandHandler, closeDialog, editDialog }: Ex
                     <FieldValue>{dateClose ? utc2market(dateClose, tz) : '-'}</FieldValue>
                 </FieldBox>
                 <FieldBox>
-                    <FieldName>Price open:</FieldName>
-                    <FieldValue>{money(currency.name, priceOpen)}</FieldValue>
+                    <FieldName>Items bought:</FieldName>
+                    <FieldValue>{itemBought ?? 0}</FieldValue>
                 </FieldBox>
                 <FieldBox>
-                    <FieldName>Price close:</FieldName>
-                    <FieldValue>{money(currency.name, priceClose)}</FieldValue>
+                    <FieldName>Items sold:</FieldName>
+                    <FieldValue>{itemSold ?? 0}</FieldValue>
                 </FieldBox>
                 <FieldBox>
-                    <FieldName>Items:</FieldName>
-                    <FieldValue>{itemNumber}</FieldValue>
+                    <FieldName>Total bought:</FieldName>
+                    <FieldValue>{money(currency.name, totalBought ?? 0.0)}</FieldValue>
                 </FieldBox>
                 <FieldBox>
-                    <FieldName>Volume:</FieldName>
-                    <FieldValue>{money(currency.name, volume)}</FieldValue>
-                </FieldBox>
-                <FieldBox>
-                    <FieldName>Volume/dep:</FieldName>
-                    <FieldValue>{volumeToDeposit} %</FieldValue>
-                </FieldBox>
-                <FieldBox>
-                    <FieldName>Stop loss:</FieldName>
-                    <FieldValue>{money(currency.name, stopLoss)}</FieldValue>
-                </FieldBox>
-                <FieldBox>
-                    <FieldName>Take profit:</FieldName>
-                    <FieldValue>{money(currency.name, takeProfit)}</FieldValue>
+                    <FieldName>Total sold:</FieldName>
+                    <FieldValue>{money(currency.name, totalSold ?? 0.0)}</FieldValue>
                 </FieldBox>
                 <FieldBox>
                     <FieldName>Risk:</FieldName>
-                    <FieldValue sx={{ color: greaterColor(risk, defaultColor, MAX_RISK_PC) }}>{risk} %</FieldValue>
+                    <FieldValue>{money(currency.name, risk)}</FieldValue>
                 </FieldBox>
-                <FieldBox>
-                    <FieldName>Fees:</FieldName>
-                    <FieldValue>{money('USD', fees)}</FieldValue>
-                </FieldBox>
-                <FieldBox>
-                    <FieldName>Break even</FieldName>
-                    <FieldValue>{money(currency.name, breakEven)} ({breakEvenPc()}%)</FieldValue>
-                </FieldBox>
-                {position == 'short' ? <FieldBox>
-                    <FieldName>Broker interest</FieldName>
-                    <FieldValue>{money('USD', brokerInterest)}</FieldValue>
-                </FieldBox> : <></>}
                 <FieldBox>
                     <FieldName>Outcome:</FieldName>
-                    <FieldValue sx={profitColor(outcome, defaultColor)}>{money(currency.name, outcome)}</FieldValue>
+                    <FieldValue>{money(currency.name, risk)}</FieldValue>
                 </FieldBox>
                 <FieldBox>
-                    <FieldName>Pos. profit:</FieldName>
-                    <FieldValue sx={profitColor(outcomePercent, defaultColor)}>{outcomePercent} %</FieldValue>
-                </FieldBox>
-                <FieldBox>
-                    <FieldName>Cap. profit:</FieldName>
-                    <FieldValue sx={profitColor(profit, defaultColor)}>{profit} %</FieldValue>
+                    <FieldName>R/R:</FieldName>
+                    <FieldValue>{money(currency.name, outcome?risk/outcome*100:0)}%</FieldValue>
                 </FieldBox>
             </ExpandedContainer>
         </Grid>
@@ -159,7 +112,6 @@ export const Expanded = ({ logItem, expandHandler, closeDialog, editDialog }: Ex
         </Grid>
         <Item item sx={{ height: remCalc(36) }} xs={2.5}>
             <ExpandButton expanded={true} onClick={expandHandler}/>
-            {dateClose ? <></> : <EditButton onClick={editDialogHandler}/>}
             {dateClose ? <></> : <CloseButton onClick={closeDialogHandler}/>}
         </Item>
     </RowBox>

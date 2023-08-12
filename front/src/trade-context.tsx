@@ -9,7 +9,6 @@ import {
     fetchTickers,
     postClose,
     postCorrection,
-    postEdit,
     postExchange,
     postLogPage,
     postOpen,
@@ -19,7 +18,6 @@ import {
     BrokerStatsType,
     ItemType,
     PositionCloseType,
-    PositionEditType,
     PositionOpenType,
     TradeContextType,
     TradeLogPageType
@@ -206,14 +204,6 @@ const useTrade = (): TradeContextType => {
         )
     }
 
-    const edit = (edit: PositionEditType) => {
-        postEdit(edit).then(
-            () => {
-                setPageLogKey('' + Date.now())
-            }
-        )
-    }
-
     return {
         refreshDashboard,
         brokers,
@@ -225,7 +215,6 @@ const useTrade = (): TradeContextType => {
         logPage,
         open,
         close,
-        edit,
         page,
         refill,
         correction,
@@ -282,7 +271,6 @@ const defaultTradeContext: TradeContextType = {
     },
     open: () => null,
     close: () => null,
-    edit: () => null,
     page: () => null,
     refill: () => null,
     correction: () => null,
