@@ -50,7 +50,6 @@ type TradeContextType = {
     isLoading: boolean
     currentBroker: ItemType | undefined
     open: (open: PositionOpenType) => void
-    edit: (edit: PositionEditType) => void
     close: (close: PositionCloseType) => void
     page: (page: number) => void
     setCurrentBrokerId: (id: number) => void
@@ -134,37 +133,39 @@ type EvalToFitRequest = {
 }
 
 type TradeLog = {
-    id: number,
-    position: string,
-    dateOpen: string,
-    dateClose: string | undefined,
-    broker: ItemType,
-    market: MarketType,
-    ticker: TickerType,
-    currency: ItemType,
+    id: number
+    position: string
+    dateOpen: string
+    dateClose: string | undefined
+    broker: ItemType
+    market: MarketType
+    ticker: TickerType
+    currency: ItemType
     //-----------------------
-    estimatedPriceOpen: number,
-    estimatedFees: number,
-    estimatedBreakEven: number,
-    estimatedItems: number,
-    riskToCapitalPc: number,
-    risk: number,
-    levelPrice: number | undefined,
-    atr: number | undefined,
+    estimatedPriceOpen: number
+    estimatedFees: number
+    estimatedBreakEven: number
+    estimatedItems: number
+    riskToCapitalPc: number
+    risk: number
+    levelPrice: number | undefined
+    atr: number | undefined
     //-----------------------
-    openStopLoss: number,
-    openTakeProfit: number,
-    brokerInterest: number | undefined,
+    openStopLoss: number
+    openTakeProfit: number
+    brokerInterest: number | undefined
     totalBought: number | undefined
     totalSold: number | undefined
-    itemBought: number | undefined,
-    itemSold: number | undefined,
-    finalStopLoss: number | undefined,
-    finalTakeProfit: number | undefined,
-    openCommission: number | undefined,
-    closeCommission: number | undefined,
-    note: string | undefined,
-    totalFeesInCurrency: number | undefined
+    itemBought: number | undefined
+    itemSold: number | undefined
+    finalStopLoss: number | undefined
+    finalTakeProfit: number | undefined
+    openCommission: number | undefined
+    closeCommission: number | undefined
+    note: string | undefined
+    outcome: number | undefined
+    outcomePc: number | undefined
+    partsClosed: number | undefined
 }
 
 type SortType = {
@@ -208,7 +209,6 @@ interface ExpandableProps {
     logItem: TradeLog,
     expandHandler: (expanded: boolean) => void
     closeDialog: (logItem: TradeLog) => void
-    editDialog: (logItem: TradeLog) => void
 }
 
 type PositionOpenType = {
@@ -217,40 +217,38 @@ type PositionOpenType = {
     brokerId: number,
     marketId: number,
     tickerId: number,
-    itemNumber: number,
-    atr: number,
-    levelPrice: number,
-    priceOpen: number,
-    stopLoss: number,
-    takeProfit: number | undefined,
-    outcomeExpected: number | undefined,
-    riskPc: number,
-    riskRewardPc: number,
-    depositPc: number,
-    breakEven: number | undefined,
-    fees: number,
+
+    estimatedPriceOpen: number,
+    estimatedFees: number,
+    estimatedBreakEven: number,
+    estimatedItems: number,
+    riskToCapitalPc: number,
+    risk: number,
+    levelPrice: number | undefined,
+    atr: number | undefined,
+
+    openStopLoss: number,
+    openTakeProfit: number | undefined,
+    itemBought: number | undefined,
+    itemSold: number | undefined,
     totalBought: number | undefined,
     totalSold: number | undefined,
+    openCommission: number,
     note: string | undefined
 }
 
 type PositionCloseType = {
     id: number,
-    quantity: number,
-    dateClose: string,
-    priceClose: number,
-    brokerInterest: number,
+    itemBought: number | undefined,
+    itemSold: number | undefined,
     totalBought: number | undefined,
     totalSold: number | undefined,
-    fees: number,
+    dateClose: string,
     note: string | undefined
-}
-
-type PositionEditType = {
-    id: number,
-    stopLoss: number,
-    takeProfit: number | undefined,
-    note: string | undefined
+    brokerInterest: number | undefined,
+    closeCommission: number | undefined,
+    finalStopLoss: number | undefined,
+    finalTakeProfit: number | undefined
 }
 
 type FormFieldNumeric = {
@@ -366,7 +364,6 @@ export {
     EvalRequest,
     PositionCloseType,
     CloseButtonProps,
-    PositionEditType,
     ExpandableProps,
     FormState,
     FormFieldNumeric,

@@ -178,7 +178,7 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
     const [currentTicker, setCurrentTicker] = useState<TickerType | undefined>(tickers[0])
     const [evaluate, setEvaluate] = useState(true)
     const [isLoading, setLoading] = useState(false)
-    const [technicalStop, setTechicalStop] = useState(false)
+    const [technicalStop, setTechnicalStop] = useState(false)
 
     console.log('openDialog', formState)
 
@@ -329,7 +329,7 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
     }
 
     const handleTechnicalStop = useCallback((technicalStop: boolean) => {
-        setTechicalStop(technicalStop)
+        setTechnicalStop(technicalStop)
         if (technicalStop) {
             dispatch({ type: 'set', payload: { name: 'stopLoss', valueNum: undefined, valid: true } })
         }
@@ -557,7 +557,7 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
     const handleReset = useCallback(() => {
         dispatch({ type: 'clearErrors', payload: {} })
         dispatch({ type: 'reset', payload: {} })
-        setTechicalStop(false)
+        setTechnicalStop(false)
     }, [])
 
     return <Dialog

@@ -4,7 +4,6 @@ import {
     ExchangeType,
     PageRequest,
     PositionCloseType,
-    PositionEditType,
     PositionOpenType,
     RefillType
 } from 'types'
@@ -169,17 +168,6 @@ const postClose = async (body: PositionCloseType) => {
     }).then()
 }
 
-const postEdit = async (body: PositionEditType) => {
-    const url = `${baseUrl}/log/open`
-    return fetch(url, {
-        method: 'put',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body)
-    }).then()
-}
-
 export {
     fetchBrokers,
     fetchCurrencies,
@@ -194,6 +182,5 @@ export {
     postOpen,
     postEval,
     postEvalToFit,
-    postClose,
-    postEdit
+    postClose
 }

@@ -6,15 +6,6 @@ import { ButtonContainerStyled } from '../styles/style'
 import LogGrid from './logGrid/logGrid'
 import { TradeContext } from '../trade-context'
 import Paginator from './logGrid/paginator'
-import {
-    ItemType,
-    MarketType,
-    PositionCloseType,
-    PositionEditType,
-    PositionOpenType,
-    TickerType,
-    TradeLogPageType
-} from 'types'
 import CircularProgress from '@mui/material/CircularProgress'
 import Open from './logGrid/dialogs/openDialog'
 
@@ -37,20 +28,8 @@ const RowStyled = styled(Box)(() => ({
     width: '100%'
 }))
 
-interface WorkIntProps {
-    logPage: TradeLogPageType,
-    currentBroker: ItemType,
-    markets: MarketType [],
-    tickers: TickerType [],
-    edit: (edit: PositionEditType) => void
-    open: (open: PositionOpenType) => void
-    close: (close: PositionCloseType) => void
-}
-
 const WorkInt = () => {
     const [isOpen, setOpen] = useState(false)
-
-    const { logPage, currentBroker, tickers, markets, open, close, edit } = useContext(TradeContext)
 
     const handleOpen = useCallback(() => {
         setOpen(true)
@@ -67,7 +46,7 @@ const WorkInt = () => {
             </ButtonContainerStyled>
         </RowStyled>
         <RowStyled>
-            <LogGrid {...{ logPage, close, edit }}/>
+            <LogGrid />
         </RowStyled>
         <RowStyled>
             <Paginator/>
