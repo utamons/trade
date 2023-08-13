@@ -329,6 +329,8 @@ class CashServiceTest {
 
 		CashAccount conversionTo = conversionAccountEUR;
 
+		cashService.transfer(1000.0, null, brokerUSD, currencyUSD, incomeType, tradeType, LocalDateTime.now());
+
 		ExchangeDTO exchangeDTO = new ExchangeDTO(brokerUSD.getId(), currencyUSD.getId(), currencyEUR.getId(), 800.0,
 		                                          700.0);
 
@@ -339,11 +341,11 @@ class CashServiceTest {
 		cashService.exchange(exchangeDTO);
 
 		// Assert
-		assertEquals(-800.0, cashService.getAccountTotal(tradeFrom));
+		assertEquals(200.0, cashService.getAccountTotal(tradeFrom));
 		assertEquals(700.0, cashService.getAccountTotal(tradeTo));
 
 		// Verify the CashFlow record is added
-		CashFlow cashFlow = cashFlowRepository.findAll().get(0);
+		CashFlow cashFlow = cashFlowRepository.findAll().get(1);
 		assertNotNull(cashFlow);
 		assertNull(cashFlow.getTradeLog());
 		assertEquals(tradeFrom, cashFlow.getAccountFrom());
@@ -352,7 +354,7 @@ class CashServiceTest {
 		assertEquals(exchangeDTO.amountFrom(), cashFlow.getSumTo());
 		assertThat(dateTime).isCloseTo(cashFlow.getCommittedAt(), new TemporalUnitWithinOffset(100, ChronoUnit.MILLIS));
 
-		CashFlow conversion = cashFlowRepository.findAll().get(1);
+		CashFlow conversion = cashFlowRepository.findAll().get(2);
 		assertNotNull(conversion);
 		assertNull(conversion.getTradeLog());
 		assertEquals(tradeTo, conversion.getAccountFrom());
@@ -374,6 +376,8 @@ class CashServiceTest {
 
 		CashAccount conversionTo = conversionAccountUSD;
 
+		cashService.transfer(1000.0, null, brokerUSD, currencyEUR, incomeType, tradeType, LocalDateTime.now());
+
 		ExchangeDTO exchangeDTO = new ExchangeDTO(brokerUSD.getId(), currencyEUR.getId(), currencyUSD.getId(), 700.0,
 		                                          800.0);
 
@@ -384,11 +388,11 @@ class CashServiceTest {
 		cashService.exchange(exchangeDTO);
 
 		// Assert
-		assertEquals(-700.0, cashService.getAccountTotal(tradeFrom));
+		assertEquals(300.0, cashService.getAccountTotal(tradeFrom));
 		assertEquals(800.0, cashService.getAccountTotal(tradeTo));
 
 		// Verify the CashFlow record is added
-		CashFlow cashFlow = cashFlowRepository.findAll().get(0);
+		CashFlow cashFlow = cashFlowRepository.findAll().get(1);
 		assertNotNull(cashFlow);
 		assertNull(cashFlow.getTradeLog());
 		assertEquals(tradeFrom, cashFlow.getAccountFrom());
@@ -397,7 +401,7 @@ class CashServiceTest {
 		assertEquals(exchangeDTO.amountFrom(), cashFlow.getSumTo());
 		assertThat(dateTime).isCloseTo(cashFlow.getCommittedAt(), new TemporalUnitWithinOffset(100, ChronoUnit.MILLIS));
 
-		CashFlow conversion = cashFlowRepository.findAll().get(1);
+		CashFlow conversion = cashFlowRepository.findAll().get(2);
 		assertNotNull(conversion);
 		assertNull(conversion.getTradeLog());
 		assertEquals(tradeTo, conversion.getAccountFrom());

@@ -79,19 +79,19 @@ export const Expanded = ({ logItem, expandHandler, closeDialog }: ExpandableProp
                 </FieldBox>
                 <FieldBox>
                     <FieldName>Items bought:</FieldName>
-                    <FieldValue>{itemBought ?? 0}</FieldValue>
+                    <FieldValue>{itemBought ?? '-'}</FieldValue>
                 </FieldBox>
                 <FieldBox>
                     <FieldName>Items sold:</FieldName>
-                    <FieldValue>{itemSold ?? 0}</FieldValue>
+                    <FieldValue>{itemSold ?? '-'}</FieldValue>
                 </FieldBox>
                 <FieldBox>
                     <FieldName>Total bought:</FieldName>
-                    <FieldValue>{money(currency.name, totalBought ?? 0.0)}</FieldValue>
+                    <FieldValue>{money(currency.name, totalBought)}</FieldValue>
                 </FieldBox>
                 <FieldBox>
                     <FieldName>Total sold:</FieldName>
-                    <FieldValue>{money(currency.name, totalSold ?? 0.0)}</FieldValue>
+                    <FieldValue>{money(currency.name, totalSold)}</FieldValue>
                 </FieldBox>
                 <FieldBox>
                     <FieldName>Risk:</FieldName>
@@ -99,11 +99,11 @@ export const Expanded = ({ logItem, expandHandler, closeDialog }: ExpandableProp
                 </FieldBox>
                 <FieldBox>
                     <FieldName>Outcome:</FieldName>
-                    <FieldValue>{money(currency.name, risk)}</FieldValue>
+                    <FieldValue>{money(currency.name, outcome)}</FieldValue>
                 </FieldBox>
                 <FieldBox>
                     <FieldName>R/R:</FieldName>
-                    <FieldValue>{money(currency.name, outcome?risk/outcome*100:0)}%</FieldValue>
+                    <FieldValue>{outcome && risk ? money(currency.name, risk/outcome*100) : '-'}</FieldValue>
                 </FieldBox>
             </ExpandedContainer>
         </Grid>

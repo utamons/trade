@@ -81,7 +81,7 @@ class TradeLogServiceTest {
 		Market market = new Market("TestMarket");
 		Ticker ticker = new Ticker("TestTicker", "TestTickerCode", currency);
 
-		TradeLog tradeLog = TradeLogMapper.toOpen(openDTO, broker, market, ticker);
+		TradeLog tradeLog = TradeLogMapper.toOpen(openDTO, broker, market, ticker, currency);
 
 		when(tradeLogRepo.save(any())).thenReturn(tradeLog);
 		when(brokerRepo.getReferenceById(openDTO.brokerId())).thenReturn(broker);
@@ -134,7 +134,7 @@ class TradeLogServiceTest {
 		Market market = new Market("TestMarket");
 		Ticker ticker = new Ticker("TestTicker", "TestTickerCode", currency);
 
-		TradeLog tradeLog = TradeLogMapper.toOpen(openDTO, broker, market, ticker);
+		TradeLog tradeLog = TradeLogMapper.toOpen(openDTO, broker, market, ticker, currency);
 
 		when(tradeLogRepo.save(any())).thenReturn(tradeLog);
 		when(brokerRepo.getReferenceById(openDTO.brokerId())).thenReturn(broker);

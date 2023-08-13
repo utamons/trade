@@ -785,6 +785,7 @@ public class CashService {
 				evalToFitRecord.items + 1,
 				evalToFitRecord.eval.volume(),
 				evalToFitRecord.eval.gainPc(),
+				evalToFitRecord.eval.risk(),
 				evalToFitRecord.eval.riskRewardPc(),
 				evalToFitRecord.volumePc
 		);
