@@ -17,6 +17,7 @@ public class EvalOutFitDTO {
 	final BigDecimal volume;
 	final BigDecimal gainPc;
 	final BigDecimal riskPc;
+	final BigDecimal risk;
 	final BigDecimal riskRewardPc;
 
 	final BigDecimal depositPc;
@@ -31,6 +32,7 @@ public class EvalOutFitDTO {
 	                     long items,
 	                     Double volume,
 	                     Double gainPc,
+	                     Double risk,
 	                     Double riskRewardPc,
 	                     Double depositPc) {
 		this.fees = round(fees);
@@ -42,9 +44,14 @@ public class EvalOutFitDTO {
 		this.volume = round(volume);
 		this.gainPc = round(gainPc);
 		this.riskPc = round(riskPc);
+		this.risk = round(risk);
 		this.riskRewardPc = round(riskRewardPc);
 		this.items = items;
 		this.depositPc = round(depositPc);
+	}
+
+	public BigDecimal getRisk() {
+		return risk;
 	}
 
 	public BigDecimal getDepositPc() {

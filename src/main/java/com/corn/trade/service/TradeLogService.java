@@ -4,10 +4,7 @@ import com.corn.trade.dto.TradeLogCloseDTO;
 import com.corn.trade.dto.TradeLogDTO;
 import com.corn.trade.dto.TradeLogOpenDTO;
 import com.corn.trade.dto.TradeLogPageReqDTO;
-import com.corn.trade.entity.Broker;
-import com.corn.trade.entity.Market;
-import com.corn.trade.entity.Ticker;
-import com.corn.trade.entity.TradeLog;
+import com.corn.trade.entity.*;
 import com.corn.trade.mapper.TradeLogMapper;
 import com.corn.trade.repository.BrokerRepository;
 import com.corn.trade.repository.MarketRepository;
@@ -62,12 +59,13 @@ public class TradeLogService {
 		Broker broker = brokerRepo.getReferenceById(openDTO.brokerId());
 		Market market = marketRepo.getReferenceById(openDTO.marketId());
 		Ticker ticker = tickerRepo.getReferenceById(openDTO.tickerId());
+		Currency currency = ticker.getCurrency();
 
 		boolean isLong = openDTO.position().equals("long");
 
 		validateOpen(openDTO, isLong);
 
-		TradeLog tradeLog = TradeLogMapper.toOpen(openDTO, broker, market, ticker);
+		TradeLog tradeLog = TradeLogMapper.toOpen(openDTO, broker, market, ticker, currency);
 		tradeLog = tradeLogRepo.save(tradeLog);
 
 		if (isLong)

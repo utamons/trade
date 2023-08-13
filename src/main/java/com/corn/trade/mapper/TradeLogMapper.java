@@ -23,7 +23,8 @@ public class TradeLogMapper {
 	public static TradeLog toOpen(TradeLogOpenDTO open,
 	                              Broker broker,
 	                              Market market,
-	                              Ticker ticker) {
+	                              Ticker ticker,
+	                              Currency currency) {
 
 		TradeLog e = new TradeLog();
 
@@ -32,6 +33,7 @@ public class TradeLogMapper {
 		e.setMarket(market);
 		e.setTicker(ticker);
 		e.setPosition(open.position());
+		e.setCurrency(currency);
 
 		// Estimated data
 		e.setEstimatedPriceOpen(open.estimatedPriceOpen());
@@ -44,10 +46,16 @@ public class TradeLogMapper {
 		e.setAtr(open.atr());
 
 		// Actual data
+		e.setOpenCommission(open.openCommission());
+		e.setDateOpen(open.dateOpen());
 		e.setOpenStopLoss(open.openStopLoss());
 		e.setOpenTakeProfit(open.openTakeProfit());
 		e.setPartsClosed(0L);
 		e.setNote(open.note());
+		e.setItemBought(open.itemBought());
+		e.setItemSold(open.itemSold());
+		e.setTotalBought(open.totalBought());
+		e.setTotalSold(open.totalSold());
 
 		return e;
 	}
@@ -59,17 +67,20 @@ public class TradeLogMapper {
 		Currency currency        = entity.getCurrency();
 		Broker   broker          = entity.getBroker();
 		Currency brokerCurrency  = broker.getFeeCurrency();
+		Double outcome = null, outcomePc = null;
 
-		double totalFees = openCommission + closeCommission + brokerInterest;
-		double totalFeesConverted =
-				currencyRateService.convert(brokerCurrency, currency, totalFees, entity.getDateClose().toLocalDate());
+		if (entity.getDateClose() != null) {
+			double totalFees = openCommission + closeCommission + brokerInterest;
+			double totalFeesConverted =
+					currencyRateService.convert(brokerCurrency, currency, totalFees, entity.getDateClose().toLocalDate());
 
-		double outcome = entity.isLong() ? entity.getTotalSold() - entity.getTotalBought() :
-		                 entity.getTotalBought() - entity.getTotalSold();
-		outcome = outcome - totalFeesConverted;
+			outcome = entity.isLong() ? entity.getTotalSold() - entity.getTotalBought() :
+					entity.getTotalBought() - entity.getTotalSold();
+			outcome = outcome - totalFeesConverted;
 
-		double outcomePc = (entity.isLong() ? outcome / entity.getTotalBought() :
-		                   outcome / entity.getTotalSold()) * 100;
+			outcomePc = (entity.isLong() ? outcome / entity.getTotalBought() :
+					outcome / entity.getTotalSold()) * 100;
+		}
 
 		return new TradeLogDTO(
 				entity.getId(),

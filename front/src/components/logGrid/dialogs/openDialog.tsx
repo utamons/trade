@@ -35,7 +35,8 @@ interface Eval {
     riskPc: number,
     riskRewardPc: number,
     breakEven: number,
-    volume: number
+    volume: number,
+    risk: number
 }
 
 interface EvalToFit {
@@ -50,7 +51,8 @@ interface EvalToFit {
     stopLoss: number,
     items: number
     volume: number,
-    depositPc: number
+    depositPc: number,
+    risk: number
 }
 
 const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, tickerId: number, marketId: number, positionId: number) => {
@@ -59,6 +61,16 @@ const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, tic
 
     const payload: FormActionPayload = {
         valuesNumeric: [
+            {
+                name: 'openCommission',
+                valid: true,
+                value: undefined
+            },
+            {
+                name: 'risk',
+                valid: true,
+                value: undefined
+            },
             {
                 name: 'totalSold',
                 valid: true,
@@ -214,6 +226,8 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
     const gainPc = getFieldValue('gainPc', formState) as number
     const totalBought = getFieldValue('totalBought', formState) as number
     const totalSold = getFieldValue('totalSold', formState) as number
+    const openCommission = getFieldValue('openCommission', formState) as number
+    const risk = getFieldValue('risk', formState) as number
     const isShort = () => positionId == '1'
 
     const breakEvenPercentageStr = () => {
@@ -366,6 +380,7 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
             dispatch({ type: 'set', payload: { name: 'items', valueNum: ev.items, valid: true } })
             dispatch({ type: 'set', payload: { name: 'volume', valueNum: ev.volume, valid: true } })
             dispatch({ type: 'set', payload: { name: 'depositPc', valueNum: ev.depositPc, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'risk', valueNum: ev.risk, valid: true } })
 
             return
         }
@@ -454,6 +469,10 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
             dispatch({ type: 'set', payload: { name: 'levelPrice', valid: false, errorText: 'required' } })
             state = false
         }
+        if (openCommission == undefined) {
+            dispatch({ type: 'set', payload: { name: 'openCommission', valid: false, errorText: 'required' } })
+            state = false
+        }
         if (!isShort() && totalBought == undefined) {
             dispatch({ type: 'set', payload: { name: 'totalBought', valid: false, errorText: 'required' } })
             state = false
@@ -487,6 +506,7 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
             dispatch({ type: 'set', payload: { name: 'riskRewardPc', valueNum: ev.riskRewardPc, valid: true } })
             dispatch({ type: 'set', payload: { name: 'breakEven', valueNum: ev.breakEven, valid: true } })
             dispatch({ type: 'set', payload: { name: 'volume', valueNum: ev.volume, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'risk', valueNum: ev.risk, valid: true } })
             return
         }
         if (!evaluate && validOpen() && riskPc != undefined && fees != undefined && outcomeExp != undefined && breakEven != undefined && depositPc != undefined) {
@@ -496,21 +516,24 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
                 brokerId: currentBroker.id,
                 marketId: Number(marketId),
                 tickerId: Number(tickerId),
-                atr,
+
+                estimatedPriceOpen: price,
+                estimatedFees: fees,
+                estimatedBreakEven: breakEven,
+                estimatedItems: items,
+                riskToCapitalPc: riskPc,
+                risk,
                 levelPrice,
-                itemNumber: items,
-                priceOpen: price,
-                stopLoss,
-                takeProfit,
-                outcomeExpected: outcomeExp,
-                riskPc,
-                riskRewardPc,
-                depositPc,
-                breakEven,
-                fees,
-                note,
+                atr,
+
+                openStopLoss: stopLoss,
+                openTakeProfit: takeProfit,
+                itemBought: isShort() ? undefined : items,
+                itemSold: isShort() ? items : undefined,
                 totalBought,
-                totalSold
+                totalSold,
+                openCommission,
+                note
             })
             onClose()
         }
@@ -616,20 +639,6 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
                             color={BLUE}
                             dispatch={dispatch}/>
                         <NumberFieldBox
-                            label={'Level Price:'}
-                            value={levelPrice}
-                            valid={isFieldValid('levelPrice', formState)}
-                            errorText={getFieldErrorText('levelPrice', formState)}
-                            fieldName={'levelPrice'}
-                            dispatch={dispatch}/>
-                        <NumberFieldBox
-                            label={'ATR:'}
-                            value={atr}
-                            valid={isFieldValid('atr', formState)}
-                            errorText={getFieldErrorText('atr', formState)}
-                            fieldName={'atr'}
-                            dispatch={dispatch}/>
-                        <NumberFieldBox
                             label={'Items:'}
                             value={items}
                             color={BLUE}
@@ -637,19 +646,6 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
                             errorText={getFieldErrorText('items', formState)}
                             fieldName={'items'}
                             dispatch={dispatch}/>
-                        <NumberFieldBox
-                            label={'Vol./depo. (%):'}
-                            value={depositPc}
-                            valid={isFieldValid('depositPc', formState)}
-                            errorText={getFieldErrorText('depositPc', formState)}
-                            color={greaterColor(depositPc, defaultColor, MAX_DEPOSIT_PC)}
-                            fieldName={'depositPc'}
-                            dispatch={dispatch}/>
-                    </Grid>
-                </Grid>
-                <Grid item xs={1}>
-                    <Grid container columns={1}>
-                        <CheckFieldBox checked={technicalStop} label="Techincal Stop:" onChange={handleTechnicalStop}/>
                         <NumberFieldBox
                             label={'Stop Loss:'}
                             value={stopLoss}
@@ -665,6 +661,40 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
                             valid={isFieldValid('takeProfit', formState)}
                             errorText={getFieldErrorText('takeProfit', formState)}
                             fieldName={'takeProfit'}
+                            dispatch={dispatch}/>
+                        <NumberFieldBox
+                            label={'Level Price:'}
+                            value={levelPrice}
+                            valid={isFieldValid('levelPrice', formState)}
+                            errorText={getFieldErrorText('levelPrice', formState)}
+                            fieldName={'levelPrice'}
+                            dispatch={dispatch}/>
+                        <NumberFieldBox
+                            label={'ATR:'}
+                            value={atr}
+                            valid={isFieldValid('atr', formState)}
+                            errorText={getFieldErrorText('atr', formState)}
+                            fieldName={'atr'}
+                            dispatch={dispatch}/>
+                        <NumberFieldBox
+                            label={'Vol./depo. (%):'}
+                            value={depositPc}
+                            valid={isFieldValid('depositPc', formState)}
+                            errorText={getFieldErrorText('depositPc', formState)}
+                            color={greaterColor(depositPc, defaultColor, MAX_DEPOSIT_PC)}
+                            fieldName={'depositPc'}
+                            dispatch={dispatch}/>
+                    </Grid>
+                </Grid>
+                <Grid item xs={1}>
+                    <Grid container columns={1}>
+                        <CheckFieldBox checked={technicalStop} label="Techincal Stop:" onChange={handleTechnicalStop}/>
+                        <NumberFieldBox
+                            label={'Open comm.:'}
+                            value={openCommission}
+                            valid={isFieldValid('openCommission', formState)}
+                            errorText={getFieldErrorText('openCommission', formState)}
+                            fieldName={'openCommission'}
                             dispatch={dispatch}/>
                         <NumberFieldBox
                             label={'Risk(%):'}
@@ -705,14 +735,12 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
                             label={'Gain:'}
                             variant={'pc'}
                             value={gainPc}/>
-                        <NumberFieldBox
+                        <ValueFieldBox
+                            label={'Risk:'}
+                            value={risk}/>
+                        <ValueFieldBox
                             label={'Fees:'}
-                            fieldName={'fees'}
-                            valid={isFieldValid('fees', formState)}
-                            errorText={getFieldErrorText('fees', formState)}
-                            value={fees}
-                            dispatch={dispatch}
-                        />
+                            value={fees}/>
                         <ValueFieldBox
                             label={'Break even:'}
                             value={`${breakEven ?? ''} ${breakEvenPercentageStr()}`}/>

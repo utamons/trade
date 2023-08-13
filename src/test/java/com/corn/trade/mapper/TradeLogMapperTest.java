@@ -22,6 +22,7 @@ class TradeLogMapperTest {
 		Broker broker = mock(Broker.class);
 		Market market = mock(Market.class);
 		Ticker ticker = mock(Ticker.class);
+		Currency currency = mock(Currency.class);
 		// TradeLog initialisation
 		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
 				"long", // position
@@ -39,21 +40,22 @@ class TradeLogMapperTest {
 				925.0, // atr
 				90.0, // openStopLoss
 				80.0, // openTakeProfit
-				null, // itemBought
-				null, // itemSold
-				null, // totalBought
-				null, // totalSold
-				null, // openCommission
+			 	100L, // itemBought
+				101L, // itemSold
+				102.0, // totalBought
+				103.0, // totalSold
+				1.0, // openCommission
 				"Long trade" // note
 		);
 
 		// Act
-		TradeLog tradeLog = TradeLogMapper.toOpen(openDTO, broker, market, ticker);
+		TradeLog tradeLog = TradeLogMapper.toOpen(openDTO, broker, market, ticker, currency);
 
 		// Assert
 		assertEquals(broker, tradeLog.getBroker());
 		assertEquals(market, tradeLog.getMarket());
 		assertEquals(ticker, tradeLog.getTicker());
+		assertEquals(currency, tradeLog.getCurrency());
 		assertEquals("long", tradeLog.getPosition());
 		assertEquals(100.0, tradeLog.getEstimatedPriceOpen());
 		assertEquals(5.0, tradeLog.getEstimatedFees());
@@ -66,6 +68,11 @@ class TradeLogMapperTest {
 		assertEquals(90.0, tradeLog.getOpenStopLoss());
 		assertEquals(80.0, tradeLog.getOpenTakeProfit());
 		assertEquals(0, tradeLog.getPartsClosed());
+		assertEquals(1.0, tradeLog.getOpenCommission());
+		assertEquals(100L, tradeLog.getItemBought());
+		assertEquals(101L, tradeLog.getItemSold());
+		assertEquals(102.0, tradeLog.getTotalBought());
+		assertEquals(103.0, tradeLog.getTotalSold());
 		assertEquals("Long trade", tradeLog.getNote());
 	}
 
