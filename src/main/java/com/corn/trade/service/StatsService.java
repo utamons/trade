@@ -19,8 +19,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static com.corn.trade.service.CashService.OUTCOME;
-import static com.corn.trade.service.CashService.TRADE;
+import static com.corn.trade.service.CashService.*;
 
 @Service
 public class StatsService {
@@ -63,8 +62,10 @@ public class StatsService {
 	public MoneyStateDTO getMoneyState() throws JsonProcessingException {
 		double          capital     = cashService.getCapital();
 		CashAccountType outcomeType = accountTypeRepo.findCashAccountTypeByName(OUTCOME);
+		CashAccountType feeType = accountTypeRepo.findCashAccountTypeByName(FEE);
 		List<CashAccount> accounts = cashAccountRepo.findAllByType(outcomeType);
 		double sumOutcomesUSD = 0.0;
+		double sumFeesUSD = 0.0;
 
 		for (CashAccount account : accounts) {
 			double outcome    = cashService.getAccountTotal(account);
@@ -72,9 +73,13 @@ public class StatsService {
 			sumOutcomesUSD += Math.abs(outcomeUSD);
 		}
 
-		double profit = capital == 0 ? 0.0 : sumOutcomesUSD / capital * 100.0;
+		for (CashAccount account : cashAccountRepo.findAllByType(feeType)) {
+			double fee    = cashService.getAccountTotal(account);
+			double feeUSD = currencyRateService.convertToUSD(account.getCurrency().getId(), fee, LocalDate.now());
+			sumFeesUSD += Math.abs(feeUSD);
+		}
 
-
+		double profit = capital == 0 ? 0.0 : (sumOutcomesUSD - sumFeesUSD) / capital * 100.0;
 
 		return new MoneyStateDTO(capital, profit);
 	}
@@ -88,16 +93,25 @@ public class StatsService {
 
 		CashAccountType outcomeType = accountTypeRepo.findCashAccountTypeByName(OUTCOME);
 		CashAccountType tradeType = accountTypeRepo.findCashAccountTypeByName(TRADE);
+		CashAccountType feeType = accountTypeRepo.findCashAccountTypeByName(FEE);
 
 		List<CashAccount> outcomeAccounts = cashAccountRepo.findAllByBrokerAndType(broker, outcomeType);
+		List<CashAccount> feeAccounts = cashAccountRepo.findAllByBrokerAndType(broker, feeType);
 		List<CashAccount> tradeAccounts = cashAccountRepo.findAllByBrokerAndType(broker, tradeType);
 
 		double sumOutcomesUSD = 0.0;
+		double sumFeesUSD = 0.0;
 
 		for (CashAccount account : outcomeAccounts) {
 			double outcome    = cashService.getAccountTotal(account);
 			double outcomeUSD = currencyRateService.convertToUSD(account.getCurrency().getId(), outcome, LocalDate.now());
 			sumOutcomesUSD += Math.abs(outcomeUSD);
+		}
+
+		for (CashAccount account : feeAccounts) {
+			double fee    = cashService.getAccountTotal(account);
+			double feeUSD = currencyRateService.convertToUSD(account.getCurrency().getId(), fee, LocalDate.now());
+			sumFeesUSD += Math.abs(feeUSD);
 		}
 
 		long open = tradeLogRepo.opensCountByBroker(broker);
@@ -108,6 +122,6 @@ public class StatsService {
 		}).toList();
 
 
-		return new BrokerStatsDTO(tradeAccountsOutDTO, sumOutcomesUSD, open, riskBase);
+		return new BrokerStatsDTO(tradeAccountsOutDTO, sumOutcomesUSD - sumFeesUSD, open, riskBase);
 	}
 }

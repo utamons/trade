@@ -5,19 +5,19 @@ import DialogActions from '@mui/material/DialogActions'
 import Dialog from '@mui/material/Dialog'
 import { remCalc } from '../../../utils/utils'
 import Button from '../../tools/button'
-import React, { Dispatch, useCallback, useEffect } from 'react'
+import React, { Dispatch, useCallback, useContext, useEffect } from 'react'
 import { ButtonContainerStyled, NoteBox } from '../../../styles/style'
 import { Grid } from '@mui/material'
 import TextField from '@mui/material/TextField'
-import { FormAction, FormActionPayload, FormState, PositionCloseType, TradeLog } from 'types'
+import { FormAction, FormActionPayload, FormState, TradeLog } from 'types'
 import { getFieldErrorText, getFieldValue, isFieldValid, useForm } from '../../dialogs/dialogUtils'
 import DatePickerBox from '../../dialogs/datePickerBox'
 import NumberFieldBox from '../../dialogs/numberFieldBox'
+import { TradeContext } from '../../../trade-context'
 
 interface CloseDialogProps {
     position: TradeLog,
     isOpen: boolean,
-    close: (close: PositionCloseType) => void,
     onClose: () => void
 }
 
@@ -25,6 +25,9 @@ const initFormState = (
     formState: FormState,
     dispatch: Dispatch<FormAction>,
     quantity: number,
+    total: number,
+    stopLoss: number,
+    takeProfit: number,
     brokerInterest: number | undefined,
     note: string | undefined) => {
     if (formState.isInitialized)
@@ -33,29 +36,29 @@ const initFormState = (
     const payload: FormActionPayload = {
         valuesNumeric: [
             {
-                name: 'fees',
-                valid: true,
-                value: undefined
-            },
-            {
-                name: 'totalSold',
-                valid: true,
-                value: undefined
-            },
-            {
-                name: 'totalBought',
-                valid: true,
-                value: undefined
-            },
-            {
-                name: 'price',
-                valid: true,
-                value: undefined
-            },
-            {
-                name: 'quantity',
+                name: 'items',
                 valid: true,
                 value: quantity
+            },
+            {
+                name: 'total',
+                valid: true,
+                value: total
+            },
+            {
+                name: 'closeCommission',
+                valid: true,
+                value: undefined
+            },
+            {
+                name: 'finalStopLoss',
+                valid: true,
+                value: stopLoss
+            },
+            {
+                name: 'finalTakeProfit',
+                valid: true,
+                value: takeProfit
             },
             {
                 name: 'brokerInterest',
@@ -82,21 +85,36 @@ const initFormState = (
     dispatch({ type: 'init', payload })
 }
 
-export default ({ onClose, isOpen, position, close }: CloseDialogProps) => {
+export default ({ onClose, isOpen, position }: CloseDialogProps) => {
+    const { close } = useContext(TradeContext)
     const { formState, dispatch } = useForm()
 
     useEffect(() => {
-        initFormState(formState, dispatch, position.itemNumber, position.brokerInterest, position.note)
+        let quantity = position.itemBought ?? position.itemSold ?? 0
+        if (position.itemBought != undefined && position.itemSold != undefined) {
+            quantity = Math.abs(position.itemBought - position.itemSold)
+        }
+        let total = position.totalBought ?? position.totalSold ?? 0
+        if (position.totalBought != undefined && position.totalSold != undefined) {
+            total = Math.abs(position.totalBought - position.totalSold)
+        }
+
+        initFormState(formState, dispatch,
+            quantity,
+            total,
+            position.openStopLoss,
+            position.openTakeProfit,
+            position.brokerInterest, position.note)
     }, [formState])
 
-    const price = getFieldValue('price', formState) as number
-    const quantity = getFieldValue('quantity', formState) as number
+    const items = getFieldValue('items', formState) as number
+    const total = getFieldValue('total', formState) as number
     const brokerInterest = getFieldValue('brokerInterest', formState) as number
     const note = getFieldValue('note', formState) as string
     const date = getFieldValue('date', formState) as Date
-    const fees = getFieldValue('fees', formState) as number
-    const totalSold = getFieldValue('totalSold', formState) as number
-    const totalBought = getFieldValue('totalBought', formState) as number
+    const finalStopLoss = getFieldValue('finalStopLoss', formState) as number
+    const finalTakeProfit = getFieldValue('finalTakeProfit', formState) as number
+    const closeCommission = getFieldValue('closeCommission', formState) as number
 
     const valid = () => {
         let state = true
@@ -104,56 +122,37 @@ export default ({ onClose, isOpen, position, close }: CloseDialogProps) => {
             dispatch({ type: 'set', payload: { name: 'date', valid: false, errorText: 'required' } })
             state = false
         }
-        if (price == undefined) {
-            dispatch({ type: 'set', payload: { name: 'price', valid: false, errorText: 'required' } })
+        if (items == undefined) {
+            dispatch({ type: 'set', payload: { name: 'items', valid: false, errorText: 'required' } })
             state = false
         }
-        if (quantity == undefined) {
-            dispatch({ type: 'set', payload: { name: 'quantity', valid: false, errorText: 'required' } })
+        if (total == undefined) {
+            dispatch({ type: 'set', payload: { name: 'total', valid: false, errorText: 'required' } })
             state = false
         }
-        if (price <= 0) {
-            dispatch({ type: 'set', payload: { name: 'price', valid: false, errorText: 'must be greater than 0' } })
+        if (items <= 0) {
+            dispatch({ type: 'set', payload: { name: 'items', valid: false, errorText: 'must be greater than 0' } })
             state = false
         }
-        if (quantity <= 0) {
-            dispatch({ type: 'set', payload: { name: 'quantity', valid: false, errorText: 'must be greater than 0' } })
+        if (total <= 0) {
+            dispatch({ type: 'set', payload: { name: 'total', valid: false, errorText: 'must be greater than 0' } })
             state = false
         }
-        if (fees == undefined) {
-            dispatch({ type: 'set', payload: { name: 'fees', valid: false, errorText: 'required' } })
+        if (closeCommission == undefined) {
+            dispatch({ type: 'set', payload: { name: 'closeCommission', valid: false, errorText: 'required' } })
             state = false
         }
-
-        if (fees < 0) {
-            dispatch({ type: 'set', payload: { name: 'fees', valid: false, errorText: 'must be greater than 0' } })
+        if (closeCommission <= 0) {
+            dispatch({ type: 'set', payload: { name: 'closeCommission', valid: false, errorText: 'must be greater than 0' } })
             state = false
         }
-        if (position.position == 'long') {
-            if (totalSold < 0) {
-                dispatch({
-                    type: 'set',
-                    payload: { name: 'totalSold', valid: false, errorText: 'must be greater than 0' }
-                })
-                state = false
-            }
-            if (totalSold == undefined) {
-                dispatch({ type: 'set', payload: { name: 'totalSold', valid: false, errorText: 'required' } })
-                state = false
-            }
+        if (finalStopLoss == undefined) {
+            dispatch({ type: 'set', payload: { name: 'finalStopLoss', valid: false, errorText: 'required' } })
+            state = false
         }
-        if (position.position == 'short') {
-            if (totalBought < 0) {
-                dispatch({
-                    type: 'set',
-                    payload: { name: 'totalBought', valid: false, errorText: 'must be greater than 0' }
-                })
-                state = false
-            }
-            if (totalBought == undefined) {
-                dispatch({ type: 'set', payload: { name: 'totalBought', valid: false, errorText: 'required' } })
-                state = false
-            }
+        if (finalTakeProfit == undefined) {
+            dispatch({ type: 'set', payload: { name: 'finalTakeProfit', valid: false, errorText: 'required' } })
+            state = false
         }
         return state
     }
@@ -162,21 +161,21 @@ export default ({ onClose, isOpen, position, close }: CloseDialogProps) => {
         if (!valid()) {
             return
         }
-        if (price) {
             close({
                 id: position.id,
                 dateClose: date.toISOString(),
-                quantity: quantity ? quantity : position.itemNumber,
-                priceClose: price,
+                itemBought: position.position == 'long' ? undefined : items,
+                itemSold: position.position == 'short' ? undefined : items,
+                totalBought: position.position == 'long' ? undefined : total,
+                totalSold: position.position == 'short' ? undefined : total,
                 brokerInterest: brokerInterest ? brokerInterest : 0,
-                note: note,
-                fees: fees,
-                totalSold: totalSold,
-                totalBought: totalBought
+                closeCommission: closeCommission,
+                finalStopLoss: finalStopLoss,
+                finalTakeProfit: finalTakeProfit,
+                note: note
             })
             onClose()
-        }
-    }, [price, quantity, date, note, brokerInterest, fees, totalSold, totalBought])
+    }, [total, items, date, note, brokerInterest, closeCommission, finalStopLoss, finalTakeProfit])
 
     return <Dialog
         maxWidth={false}
@@ -191,40 +190,40 @@ export default ({ onClose, isOpen, position, close }: CloseDialogProps) => {
                             fieldName={'date'}
                             dispatch={dispatch}/>
                         <NumberFieldBox
-                            label="Quantity:"
-                            value={quantity}
-                            valid={isFieldValid('quantity', formState)}
-                            errorText={getFieldErrorText('quantity', formState)}
-                            fieldName={'quantity'}
+                            label="Items:"
+                            value={items}
+                            valid={isFieldValid('items', formState)}
+                            errorText={getFieldErrorText('items', formState)}
+                            fieldName={'items'}
                             dispatch={dispatch}/>
                         <NumberFieldBox
-                            label={`Price: ${position.currency.name}`}
-                            valid={isFieldValid('price', formState)}
-                            errorText={getFieldErrorText('price', formState)}
-                            value={price}
-                            fieldName={'price'}
+                            label={`Total: ${position.currency.name}`}
+                            valid={isFieldValid('total', formState)}
+                            errorText={getFieldErrorText('total', formState)}
+                            value={total}
+                            fieldName={'total'}
                             dispatch={dispatch}/>
                         <NumberFieldBox
-                            label={`Fees: ${position.currency.name}`}
-                            valid={isFieldValid('fees', formState)}
-                            errorText={getFieldErrorText('fees', formState)}
-                            value={fees}
-                            fieldName={'fees'}
+                            label={'Close comm: USD'}
+                            valid={isFieldValid('closeCommission', formState)}
+                            errorText={getFieldErrorText('closeCommission', formState)}
+                            value={closeCommission}
+                            fieldName={'closeCommission'}
                             dispatch={dispatch}/>
-                        {position.position == 'long' ? <NumberFieldBox
-                                label={`Total sold: ${position.currency.name}`}
-                                valid={isFieldValid('totalSold', formState)}
-                                errorText={getFieldErrorText('totalSold', formState)}
-                                value={totalSold}
-                                fieldName={'totalSold'}
-                                dispatch={dispatch}/> :
-                            <NumberFieldBox
-                                label={`Total bought: ${position.currency.name}`}
-                                valid={isFieldValid('totalBought', formState)}
-                                errorText={getFieldErrorText('totalBought', formState)}
-                                value={totalBought}
-                                fieldName={'totalBought'}
-                                dispatch={dispatch}/>}
+                        <NumberFieldBox
+                            label={`Final stop: ${position.currency.name}`}
+                            valid={isFieldValid('finalStopLoss', formState)}
+                            errorText={getFieldErrorText('finalStopLoss', formState)}
+                            value={finalStopLoss}
+                            fieldName={'finalStopLoss'}
+                            dispatch={dispatch}/>
+                        <NumberFieldBox
+                            label={`Final take: ${position.currency.name}`}
+                            valid={isFieldValid('finalTakeProfit', formState)}
+                            errorText={getFieldErrorText('finalTakeProfit', formState)}
+                            value={finalTakeProfit}
+                            fieldName={'finalTakeProfit'}
+                            dispatch={dispatch}/>
                         {position.position == 'short' ?
                             <NumberFieldBox
                                 label={`Broker interest: ${position.currency.name}`}
