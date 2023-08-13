@@ -9,6 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+
 import static com.corn.trade.util.Util.round;
 
 @Service
@@ -69,13 +71,13 @@ public class TradeLogMapper {
 		Currency brokerCurrency  = broker.getFeeCurrency();
 		Double outcome = null, outcomePc = null;
 
-		if (entity.getDateClose() != null) {
+		if (entity.getTotalSold() != null && entity.getTotalBought() != null) {
+			LocalDate dateClose = entity.getDateClose() == null ? LocalDate.now() : entity.getDateClose().toLocalDate();
 			double totalFees = openCommission + closeCommission + brokerInterest;
 			double totalFeesConverted =
-					currencyRateService.convert(brokerCurrency, currency, totalFees, entity.getDateClose().toLocalDate());
+					currencyRateService.convert(brokerCurrency, currency, totalFees, dateClose);
 
-			outcome = entity.isLong() ? entity.getTotalSold() - entity.getTotalBought() :
-					entity.getTotalBought() - entity.getTotalSold();
+			outcome = entity.getTotalSold() - entity.getTotalBought();
 			outcome = outcome - totalFeesConverted;
 
 			outcomePc = (entity.isLong() ? outcome / entity.getTotalBought() :

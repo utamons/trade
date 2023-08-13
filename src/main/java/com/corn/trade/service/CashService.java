@@ -25,6 +25,7 @@ public class CashService {
 	public static final  String                    START                        = "start";
 	public static final  String                    FINISH                       = "finish";
 	public static final  String                    TRADE                        = "trade";
+	public static final  String                    FEE                          = "fee";
 	public static final  String                    TRADE_LOG_RECORD_IS_REQUIRED = "Trade log record is required";
 	public static final  String                    BORROWED                     = "borrowed";
 	public static final  String                    ACCOUNT_TYPES_ARE_NOT_FOUND  = "Account types are not found";
@@ -208,7 +209,7 @@ public class CashService {
 		if (transferFrom > totalFrom) {
 			throw new IllegalArgumentException("Not enough money to transfer");
 		}
-		double      delta        = transferFrom - transferTo;
+		double delta = transferFrom - transferTo;
 
 		CashFlow cashFlow = new CashFlow(
 				tradeFrom,

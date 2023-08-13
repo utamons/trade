@@ -46,8 +46,8 @@ export const Collapsed = ({ logItem, expandHandler, closeDialog }: ExpandablePro
         <Item item xs={2}>{position}</Item>
         <Item item xs={6}>{utc2market(dateOpen, tz)}</Item>
         <Item item xs={6}>{dateClose ? utc2market(dateClose, tz) : '-'}</Item>
-        <Item item xs={4}>{money(currency.name, itemBought ?? 0.0)}</Item>
-        <Item item xs={4}>{money(currency.name, itemSold ?? 0.0)}</Item>
+        <Item item xs={4}>{itemBought ?? '-'}</Item>
+        <Item item xs={4}>{itemSold ?? '-'}</Item>
         <Item item xs={3}>{money(currency.name, totalBought ?? 0.0)}</Item>
         <Item item xs={4}>{money(currency.name, totalSold ?? 0.0)}</Item>
         <Item item sx={profitColor(outcome, defaultColor)} xs={4}>{money(currency.name, outcome)}</Item>

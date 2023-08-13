@@ -22,7 +22,7 @@ const getRows = (logPage: TradeLogPageType) => {
     return <>
         {logPage.content.map(logItem => <LogRow closeDialog={closeDialogUp} key={logItem.id} logItem={logItem}/>)}
         {logItem ?
-            <CloseDialog isOpen={openCloseDialog} close={close} onClose={closeDialogDown} position={logItem}/> : <></>}
+            <CloseDialog isOpen={openCloseDialog} onClose={closeDialogDown} position={logItem}/> : <></>}
     </>
 }
 

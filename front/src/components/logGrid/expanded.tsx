@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react'
 import { Box, Grid, styled } from '@mui/material'
 import { FieldName } from '../../styles/style'
-import { money, remCalc, utc2market } from '../../utils/utils'
+import { money, remCalc, roundTo2, utc2market } from '../../utils/utils'
 import ExpandButton from '../tools/expandButton'
 import { CloseButton } from '../tools/closeButton'
 import { ExpandableProps } from 'types'
@@ -103,7 +103,7 @@ export const Expanded = ({ logItem, expandHandler, closeDialog }: ExpandableProp
                 </FieldBox>
                 <FieldBox>
                     <FieldName>R/R:</FieldName>
-                    <FieldValue>{outcome && risk ? money(currency.name, risk/outcome*100) : '-'}</FieldValue>
+                    <FieldValue>{outcome && risk && outcome > 0 ? roundTo2(risk/outcome*100) +' %' : '-'}</FieldValue>
                 </FieldBox>
             </ExpandedContainer>
         </Grid>
