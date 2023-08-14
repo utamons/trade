@@ -35,8 +35,7 @@ export const SubMenu = ({ anchorEl, close, options }: SubMenuProps) => {
             {options.map((option, index) => (
                 <MenuItem
                     key={option.name}
-                    onClick={(event) => handleMenuItemClick(event, index)}
-                >
+                    onClick={(event) => handleMenuItemClick(event, index)}>
                     {option.checked ? <CheckStyled/>: null}{option.name}
                 </MenuItem>
             ))}

@@ -2,7 +2,7 @@ import React, { useContext } from 'react'
 import { Box, styled } from '@mui/material'
 import { MainMenuItem } from './mainMenuItem'
 import { remCalc } from '../../utils/utils'
-import { TradeContext } from '../../trade-context'
+import { LOG_VIEW, STATS_VIEW, TradeContext } from '../../trade-context'
 
 const Container = styled(Box)(({ theme }) => ({
     display: 'flex',
@@ -25,6 +25,8 @@ export const MainMenu = () => {
         setCorrectionDialogVisible,
         setExchangeDialogVisible,
         setCurrentBrokerId,
+        currentView,
+        setCurrentView,
         setOpenDialogVisible } = useContext(TradeContext)
 
     const brokerOptions = []
@@ -40,8 +42,8 @@ export const MainMenu = () => {
     }
 
     const viewOptions = [
-        { name: 'Trade log', onClick: () => console.log('View 1') },
-        { name: 'Stats', onClick: () => console.log('View 2') }
+        { name: 'Trade log', checked: currentView == LOG_VIEW, onClick: () => setCurrentView(LOG_VIEW) },
+        { name: 'Stats', checked: currentView == STATS_VIEW, onClick: () => setCurrentView(STATS_VIEW) }
     ]
 
     const actionsOptions = [
