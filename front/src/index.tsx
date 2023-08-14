@@ -18,7 +18,32 @@ const Outer = () => {
                 palette: {
                     mode: prefersDarkMode ? 'dark' : 'light'
                 },
+                components: {
+                    MuiList: {
+                        styleOverrides: {
+                            root: {
+                                paddingTop: 0,
+                                paddingBottom: 0
+                            }
+                        }
+                    },
+                    MuiMenu: {
+                        styleOverrides: {
+                            paper: {
+                                borderRadius: '0!important'
+                            }
+                        }
+                    },
+                    MuiMenuItem: {
+                        styleOverrides: {
+                            root: {
+                                fontSize: 14
+                            }
+                        }
+                    }
+                },
                 typography: {
+                    fontSize: 14,
                     caption: {
                         fontSize: 14,
                         fontFamily: 'sans-serif'

@@ -14,8 +14,7 @@ const ContainerStyled = styled(Box)(({ theme }) => ({
     color: theme.palette.text.primary,
     backgroundColor: theme.palette.background.default,
     justifyContent: 'flex-start',
-    border: `solid ${remCalc(1)}`,
-    borderRadius: remCalc(2),
+    borderBottom: `solid ${remCalc(1)}`,
     borderColor: theme.palette.text.primary
 }))
 

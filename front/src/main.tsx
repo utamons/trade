@@ -3,6 +3,7 @@ import { Box, Grid, styled } from '@mui/material'
 import Dashboard from './components/dashboard/dashboard'
 import Work from './components/work'
 import { remCalc } from './utils/utils'
+import { MainMenu } from './components/menu/mainMenu'
 
 
 const MainStyled = styled(Box)(({ theme }) => ({
@@ -21,6 +22,9 @@ export default () => {
     return (
         <MainStyled>
             <Grid id="mainContainer" container spacing={0}>
+                <Grid item xs={12}>
+                    <MainMenu />
+                </Grid>
                 <Grid item xs={12}>
                     <Dashboard />
                 </Grid>
