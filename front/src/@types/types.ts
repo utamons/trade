@@ -60,6 +60,14 @@ type TradeContextType = {
                amountFrom: number,
                amountTo: number) => Promise<any>,
     refreshDashboard: () => void
+    setOpenDialogVisible: (visible: boolean) => void
+    openDialogVisible: boolean,
+    refillDialogVisible: boolean,
+    exchangeDialogVisible: boolean,
+    setRefillDialogVisible: (visible: boolean) => void
+    setExchangeDialogVisible: (visible: boolean) => void
+    correctionDialogVisible: boolean,
+    setCorrectionDialogVisible: (visible: boolean) => void
 }
 
 type ButtonProps = {

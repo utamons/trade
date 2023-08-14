@@ -10,11 +10,11 @@ export interface MainMenuItemProps {
 
 const Container = styled(Box)(({ theme }) => ({
     padding: remCalc(5),
+    color: theme.palette.text.primary,
     '&.selected': {
         backgroundColor: theme.palette.text.disabled
     },
     '&:hover': {
-        color: theme.palette.text.primary,
         backgroundColor: theme.palette.action.hover,
         borderColor: theme.palette.text.primary,
         cursor: 'pointer'
@@ -36,8 +36,9 @@ export const MainMenuItem = ({ name, options }: MainMenuItemProps) => {
     }
 
     return (<>
-            <Container className={selected?'selected':''} onClick={open}>{name}</Container>
-            <SubMenu options={options} anchorEl={anchorEl} close={close} />
+            <Container className={selected ? 'selected' : ''} onClick={open}>
+                {name}</Container>
+            <SubMenu options={options} anchorEl={anchorEl} close={close}/>
         </>
     )
 }

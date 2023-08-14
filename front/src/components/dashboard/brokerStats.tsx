@@ -1,30 +1,19 @@
 import React, { useContext } from 'react'
 import { Box, styled } from '@mui/material'
-import { profitColor, remCalc } from '../../utils/utils'
-import { BrokerStatsType } from 'types'
+import { GREEN, profitColor, remCalc } from '../../utils/utils'
 import { useTheme } from '@emotion/react'
 import { TradeContext } from '../../trade-context'
 
-const ContainerStyled = styled(Box)(({ theme }) => ({
-    borderRight: `solid ${remCalc(1)}`,
-    borderColor: theme.palette.text.primary,
-    padding: remCalc(10),
-    height: remCalc(131),
-    display: 'flex',
-    flexFlow: 'column wrap',
-    gap: remCalc(20)
-}))
-
 const BoxStyled = styled(Box)(() => ({
-    width: remCalc(160),
     display: 'flex',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    gap: remCalc(5),
+    paddingRight: remCalc(20)
 }))
 
 export default () => {
-    const { brokerStats } = useContext(TradeContext)
+    const { brokerStats, currentBroker } = useContext(TradeContext)
     const { tradeAccounts, riskBase, open, outcome } = brokerStats
-    const width = tradeAccounts.length>0?remCalc(337):remCalc(164)
 
     const theme = useTheme()
     // noinspection TypeScriptUnresolvedVariable
@@ -32,7 +21,10 @@ export default () => {
     // @ts-ignore
     const defaultColor = theme.palette.text.primary
 
-    return <ContainerStyled sx={{ width }}>
+    return <>
+        <BoxStyled>
+            <div>Broker:</div> <Box sx={{ color: GREEN, fontWeight: 'bolder' }}>{currentBroker?.name}</Box>
+        </BoxStyled>
         {tradeAccounts.map(acc => <BoxStyled key={acc.id}>
             <div>{acc.currency.name}:</div> <div>{acc.amount}</div>
         </BoxStyled>)}
@@ -45,6 +37,6 @@ export default () => {
         <BoxStyled>
             <div>Risk base:</div> <div>$ {riskBase}</div>
         </BoxStyled>
-    </ContainerStyled>
+    </>
 
 }

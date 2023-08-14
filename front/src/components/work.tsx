@@ -1,13 +1,13 @@
-import React, { useCallback, useContext, useState } from 'react'
+import React, { useCallback, useContext } from 'react'
 import { Box, styled } from '@mui/material'
 import { remCalc } from '../utils/utils'
-import Button from './tools/button'
-import { ButtonContainerStyled } from '../styles/style'
 import LogGrid from './logGrid/logGrid'
 import { TradeContext } from '../trade-context'
 import Paginator from './logGrid/paginator'
 import CircularProgress from '@mui/material/CircularProgress'
 import Open from './logGrid/dialogs/openDialog'
+import Refill from './dialogs/refill'
+import Exchange from './dialogs/exchange'
 
 const ContainerStyled = styled(Box)(({ theme }) => ({
     alignItems: 'top',
@@ -29,22 +29,50 @@ const RowStyled = styled(Box)(() => ({
 }))
 
 const WorkInt = () => {
-    const [isOpen, setOpen] = useState(false)
-
-    const handleOpen = useCallback(() => {
-        setOpen(true)
-    }, [])
+    const {
+        openDialogVisible,
+        setOpenDialogVisible,
+        setRefillDialogVisible,
+        setCorrectionDialogVisible,
+        setExchangeDialogVisible,
+        refillDialogVisible,
+        correctionDialogVisible,
+        exchangeDialogVisible,
+        currencies,
+        refill,
+        correction,
+        refreshDashboard
+    } = useContext(TradeContext)
 
     const handleCloseOpenDialog = useCallback(() => {
-        setOpen(false)
+        setOpenDialogVisible(false)
     }, [])
 
+    const commitRefill = useCallback((currencyId: number, amount: number) => {
+        refill(currencyId, amount)
+        setRefillDialogVisible(false)
+    }, [])
+
+    const commitCorrection = useCallback((currencyId: number, amount: number) => {
+        correction(currencyId, amount)
+        setCorrectionDialogVisible(false)
+    }, [])
+
+    const cancelRefill = useCallback(() => {
+        setRefillDialogVisible(false)
+    }, [])
+
+    const cancelCorrection = useCallback(() => {
+        setCorrectionDialogVisible(false)
+    }, [])
+
+    const exchangeClose = useCallback(() => {
+        setExchangeDialogVisible(false)
+        refreshDashboard()
+    }, [])
+
+
     return <ContainerStyled>
-        <RowStyled>
-            <ButtonContainerStyled>
-                <Button style={{ minWidth: remCalc(101) }} text="Open" onClick={handleOpen}/>
-            </ButtonContainerStyled>
-        </RowStyled>
         <RowStyled>
             <LogGrid />
         </RowStyled>
@@ -52,8 +80,13 @@ const WorkInt = () => {
             <Paginator/>
         </RowStyled>
         <Open
-            isOpen={isOpen}
+            isOpen={openDialogVisible}
             onClose={handleCloseOpenDialog}/>
+        <Refill open={refillDialogVisible} negativeAllowed={false} title="Refill" onSubmit={commitRefill} onCancel={cancelRefill}
+                currencies={currencies}/>
+        <Refill open={correctionDialogVisible} negativeAllowed={true} title="Correction" onSubmit={commitCorrection}
+                onCancel={cancelCorrection} currencies={currencies}/>
+        <Exchange open={exchangeDialogVisible} onClose={exchangeClose} currencies={currencies}/>
     </ContainerStyled>
 }
 
