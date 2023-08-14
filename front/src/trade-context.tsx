@@ -33,6 +33,9 @@ const onetimeQueryOptions = () => {
     }
 }
 
+const LOG_VIEW = 0
+const STATS_VIEW = 1
+
 const useBrokers = () => {
     const { data, isLoading } = useQuery('fetchBrokers', fetchBrokers, onetimeQueryOptions())
 
@@ -122,6 +125,7 @@ const useTrade = (): TradeContextType => {
     const [exchangeDialogVisible, setExchangeDialogVisible] = useState(false)
     const [refillDialogVisible, setRefillDialogVisible] = useState(false)
     const [correctionDialogVisible, setCorrectionDialogVisible] = useState(false)
+    const [currentView, setCurrentView] = useState<0 | 1>(LOG_VIEW)
     const { brokerStats, isLoadingBrokerStats } = useBrokerStats(currentBrokerId, brokerStatsKey)
     const { moneyState, isLoadingMoneyState } = useMoneyState(moneyStateKey)
     const { logPage, isLoadingLogPage } = useLogPage(pageLogKey, pageNum)
@@ -234,7 +238,9 @@ const useTrade = (): TradeContextType => {
         refillDialogVisible,
         setRefillDialogVisible,
         correctionDialogVisible,
-        setCorrectionDialogVisible
+        setCorrectionDialogVisible,
+        currentView,
+        setCurrentView
     }
 }
 
@@ -298,7 +304,9 @@ const defaultTradeContext: TradeContextType = {
     refillDialogVisible: false,
     setRefillDialogVisible: () => null,
     correctionDialogVisible: false,
-    setCorrectionDialogVisible: () => null
+    setCorrectionDialogVisible: () => null,
+    currentView: LOG_VIEW,
+    setCurrentView: () => null
 }
 
 export const TradeContext = createContext(defaultTradeContext)
@@ -312,3 +320,5 @@ export const TradeProvider = ({ children }: { children: JSX.Element }) => {
         </TradeContext.Provider>
     )
 }
+
+export { LOG_VIEW, STATS_VIEW }
