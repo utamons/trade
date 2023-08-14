@@ -46,7 +46,7 @@ public class TimePeriodConverter {
 		LocalDateTime start, end;
 
 		end = switch (timePeriod) {
-			case CURRENT_WEEK -> {
+			case WEEK_TO_DATE -> {
 				start = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
 				yield now.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
 			}
@@ -54,7 +54,7 @@ public class TimePeriodConverter {
 				start = now.minusWeeks(1).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
 				yield now.minusWeeks(1).with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
 			}
-			case CURRENT_MONTH -> {
+			case MONTH_TO_DATE -> {
 				start = now.with(TemporalAdjusters.firstDayOfMonth());
 				yield now.with(TemporalAdjusters.lastDayOfMonth());
 			}
@@ -62,7 +62,7 @@ public class TimePeriodConverter {
 				start = now.minusMonths(1).with(TemporalAdjusters.firstDayOfMonth());
 				yield now.minusMonths(1).with(TemporalAdjusters.lastDayOfMonth());
 			}
-			case CURRENT_QUARTER -> {
+			case QUARTER_TO_DATE -> {
 				start = now.with(getQuarterStart());
 				yield now.with(getQuarterEnd());
 			}
@@ -70,7 +70,7 @@ public class TimePeriodConverter {
 				start = now.minusMonths(3).with(getQuarterStart());
 				yield now.minusMonths(3).with(getQuarterEnd());
 			}
-			case CURRENT_YEAR -> {
+			case YEAR_TO_DATE -> {
 				start = now.with(TemporalAdjusters.firstDayOfYear());
 				yield now.with(TemporalAdjusters.lastDayOfYear());
 			}

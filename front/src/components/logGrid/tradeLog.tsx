@@ -1,9 +1,9 @@
 import React, { useContext } from 'react'
 import { Box, styled } from '@mui/material'
-import { remCalc } from '../utils/utils'
-import LogGrid from './logGrid/logGrid'
-import { TradeContext } from '../trade-context'
-import Paginator from './logGrid/paginator'
+import { remCalc } from '../../utils/utils'
+import LogGrid from './logGrid'
+import { TradeContext } from '../../trade-context'
+import Paginator from './paginator'
 import CircularProgress from '@mui/material/CircularProgress'
 
 const ContainerStyled = styled(Box)(({ theme }) => ({
