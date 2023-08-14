@@ -118,6 +118,10 @@ const useTrade = (): TradeContextType => {
     const [moneyStateKey, setMoneyStateKey] = useState('moneyKey')
     const [pageLogKey, setPageLogKey] = useState('pageLogKey')
     const [pageNum, setPageNum] = useState(0)
+    const [openDialogVisible, setOpenDialogVisible] = useState(false)
+    const [exchangeDialogVisible, setExchangeDialogVisible] = useState(false)
+    const [refillDialogVisible, setRefillDialogVisible] = useState(false)
+    const [correctionDialogVisible, setCorrectionDialogVisible] = useState(false)
     const { brokerStats, isLoadingBrokerStats } = useBrokerStats(currentBrokerId, brokerStatsKey)
     const { moneyState, isLoadingMoneyState } = useMoneyState(moneyStateKey)
     const { logPage, isLoadingLogPage } = useLogPage(pageLogKey, pageNum)
@@ -162,9 +166,9 @@ const useTrade = (): TradeContextType => {
     }
 
     const exchange = async (currencyFromId: number,
-                      currencyToId: number,
-                      amountFrom: number,
-                      amountTo: number) => {
+        currencyToId: number,
+        amountFrom: number,
+        amountTo: number) => {
         try {
             await postExchange({
                 brokerId: currentBrokerId,
@@ -222,7 +226,15 @@ const useTrade = (): TradeContextType => {
         isLoading: isLoadingBrokers || isLoadingCurrencies || isLoadingMarkets || isLoadingTickers ||
             isLoadingBrokerStats || isLoadingMoneyState || isLoadingLogPage,
         currentBroker: currentBroker(),
-        setCurrentBrokerId
+        setCurrentBrokerId,
+        openDialogVisible,
+        setOpenDialogVisible,
+        exchangeDialogVisible,
+        setExchangeDialogVisible,
+        refillDialogVisible,
+        setRefillDialogVisible,
+        correctionDialogVisible,
+        setCorrectionDialogVisible
     }
 }
 
@@ -278,7 +290,15 @@ const defaultTradeContext: TradeContextType = {
     isLoading: true,
     currentBroker: undefined,
     setCurrentBrokerId: () => null,
-    refreshDashboard: () => null
+    refreshDashboard: () => null,
+    openDialogVisible: false,
+    setOpenDialogVisible: () => null,
+    exchangeDialogVisible: false,
+    setExchangeDialogVisible: () => null,
+    refillDialogVisible: false,
+    setRefillDialogVisible: () => null,
+    correctionDialogVisible: false,
+    setCorrectionDialogVisible: () => null
 }
 
 export const TradeContext = createContext(defaultTradeContext)

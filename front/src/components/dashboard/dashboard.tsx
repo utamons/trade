@@ -2,10 +2,8 @@ import React, { useContext } from 'react'
 import { Box, styled } from '@mui/material'
 import { Loadable, remCalc } from '../../utils/utils'
 import { TradeContext } from '../../trade-context'
-import Broker from './broker'
 import BrokerStats from './brokerStats'
 import MoneyState from './moneyState'
-import Markets from './markets'
 
 const ContainerStyled = styled(Box)(({ theme }) => ({
     display: 'flex',
@@ -14,8 +12,9 @@ const ContainerStyled = styled(Box)(({ theme }) => ({
     color: theme.palette.text.primary,
     backgroundColor: theme.palette.background.default,
     justifyContent: 'flex-start',
-    borderBottom: `solid ${remCalc(1)}`,
-    borderColor: theme.palette.text.primary
+
+    borderColor: theme.palette.text.primary,
+    padding: `${remCalc(15)} ${remCalc(20)} 0 ${remCalc(20)}`
 }))
 
 export default () => {
@@ -23,10 +22,8 @@ export default () => {
 
     return <Loadable isLoading={isLoading}>
         <ContainerStyled>
-            <Broker />
             <BrokerStats />
             <MoneyState />
-            <Markets/>
         </ContainerStyled>
     </Loadable>
 }

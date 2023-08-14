@@ -1,6 +1,9 @@
 import React from 'react'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
+import Check from '@mui/icons-material/Check'
+import { styled } from '@mui/material'
+import { remCalc } from '../../utils/utils'
 
 interface SubMenuProps {
     anchorEl: HTMLElement | null
@@ -10,15 +13,21 @@ interface SubMenuProps {
 
 export interface SubMenuOption {
     name: string
+    checked?: boolean
     onClick: () => void
 }
+
+const CheckStyled = styled(Check)(() => ({
+    fontSize: remCalc(14),
+    paddingRight: remCalc(7)
+}))
 
 export const SubMenu = ({ anchorEl, close, options }: SubMenuProps) => {
     const open = Boolean(anchorEl)
 
-    const handleMenuItemClick = (event: React.MouseEvent<HTMLElement>, index: number) => {
-        console.log('handleMenuItemClick', index)
+    const handleMenuItemClick = (_event: React.MouseEvent<HTMLElement>, index: number) => {
         options[index].onClick()
+        close()
     }
 
     return (
@@ -28,7 +37,7 @@ export const SubMenu = ({ anchorEl, close, options }: SubMenuProps) => {
                     key={option.name}
                     onClick={(event) => handleMenuItemClick(event, index)}
                 >
-                    {option.name}
+                    {option.checked ? <CheckStyled/>: null}{option.name}
                 </MenuItem>
             ))}
         </Menu>

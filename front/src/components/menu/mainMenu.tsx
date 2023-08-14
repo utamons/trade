@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { Box, styled } from '@mui/material'
 import { MainMenuItem } from './mainMenuItem'
 import { remCalc } from '../../utils/utils'
+import { TradeContext } from '../../trade-context'
 
 const Container = styled(Box)(({ theme }) => ({
     display: 'flex',
@@ -18,10 +19,25 @@ const Container = styled(Box)(({ theme }) => ({
 
 export const MainMenu = () => {
 
-    const brokerOptions = [
-        { name: 'Interactive', onClick: () => console.log('Broker 1') },
-        { name: 'FreedomFN', onClick: () => console.log('Broker 2') }
-    ]
+    const { brokers,
+        currentBroker,
+        setRefillDialogVisible,
+        setCorrectionDialogVisible,
+        setExchangeDialogVisible,
+        setCurrentBrokerId,
+        setOpenDialogVisible } = useContext(TradeContext)
+
+    const brokerOptions = []
+
+    if (brokers) {
+        for (const broker of brokers) {
+            brokerOptions.push({
+                checked: broker.id === currentBroker?.id,
+                name: broker.name,
+                onClick: () => setCurrentBrokerId(broker.id)
+            })
+        }
+    }
 
     const viewOptions = [
         { name: 'Trade log', onClick: () => console.log('View 1') },
@@ -29,10 +45,10 @@ export const MainMenu = () => {
     ]
 
     const actionsOptions = [
-        { name: 'Open', onClick: () => console.log('Action 1') },
-        { name: 'Refill', onClick: () => console.log('Action 2') },
-        { name: 'Correction', onClick: () => console.log('Action 3') },
-        { name: 'Exchange', onClick: () => console.log('Action 4') }
+        { name: 'Open', onClick: () => setOpenDialogVisible(true) },
+        { name: 'Refill', onClick: () => setRefillDialogVisible(true) },
+        { name: 'Correction', onClick: () => setCorrectionDialogVisible(true) },
+        { name: 'Exchange', onClick: () => setExchangeDialogVisible(true) }
     ]
 
     return (
