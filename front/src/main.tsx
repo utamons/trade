@@ -1,13 +1,14 @@
 import React, { useCallback, useContext } from 'react'
 import { Box, Grid, styled } from '@mui/material'
 import Dashboard from './components/dashboard/dashboard'
-import TradeLog from './components/tradeLog'
+import TradeLog from './components/logGrid/tradeLog'
 import { remCalc } from './utils/utils'
 import { MainMenu } from './components/menu/mainMenu'
 import { LOG_VIEW, STATS_VIEW, TradeContext } from './trade-context'
 import Open from './components/logGrid/dialogs/openDialog'
 import Refill from './components/dialogs/refill'
 import Exchange from './components/dialogs/exchange'
+import Stats from './components/stats/stats'
 
 
 const MainStyled = styled(Box)(({ theme }) => ({
@@ -37,7 +38,7 @@ const StatsView = () => {
     const { currentView } = useContext(TradeContext)
     return currentView == STATS_VIEW ? <>
         <Grid item xs={12}>
-            <Dashboard/>
+            <Stats />
         </Grid> </> : <></>
 }
 

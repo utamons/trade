@@ -27,8 +27,6 @@ export default ({ name, items, value, dispatch, variant, color } : SelectorProps
         dispatch({ type: 'set', payload: { name, valueNum: event.target.value as number, valid: true } })
     }
 
-    console.log('select', name, value)
-
     return <Select
         sx={{ fontSize, color: color }}
         label="from"
