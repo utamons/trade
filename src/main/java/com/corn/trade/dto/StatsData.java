@@ -11,15 +11,14 @@ public class StatsData {
 	private BigDecimal dayWithTradesDayRatio;
 	private Long       partials;
 	private Long       tradesPerDayMax;
-	private BigDecimal       tradesPerDayAvg;
+	private BigDecimal tradesPerDayAvg;
 	// Volume
 	private BigDecimal volume;
 	private BigDecimal volumePerTradeMax;
 	private BigDecimal volumePerTradeAvg;
 	private BigDecimal volumePerDayMax;
 	private BigDecimal volumePerDayAvg;
-	private BigDecimal volumeToDepositPerDayAvgRatio; // we take deposit at the start of the first trade in the day
-	private BigDecimal volumeToDepositPerDayMaxRatio;
+	private BigDecimal volumeToCapitalRatio;
 	// Commissions
 	private BigDecimal commissionsPerTradeAvg;
 	private BigDecimal commissions;
@@ -96,12 +95,8 @@ public class StatsData {
 		return volumePerDayAvg;
 	}
 
-	public BigDecimal getVolumeToDepositPerDayAvgRatio() {
-		return volumeToDepositPerDayAvgRatio;
-	}
-
-	public BigDecimal getVolumeToDepositPerDayMaxRatio() {
-		return volumeToDepositPerDayMaxRatio;
+	public BigDecimal getVolumeToCapitalRatio() {
+		return volumeToCapitalRatio;
 	}
 
 	public BigDecimal getCommissionsPerTradeAvg() {
@@ -207,8 +202,7 @@ public class StatsData {
 		private BigDecimal volumePerTradeAvg;
 		private BigDecimal volumePerDayMax;
 		private BigDecimal volumePerDayAvg;
-		private BigDecimal volumeToDepositPerDayAvgRatio;
-		private BigDecimal volumeToDepositPerDayMaxRatio;
+		private BigDecimal volumeToCapitalRatio;
 		private BigDecimal commissionsPerTradeAvg;
 		private BigDecimal commissions;
 		private BigDecimal profit;
@@ -286,13 +280,8 @@ public class StatsData {
 			return this;
 		}
 
-		public StatsDataBuilder withVolumeToDepositPerDayAvgRatio(BigDecimal volumeToDepositPerDayAvgRatio) {
-			this.volumeToDepositPerDayAvgRatio = volumeToDepositPerDayAvgRatio;
-			return this;
-		}
-
-		public StatsDataBuilder withVolumeToDepositPerDayMaxRatio(BigDecimal volumeToDepositPerDayMaxRatio) {
-			this.volumeToDepositPerDayMaxRatio = volumeToDepositPerDayMaxRatio;
+		public StatsDataBuilder withVolumeToCapitalRatio(BigDecimal volumeToCapitalRatio) {
+			this.volumeToCapitalRatio = volumeToCapitalRatio;
 			return this;
 		}
 
@@ -433,7 +422,6 @@ public class StatsData {
 			statsData.commissions = this.commissions;
 			statsData.riskRewardRatioMax = this.riskRewardRatioMax;
 			statsData.profitCapitalPc = this.profitCapitalPc;
-			statsData.volumeToDepositPerDayMaxRatio = this.volumeToDepositPerDayMaxRatio;
 			statsData.profitPerTradeMax = this.profitPerTradeMax;
 			statsData.refills = this.refills;
 			statsData.winRate = this.winRate;
@@ -442,7 +430,7 @@ public class StatsData {
 			statsData.stopDeltaAvg = this.stopDeltaAvg;
 			statsData.tradesPerDayAvg = this.tradesPerDayAvg;
 			statsData.dayWithTradesDayRatio = this.dayWithTradesDayRatio;
-			statsData.volumeToDepositPerDayAvgRatio = this.volumeToDepositPerDayAvgRatio;
+			statsData.volumeToCapitalRatio = this.volumeToCapitalRatio;
 			statsData.partials = this.partials;
 			statsData.tradesPerDayMax = this.tradesPerDayMax;
 			statsData.trades = this.trades;
