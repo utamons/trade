@@ -18,38 +18,55 @@ const FilterContainer = styled(Box)(({ theme }) => ({
     padding: `${remCalc(15)} ${remCalc(20)} 0 ${remCalc(20)}`
 }))
 
-const dateRangeItems: ItemType[] = [
+type DateRange = ItemType & {
+    enumName: string
+}
+
+const dateRangeItems: DateRange[] = [
     {
         id: 0,
-        name: 'Week to date'
+        name: 'Week to date',
+        enumName: 'WEEK_TO_DATE'
     },
     {
         id: 1,
-        name: 'Last week'
+        name: 'Last week',
+        enumName: 'LAST_WEEK'
     },
     {
         id: 2,
-        name: 'Month to date'
+        name: 'Month to date',
+        enumName: 'MONTH_TO_DATE'
     },
     {
         id: 3,
-        name: 'Last month'
+        name: 'Last month',
+        enumName: 'LAST_MONTH'
     },
     {
         id: 4,
-        name: 'Quarter to date'
+        name: 'Quarter to date',
+        enumName: 'QUARTER_TO_DATE'
     },
     {
         id: 5,
-        name: 'Last quarter'
+        name: 'Last quarter',
+        enumName: 'LAST_QUARTER'
     },
     {
         id: 6,
-        name: 'Year to date'
+        name: 'Year to date',
+        enumName: 'YEAR_TO_DATE'
     },
     {
         id: 7,
-        name: 'Last year'
+        name: 'Last year',
+        enumName: 'LAST_YEAR'
+    },
+    {
+        id: 8,
+        name: 'All time',
+        enumName: 'ALL_TIME'
     }
 ]
 const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>) => {

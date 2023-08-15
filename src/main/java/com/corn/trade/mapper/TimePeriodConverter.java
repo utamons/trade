@@ -19,6 +19,24 @@ public class TimePeriodConverter {
 		throw new IllegalStateException("Utility class");
 	}
 
+	public static long countWeekdaysBetween(LocalDateTime from, LocalDateTime to) {
+		long weekdays = 0;
+
+		LocalDateTime currentDateTime = from;
+
+		while (currentDateTime.isBefore(to) || currentDateTime.isEqual(to)) {
+			DayOfWeek dayOfWeek = currentDateTime.getDayOfWeek();
+
+			if (dayOfWeek != DayOfWeek.SATURDAY && dayOfWeek != DayOfWeek.SUNDAY) {
+				weekdays++;
+			}
+
+			currentDateTime = currentDateTime.plusDays(1);
+		}
+
+		return weekdays;
+	}
+
 	public static Pair<LocalDateTime, LocalDateTime> getPreviousTimeRange(Pair<LocalDateTime, LocalDateTime> timeRange) {
 		LocalDateTime start = timeRange.left();
 		LocalDateTime end = timeRange.right();
@@ -46,9 +64,13 @@ public class TimePeriodConverter {
 		LocalDateTime start, end;
 
 		end = switch (timePeriod) {
+			case ALL_TIME -> {
+				start = LocalDateTime.of(2023, 1, 1, 0, 0);
+				yield now;
+			}
 			case WEEK_TO_DATE -> {
 				start = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-				yield now.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+				yield now;
 			}
 			case LAST_WEEK -> {
 				start = now.minusWeeks(1).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
@@ -56,7 +78,7 @@ public class TimePeriodConverter {
 			}
 			case MONTH_TO_DATE -> {
 				start = now.with(TemporalAdjusters.firstDayOfMonth());
-				yield now.with(TemporalAdjusters.lastDayOfMonth());
+				yield now;
 			}
 			case LAST_MONTH -> {
 				start = now.minusMonths(1).with(TemporalAdjusters.firstDayOfMonth());
@@ -64,7 +86,7 @@ public class TimePeriodConverter {
 			}
 			case QUARTER_TO_DATE -> {
 				start = now.with(getQuarterStart());
-				yield now.with(getQuarterEnd());
+				yield now;
 			}
 			case LAST_QUARTER -> {
 				start = now.minusMonths(3).with(getQuarterStart());
@@ -72,7 +94,7 @@ public class TimePeriodConverter {
 			}
 			case YEAR_TO_DATE -> {
 				start = now.with(TemporalAdjusters.firstDayOfYear());
-				yield now.with(TemporalAdjusters.lastDayOfYear());
+				yield now;
 			}
 			case LAST_YEAR -> {
 				start = now.minusYears(1).with(TemporalAdjusters.firstDayOfYear());

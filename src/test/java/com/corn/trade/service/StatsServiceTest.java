@@ -14,6 +14,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import javax.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,6 +45,7 @@ class StatsServiceTest {
 		cashAccountRepo = mock(CashAccountRepository.class);
 		currencyRateService = mock(CurrencyRateService.class);
 		brokerRepo = mock(BrokerRepository.class);
+		EntityManager em = mock(EntityManager.class);
 
 		usdCurrency = new Currency(USD);
 		usdCurrency.setId(1);
@@ -56,7 +58,7 @@ class StatsServiceTest {
 
 		statsService =
 				new StatsService(tradeLogRepo, cashService, accountTypeRepo, cashAccountRepo, currencyRateService,
-				                 brokerRepo);
+				                 brokerRepo, em);
 	}
 
 

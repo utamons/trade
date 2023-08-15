@@ -1,6 +1,7 @@
 package com.corn.trade.service;
 
 public enum TimePeriod {
+	ALL_TIME("All time"),
 	WEEK_TO_DATE("Week to date"),
 	LAST_WEEK("Last week"),
 	MONTH_TO_DATE("Month to date"),
