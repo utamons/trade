@@ -361,8 +361,7 @@ type Stats = {
     volumePerTradeAvg: number,
     volumePerDayMax: number,
     volumePerDayAvg: number,
-    volumeToDepositPerDayRatio: number,
-    volumeToDepositMaxRatio: number,
+    volumeToCapitalRatio: number, // Capital turnover
     volume: number,
     // Commissions
     commissionsPerTradeAvg: number,

@@ -25,6 +25,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,31 +57,16 @@ public class StatsService {
 		this.entityManager = entityManager;
 	}
 
-	public static Map<LocalDate, Integer> countTradesOpenedPerDay(List<TradeLog> trades,
-	                                                              Pair<LocalDateTime, LocalDateTime> period) {
-		Map<LocalDate, Integer> tradeCountPerDay = new HashMap<>();
+	public static Map<LocalDate, List<TradeLog>> getTradesPerDay(List<TradeLog> trades) {
+		Map<LocalDate, List<TradeLog>> tradesPerDayMap = new HashMap<>();
 
-		LocalDateTime currentDateTime = period.left();
-
-		while (currentDateTime.isBefore(period.right().plusMinutes(1))) {
-			LocalDate currentDate = currentDateTime.toLocalDate();
-			int       count       = 0;
-
-			for (TradeLog trade : trades) {
-				LocalDateTime tradeOpenDate      = trade.getDateOpen();
-				LocalDate     tradeOpenLocalDate = tradeOpenDate.toLocalDate();
-				if (tradeOpenLocalDate.equals(currentDate)) {
-					count++;
-
-				}
-			}
-
-			if (count > 0)
-				tradeCountPerDay.put(currentDate, count);
-			currentDateTime = currentDateTime.plusDays(1);
+		for (TradeLog tradeLog: trades) {
+			LocalDate openDate = tradeLog.getDateOpen().toLocalDate();
+			List<TradeLog> tradesPerDay = tradesPerDayMap.computeIfAbsent(openDate, k -> new ArrayList<>());
+			tradesPerDay.add(tradeLog);
 		}
 
-		return tradeCountPerDay;
+		return tradesPerDayMap;
 	}
 
 	public StatsData getStats(TimePeriod timePeriod, Long currencyId, Long brokerId) throws JsonProcessingException {
@@ -88,10 +74,27 @@ public class StatsService {
 
 		List<TradeLog> trades = getTrades(timePeriod, currencyId, brokerId);
 
-		Map<LocalDate, Integer> tradeCountPerDay = countTradesOpenedPerDay(trades, period);
+		Map<LocalDate, List<TradeLog>> tradesPerDayMap = getTradesPerDay(trades);
+		Map<LocalDate, Integer> tradeCountPerDay = countTradesOpenedPerDay(tradesPerDayMap);
+		Map<LocalDate, Double> tradesVolumePerDay = countTradesVolumePerDay(tradesPerDayMap);
+
 		long daysBetween = TimePeriodConverter.countWeekdaysBetween(period.left(), period.right());
-		long tradesPerDayMax = tradeCountPerDay.values().stream().max(Integer::compareTo).orElse(0);
+		long   tradesPerDayMax = tradeCountPerDay.values().stream().max(Integer::compareTo).orElse(0);
 		double tradesPerDayAvg =  tradeCountPerDay.values().stream().mapToDouble(Integer::intValue).sum() / tradeCountPerDay.size();
+
+		double volumePerTradeMax = trades.stream().mapToDouble(TradeLog::getVolume).max().orElse(0.0);
+		double volumePerTradeAvg = trades.stream().mapToDouble(TradeLog::getVolume).sum() / trades.size();
+
+		double volumePerDayAvg = tradesVolumePerDay.values().stream().mapToDouble(Double::doubleValue).sum() / tradesVolumePerDay.size();
+		double volumePerDayMax = tradesVolumePerDay.values().stream().max(Double::compareTo).orElse(0.0);
+		double volumeAll = trades.stream().mapToDouble(TradeLog::getVolume).sum();
+
+		/*
+		   Мне всё равно придётся считать капитал на определённый момент и возможно по определённому брокеру.
+		   Иначе я не вычислю изменение капитала за период и профит за период.
+
+		   Поэтому, почему бы не считать оборачиваемость капитала с учётом среднедневного капитала за период?
+		 */
 
 		return aStatsData()
 				.withTrades((long) trades.size())
@@ -99,8 +102,34 @@ public class StatsService {
 				.withPartials(partials(trades))
 				.withTradesPerDayMax(tradesPerDayMax)
 				.withTradesPerDayAvg(round(tradesPerDayAvg))
+				.withVolumePerDayMax(round(volumePerDayMax))
+				.withVolumePerDayAvg(round(volumePerDayAvg))
+				.withVolumePerTradeMax(round(volumePerTradeMax))
+				.withVolumePerTradeAvg(round(volumePerTradeAvg))
+				.withVolume(round(volumeAll))
 				.withCapital(cashService.getCapital())
 				.build();
+	}
+
+	private Map<LocalDate, Double> countTradesVolumePerDay(Map<LocalDate, List<TradeLog>> tradesPerDayMap) {
+		Map<LocalDate, Double> tradesVolumePerDay = new HashMap<>();
+
+		for (Map.Entry<LocalDate, List<TradeLog>> entry: tradesPerDayMap.entrySet()) {
+			double volume = entry.getValue().stream().mapToDouble(TradeLog::getVolume).sum();
+			tradesVolumePerDay.put(entry.getKey(), volume);
+		}
+
+		return tradesVolumePerDay;
+	}
+
+	private Map<LocalDate, Integer> countTradesOpenedPerDay(Map<LocalDate, List<TradeLog>> tradesPerDayMap) {
+		Map<LocalDate, Integer> tradeCountPerDay = new HashMap<>();
+
+		for (Map.Entry<LocalDate, List<TradeLog>> entry: tradesPerDayMap.entrySet()) {
+			tradeCountPerDay.put(entry.getKey(), entry.getValue().size());
+		}
+
+		return tradeCountPerDay;
 	}
 
 	private long partials(List<TradeLog> trades) {

@@ -366,4 +366,9 @@ public class TradeLog implements Serializable {
 	public boolean isShort() {
 		return "short".equals(position);
 	}
+
+	@Transient
+	public double getVolume() {
+		return isLong() ? totalBought : totalSold;
+	}
 }
