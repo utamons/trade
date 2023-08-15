@@ -18,13 +18,13 @@ public interface TradeLogRepository extends JpaRepository<TradeLog, Long>, JpaSp
 	Page<TradeLog> findAll(Pageable pageable);
 
 	@Query("select t from TradeLog t where t.broker=:broker and t.dateClose is not null")
-	List<TradeLog> findAllClosedByBroker(@Param("broker") Broker broker);
+	List<TradeLog> findAllOpenByBroker(@Param("broker") Broker broker);
 
 	@Query("select count(t) from TradeLog t where t.broker=:broker  and t.dateClose is null")
 	long opensCountByBroker(Broker broker);
 
 	@Query("select t from TradeLog t where t.dateClose is not null")
-	List<TradeLog> findAllClosed();
+	List<TradeLog> findAllOpen();
 
 	@Query("select new com.corn.trade.dto.CurrencySumDTO(t.currency.id, sum(t.totalBought - t.risk))" +
 	       " from TradeLog t where t.position='long' and t.dateClose is null group by t.currency")
@@ -42,6 +42,15 @@ public interface TradeLogRepository extends JpaRepository<TradeLog, Long>, JpaSp
 	       " from TradeLog t where t.broker=:broker and t.position='short' and t.dateClose is null group by t.currency")
 	List<CurrencySumDTO> openShortRisksByBroker(Broker broker);
 
-	@Query("select t from TradeLog t where t.dateClose is not null and t.dateClose between :from and :to")
-	List<TradeLog> findAllClosedByPeriod(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+	@Query("select count(t) from TradeLog t where t.dateOpen between :from and :to")
+	long countOpenByPeriod(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
+	@Query("select count(t) from TradeLog t where t.dateOpen between :from and :to and t.currency.id=:currencyId")
+	long countOpenByPeriodAndCurrency(LocalDateTime from, LocalDateTime to, Long currencyId);
+
+	@Query("select count(t) from TradeLog t where t.dateOpen between :from and :to and t.broker.id=:brokerId")
+	long countOpenByPeriodAndBroker(LocalDateTime from, LocalDateTime to, Long brokerId);
+
+	@Query("select count(t) from TradeLog t where t.dateOpen between :from and :to and t.currency.id=:currencyId and t.broker.id=:brokerId")
+	long countOpenByPeriodAndCurrencyAndBroker(LocalDateTime from, LocalDateTime to, Long currencyId, Long brokerId);
 }

@@ -23,9 +23,11 @@ public class StatsController {
 		this.service = service;
 	}
 
-	@GetMapping(produces=MediaType.APPLICATION_JSON_VALUE)
-	public StatsData getStats(@RequestParam TimePeriod timePeriod) {
-		return service.getStats(timePeriod);
+	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+	public StatsData getStats(@RequestParam TimePeriod timePeriod,
+	                          @RequestParam(required = false) Long currencyId,
+	                          @RequestParam(required = false) Long brokerId) throws JsonProcessingException {
+		return service.getStats(timePeriod, currencyId, brokerId);
 	}
 
 	@GetMapping("/state")

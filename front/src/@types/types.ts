@@ -349,7 +349,53 @@ interface DatePickerBoxProps {
     dispatch: React.Dispatch<FormAction>
 }
 
+type Stats = {
+    // Common
+    trades: number,
+    dayWithTradesDayRatio: number,
+    partials: number,
+    tradesPerDayMax: number,
+    tradesPerDayAvg: number,
+    // Volume
+    volumePerTradeMax: number,
+    volumePerTradeAvg: number,
+    volumePerDayMax: number,
+    volumePerDayAvg: number,
+    volumeToDepositPerDayRatio: number,
+    volumeToDepositMaxRatio: number,
+    volume: number,
+    // Commissions
+    commissionsPerTradeAvg: number,
+    commissions: number,
+    // Profit
+    profitPerTradeAvg: number,
+    profitPerDayAvg: number,
+    profitPerTradeMax: number,
+    profitPartialsAvg: number,
+    profitSinglesAvg: number
+    profit: number,
+    profitVolumePc: number, // Profit/Volume
+    profitCapitalPc: number, // Profit/Capital (at the start of the period)
+    // Loss
+    lossPerTradeAvg: number,
+    lossPerTradeMax: number,
+    // Quality
+    riskRewardRatioAvg: number,
+    riskRewardRatioMax: number,
+    winRate: number, // Trades with profit / Total trades
+    slippageAvg: number,
+    takeDeltaAvg: number, // TakeProfit estimate - TakeProfit real (for positive trades)
+    stopDeltaAvg: number, // StopLoss estimate - StopLoss real (for negative trades)
+    // Money
+    capital: number,
+    refills: number,
+    withdrawals: number,
+    deposit: number,
+    capitalChange: number // Capital change during the period
+}
+
 export {
+    Stats,
     DatePickerBoxProps,
     ValueFieldBoxProps,
     SelectFieldBoxProps,
