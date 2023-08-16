@@ -7,9 +7,12 @@ import com.corn.trade.util.Pair;
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
+import java.util.List;
 
 @SuppressWarnings("unused")
 public class TimePeriodConverter {
@@ -19,8 +22,8 @@ public class TimePeriodConverter {
 		throw new IllegalStateException("Utility class");
 	}
 
-	public static long countWeekdaysBetween(LocalDateTime from, LocalDateTime to) {
-		long weekdays = 0;
+	public static List<LocalDateTime> getWeekdaysBetween(LocalDateTime from, LocalDateTime to) {
+		List<LocalDateTime> weekdayStartDates = new ArrayList<>();
 
 		LocalDateTime currentDateTime = from;
 
@@ -28,13 +31,13 @@ public class TimePeriodConverter {
 			DayOfWeek dayOfWeek = currentDateTime.getDayOfWeek();
 
 			if (dayOfWeek != DayOfWeek.SATURDAY && dayOfWeek != DayOfWeek.SUNDAY) {
-				weekdays++;
+				weekdayStartDates.add(currentDateTime.with(LocalTime.MIN));
 			}
 
 			currentDateTime = currentDateTime.plusDays(1);
 		}
 
-		return weekdays;
+		return weekdayStartDates;
 	}
 
 	public static Pair<LocalDateTime, LocalDateTime> getPreviousTimeRange(Pair<LocalDateTime, LocalDateTime> timeRange) {
