@@ -386,7 +386,31 @@ public class TradeLog implements Serializable {
 		if (!isClosed()) {
 			return 0;
 		}
-		return Math.abs(totalSold - totalBought) - getFees();
+        double profit;
+		if (isLong()) {
+			profit = totalSold - totalBought;
+		} else {
+			profit = totalBought - totalSold;
+		}
+
+		profit -= getFees();
+		return profit < 0 ? 0 : profit;
+	}
+
+	@Transient
+	public double getLoss() {
+		if (!isClosed()) {
+			return 0;
+		}
+		double loss;
+		if (isLong()) {
+			loss = totalSold - totalBought;
+		} else {
+			loss = totalBought - totalSold;
+		}
+
+		loss += getFees();
+		return loss > 0 ? 0 : loss;
 	}
 
 	@Transient

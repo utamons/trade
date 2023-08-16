@@ -72,59 +72,132 @@ public class StatsService {
 	public StatsData getStats(TimePeriod timePeriod, Long currencyId, Long brokerId) throws JsonProcessingException {
 		final Broker                             broker = brokerId == null ? null : brokerRepo.getReferenceById(brokerId);
 		final Pair<LocalDateTime, LocalDateTime> period = TimePeriodConverter.getDateTimeRange(timePeriod);
+		final LocalDate                          now    = LocalDate.now();
+
+		double capitalStart = cashService.getCapital(broker, period.left());
 
 		List<TradeLog> trades              = getTrades(timePeriod, currencyId, brokerId);
 		List<TradeLog> tradesAllCurrencies = getTrades(timePeriod, null, brokerId);
+		List<TradeLog> partials 		  = trades.stream().filter(TradeLog::isPartial).toList();
+		List<TradeLog> singles 			  = trades.stream().filter(trade -> !trade.isPartial()).toList();
 
 		Map<LocalDate, List<TradeLog>> tradesPerDayMap    = getTradesPerDay(trades);
 		Map<LocalDate, Integer>        tradeCountPerDay   = countTradesOpenedPerDay(tradesPerDayMap);
 		Map<LocalDate, Double>         tradesVolumePerDay = countTradesVolumePerDay(tradesPerDayMap);
-		long                           partials           = trades.stream().filter(TradeLog::isPartial).count();
+		long                           partialsCount           = trades.stream().filter(TradeLog::isPartial).count();
 
 		List<LocalDateTime> weekdaysBetween = TimePeriodConverter.getWeekdaysBetween(period.left(), period.right());
-		long                tradesPerDayMax = tradeCountPerDay.values().stream().max(Integer::compareTo).orElse(0);
+
+		long tradesPerDayMax = tradeCountPerDay.values().stream().max(Integer::compareTo).orElse(0);
+
 		double tradesPerDayAvg =
 				tradeCountPerDay.values().stream().mapToDouble(Integer::intValue).sum() / tradeCountPerDay.size();
 
-		double volumePerTradeMax = trades.stream().mapToDouble(TradeLog::getVolume).max().orElse(0.0);
-		double volumePerTradeAvg = trades.stream().mapToDouble(TradeLog::getVolume).sum() / trades.size();
+		double volumePerTradeMax = 0.0;
+
+		for (TradeLog trade : trades) {
+			double convertedVolume = currencyRateService.convertToUSD(trade.getCurrency().getId(), trade.getVolume(), now);
+			volumePerTradeMax = Math.max(volumePerTradeMax, convertedVolume);
+		}
+
+		double volumePerTradeAvg = 0.0;
+
+		for (TradeLog trade : trades) {
+			double convertedVolume = currencyRateService.convertToUSD(trade.getCurrency().getId(), trade.getVolume(), now);
+			volumePerTradeAvg += convertedVolume;
+		}
+
+		volumePerTradeAvg /= trades.size();
+
 		double volumePerDayAvg =
-				tradesVolumePerDay.values().stream().mapToDouble(Double::doubleValue).sum() / tradesVolumePerDay.size();
-		double volumePerDayMax     = tradesVolumePerDay.values().stream().max(Double::compareTo).orElse(0.0);
-		double volumeAll           = trades.stream().mapToDouble(TradeLog::getVolume).sum();
-		double volumeAllCurrencies = tradesAllCurrencies.stream().mapToDouble(TradeLog::getVolume).sum();
-		double capitalAvg          = capitalAvg(broker, weekdaysBetween);
-		double capitalTurnover     = volumeAllCurrencies / capitalAvg * 100.0;
+				tradesVolumePerDay.values().stream().mapToDouble(Double::doubleValue).sum() / tradesPerDayMap.size();
 
+		double volumePerDayMax = tradesVolumePerDay.values().stream().max(Double::compareTo).orElse(0.0);
 
-		double commissions            = trades.stream().mapToDouble(TradeLog::getFees).sum();
+		double volumeAll = tradesVolumePerDay.values().stream().mapToDouble(Double::doubleValue).sum();
+
+		double volumeAllCurrencies = 0.0;
+
+		for (TradeLog trade : tradesAllCurrencies) {
+			double convertedVolume = currencyRateService.convertToUSD(trade.getCurrency().getId(), trade.getVolume(), now);
+			volumeAllCurrencies += convertedVolume;
+		}
+
+		double capitalAvg      = capitalAvg(broker, weekdaysBetween);
+		double capitalTurnover = volumeAllCurrencies / capitalAvg * 100.0;
+
+		double commissions = 0.0;
+
+		for (TradeLog trade : trades) {
+			double convertedCommission =
+					currencyRateService.convertToUSD(trade.getBroker().getFeeCurrency().getId(), trade.getFees(), now);
+			commissions += convertedCommission;
+		}
+
 		double commissionsPerTradeAvg = commissions / trades.size();
 
-		/*
-		   К профитам есть вопросы. Если они в денежном выражении, то как быть с разными валютами?
-		 */
+		double profitPerTradeAvg = 0.0;
 
-		double profitPerTradeAvg = trades.stream().mapToDouble(TradeLog::getProfit).sum() / trades.size();
-		double profitPerDayAvg   = trades.stream().mapToDouble(TradeLog::getProfit).sum() / tradesPerDayMap.size();
-		double profitPerDayMax = tradesPerDayMap.values().stream()
-		                                        .mapToDouble(tradesPerDay -> tradesPerDay.stream()
-		                                                                                 .mapToDouble(TradeLog::getProfit)
-		                                                                                 .sum())
-		                                        .max()
-		                                        .orElse(0.0);
-		double profitPartialsAvg = trades.stream().filter(trade -> trade.isPartial() && trade.isClosed())
-		                                 .mapToDouble(TradeLog::getProfit)
-		                                 .sum() / partials;
+		for (TradeLog trade : trades) {
+			double convertedProfit = currencyRateService.convertToUSD(trade.getCurrency().getId(), trade.getProfit(), now);
+			profitPerTradeAvg += convertedProfit;
+		}
 
-		double profitSinglesAvg = trades.stream().filter(trade -> !trade.isPartial() && trade.isClosed())
-		                                .mapToDouble(TradeLog::getProfit)
-		                                .sum() / (trades.size() - partials);
+		profitPerTradeAvg /= trades.size();
+
+		double profitPerDayAvg = 0.0;
+
+		for (TradeLog trade : trades) {
+			double convertedProfit = currencyRateService.convertToUSD(trade.getCurrency().getId(), trade.getProfit(), now);
+			profitPerDayAvg += convertedProfit;
+		}
+
+		profitPerDayAvg /= tradesPerDayMap.size();
+
+		double profitPerDayMax = 0.0;
+
+		for (List<TradeLog> tradeLogs : tradesPerDayMap.values()) {
+			double convertedProfit = 0.0;
+			for (TradeLog trade : tradeLogs) {
+				convertedProfit += currencyRateService.convertToUSD(trade.getCurrency().getId(), trade.getProfit(), now);
+			}
+			profitPerDayMax = Math.max(profitPerDayMax, convertedProfit);
+		}
+
+		double profitPartialsAvg = 0.0;
+
+		for (TradeLog trade : partials) {
+			double convertedProfit = currencyRateService.convertToUSD(trade.getCurrency().getId(), trade.getProfit(), now);
+			profitPartialsAvg += convertedProfit;
+		}
+
+		profitPartialsAvg /= partials.size();
+
+		double profitSinglesAvg = 0.0;
+
+		for (TradeLog trade : singles) {
+			double convertedProfit = currencyRateService.convertToUSD(trade.getCurrency().getId(), trade.getProfit(), now);
+			profitSinglesAvg += convertedProfit;
+		}
+
+		profitSinglesAvg /= singles.size();
+
+		double profitAll = 0.0;
+
+		for (TradeLog trade : trades) {
+			double convertedProfit = currencyRateService.convertToUSD(trade.getCurrency().getId(), trade.getProfit(), now);
+			profitAll += convertedProfit;
+		}
+
+		double profitVolumePc = profitAll / volumeAll * 100.0;
+
+		double profitCapitalPc = profitAll / capitalStart * 100.0;
 
 
 		return aStatsData()
 				.withTrades((long) trades.size())
 				.withDayWithTradesDayRatio(round((double) tradeCountPerDay.size() / weekdaysBetween.size() * 100.0))
-				.withPartials(partials)
+				.withPartials(partialsCount)
 				.withTradesPerDayMax(tradesPerDayMax)
 				.withTradesPerDayAvg(round(tradesPerDayAvg))
 
@@ -143,6 +216,9 @@ public class StatsService {
 				.withProfitPerDayMax(round(profitPerDayMax))
 				.withProfitPartialsAvg(round(profitPartialsAvg))
 				.withProfitSinglesAvg(round(profitSinglesAvg))
+				.withProfit(round(profitAll))
+				.withProfitVolumePc(round(profitVolumePc))
+				.withProfitCapitalPc(round(profitCapitalPc))
 
 				.withCapital(cashService.getCapital(null, null))
 				.build();
@@ -158,11 +234,18 @@ public class StatsService {
 		return capitalSum / weekdaysBetween.size();
 	}
 
-	private Map<LocalDate, Double> countTradesVolumePerDay(Map<LocalDate, List<TradeLog>> tradesPerDayMap) {
+	private Map<LocalDate, Double> countTradesVolumePerDay(Map<LocalDate, List<TradeLog>> tradesPerDayMap) throws JsonProcessingException {
 		Map<LocalDate, Double> tradesVolumePerDay = new HashMap<>();
 
 		for (Map.Entry<LocalDate, List<TradeLog>> entry : tradesPerDayMap.entrySet()) {
-			double volume = entry.getValue().stream().mapToDouble(TradeLog::getVolume).sum();
+			double volume = 0.0;
+
+			for (TradeLog trade : entry.getValue()) {
+				double convertedVolume =
+						currencyRateService.convertToUSD(trade.getCurrency().getId(), trade.getVolume(), LocalDate.now());
+				volume += convertedVolume;
+			}
+
 			tradesVolumePerDay.put(entry.getKey(), volume);
 		}
 
