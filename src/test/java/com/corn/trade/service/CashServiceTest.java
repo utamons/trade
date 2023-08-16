@@ -1570,7 +1570,7 @@ class CashServiceTest {
 		cashService.transfer(1000.0, null, brokerEUR, currencyEUR, incomeType, tradeType, dateTime);
 
 		// Act
-		double capital = cashService.getCapital();
+		double capital = cashService.getCapital(null, null);
 
 		// Assert
 		assertEquals(2250.0, capital);
@@ -1595,7 +1595,7 @@ class CashServiceTest {
 		tradeLogRepository.save(tradeLog);
 
 		// Act
-		double capital = cashService.getCapital();
+		double capital = cashService.getCapital(null, null);
 
 		// Assert
 		assertEquals(4246.0, capital);
@@ -1621,7 +1621,7 @@ class CashServiceTest {
 		tradeLogRepository.save(tradeLog);
 
 		// Act
-		double capital = cashService.getCapital();
+		double capital = cashService.getCapital(null, null);
 
 		// Assert
 		assertEquals(4495.25, capital);

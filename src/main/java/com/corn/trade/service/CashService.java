@@ -11,8 +11,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
+import javax.persistence.criteria.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.corn.trade.util.Util.round;
@@ -48,13 +51,17 @@ public class CashService {
 	private final TradeLogRepository  tradeLogRepo;
 	private final CurrencyRateService currencyRateService;
 
+	private final EntityManager entityManager;
+
 	public CashService(CashAccountRepository accountRepo,
 	                   CashFlowRepository cashFlowRepo,
 	                   BrokerRepository brokerRepo,
 	                   CurrencyRepository currencyRepo,
 	                   CashAccountTypeRepository accountTypeRepo,
 	                   TickerRepository tickerRepo,
-	                   TradeLogRepository tradeLogRepo, CurrencyRateService currencyRateService) {
+	                   TradeLogRepository tradeLogRepo,
+	                   CurrencyRateService currencyRateService,
+	                   EntityManager entityManager) {
 		this.accountRepo = accountRepo;
 		this.cashFlowRepo = cashFlowRepo;
 		this.brokerRepo = brokerRepo;
@@ -63,6 +70,43 @@ public class CashService {
 		this.tickerRepo = tickerRepo;
 		this.tradeLogRepo = tradeLogRepo;
 		this.currencyRateService = currencyRateService;
+		this.entityManager = entityManager;
+	}
+
+	private static void prepareTradeLogQuery(LocalDateTime date,
+	                                         Broker broker,
+	                                         Root<TradeLog> tradeLogRoot,
+	                                         CriteriaBuilder cb,
+	                                         String position,
+	                                         CriteriaQuery<CurrencySumDTO> cq,
+	                                         Expression<Double> exp) {
+		Join<TradeLog, Currency> currencyJoin = tradeLogRoot.join("currency");
+
+		List<Predicate> predicates = new ArrayList<>();
+
+		predicates.add(cb.equal(tradeLogRoot.get("position"), position));
+
+		if (date == null) { // get open positions at the moment
+            predicates.add(cb.isNull(tradeLogRoot.get("dateClose")));
+		} else {
+			predicates.add(cb.lessThanOrEqualTo(tradeLogRoot.get("dateOpen"), date));
+			predicates.add(cb.greaterThan(tradeLogRoot.get("dateClose"), date));
+		}
+		if (broker != null) {
+			predicates.add(cb.equal(tradeLogRoot.get("broker"), broker));
+		}
+
+		Predicate predicate = cb.and(
+				predicates.toArray(new Predicate[0])
+		);
+
+		cq.select(cb.construct(
+				CurrencySumDTO.class,
+				currencyJoin.get("id"),
+				cb.sum(exp)
+		));
+		cq.where(predicate);
+		cq.groupBy(currencyJoin);
 	}
 
 	/**
@@ -530,30 +574,6 @@ public class CashService {
 	}
 
 	/**
-	 * Estimated capital for a broker.
-	 * <p>
-	 *
-	 * @param broker broker
-	 * @return estimated capital
-	 * @throws JsonProcessingException if currency conversion fails
-	 */
-	public double getCapital(Broker broker) throws JsonProcessingException {
-		CashAccountType   tradeType = accountTypeRepo.findCashAccountTypeByName(TRADE);
-		List<CashAccount> accounts  = accountRepo.findAllByBrokerAndType(broker, tradeType);
-		double            capital   = 0.0;
-		LocalDate         today     = LocalDate.now();
-		for (CashAccount account : accounts) {
-			double amount = getAccountTotal(account);
-			capital += currencyRateService.convertToUSD(
-					account.getCurrency().getId(),
-					amount,
-					today);
-		}
-
-		return capital + openPositionsUSD(broker);
-	}
-
-	/**
 	 * Estimated overall capital.
 	 * <p>
 	 * Is used for statistics only. Risk assessment is made on a per-broker basis.
@@ -561,25 +581,32 @@ public class CashService {
 	 * @return estimated overall capital
 	 * @throws JsonProcessingException if currency conversion fails
 	 */
-	public double getCapital() throws JsonProcessingException {
-		CashAccountType   tradeType = accountTypeRepo.findCashAccountTypeByName(TRADE);
-		List<CashAccount> accounts  = accountRepo.findAllByType(tradeType);
-		double            capital   = 0.0;
-		LocalDate         today     = LocalDate.now();
+	public double getCapital(Broker broker, LocalDateTime localDateTime) throws JsonProcessingException {
+		CashAccountType tradeType = accountTypeRepo.findCashAccountTypeByName(TRADE);
+		List<CashAccount> accounts = broker == null ? accountRepo.findAllByType(tradeType) :
+				accountRepo.findAllByBrokerAndType(broker, tradeType);
+		double    capital = 0.0;
+		LocalDate today   = LocalDate.now();
 		for (CashAccount account : accounts) {
-			double amount = getAccountTotal(account);
+			double amount = getAccountTotal(account, localDateTime);
 			capital += currencyRateService.convertToUSD(
 					account.getCurrency().getId(),
 					amount,
 					today);
 		}
 
-		return capital + openPositionsUSD();
+		return capital + openPositionsUSD(broker, localDateTime);
 	}
 
 	public double getAccountTotal(CashAccount account) {
-		Double sumFrom = cashFlowRepo.getSumFromByAccount(account);
-		Double sumTo   = cashFlowRepo.getSumToByAccount(account);
+		return getAccountTotal(account, null);
+	}
+
+	public double getAccountTotal(CashAccount account, LocalDateTime dateTime) {
+		Double sumFrom = dateTime == null ? cashFlowRepo.getSumFromByAccount(account) :
+				cashFlowRepo.getSumFromByAccountToDate(account, dateTime);
+		Double sumTo = dateTime == null ? cashFlowRepo.getSumToByAccount(account) :
+				cashFlowRepo.getSumToByAccountToDate(account, dateTime);
 		if (sumFrom == null) {
 			sumFrom = 0.0;
 		}
@@ -592,6 +619,30 @@ public class CashService {
 	public double getAccountTotal(CashAccountDTO accountDTO) {
 		CashAccount account = accountRepo.getReferenceById(accountDTO.id());
 		return getAccountTotal(account);
+	}
+
+	public List<CurrencySumDTO> getOpenLongSums(Broker broker, LocalDateTime date) {
+		CriteriaBuilder               cb           = entityManager.getCriteriaBuilder();
+		CriteriaQuery<CurrencySumDTO> cq           = cb.createQuery(CurrencySumDTO.class);
+		Root<TradeLog>                tradeLogRoot = cq.from(TradeLog.class);
+		String                        position     = "long";
+		Expression<Double>            exp          = cb.diff(tradeLogRoot.get("totalBought"), tradeLogRoot.get("risk"));
+
+		prepareTradeLogQuery(date, broker, tradeLogRoot, cb, position, cq, exp);
+
+		return entityManager.createQuery(cq).getResultList();
+	}
+
+	public List<CurrencySumDTO> getOpenShortRisks(Broker broker, LocalDateTime date) {
+		CriteriaBuilder               cb           = entityManager.getCriteriaBuilder();
+		CriteriaQuery<CurrencySumDTO> cq           = cb.createQuery(CurrencySumDTO.class);
+		Root<TradeLog>                tradeLogRoot = cq.from(TradeLog.class);
+		String                        position     = "short";
+		Expression<Double>            exp          = tradeLogRoot.get("risk");
+
+		prepareTradeLogQuery(date, broker, tradeLogRoot, cb, position, cq, exp);
+
+		return entityManager.createQuery(cq).getResultList();
 	}
 
 	public double getRiskBase(double capital) {
@@ -609,47 +660,12 @@ public class CashService {
 	 * @return the estimated capital, stored in open positions
 	 * @throws JsonProcessingException if currency rate service fails.
 	 */
-	public double openPositionsUSD() throws JsonProcessingException {
-		List<CurrencySumDTO> opens      = tradeLogRepo.openLongSums();
-		List<CurrencySumDTO> shortRisks = tradeLogRepo.openShortRisks();
+	public double openPositionsUSD(Broker broker, LocalDateTime localDateTime) throws JsonProcessingException {
+		List<CurrencySumDTO> opens      = getOpenLongSums(broker, localDateTime);
+		List<CurrencySumDTO> shortRisks = getOpenShortRisks(broker, localDateTime);
 
 		double    sum  = 0.0;
-		LocalDate date = LocalDate.now();
-
-		for (CurrencySumDTO dto : opens) {
-			sum += currencyRateService.convertToUSD(
-					dto.currencyId(),
-					dto.sum(),
-					date);
-		}
-
-		for (CurrencySumDTO dto : shortRisks) {
-			sum -= currencyRateService.convertToUSD(
-					dto.currencyId(),
-					dto.sum(),
-					date);
-		}
-
-		return sum;
-	}
-
-	/**
-	 * Estimated capital, stored in open positions in a broker.
-	 * <p>
-	 * We take all long positions at maximum risk (all losses) and
-	 * distract all maximum risks in short positions (all losses).
-	 * <p>
-	 * Thus, we get the capital that is stored in open positions in the worth case.
-	 *
-	 * @return the estimated capital, stored in open positions
-	 * @throws JsonProcessingException if currency rate service fails.
-	 */
-	public double openPositionsUSD(Broker broker) throws JsonProcessingException {
-		List<CurrencySumDTO> opens      = tradeLogRepo.openLongSumsByBroker(broker);
-		List<CurrencySumDTO> shortRisks = tradeLogRepo.openShortRisksByBroker(broker);
-
-		double    sum  = 0.0;
-		LocalDate date = LocalDate.now();
+		LocalDate date = localDateTime == null ? LocalDate.now() : localDateTime.toLocalDate();
 
 		for (CurrencySumDTO dto : opens) {
 			sum += currencyRateService.convertToUSD(
@@ -757,7 +773,7 @@ public class CashService {
 		Currency  currency   = tickerRepo.getReferenceById(evalDTO.tickerId()).getCurrency();
 		Broker    broker     = brokerRepo.getReferenceById(evalDTO.brokerId());
 		double    price      = levelPrice + (shortC * 0.05);
-		double    capital    = getCapital(broker);
+		double    capital    = getCapital(broker, null);
 		if (capital == 0.0) {
 			throw new IllegalStateException("No capital for broker " + broker.getName());
 		}
@@ -770,7 +786,7 @@ public class CashService {
 		EvalToFitRecord evalToFitRecord;
 
 		if (evalDTO.technicalStop()) { // if we want a technical stop instead of a calculated one
-			stopLoss = getTechnicalStop(evalDTO, shortC, atr, currency, price, stopLoss, takeProfit);
+			stopLoss = getTechnicalStop(broker, evalDTO, shortC, atr, currency, price, stopLoss, takeProfit);
 			stopLoss = stopLoss + (shortC * 0.01);
 		}
 		evalToFitRecord = evalToFit(evalDTO, currency, atr, stopLoss, takeProfit, price, capital);
@@ -792,7 +808,8 @@ public class CashService {
 		);
 	}
 
-	private double getTechnicalStop(EvalInFitDTO evalDTO,
+	private double getTechnicalStop(Broker broker,
+									EvalInFitDTO evalDTO,
 	                                int shortC,
 	                                Double atr,
 	                                Currency currency,
@@ -802,7 +819,7 @@ public class CashService {
 		EvalToFitRecord evalToFitRecord;
 		long            ms      = System.currentTimeMillis();
 		double          rrPC    = 0;
-		double          capital = getCapital();
+		double          capital = getCapital(broker, null);
 		while (rrPC <= evalDTO.riskRewardPc()) {
 			stopLoss = stopLoss - (shortC * 0.01);
 			evalToFitRecord = evalToFit(evalDTO, currency, atr, stopLoss, takeProfit, price, capital);
@@ -817,7 +834,7 @@ public class CashService {
 		final Broker      broker      = brokerRepo.getReferenceById(evalDTO.brokerId());
 		final Ticker      ticker      = tickerRepo.getReferenceById(evalDTO.tickerId());
 		final CurrencyDTO currencyDTO = CurrencyMapper.toDTO(ticker.getCurrency());
-		final double      capital     = getCapital(broker);
+		final double      capital     = getCapital(broker, null);
 		return eval(evalDTO, broker.getName(), currencyDTO, capital);
 	}
 

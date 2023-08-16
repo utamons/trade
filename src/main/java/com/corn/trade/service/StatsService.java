@@ -69,7 +69,7 @@ public class StatsService {
 		return tradesPerDayMap;
 	}
 
-	public StatsData getStats(TimePeriod timePeriod, Long currencyId, Long brokerId) throws JsonProcessingException {
+	public StatsData getBrokerStats(TimePeriod timePeriod, Long currencyId, Long brokerId) throws JsonProcessingException {
 		final Pair<LocalDateTime, LocalDateTime> period = TimePeriodConverter.getDateTimeRange(timePeriod);
 
 		List<TradeLog> trades = getTrades(timePeriod, currencyId, brokerId);
@@ -107,7 +107,7 @@ public class StatsService {
 				.withVolumePerTradeMax(round(volumePerTradeMax))
 				.withVolumePerTradeAvg(round(volumePerTradeAvg))
 				.withVolume(round(volumeAll))
-				.withCapital(cashService.getCapital())
+				.withCapital(cashService.getCapital(null, null))
 				.build();
 	}
 
@@ -143,27 +143,27 @@ public class StatsService {
 		CriteriaQuery<TradeLog> cq           = cb.createQuery(TradeLog.class);
 		Root<TradeLog>          tradeLogRoot = cq.from(TradeLog.class);
 
-		Predicate datePredicate;
+		Predicate predicate;
 
 		if (currencyId == null && brokerId == null)
-			datePredicate = cb.between(tradeLogRoot.get("dateOpen"), period.left(), period.right());
+			predicate = cb.between(tradeLogRoot.get("dateOpen"), period.left(), period.right());
 		else if (currencyId != null && brokerId == null)
-			datePredicate = cb.and(cb.between(tradeLogRoot.get("dateOpen"), period.left(), period.right()),
+			predicate = cb.and(cb.between(tradeLogRoot.get("dateOpen"), period.left(), period.right()),
 			                       cb.equal(tradeLogRoot.get("currency").get("id"), currencyId));
 		else if (currencyId == null)
-			datePredicate = cb.and(cb.between(tradeLogRoot.get("dateOpen"), period.left(), period.right()),
+			predicate = cb.and(cb.between(tradeLogRoot.get("dateOpen"), period.left(), period.right()),
 			                       cb.equal(tradeLogRoot.get("broker").get("id"), brokerId));
 		else
-			datePredicate = cb.and(cb.between(tradeLogRoot.get("dateOpen"), period.left(), period.right()),
+			predicate = cb.and(cb.between(tradeLogRoot.get("dateOpen"), period.left(), period.right()),
 			                       cb.equal(tradeLogRoot.get("currency").get("id"), currencyId),
 			                       cb.equal(tradeLogRoot.get("broker").get("id"), brokerId));
 
-		cq.where(datePredicate);
+		cq.where(predicate);
 		return entityManager.createQuery(cq).getResultList();
 	}
 
 	public MoneyStateDTO getMoneyState() throws JsonProcessingException {
-		double            capital        = cashService.getCapital();
+		double            capital        = cashService.getCapital(null, null);
 		CashAccountType   outcomeType    = accountTypeRepo.findCashAccountTypeByName(OUTCOME);
 		CashAccountType   feeType        = accountTypeRepo.findCashAccountTypeByName(FEE);
 		List<CashAccount> accounts       = cashAccountRepo.findAllByType(outcomeType);
@@ -187,10 +187,10 @@ public class StatsService {
 		return new MoneyStateDTO(capital, profit);
 	}
 
-	public BrokerStatsDTO getStats(Long brokerId) throws JsonProcessingException {
+	public BrokerStatsDTO getBrokerStats(Long brokerId) throws JsonProcessingException {
 		Broker broker = brokerRepo.getReferenceById(brokerId);
 
-		double capital = cashService.getCapital(broker);
+		double capital = cashService.getCapital(broker, null);
 
 		double riskBase = cashService.getRiskBase(capital);
 
