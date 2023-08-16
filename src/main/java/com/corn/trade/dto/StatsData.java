@@ -26,7 +26,7 @@ public class StatsData {
 	private BigDecimal profit;
 	private BigDecimal profitPerTradeAvg;
 	private BigDecimal profitPerDayAvg;
-	private BigDecimal profitPerTradeMax;
+	private BigDecimal profitPerDayMax;
 	private BigDecimal profitPartialsAvg;
 	private BigDecimal profitSinglesAvg;
 	private BigDecimal profitVolumePc; // Profit/Volume
@@ -119,8 +119,8 @@ public class StatsData {
 		return profitPerDayAvg;
 	}
 
-	public BigDecimal getProfitPerTradeMax() {
-		return profitPerTradeMax;
+	public BigDecimal getProfitPerDayMax() {
+		return profitPerDayMax;
 	}
 
 	public BigDecimal getProfitPartialsAvg() {
@@ -208,7 +208,7 @@ public class StatsData {
 		private BigDecimal profit;
 		private BigDecimal profitPerTradeAvg;
 		private BigDecimal profitPerDayAvg;
-		private BigDecimal profitPerTradeMax;
+		private BigDecimal profitPerDayMax;
 		private BigDecimal profitPartialsAvg;
 		private BigDecimal profitSinglesAvg;
 		private BigDecimal profitVolumePc;
@@ -310,8 +310,8 @@ public class StatsData {
 			return this;
 		}
 
-		public StatsDataBuilder withProfitPerTradeMax(BigDecimal profitPerTradeMax) {
-			this.profitPerTradeMax = profitPerTradeMax;
+		public StatsDataBuilder withProfitPerDayMax(BigDecimal profitPerDayMax) {
+			this.profitPerDayMax = profitPerDayMax;
 			return this;
 		}
 
@@ -422,7 +422,7 @@ public class StatsData {
 			statsData.commissions = this.commissions;
 			statsData.riskRewardRatioMax = this.riskRewardRatioMax;
 			statsData.profitCapitalPc = this.profitCapitalPc;
-			statsData.profitPerTradeMax = this.profitPerTradeMax;
+			statsData.profitPerDayMax = this.profitPerDayMax;
 			statsData.refills = this.refills;
 			statsData.winRate = this.winRate;
 			statsData.volume = this.volume;

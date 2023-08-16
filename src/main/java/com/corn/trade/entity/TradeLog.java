@@ -371,4 +371,26 @@ public class TradeLog implements Serializable {
 	public double getVolume() {
 		return isLong() ? totalBought : totalSold;
 	}
+
+	@Transient
+	public double getFees() {
+		double fees = 0;
+		fees += openCommission == null ? 0 : openCommission;
+		fees += closeCommission == null ? 0 : closeCommission;
+		fees += brokerInterest == null ? 0 : brokerInterest;
+		return fees;
+	}
+
+	@Transient
+	public double getProfit() {
+		if (!isClosed()) {
+			return 0;
+		}
+		return Math.abs(totalSold - totalBought) - getFees();
+	}
+
+	@Transient
+	public boolean isPartial() {
+		return partsClosed > 1;
+	}
 }
