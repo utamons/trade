@@ -369,7 +369,7 @@ type Stats = {
     // Profit
     profitPerTradeAvg: number,
     profitPerDayAvg: number,
-    profitPerTradeMax: number,
+    profitPerDayMax: number,
     profitPartialsAvg: number,
     profitSinglesAvg: number
     profit: number,

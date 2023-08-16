@@ -79,16 +79,16 @@ public class StatsService {
 		Map<LocalDate, List<TradeLog>> tradesPerDayMap    = getTradesPerDay(trades);
 		Map<LocalDate, Integer>        tradeCountPerDay   = countTradesOpenedPerDay(tradesPerDayMap);
 		Map<LocalDate, Double>         tradesVolumePerDay = countTradesVolumePerDay(tradesPerDayMap);
+		long                           partials           = trades.stream().filter(TradeLog::isPartial).count();
 
 		List<LocalDateTime> weekdaysBetween = TimePeriodConverter.getWeekdaysBetween(period.left(), period.right());
 		long                tradesPerDayMax = tradeCountPerDay.values().stream().max(Integer::compareTo).orElse(0);
-		double              tradesPerDayAvg =
+		double tradesPerDayAvg =
 				tradeCountPerDay.values().stream().mapToDouble(Integer::intValue).sum() / tradeCountPerDay.size();
 
 		double volumePerTradeMax = trades.stream().mapToDouble(TradeLog::getVolume).max().orElse(0.0);
 		double volumePerTradeAvg = trades.stream().mapToDouble(TradeLog::getVolume).sum() / trades.size();
-
-		double volumePerDayAvg     =
+		double volumePerDayAvg =
 				tradesVolumePerDay.values().stream().mapToDouble(Double::doubleValue).sum() / tradesVolumePerDay.size();
 		double volumePerDayMax     = tradesVolumePerDay.values().stream().max(Double::compareTo).orElse(0.0);
 		double volumeAll           = trades.stream().mapToDouble(TradeLog::getVolume).sum();
@@ -96,18 +96,54 @@ public class StatsService {
 		double capitalAvg          = capitalAvg(broker, weekdaysBetween);
 		double capitalTurnover     = volumeAllCurrencies / capitalAvg * 100.0;
 
+
+		double commissions            = trades.stream().mapToDouble(TradeLog::getFees).sum();
+		double commissionsPerTradeAvg = commissions / trades.size();
+
+		/*
+		   К профитам есть вопросы. Если они в денежном выражении, то как быть с разными валютами?
+		 */
+
+		double profitPerTradeAvg = trades.stream().mapToDouble(TradeLog::getProfit).sum() / trades.size();
+		double profitPerDayAvg   = trades.stream().mapToDouble(TradeLog::getProfit).sum() / tradesPerDayMap.size();
+		double profitPerDayMax = tradesPerDayMap.values().stream()
+		                                        .mapToDouble(tradesPerDay -> tradesPerDay.stream()
+		                                                                                 .mapToDouble(TradeLog::getProfit)
+		                                                                                 .sum())
+		                                        .max()
+		                                        .orElse(0.0);
+		double profitPartialsAvg = trades.stream().filter(trade -> trade.isPartial() && trade.isClosed())
+		                                 .mapToDouble(TradeLog::getProfit)
+		                                 .sum() / partials;
+
+		double profitSinglesAvg = trades.stream().filter(trade -> !trade.isPartial() && trade.isClosed())
+		                                .mapToDouble(TradeLog::getProfit)
+		                                .sum() / (trades.size() - partials);
+
+
 		return aStatsData()
 				.withTrades((long) trades.size())
 				.withDayWithTradesDayRatio(round((double) tradeCountPerDay.size() / weekdaysBetween.size() * 100.0))
-				.withPartials(partials(trades))
+				.withPartials(partials)
 				.withTradesPerDayMax(tradesPerDayMax)
 				.withTradesPerDayAvg(round(tradesPerDayAvg))
+
 				.withVolumePerDayMax(round(volumePerDayMax))
 				.withVolumePerDayAvg(round(volumePerDayAvg))
 				.withVolumePerTradeMax(round(volumePerTradeMax))
 				.withVolumePerTradeAvg(round(volumePerTradeAvg))
 				.withCapitalTurnover(round(capitalTurnover))
 				.withVolume(round(volumeAll))
+
+				.withCommissionsPerTradeAvg(round(commissionsPerTradeAvg))
+				.withCommissions(round(commissions))
+
+				.withProfitPerTradeAvg(round(profitPerTradeAvg))
+				.withProfitPerDayAvg(round(profitPerDayAvg))
+				.withProfitPerDayMax(round(profitPerDayMax))
+				.withProfitPartialsAvg(round(profitPartialsAvg))
+				.withProfitSinglesAvg(round(profitSinglesAvg))
+
 				.withCapital(cashService.getCapital(null, null))
 				.build();
 	}
@@ -141,10 +177,6 @@ public class StatsService {
 		}
 
 		return tradeCountPerDay;
-	}
-
-	private long partials(List<TradeLog> trades) {
-		return trades.stream().filter(trade -> trade.getPartsClosed() > 1).count();
 	}
 
 	public List<TradeLog> getTrades(TimePeriod timePeriod, Long currencyId, Long brokerId) {
