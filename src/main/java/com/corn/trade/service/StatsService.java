@@ -60,8 +60,8 @@ public class StatsService {
 	public static Map<LocalDate, List<TradeLog>> getTradesPerDay(List<TradeLog> trades) {
 		Map<LocalDate, List<TradeLog>> tradesPerDayMap = new HashMap<>();
 
-		for (TradeLog tradeLog: trades) {
-			LocalDate openDate = tradeLog.getDateOpen().toLocalDate();
+		for (TradeLog tradeLog : trades) {
+			LocalDate      openDate     = tradeLog.getDateOpen().toLocalDate();
 			List<TradeLog> tradesPerDay = tradesPerDayMap.computeIfAbsent(openDate, k -> new ArrayList<>());
 			tradesPerDay.add(tradeLog);
 		}
@@ -69,36 +69,36 @@ public class StatsService {
 		return tradesPerDayMap;
 	}
 
-	public StatsData getBrokerStats(TimePeriod timePeriod, Long currencyId, Long brokerId) throws JsonProcessingException {
+	public StatsData getStats(TimePeriod timePeriod, Long currencyId, Long brokerId) throws JsonProcessingException {
+		final Broker                             broker = brokerId == null ? null : brokerRepo.getReferenceById(brokerId);
 		final Pair<LocalDateTime, LocalDateTime> period = TimePeriodConverter.getDateTimeRange(timePeriod);
 
-		List<TradeLog> trades = getTrades(timePeriod, currencyId, brokerId);
+		List<TradeLog> trades              = getTrades(timePeriod, currencyId, brokerId);
+		List<TradeLog> tradesAllCurrencies = getTrades(timePeriod, null, brokerId);
 
-		Map<LocalDate, List<TradeLog>> tradesPerDayMap = getTradesPerDay(trades);
-		Map<LocalDate, Integer> tradeCountPerDay = countTradesOpenedPerDay(tradesPerDayMap);
-		Map<LocalDate, Double> tradesVolumePerDay = countTradesVolumePerDay(tradesPerDayMap);
+		Map<LocalDate, List<TradeLog>> tradesPerDayMap    = getTradesPerDay(trades);
+		Map<LocalDate, Integer>        tradeCountPerDay   = countTradesOpenedPerDay(tradesPerDayMap);
+		Map<LocalDate, Double>         tradesVolumePerDay = countTradesVolumePerDay(tradesPerDayMap);
 
-		long daysBetween = TimePeriodConverter.countWeekdaysBetween(period.left(), period.right());
-		long   tradesPerDayMax = tradeCountPerDay.values().stream().max(Integer::compareTo).orElse(0);
-		double tradesPerDayAvg =  tradeCountPerDay.values().stream().mapToDouble(Integer::intValue).sum() / tradeCountPerDay.size();
+		List<LocalDateTime> weekdaysBetween = TimePeriodConverter.getWeekdaysBetween(period.left(), period.right());
+		long                tradesPerDayMax = tradeCountPerDay.values().stream().max(Integer::compareTo).orElse(0);
+		double              tradesPerDayAvg =
+				tradeCountPerDay.values().stream().mapToDouble(Integer::intValue).sum() / tradeCountPerDay.size();
 
 		double volumePerTradeMax = trades.stream().mapToDouble(TradeLog::getVolume).max().orElse(0.0);
 		double volumePerTradeAvg = trades.stream().mapToDouble(TradeLog::getVolume).sum() / trades.size();
 
-		double volumePerDayAvg = tradesVolumePerDay.values().stream().mapToDouble(Double::doubleValue).sum() / tradesVolumePerDay.size();
-		double volumePerDayMax = tradesVolumePerDay.values().stream().max(Double::compareTo).orElse(0.0);
-		double volumeAll = trades.stream().mapToDouble(TradeLog::getVolume).sum();
-
-		/*
-		   Мне всё равно придётся считать капитал на определённый момент и возможно по определённому брокеру.
-		   Иначе я не вычислю изменение капитала за период и профит за период.
-
-		   Поэтому, почему бы не считать оборачиваемость капитала с учётом среднедневного капитала за период?
-		 */
+		double volumePerDayAvg     =
+				tradesVolumePerDay.values().stream().mapToDouble(Double::doubleValue).sum() / tradesVolumePerDay.size();
+		double volumePerDayMax     = tradesVolumePerDay.values().stream().max(Double::compareTo).orElse(0.0);
+		double volumeAll           = trades.stream().mapToDouble(TradeLog::getVolume).sum();
+		double volumeAllCurrencies = tradesAllCurrencies.stream().mapToDouble(TradeLog::getVolume).sum();
+		double capitalAvg          = capitalAvg(broker, weekdaysBetween);
+		double capitalTurnover     = volumeAllCurrencies / capitalAvg * 100.0;
 
 		return aStatsData()
 				.withTrades((long) trades.size())
-				.withDayWithTradesDayRatio(round((double) tradeCountPerDay.size() / daysBetween * 100.0))
+				.withDayWithTradesDayRatio(round((double) tradeCountPerDay.size() / weekdaysBetween.size() * 100.0))
 				.withPartials(partials(trades))
 				.withTradesPerDayMax(tradesPerDayMax)
 				.withTradesPerDayAvg(round(tradesPerDayAvg))
@@ -106,15 +106,26 @@ public class StatsService {
 				.withVolumePerDayAvg(round(volumePerDayAvg))
 				.withVolumePerTradeMax(round(volumePerTradeMax))
 				.withVolumePerTradeAvg(round(volumePerTradeAvg))
+				.withCapitalTurnover(round(capitalTurnover))
 				.withVolume(round(volumeAll))
 				.withCapital(cashService.getCapital(null, null))
 				.build();
 	}
 
+	private Double capitalAvg(Broker broker, List<LocalDateTime> weekdaysBetween) throws JsonProcessingException {
+		double capitalSum = 0.0;
+
+		for (LocalDateTime weekday : weekdaysBetween) {
+			capitalSum += cashService.getCapital(broker, weekday);
+		}
+
+		return capitalSum / weekdaysBetween.size();
+	}
+
 	private Map<LocalDate, Double> countTradesVolumePerDay(Map<LocalDate, List<TradeLog>> tradesPerDayMap) {
 		Map<LocalDate, Double> tradesVolumePerDay = new HashMap<>();
 
-		for (Map.Entry<LocalDate, List<TradeLog>> entry: tradesPerDayMap.entrySet()) {
+		for (Map.Entry<LocalDate, List<TradeLog>> entry : tradesPerDayMap.entrySet()) {
 			double volume = entry.getValue().stream().mapToDouble(TradeLog::getVolume).sum();
 			tradesVolumePerDay.put(entry.getKey(), volume);
 		}
@@ -125,7 +136,7 @@ public class StatsService {
 	private Map<LocalDate, Integer> countTradesOpenedPerDay(Map<LocalDate, List<TradeLog>> tradesPerDayMap) {
 		Map<LocalDate, Integer> tradeCountPerDay = new HashMap<>();
 
-		for (Map.Entry<LocalDate, List<TradeLog>> entry: tradesPerDayMap.entrySet()) {
+		for (Map.Entry<LocalDate, List<TradeLog>> entry : tradesPerDayMap.entrySet()) {
 			tradeCountPerDay.put(entry.getKey(), entry.getValue().size());
 		}
 
@@ -149,14 +160,14 @@ public class StatsService {
 			predicate = cb.between(tradeLogRoot.get("dateOpen"), period.left(), period.right());
 		else if (currencyId != null && brokerId == null)
 			predicate = cb.and(cb.between(tradeLogRoot.get("dateOpen"), period.left(), period.right()),
-			                       cb.equal(tradeLogRoot.get("currency").get("id"), currencyId));
+			                   cb.equal(tradeLogRoot.get("currency").get("id"), currencyId));
 		else if (currencyId == null)
 			predicate = cb.and(cb.between(tradeLogRoot.get("dateOpen"), period.left(), period.right()),
-			                       cb.equal(tradeLogRoot.get("broker").get("id"), brokerId));
+			                   cb.equal(tradeLogRoot.get("broker").get("id"), brokerId));
 		else
 			predicate = cb.and(cb.between(tradeLogRoot.get("dateOpen"), period.left(), period.right()),
-			                       cb.equal(tradeLogRoot.get("currency").get("id"), currencyId),
-			                       cb.equal(tradeLogRoot.get("broker").get("id"), brokerId));
+			                   cb.equal(tradeLogRoot.get("currency").get("id"), currencyId),
+			                   cb.equal(tradeLogRoot.get("broker").get("id"), brokerId));
 
 		cq.where(predicate);
 		return entityManager.createQuery(cq).getResultList();
