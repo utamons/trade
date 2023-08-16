@@ -27,7 +27,7 @@ public class StatsController {
 	public StatsData getStats(@RequestParam TimePeriod timePeriod,
 	                          @RequestParam(required = false) Long currencyId,
 	                          @RequestParam(required = false) Long brokerId) throws JsonProcessingException {
-		return service.getStats(timePeriod, currencyId, brokerId);
+		return service.getBrokerStats(timePeriod, currencyId, brokerId);
 	}
 
 	@GetMapping("/state")
@@ -37,6 +37,6 @@ public class StatsController {
 
 	@GetMapping("/broker")
 	public BrokerStatsDTO getStats(@RequestParam("brokerId") Long brokerId) throws JsonProcessingException {
-		return service.getStats(brokerId);
+		return service.getBrokerStats(brokerId);
 	}
 }

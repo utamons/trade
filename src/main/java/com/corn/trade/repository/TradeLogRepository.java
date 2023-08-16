@@ -1,6 +1,5 @@
 package com.corn.trade.repository;
 
-import com.corn.trade.dto.CurrencySumDTO;
 import com.corn.trade.entity.Broker;
 import com.corn.trade.entity.TradeLog;
 import org.springframework.data.domain.Page;
@@ -25,22 +24,6 @@ public interface TradeLogRepository extends JpaRepository<TradeLog, Long>, JpaSp
 
 	@Query("select t from TradeLog t where t.dateClose is not null")
 	List<TradeLog> findAllOpen();
-
-	@Query("select new com.corn.trade.dto.CurrencySumDTO(t.currency.id, sum(t.totalBought - t.risk))" +
-	       " from TradeLog t where t.position='long' and t.dateClose is null group by t.currency")
-	List<CurrencySumDTO> openLongSums();
-
-	@Query("select new com.corn.trade.dto.CurrencySumDTO(t.currency.id, sum(t.risk))" +
-	       " from TradeLog t where t.position='short' and t.dateClose is null group by t.currency")
-	List<CurrencySumDTO> openShortRisks();
-
-	@Query("select new com.corn.trade.dto.CurrencySumDTO(t.currency.id, sum(t.totalBought - t.risk))" +
-	       " from TradeLog t where t.broker=:broker and t.position='long' and t.dateClose is null group by t.currency")
-	List<CurrencySumDTO> openLongSumsByBroker(Broker broker);
-
-	@Query("select new com.corn.trade.dto.CurrencySumDTO(t.currency.id, sum(t.risk))" +
-	       " from TradeLog t where t.broker=:broker and t.position='short' and t.dateClose is null group by t.currency")
-	List<CurrencySumDTO> openShortRisksByBroker(Broker broker);
 
 	@Query("select count(t) from TradeLog t where t.dateOpen between :from and :to")
 	long countOpenByPeriod(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);

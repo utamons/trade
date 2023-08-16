@@ -21,7 +21,7 @@ public interface CashFlowRepository extends JpaRepository<CashFlow, Long>, JpaSp
 	Double getSumFromByAccount(CashAccount accountFrom);
 
 	@Query("select sum(cf.sumFrom) from CashFlow cf where cf.accountFrom = ?1 and cf.committedAt <= ?2")
-	Double getSumFromByAccountToDate(CashAccount accountFrom);
+	Double getSumFromByAccountToDate(CashAccount accountFrom, LocalDateTime date);
 
 	@Query("select sum(cf.sumFrom - cf.sumTo) from CashFlow cf")
 	Double getCashFlowBalance();

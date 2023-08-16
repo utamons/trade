@@ -18,7 +18,7 @@ public class StatsData {
 	private BigDecimal volumePerTradeAvg;
 	private BigDecimal volumePerDayMax;
 	private BigDecimal volumePerDayAvg;
-	private BigDecimal volumeToCapitalRatio;
+	private BigDecimal capitalTurnover;
 	// Commissions
 	private BigDecimal commissionsPerTradeAvg;
 	private BigDecimal commissions;
@@ -95,8 +95,8 @@ public class StatsData {
 		return volumePerDayAvg;
 	}
 
-	public BigDecimal getVolumeToCapitalRatio() {
-		return volumeToCapitalRatio;
+	public BigDecimal getCapitalTurnover() {
+		return capitalTurnover;
 	}
 
 	public BigDecimal getCommissionsPerTradeAvg() {
@@ -202,7 +202,7 @@ public class StatsData {
 		private BigDecimal volumePerTradeAvg;
 		private BigDecimal volumePerDayMax;
 		private BigDecimal volumePerDayAvg;
-		private BigDecimal volumeToCapitalRatio;
+		private BigDecimal capitalTurnover;
 		private BigDecimal commissionsPerTradeAvg;
 		private BigDecimal commissions;
 		private BigDecimal profit;
@@ -280,8 +280,8 @@ public class StatsData {
 			return this;
 		}
 
-		public StatsDataBuilder withVolumeToCapitalRatio(BigDecimal volumeToCapitalRatio) {
-			this.volumeToCapitalRatio = volumeToCapitalRatio;
+		public StatsDataBuilder withCapitalTurnover(BigDecimal capitalTurnover) {
+			this.capitalTurnover = capitalTurnover;
 			return this;
 		}
 
@@ -430,7 +430,7 @@ public class StatsData {
 			statsData.stopDeltaAvg = this.stopDeltaAvg;
 			statsData.tradesPerDayAvg = this.tradesPerDayAvg;
 			statsData.dayWithTradesDayRatio = this.dayWithTradesDayRatio;
-			statsData.volumeToCapitalRatio = this.volumeToCapitalRatio;
+			statsData.capitalTurnover = this.capitalTurnover;
 			statsData.partials = this.partials;
 			statsData.tradesPerDayMax = this.tradesPerDayMax;
 			statsData.trades = this.trades;

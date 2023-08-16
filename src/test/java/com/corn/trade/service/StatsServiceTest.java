@@ -74,7 +74,7 @@ class StatsServiceTest {
 
 		when(cashService.getAccountTotal(accounts.get(0))).thenReturn(-1000.0);
 		when(cashService.getAccountTotal(accounts.get(1))).thenReturn(-2000.0);
-		when(cashService.getCapital()).thenReturn(capital);
+		when(cashService.getCapital(null, null)).thenReturn(capital);
 		when(accountTypeRepo.findCashAccountTypeByName(OUTCOME)).thenReturn(outcomeType);
 		when(cashAccountRepo.findAllByType(outcomeType)).thenReturn(accounts);
 		when(currencyRateService.convertToUSD(eq(usdCurrency.getId()), eq(-1000.0), any())).thenReturn(-1000.0);
@@ -104,7 +104,7 @@ class StatsServiceTest {
 		tradeAccounts.add(new CashAccount("USD", usdCurrency, broker, tradeType));
 		tradeAccounts.add(new CashAccount("EUR", eurCurrency, broker, tradeType));
 
-		when(cashService.getCapital(broker)).thenReturn(capital);
+		when(cashService.getCapital(broker, null)).thenReturn(capital);
 		when(cashService.getRiskBase(capital)).thenReturn(capital);
 		when(cashService.getAccountTotal(outcomeAccounts.get(0))).thenReturn(-1000.0);
 		when(cashService.getAccountTotal(outcomeAccounts.get(1))).thenReturn(-2000.0);
@@ -130,7 +130,7 @@ class StatsServiceTest {
 		when(tradeLogRepo.opensCountByBroker(broker)).thenReturn(3L);
 
 		// Act
-		BrokerStatsDTO brokerStats = statsService.getStats(brokerId);
+		BrokerStatsDTO brokerStats = statsService.getBrokerStats(brokerId);
 
 		// Assert
 		assertNotNull(brokerStats);

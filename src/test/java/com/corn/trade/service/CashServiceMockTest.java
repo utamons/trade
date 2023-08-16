@@ -1,7 +1,6 @@
 package com.corn.trade.service;
 
 import com.corn.trade.dto.CurrencyDTO;
-import com.corn.trade.dto.CurrencySumDTO;
 import com.corn.trade.entity.Broker;
 import com.corn.trade.entity.CashAccountType;
 import com.corn.trade.entity.Currency;
@@ -14,10 +13,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 
+import javax.persistence.EntityManager;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 import static com.corn.trade.service.CashService.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,6 +42,9 @@ class CashServiceMockTest {
 	@Mock
 	private TradeLogRepository        tradeLogRepo;
 
+	@Mock
+	private EntityManager entityManager;
+
 	@BeforeEach
 	void setup() {
 		currencyRateService = mock(CurrencyRateService.class);
@@ -57,8 +58,8 @@ class CashServiceMockTest {
 				accountTypeRepo,
 				tickerRepo,
 				tradeLogRepo,
-				currencyRateService
-		);
+				currencyRateService,
+				entityManager);
 	}
 
 	@Test
@@ -169,48 +170,6 @@ class CashServiceMockTest {
 
 		// Assert
 		assertEquals(1.0, riskPc);
-	}
-
-	@Test
-	void testGetOpenPositionsUSD() throws JsonProcessingException {
-		// Arrange
-		List<CurrencySumDTO> opens = new ArrayList<>();
-		opens.add(new CurrencySumDTO(1L, 100.0)); // Assuming currencyId 1 and sum 100.0
-		opens.add(new CurrencySumDTO(2L, 200.0)); // Assuming currencyId 2 and sum 200.0
-		List<CurrencySumDTO> shortRisks = new ArrayList<>();
-		shortRisks.add(new CurrencySumDTO(1L, 10.0)); // Assuming currencyId 1 and sum 10.0
-		shortRisks.add(new CurrencySumDTO(2L, 20.0)); // Assuming currencyId 2 and sum 20.0
-
-		// Assume currencyRateService.convertToUSD will return the sum from arguments
-		when(currencyRateService.convertToUSD(1L, 100.0, LocalDate.now())).thenReturn(100.0);
-		when(currencyRateService.convertToUSD(2L, 200.0, LocalDate.now())).thenReturn(200.0);
-		when(currencyRateService.convertToUSD(1L, 10.0, LocalDate.now())).thenReturn(10.0);
-		when(currencyRateService.convertToUSD(2L, 20.0, LocalDate.now())).thenReturn(20.0);
-
-		// Assume tradeLogRepo.openLongSums() returns the list of opens
-		when(tradeLogRepo.openLongSums()).thenReturn(opens);
-		when(tradeLogRepo.openShortRisks()).thenReturn(shortRisks);
-
-		// Act
-		double openPositionsUSD = cashService.openPositionsUSD();
-
-		// Assert
-		assertEquals(270.0, openPositionsUSD);
-	}
-
-	@Test
-	void testGetOpenPositionsUSD_EmptyList() throws JsonProcessingException {
-		// Arrange
-		List<CurrencySumDTO> opens = new ArrayList<>();
-
-		// Assume tradeLogRepo.openLongSums() returns an empty list
-		when(tradeLogRepo.openLongSums()).thenReturn(opens);
-
-		// Act
-		double openPositionsUSD = cashService.openPositionsUSD();
-
-		// Assert
-		assertEquals(0.0, openPositionsUSD);
 	}
 
 	@Test
