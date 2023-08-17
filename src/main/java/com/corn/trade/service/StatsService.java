@@ -334,7 +334,7 @@ public class StatsService {
 		for (CashAccount account : accounts) {
 			double outcome    = cashService.getAccountTotal(account);
 			double outcomeUSD = currencyRateService.convertToUSD(account.getCurrency().getId(), outcome, LocalDate.now());
-			sumOutcomesUSD += Math.abs(outcomeUSD);
+			sumOutcomesUSD -= outcomeUSD;
 		}
 
 		for (CashAccount account : feeAccounts) {
