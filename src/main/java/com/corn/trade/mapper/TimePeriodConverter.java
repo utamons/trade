@@ -72,36 +72,36 @@ public class TimePeriodConverter {
 				yield now;
 			}
 			case WEEK_TO_DATE -> {
-				start = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+				start = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).with(LocalTime.MIN);
 				yield now;
 			}
 			case LAST_WEEK -> {
-				start = now.minusWeeks(1).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-				yield now.minusWeeks(1).with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+				start = now.minusWeeks(1).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).with(LocalTime.MIN);
+				yield now.minusWeeks(1).with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY)).with(LocalTime.MAX);
 			}
 			case MONTH_TO_DATE -> {
-				start = now.with(TemporalAdjusters.firstDayOfMonth());
+				start = now.with(TemporalAdjusters.firstDayOfMonth()).with(LocalTime.MIN);
 				yield now;
 			}
 			case LAST_MONTH -> {
-				start = now.minusMonths(1).with(TemporalAdjusters.firstDayOfMonth());
-				yield now.minusMonths(1).with(TemporalAdjusters.lastDayOfMonth());
+				start = now.minusMonths(1).with(TemporalAdjusters.firstDayOfMonth()).with(LocalTime.MIN);
+				yield now.minusMonths(1).with(TemporalAdjusters.lastDayOfMonth()).with(LocalTime.MAX);
 			}
 			case QUARTER_TO_DATE -> {
-				start = now.with(getQuarterStart());
+				start = now.with(getQuarterStart()).with(LocalTime.MIN);
 				yield now;
 			}
 			case LAST_QUARTER -> {
-				start = now.minusMonths(3).with(getQuarterStart());
-				yield now.minusMonths(3).with(getQuarterEnd());
+				start = now.minusMonths(3).with(getQuarterStart()).with(LocalTime.MIN);
+				yield now.minusMonths(3).with(getQuarterEnd()).with(LocalTime.MAX);
 			}
 			case YEAR_TO_DATE -> {
-				start = now.with(TemporalAdjusters.firstDayOfYear());
+				start = now.with(TemporalAdjusters.firstDayOfYear()).with(LocalTime.MIN);
 				yield now;
 			}
 			case LAST_YEAR -> {
-				start = now.minusYears(1).with(TemporalAdjusters.firstDayOfYear());
-				yield now.minusYears(1).with(TemporalAdjusters.lastDayOfYear());
+				start = now.minusYears(1).with(TemporalAdjusters.firstDayOfYear()).with(LocalTime.MIN);
+				yield now.minusYears(1).with(TemporalAdjusters.lastDayOfYear()).with(LocalTime.MAX);
 			}
 			default -> throw new IllegalArgumentException("Unsupported TimePeriod: " + timePeriod);
 		};
