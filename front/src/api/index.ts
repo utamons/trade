@@ -5,9 +5,10 @@ import {
     PageRequest,
     PositionCloseType,
     PositionOpenType,
-    RefillType, TimePeriod
+    RefillType
 } from 'types'
 import config from '../../config/config.json'
+import { TimePeriod } from '../utils/constants'
 
 const baseUrl = config.baseUrl
 
