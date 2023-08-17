@@ -98,14 +98,15 @@ public class StatsService {
 
 		long tradesPerDayMax = tradeCountPerDay.values().stream().max(Integer::compareTo).orElse(0);
 
-		double tradesPerDayAvg =
+		double tradesPerDayAvg = tradeCountPerDay.isEmpty() ? 0.0 :
 				tradeCountPerDay.values().stream().mapToDouble(Integer::intValue).sum() / tradeCountPerDay.size();
 
 		double volumePerTradeMax = trades.stream().mapToDouble(Trade::volume).max().orElse(0.0);
 
-		double volumePerTradeAvg = trades.stream().mapToDouble(Trade::volume).sum() / trades.size();
+		double volumePerTradeAvg = trades.isEmpty() ? 0.0 :
+				trades.stream().mapToDouble(Trade::volume).sum() / trades.size();
 
-		double volumePerDayAvg =
+		double volumePerDayAvg = tradesPerDayMap.isEmpty() ? 0.0 :
 				tradesVolumePerDay.values().stream().mapToDouble(Double::doubleValue).sum() / tradesPerDayMap.size();
 
 		double volumePerDayMax = tradesVolumePerDay.values().stream().max(Double::compareTo).orElse(0.0);
@@ -115,15 +116,15 @@ public class StatsService {
 		double volumeAllCurrencies = tradesAllCurrencies.stream().mapToDouble(Trade::volume).sum();
 
 		double capitalAvg      = capitalAvg(broker, weekdaysBetween);
-		double capitalTurnover = volumeAllCurrencies / capitalAvg * 100.0;
+		double capitalTurnover = capitalAvg == 0 ? 0.0 : volumeAllCurrencies / capitalAvg * 100.0;
 
 		double commissions = trades.stream().mapToDouble(Trade::fees).sum();
 
-		double commissionsPerTradeAvg = commissions / trades.size();
+		double commissionsPerTradeAvg = trades.isEmpty()? 0.0 : commissions / trades.size();
 
-		double profitPerTradeAvg = trades.stream().mapToDouble(Trade::profit).sum() / trades.size();
+		double profitPerTradeAvg = positiveCount == 0? 0.0 : trades.stream().mapToDouble(Trade::profit).sum() / positiveCount;
 
-		double profitPerDayAvg = tradesPerDayMap.values().stream().mapToDouble(tradesPerDay ->
+		double profitPerDayAvg = tradesPerDayMap.isEmpty()? 0.0 : tradesPerDayMap.values().stream().mapToDouble(tradesPerDay ->
 				                                                                       tradesPerDay.stream()
 				                                                                                   .mapToDouble(Trade::profit)
 				                                                                                   .sum()
@@ -135,34 +136,34 @@ public class StatsService {
 				                                                                                   .sum()
 		).max().orElse(0.0);
 
-		double profitPartialsAvg = partials.stream().mapToDouble(Trade::profit).sum() / partials.size();
+		double profitPartialsAvg = partials.isEmpty() ? 0.0 :partials.stream().mapToDouble(Trade::profit).sum() / partials.size();
 
-		double profitSinglesAvg = singles.stream().mapToDouble(Trade::profit).sum() / singles.size();
+		double profitSinglesAvg = singles.isEmpty() ? 0.0 : singles.stream().mapToDouble(Trade::profit).sum() / singles.size();
 
 		double profitAll = trades.stream().mapToDouble(Trade::profit).sum();
 
 		double lossAll = trades.stream().mapToDouble(Trade::loss).sum();
 
-		double profitVolumePc = profitAll / volumeAll * 100.0;
+		double profitVolumePc = volumeAll == 0 ? 0.0 : profitAll / volumeAll * 100.0;
 
-		double profitCapitalPc = profitAll / capitalStart * 100.0;
+		double profitCapitalPc = capitalStart == 0? 0.0 : profitAll / capitalStart * 100.0;
 
-		double lossPerTradeAvg = trades.stream().mapToDouble(Trade::loss).sum() / trades.size();
+		double lossPerTradeAvg = trades.isEmpty() ? 0.0 : trades.stream().mapToDouble(Trade::loss).sum() / trades.size();
 		double lossPerTradeMax = trades.stream().mapToDouble(Trade::loss).max().orElse(0.0);
 
-		double riskRewardRatioAvg =
+		double riskRewardRatioAvg = positiveCount == 0 ? 0.0 :
 				trades.stream().filter(t -> t.profit > 0).mapToDouble(Trade::riskRewardRatio).sum() / positiveCount * 100.0;
 
 		double riskRewardRatioMax =
 				trades.stream().filter(t -> t.profit > 0).mapToDouble(Trade::riskRewardRatio).max().orElse(0.0) * 100.0;
 
-		double winRate = positiveCount / (double) trades.size() * 100.0;
+		double winRate = trades.isEmpty() ? 0.0 : positiveCount / (double) trades.size() * 100.0;
 
-		double slippageAvg = trades.stream().mapToDouble(Trade::slippage).sum() / trades.size();
+		double slippageAvg = trades.isEmpty() ? 0.0 :trades.stream().mapToDouble(Trade::slippage).sum() / trades.size();
 
-		double takeDeltaAvg = trades.stream().filter(t -> t.profit > 0).mapToDouble(Trade::takeDelta).sum() / positiveCount;
+		double takeDeltaAvg = positiveCount == 0 ? 0.0 : trades.stream().filter(t -> t.profit > 0).mapToDouble(Trade::takeDelta).sum() / positiveCount;
 
-		double stopDeltaAvg = trades.stream().filter(t -> t.loss > 0).mapToDouble(Trade::stopDelta).sum() / negativeCount;
+		double stopDeltaAvg = negativeCount == 0 ? 0.0 : trades.stream().filter(t -> t.loss > 0).mapToDouble(Trade::stopDelta).sum() / negativeCount;
 
 		double capitalChange = capitalEnd - capitalStart;
 
