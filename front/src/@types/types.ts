@@ -349,7 +349,7 @@ interface DatePickerBoxProps {
     dispatch: React.Dispatch<FormAction>
 }
 
-type Stats = {
+type StatsType = {
     // Common
     trades: number,
     dayWithTradesDayRatio: number,
@@ -394,7 +394,7 @@ type Stats = {
 }
 
 export {
-    Stats,
+    StatsType,
     DatePickerBoxProps,
     ValueFieldBoxProps,
     SelectFieldBoxProps,

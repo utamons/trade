@@ -1,10 +1,12 @@
-import React, { Dispatch, useContext } from 'react'
+import React, { Dispatch, useContext, useEffect, useState } from 'react'
 import { Box, styled } from '@mui/material'
 import { remCalc } from '../../utils/utils'
 import { TradeContext } from '../../trade-context'
-import { FormAction, FormActionPayload, FormState, ItemType } from 'types'
 import Select from '../tools/select'
 import { getFieldValue, useForm } from '../dialogs/dialogUtils'
+import { fetchStats } from '../../api'
+import { FormAction, FormActionPayload, FormState, ItemType, StatsType } from 'types'
+import { TimePeriod } from '../../utils/constants'
 
 const FilterContainer = styled(Box)(({ theme }) => ({
     display: 'flex',
@@ -19,54 +21,54 @@ const FilterContainer = styled(Box)(({ theme }) => ({
 }))
 
 type DateRange = ItemType & {
-    enumName: string
+    enum: TimePeriod
 }
 
 const dateRangeItems: DateRange[] = [
     {
         id: 0,
         name: 'Week to date',
-        enumName: 'WEEK_TO_DATE'
+        enum: TimePeriod.WEEK_TO_DATE
     },
     {
         id: 1,
         name: 'Last week',
-        enumName: 'LAST_WEEK'
+        enum: TimePeriod.LAST_WEEK
     },
     {
         id: 2,
         name: 'Month to date',
-        enumName: 'MONTH_TO_DATE'
+        enum: TimePeriod.MONTH_TO_DATE
     },
     {
         id: 3,
         name: 'Last month',
-        enumName: 'LAST_MONTH'
+        enum: TimePeriod.LAST_MONTH
     },
     {
         id: 4,
         name: 'Quarter to date',
-        enumName: 'QUARTER_TO_DATE'
+        enum: TimePeriod.QUARTER_TO_DATE
     },
     {
         id: 5,
         name: 'Last quarter',
-        enumName: 'LAST_QUARTER'
+        enum: TimePeriod.LAST_QUARTER
     },
     {
         id: 6,
         name: 'Year to date',
-        enumName: 'YEAR_TO_DATE'
+        enum: TimePeriod.YEAR_TO_DATE
     },
     {
         id: 7,
         name: 'Last year',
-        enumName: 'LAST_YEAR'
+        enum: TimePeriod.LAST_YEAR
     },
     {
         id: 8,
         name: 'All time',
-        enumName: 'ALL_TIME'
+        enum: TimePeriod.ALL_TIME
     }
 ]
 const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>) => {
@@ -99,12 +101,13 @@ const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>) => 
 const Stats = () => {
     const { brokers, currencies } = useContext(TradeContext)
     const { formState, dispatch } = useForm()
+    const [ stats, setStats ] = useState<StatsType>()
 
     initFormState(formState, dispatch)
 
-    const brokerId = '' + getFieldValue('brokerId', formState)
-    const currencyId = '' + getFieldValue('currencyId', formState)
-    const dateRange = '' + getFieldValue('dateRange', formState)
+    const brokerId = '' + getFieldValue('brokerId', formState) as unknown as number
+    const currencyId = '' + getFieldValue('currencyId', formState) as unknown as number
+    const dateRange = '' + getFieldValue('dateRange', formState) as unknown as number
 
     const brokerItems: ItemType[] = []
     const currencyItems: ItemType[] = []
@@ -135,25 +138,36 @@ const Stats = () => {
         }
     }
 
+    useEffect(() => {
+        const ti = dateRangeItems.find((elem: DateRange) => {
+            return elem.id == dateRange
+        }) ?? dateRangeItems[0]
+        fetchStats(ti.enum, brokerId, currencyId).then((data: StatsType) => {
+            setStats(data)
+        }).catch((err: any) => {
+            console.log('fetchStats error', err)
+        })
+    }, [ brokerId, currencyId, dateRange ])
+
     return <FilterContainer>
         <Select
             label="Broker"
             items={brokerItems}
-            value={brokerId}
+            value={brokerId as unknown as string}
             name={'brokerId'}
             variant={'medium'}
             dispatch={dispatch} />
         <Select
             label="Currency"
             items={currencyItems}
-            value={currencyId}
+            value={currencyId as unknown as string}
             name={'currencyId'}
             variant={'medium'}
             dispatch={dispatch} />
         <Select
             label="Date range"
             items={dateRangeItems}
-            value={dateRange}
+            value={dateRange as unknown as string}
             name={'dateRange'}
             variant={'medium'}
             dispatch={dispatch} />

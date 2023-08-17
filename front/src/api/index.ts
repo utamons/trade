@@ -5,7 +5,7 @@ import {
     PageRequest,
     PositionCloseType,
     PositionOpenType,
-    RefillType
+    RefillType, TimePeriod
 } from 'types'
 import config from '../../config/config.json'
 
@@ -58,6 +58,22 @@ const fetchBrokerStats = async (brokerId: number) => {
 
 const fetchMoneyState = async () => {
     const url = `${baseUrl}/stats/state`
+    return fetch(url, {
+        method: 'get'
+    }).then((res) => {
+        return res.json()
+    })
+}
+
+const fetchStats = async (timePeriod: TimePeriod, currencyId: number | undefined, brokerId: number | undefined) => {
+    let params = '?timePeriod=' + timePeriod
+    if (currencyId) {
+        params += `&currencyId=${currencyId}`
+    }
+    if (brokerId) {
+        params += `&brokerId=${brokerId}`
+    }
+    const url = `${baseUrl}/stats${params}`
     return fetch(url, {
         method: 'get'
     }).then((res) => {
@@ -169,6 +185,7 @@ const postClose = async (body: PositionCloseType) => {
 }
 
 export {
+    fetchStats,
     fetchBrokers,
     fetchCurrencies,
     fetchMarkets,
