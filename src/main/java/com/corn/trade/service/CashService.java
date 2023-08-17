@@ -30,17 +30,19 @@ public class CashService {
 	public static final  String                    TRADE                        = "trade";
 	public static final  String                    FEE                          = "fee";
 	public static final  String                    TRADE_LOG_RECORD_IS_REQUIRED = "Trade log record is required";
-	public static final  String                    BORROWED                     = "borrowed";
-	public static final  String                    ACCOUNT_TYPES_ARE_NOT_FOUND  = "Account types are not found";
-	public static final  String                    OPEN                         = "open";
-	public static final  String                    OUTCOME                      = "outcome";
-	public static final  String                    FREEDOM_FN                   = "FreedomFN";
-	public static final  String                    INTERACTIVE                  = "Interactive";
-	public static final  String                    USD                          = "USD";
-	public static final  String                    KZT                          = "KZT";
-	public static final  String                    EUR                          = "EUR";
-	private static final Logger                    logger                       =
+	public static final  String                    BORROWED                    = "borrowed";
+	public static final  String                    ACCOUNT_TYPES_ARE_NOT_FOUND = "Account types are not found";
+	public static final  String                    OPEN                        = "open";
+	public static final  String                    OUTCOME                     = "outcome";
+	public static final  String                    FREEDOM_FN                  = "FreedomFN";
+	public static final  String                    INTERACTIVE                 = "Interactive";
+	public static final  String                    USD                         = "USD";
+	public static final  String                    KZT                         = "KZT";
+	public static final  String                    EUR                         = "EUR";
+	private static final Logger                    logger                      =
 			LoggerFactory.getLogger(CashService.class);
+	public static final  String                    INCOME                      = "income";
+	public static final String WITHDRAWAL = "withdraw";
 	private final        CashAccountRepository     accountRepo;
 	private final        CashFlowRepository        cashFlowRepo;
 	private final        BrokerRepository          brokerRepo;
@@ -152,7 +154,7 @@ public class CashService {
 		Broker          broker     = brokerRepo.getReferenceById(transferDTO.brokerId());
 		Currency        currency   = currencyRepo.getReferenceById(transferDTO.currencyId());
 		CashAccountType toTrade    = accountTypeRepo.findCashAccountTypeByName(TRADE);
-		CashAccountType fromIncome = accountTypeRepo.findCashAccountTypeByName("income");
+		CashAccountType fromIncome = accountTypeRepo.findCashAccountTypeByName(INCOME);
 
 		CashAccount trade = transfer(
 				transferDTO.amount(),
@@ -596,6 +598,40 @@ public class CashService {
 		}
 
 		return capital + openPositionsUSD(broker, localDateTime);
+	}
+
+	public double getRefills(Broker broker, LocalDateTime localDateTime) throws JsonProcessingException {
+		CashAccountType fromIncome = accountTypeRepo.findCashAccountTypeByName(INCOME);
+		List<CashAccount> accounts = broker == null ? accountRepo.findAllByType(fromIncome) :
+				accountRepo.findAllByBrokerAndType(broker, fromIncome);
+		double    refills = 0.0;
+		LocalDate today   = LocalDate.now();
+		for (CashAccount account : accounts) {
+			double amount = Math.abs(getAccountTotal(account, localDateTime));
+			refills += currencyRateService.convertToUSD(
+					account.getCurrency().getId(),
+					amount,
+					today);
+		}
+
+		return refills;
+	}
+
+	public double getWithdrawals(Broker broker, LocalDateTime localDateTime) throws JsonProcessingException {
+		CashAccountType toWithdrawal = accountTypeRepo.findCashAccountTypeByName(WITHDRAWAL);
+		List<CashAccount> accounts = broker == null ? accountRepo.findAllByType(toWithdrawal) :
+				accountRepo.findAllByBrokerAndType(broker, toWithdrawal);
+		double    withdrawals = 0.0;
+		LocalDate today   = LocalDate.now();
+		for (CashAccount account : accounts) {
+			double amount = Math.abs(getAccountTotal(account, localDateTime));
+			withdrawals += currencyRateService.convertToUSD(
+					account.getCurrency().getId(),
+					amount,
+					today);
+		}
+
+		return withdrawals;
 	}
 
 	public double getAccountTotal(CashAccount account) {

@@ -376,6 +376,7 @@ type Stats = {
     profitVolumePc: number, // Profit/Volume
     profitCapitalPc: number, // Profit/Capital (at the start of the period)
     // Loss
+    loss: number,
     lossPerTradeAvg: number,
     lossPerTradeMax: number,
     // Quality
@@ -389,7 +390,6 @@ type Stats = {
     capital: number,
     refills: number,
     withdrawals: number,
-    deposit: number,
     capitalChange: number // Capital change during the period
 }
 

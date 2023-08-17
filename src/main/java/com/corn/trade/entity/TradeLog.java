@@ -47,7 +47,8 @@ public class TradeLog implements Serializable {
 	private Currency currency;
 
 	/*
-	 * Estimated data *********************************************************************************************************
+	 * Estimated data
+	 * *********************************************************************************************************
 	 */
 
 	@Column(name = "estimated_price_open", nullable = false)
@@ -68,14 +69,15 @@ public class TradeLog implements Serializable {
 	@Column(name = "risk", nullable = false)
 	private Double risk;
 
-	@Column(name="level_price")
+	@Column(name = "level_price")
 	private Double levelPrice;
 
-	@Column(name="atr")
+	@Column(name = "atr")
 	private Double atr;
 
 	/*
-	 * Real trade data *********************************************************************************************************
+	 * Real trade data
+	 * *********************************************************************************************************
 	 */
 
 	@Column(name = "open_stop_loss", nullable = false)
@@ -84,13 +86,13 @@ public class TradeLog implements Serializable {
 	@Column(name = "open_take_profit", nullable = false)
 	private Double openTakeProfit;
 
-	@Column(name="broker_interest")
+	@Column(name = "broker_interest")
 	private Double brokerInterest;
 
-	@Column(name="total_bought")
+	@Column(name = "total_bought")
 	private Double totalBought;
 
-	@Column(name="total_sold")
+	@Column(name = "total_sold")
 	private Double totalSold;
 
 	@Column(name = "item_bought")
@@ -99,26 +101,27 @@ public class TradeLog implements Serializable {
 	@Column(name = "item_sold")
 	private Long itemSold;
 
-	@Column(name="final_stop_loss")
+	@Column(name = "final_stop_loss")
 	private Double finalStopLoss;
 
-	@Column(name="final_take_profit")
+	@Column(name = "final_take_profit")
 	private Double finalTakeProfit;
 
-	@Column(name="open_commission", nullable = false)
+	@Column(name = "open_commission", nullable = false)
 	private Double openCommission;
 
-	@Column(name="close_commission")
+	@Column(name = "close_commission")
 	private Double closeCommission;
 
-	@Column(name="parts_closed")
+	@Column(name = "parts_closed")
 	private Long partsClosed;
 
 	@Column(name = "note")
 	private String note;
 
 	/*
-	 * Getters and Setters *********************************************************************************************************
+	 * Getters and Setters
+	 * *********************************************************************************************************
 	 */
 
 	public Long getId() {
@@ -362,6 +365,7 @@ public class TradeLog implements Serializable {
 	public boolean isClosed() {
 		return dateClose != null;
 	}
+
 	@Transient
 	public boolean isShort() {
 		return "short".equals(position);
@@ -386,7 +390,7 @@ public class TradeLog implements Serializable {
 		if (!isClosed()) {
 			return 0;
 		}
-        double profit;
+		double profit;
 		if (isLong()) {
 			profit = totalSold - totalBought;
 		} else {
@@ -409,12 +413,39 @@ public class TradeLog implements Serializable {
 			loss = totalBought - totalSold;
 		}
 
-		loss += getFees();
-		return loss > 0 ? 0 : loss;
+		loss -= getFees();
+		return loss > 0 ? 0 : Math.abs(loss);
 	}
 
 	@Transient
 	public boolean isPartial() {
 		return partsClosed > 1;
+	}
+
+	@Transient
+	public double getRiskRewardRatio() {
+		if (getProfit() == 0) {
+			return 0;
+		}
+		return risk / getProfit();
+	}
+
+	@Transient
+	public double getSlippage() {
+		double estimatedVolume = estimatedPriceOpen * estimatedItems;
+		double realVolume      = isLong() ? totalBought : totalSold;
+		return Math.abs(realVolume - estimatedVolume);
+	}
+
+	@Transient
+	public double getTakeDelta() {
+		double realTakeProfit = (isLong() ? totalSold : totalBought) / (isLong() ? itemSold : itemBought);
+		return Math.abs(openTakeProfit - realTakeProfit);
+	}
+
+	@Transient
+	public double getStopDelta() {
+		double realStopLoss = (isLong() ? totalSold : totalBought) / (isLong() ? itemSold : itemBought);
+		return Math.abs(openStopLoss - realStopLoss);
 	}
 }

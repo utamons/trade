@@ -4,10 +4,7 @@ import com.corn.trade.dto.BrokerStatsDTO;
 import com.corn.trade.dto.CashAccountOutDTO;
 import com.corn.trade.dto.MoneyStateDTO;
 import com.corn.trade.dto.StatsData;
-import com.corn.trade.entity.Broker;
-import com.corn.trade.entity.CashAccount;
-import com.corn.trade.entity.CashAccountType;
-import com.corn.trade.entity.TradeLog;
+import com.corn.trade.entity.*;
 import com.corn.trade.mapper.CashAccountMapper;
 import com.corn.trade.mapper.TimePeriodConverter;
 import com.corn.trade.repository.BrokerRepository;
@@ -23,6 +20,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -57,13 +55,13 @@ public class StatsService {
 		this.entityManager = entityManager;
 	}
 
-	public static Map<LocalDate, List<TradeLog>> getTradesPerDay(List<TradeLog> trades) {
-		Map<LocalDate, List<TradeLog>> tradesPerDayMap = new HashMap<>();
+	public static Map<LocalDate, List<Trade>> getTradesPerDay(List<Trade> trades) {
+		Map<LocalDate, List<Trade>> tradesPerDayMap = new HashMap<>();
 
-		for (TradeLog tradeLog : trades) {
-			LocalDate      openDate     = tradeLog.getDateOpen().toLocalDate();
-			List<TradeLog> tradesPerDay = tradesPerDayMap.computeIfAbsent(openDate, k -> new ArrayList<>());
-			tradesPerDay.add(tradeLog);
+		for (Trade trade : trades) {
+			LocalDate   openDate     = trade.dateOpen().toLocalDate();
+			List<Trade> tradesPerDay = tradesPerDayMap.computeIfAbsent(openDate, k -> new ArrayList<>());
+			tradesPerDay.add(trade);
 		}
 
 		return tradesPerDayMap;
@@ -75,16 +73,26 @@ public class StatsService {
 		final LocalDate                          now    = LocalDate.now();
 
 		double capitalStart = cashService.getCapital(broker, period.left());
+		double capitalEnd   = cashService.getCapital(broker, period.right());
 
-		List<TradeLog> trades              = getTrades(timePeriod, currencyId, brokerId);
-		List<TradeLog> tradesAllCurrencies = getTrades(timePeriod, null, brokerId);
-		List<TradeLog> partials 		  = trades.stream().filter(TradeLog::isPartial).toList();
-		List<TradeLog> singles 			  = trades.stream().filter(trade -> !trade.isPartial()).toList();
+		List<Trade> tradesAllCurrencies = getTradesAllCurrencies(timePeriod, brokerId, now);
 
-		Map<LocalDate, List<TradeLog>> tradesPerDayMap    = getTradesPerDay(trades);
-		Map<LocalDate, Integer>        tradeCountPerDay   = countTradesOpenedPerDay(tradesPerDayMap);
-		Map<LocalDate, Double>         tradesVolumePerDay = countTradesVolumePerDay(tradesPerDayMap);
-		long                           partialsCount           = trades.stream().filter(TradeLog::isPartial).count();
+		List<Trade> trades;
+
+		if (currencyId == null)
+			trades = tradesAllCurrencies;
+		else
+			trades = tradesAllCurrencies.stream().filter(trade -> trade.currency().getId() == currencyId).toList();
+
+		List<Trade> partials = trades.stream().filter(Trade::isPartial).toList();
+		List<Trade> singles  = trades.stream().filter(trade -> !trade.isPartial()).toList();
+
+		Map<LocalDate, List<Trade>> tradesPerDayMap    = getTradesPerDay(trades);
+		Map<LocalDate, Integer>     tradeCountPerDay   = countTradesOpenedPerDay(tradesPerDayMap);
+		Map<LocalDate, Double>      tradesVolumePerDay = countTradesVolumePerDay(tradesPerDayMap);
+		long                        partialsCount      = trades.stream().filter(Trade::isPartial).count();
+		long positiveCount = trades.stream().filter(trade -> trade.profit > 0).count();
+		long negativeCount = trades.stream().filter(trade -> trade.loss > 0).count();
 
 		List<LocalDateTime> weekdaysBetween = TimePeriodConverter.getWeekdaysBetween(period.left(), period.right());
 
@@ -93,105 +101,80 @@ public class StatsService {
 		double tradesPerDayAvg =
 				tradeCountPerDay.values().stream().mapToDouble(Integer::intValue).sum() / tradeCountPerDay.size();
 
-		double volumePerTradeMax = 0.0;
+		double volumePerTradeMax = trades.stream().mapToDouble(Trade::volume).max().orElse(0.0);
 
-		for (TradeLog trade : trades) {
-			double convertedVolume = currencyRateService.convertToUSD(trade.getCurrency().getId(), trade.getVolume(), now);
-			volumePerTradeMax = Math.max(volumePerTradeMax, convertedVolume);
-		}
-
-		double volumePerTradeAvg = 0.0;
-
-		for (TradeLog trade : trades) {
-			double convertedVolume = currencyRateService.convertToUSD(trade.getCurrency().getId(), trade.getVolume(), now);
-			volumePerTradeAvg += convertedVolume;
-		}
-
-		volumePerTradeAvg /= trades.size();
+		double volumePerTradeAvg = trades.stream().mapToDouble(Trade::volume).sum() / trades.size();
 
 		double volumePerDayAvg =
 				tradesVolumePerDay.values().stream().mapToDouble(Double::doubleValue).sum() / tradesPerDayMap.size();
 
 		double volumePerDayMax = tradesVolumePerDay.values().stream().max(Double::compareTo).orElse(0.0);
 
-		double volumeAll = tradesVolumePerDay.values().stream().mapToDouble(Double::doubleValue).sum();
+		double volumeAll = trades.stream().mapToDouble(Trade::volume).sum();
 
-		double volumeAllCurrencies = 0.0;
-
-		for (TradeLog trade : tradesAllCurrencies) {
-			double convertedVolume = currencyRateService.convertToUSD(trade.getCurrency().getId(), trade.getVolume(), now);
-			volumeAllCurrencies += convertedVolume;
-		}
+		double volumeAllCurrencies = tradesAllCurrencies.stream().mapToDouble(Trade::volume).sum();
 
 		double capitalAvg      = capitalAvg(broker, weekdaysBetween);
 		double capitalTurnover = volumeAllCurrencies / capitalAvg * 100.0;
 
-		double commissions = 0.0;
-
-		for (TradeLog trade : trades) {
-			double convertedCommission =
-					currencyRateService.convertToUSD(trade.getBroker().getFeeCurrency().getId(), trade.getFees(), now);
-			commissions += convertedCommission;
-		}
+		double commissions = trades.stream().mapToDouble(Trade::fees).sum();
 
 		double commissionsPerTradeAvg = commissions / trades.size();
 
-		double profitPerTradeAvg = 0.0;
+		double profitPerTradeAvg = trades.stream().mapToDouble(Trade::profit).sum() / trades.size();
 
-		for (TradeLog trade : trades) {
-			double convertedProfit = currencyRateService.convertToUSD(trade.getCurrency().getId(), trade.getProfit(), now);
-			profitPerTradeAvg += convertedProfit;
-		}
+		double profitPerDayAvg = tradesPerDayMap.values().stream().mapToDouble(tradesPerDay ->
+				                                                                       tradesPerDay.stream()
+				                                                                                   .mapToDouble(Trade::profit)
+				                                                                                   .sum()
+		).sum() / tradesPerDayMap.size();
 
-		profitPerTradeAvg /= trades.size();
+		double profitPerDayMax = tradesPerDayMap.values().stream().mapToDouble(tradesPerDay ->
+				                                                                       tradesPerDay.stream()
+				                                                                                   .mapToDouble(Trade::profit)
+				                                                                                   .sum()
+		).max().orElse(0.0);
 
-		double profitPerDayAvg = 0.0;
+		double profitPartialsAvg = partials.stream().mapToDouble(Trade::profit).sum() / partials.size();
 
-		for (TradeLog trade : trades) {
-			double convertedProfit = currencyRateService.convertToUSD(trade.getCurrency().getId(), trade.getProfit(), now);
-			profitPerDayAvg += convertedProfit;
-		}
+		double profitSinglesAvg = singles.stream().mapToDouble(Trade::profit).sum() / singles.size();
 
-		profitPerDayAvg /= tradesPerDayMap.size();
+		double profitAll = trades.stream().mapToDouble(Trade::profit).sum();
 
-		double profitPerDayMax = 0.0;
-
-		for (List<TradeLog> tradeLogs : tradesPerDayMap.values()) {
-			double convertedProfit = 0.0;
-			for (TradeLog trade : tradeLogs) {
-				convertedProfit += currencyRateService.convertToUSD(trade.getCurrency().getId(), trade.getProfit(), now);
-			}
-			profitPerDayMax = Math.max(profitPerDayMax, convertedProfit);
-		}
-
-		double profitPartialsAvg = 0.0;
-
-		for (TradeLog trade : partials) {
-			double convertedProfit = currencyRateService.convertToUSD(trade.getCurrency().getId(), trade.getProfit(), now);
-			profitPartialsAvg += convertedProfit;
-		}
-
-		profitPartialsAvg /= partials.size();
-
-		double profitSinglesAvg = 0.0;
-
-		for (TradeLog trade : singles) {
-			double convertedProfit = currencyRateService.convertToUSD(trade.getCurrency().getId(), trade.getProfit(), now);
-			profitSinglesAvg += convertedProfit;
-		}
-
-		profitSinglesAvg /= singles.size();
-
-		double profitAll = 0.0;
-
-		for (TradeLog trade : trades) {
-			double convertedProfit = currencyRateService.convertToUSD(trade.getCurrency().getId(), trade.getProfit(), now);
-			profitAll += convertedProfit;
-		}
+		double lossAll = trades.stream().mapToDouble(Trade::loss).sum();
 
 		double profitVolumePc = profitAll / volumeAll * 100.0;
 
 		double profitCapitalPc = profitAll / capitalStart * 100.0;
+
+		double lossPerTradeAvg = trades.stream().mapToDouble(Trade::loss).sum() / trades.size();
+		double lossPerTradeMax = trades.stream().mapToDouble(Trade::loss).max().orElse(0.0);
+
+		double riskRewardRatioAvg =
+				trades.stream().filter(t -> t.profit > 0).mapToDouble(Trade::riskRewardRatio).sum() / positiveCount * 100.0;
+
+		double riskRewardRatioMax =
+				trades.stream().filter(t -> t.profit > 0).mapToDouble(Trade::riskRewardRatio).max().orElse(0.0) * 100.0;
+
+		double winRate = positiveCount / (double) trades.size() * 100.0;
+
+		double slippageAvg = trades.stream().mapToDouble(Trade::slippage).sum() / trades.size();
+
+		double takeDeltaAvg = trades.stream().filter(t -> t.profit > 0).mapToDouble(Trade::takeDelta).sum() / positiveCount;
+
+		double stopDeltaAvg = trades.stream().filter(t -> t.loss > 0).mapToDouble(Trade::stopDelta).sum() / negativeCount;
+
+		double capitalChange = capitalEnd - capitalStart;
+
+		double refillsStart = cashService.getRefills(broker, period.left().minus(Duration.ofMinutes(1)));
+		double refillsEnd = cashService.getRefills(broker, period.right());
+
+		double refills = refillsEnd - refillsStart;
+
+		double withdrawalsStart = cashService.getWithdrawals(broker, period.left().minus(Duration.ofMinutes(1)));
+		double withdrawalsEnd = cashService.getWithdrawals(broker, period.right());
+
+		double withdrawals = withdrawalsEnd - withdrawalsStart;
 
 
 		return aStatsData()
@@ -220,8 +203,56 @@ public class StatsService {
 				.withProfitVolumePc(round(profitVolumePc))
 				.withProfitCapitalPc(round(profitCapitalPc))
 
-				.withCapital(cashService.getCapital(null, null))
+				.withLoss(round(lossAll))
+				.withLossPerTradeAvg(round(lossPerTradeAvg))
+				.withLossPerTradeMax(round(lossPerTradeMax))
+
+				.withRiskRewardRatioAvg(round(riskRewardRatioAvg))
+				.withRiskRewardRatioMax(round(riskRewardRatioMax))
+				.withWinRate(round(winRate))
+				.withSlippageAvg(round(slippageAvg))
+				.withTakeDeltaAvg(round(takeDeltaAvg))
+				.withStopDeltaAvg(round(stopDeltaAvg))
+
+				.withCapital(capitalEnd)
+				.withRefills(round(refills))
+				.withWithdrawals(round(withdrawals))
+				.withCapitalChange(round(capitalChange))
 				.build();
+	}
+
+	private List<Trade> getTradesAllCurrencies(TimePeriod timePeriod,
+	                                           Long brokerId,
+	                                           LocalDate now) throws JsonProcessingException {
+		List<Trade> tradesAllCurrencies = new ArrayList<>();
+
+		for (TradeLog tradeLog : getTrades(timePeriod, null, brokerId)) {
+			double convertedProfit =
+					currencyRateService.convertToUSD(tradeLog.getCurrency().getId(), tradeLog.getProfit(), now);
+			double convertedLoss =
+					currencyRateService.convertToUSD(tradeLog.getCurrency().getId(), tradeLog.getLoss(), now);
+			double convertedFees =
+					currencyRateService.convertToUSD(tradeLog.getBroker().getFeeCurrency().getId(), tradeLog.getFees(),
+					                                 now);
+			double convertedVolume =
+					currencyRateService.convertToUSD(tradeLog.getCurrency().getId(), tradeLog.getVolume(), now);
+			Trade trade = new Trade(tradeLog.getCurrency(),
+			                        tradeLog.getBroker().getFeeCurrency(),
+			                        tradeLog.getDateOpen(),
+			                        convertedVolume,
+			                        convertedProfit,
+			                        convertedLoss,
+			                        convertedFees,
+			                        tradeLog.isPartial(),
+			                        tradeLog.isLong(),
+			                        tradeLog.getRiskRewardRatio(),
+			                        tradeLog.getSlippage(),
+			                        tradeLog.getTakeDelta(),
+			                        tradeLog.getStopDelta()
+			);
+			tradesAllCurrencies.add(trade);
+		}
+		return tradesAllCurrencies;
 	}
 
 	private Double capitalAvg(Broker broker, List<LocalDateTime> weekdaysBetween) throws JsonProcessingException {
@@ -234,28 +265,21 @@ public class StatsService {
 		return capitalSum / weekdaysBetween.size();
 	}
 
-	private Map<LocalDate, Double> countTradesVolumePerDay(Map<LocalDate, List<TradeLog>> tradesPerDayMap) throws JsonProcessingException {
+	private Map<LocalDate, Double> countTradesVolumePerDay(Map<LocalDate, List<Trade>> tradesPerDayMap) {
 		Map<LocalDate, Double> tradesVolumePerDay = new HashMap<>();
 
-		for (Map.Entry<LocalDate, List<TradeLog>> entry : tradesPerDayMap.entrySet()) {
-			double volume = 0.0;
-
-			for (TradeLog trade : entry.getValue()) {
-				double convertedVolume =
-						currencyRateService.convertToUSD(trade.getCurrency().getId(), trade.getVolume(), LocalDate.now());
-				volume += convertedVolume;
-			}
-
+		for (Map.Entry<LocalDate, List<Trade>> entry : tradesPerDayMap.entrySet()) {
+			double volume = entry.getValue().stream().mapToDouble(t -> t.volume).sum();
 			tradesVolumePerDay.put(entry.getKey(), volume);
 		}
 
 		return tradesVolumePerDay;
 	}
 
-	private Map<LocalDate, Integer> countTradesOpenedPerDay(Map<LocalDate, List<TradeLog>> tradesPerDayMap) {
+	private Map<LocalDate, Integer> countTradesOpenedPerDay(Map<LocalDate, List<Trade>> tradesPerDayMap) {
 		Map<LocalDate, Integer> tradeCountPerDay = new HashMap<>();
 
-		for (Map.Entry<LocalDate, List<TradeLog>> entry : tradesPerDayMap.entrySet()) {
+		for (Map.Entry<LocalDate, List<Trade>> entry : tradesPerDayMap.entrySet()) {
 			tradeCountPerDay.put(entry.getKey(), entry.getValue().size());
 		}
 
@@ -289,12 +313,22 @@ public class StatsService {
 	}
 
 	public MoneyStateDTO getMoneyState() throws JsonProcessingException {
-		double            capital        = cashService.getCapital(null, null);
-		CashAccountType   outcomeType    = accountTypeRepo.findCashAccountTypeByName(OUTCOME);
-		CashAccountType   feeType        = accountTypeRepo.findCashAccountTypeByName(FEE);
-		List<CashAccount> accounts       = cashAccountRepo.findAllByType(outcomeType);
-		double            sumOutcomesUSD = 0.0;
-		double            sumFeesUSD     = 0.0;
+		double            capital      = cashService.getCapital(null, null);
+		CashAccountType   outcomeType  = accountTypeRepo.findCashAccountTypeByName(OUTCOME);
+		CashAccountType   feeType      = accountTypeRepo.findCashAccountTypeByName(FEE);
+		List<CashAccount> accounts     = cashAccountRepo.findAllByType(outcomeType);
+		List<CashAccount> feeAccounts  = cashAccountRepo.findAllByType(feeType);
+		OutcomesFees      outcomesFees = getOutcomesFees(accounts, feeAccounts);
+
+		double profit = capital == 0 ? 0.0 : (outcomesFees.sumOutcomesUSD() - outcomesFees.sumFeesUSD()) / capital * 100.0;
+
+		return new MoneyStateDTO(capital, profit);
+	}
+
+	private OutcomesFees getOutcomesFees(List<CashAccount> accounts,
+	                                     List<CashAccount> feeAccounts) throws JsonProcessingException {
+		double sumOutcomesUSD = 0.0;
+		double sumFeesUSD     = 0.0;
 
 		for (CashAccount account : accounts) {
 			double outcome    = cashService.getAccountTotal(account);
@@ -302,15 +336,12 @@ public class StatsService {
 			sumOutcomesUSD += Math.abs(outcomeUSD);
 		}
 
-		for (CashAccount account : cashAccountRepo.findAllByType(feeType)) {
+		for (CashAccount account : feeAccounts) {
 			double fee    = cashService.getAccountTotal(account);
 			double feeUSD = currencyRateService.convertToUSD(account.getCurrency().getId(), fee, LocalDate.now());
 			sumFeesUSD += Math.abs(feeUSD);
 		}
-
-		double profit = capital == 0 ? 0.0 : (sumOutcomesUSD - sumFeesUSD) / capital * 100.0;
-
-		return new MoneyStateDTO(capital, profit);
+		return new OutcomesFees(sumOutcomesUSD, sumFeesUSD);
 	}
 
 	public BrokerStatsDTO getBrokerStats(Long brokerId) throws JsonProcessingException {
@@ -328,20 +359,7 @@ public class StatsService {
 		List<CashAccount> feeAccounts     = cashAccountRepo.findAllByBrokerAndType(broker, feeType);
 		List<CashAccount> tradeAccounts   = cashAccountRepo.findAllByBrokerAndType(broker, tradeType);
 
-		double sumOutcomesUSD = 0.0;
-		double sumFeesUSD     = 0.0;
-
-		for (CashAccount account : outcomeAccounts) {
-			double outcome    = cashService.getAccountTotal(account);
-			double outcomeUSD = currencyRateService.convertToUSD(account.getCurrency().getId(), outcome, LocalDate.now());
-			sumOutcomesUSD += Math.abs(outcomeUSD);
-		}
-
-		for (CashAccount account : feeAccounts) {
-			double fee    = cashService.getAccountTotal(account);
-			double feeUSD = currencyRateService.convertToUSD(account.getCurrency().getId(), fee, LocalDate.now());
-			sumFeesUSD += Math.abs(feeUSD);
-		}
+		OutcomesFees outcomesFees = getOutcomesFees(outcomeAccounts, feeAccounts);
 
 		long open = tradeLogRepo.opensCountByBroker(broker);
 
@@ -351,6 +369,19 @@ public class StatsService {
 		}).toList();
 
 
-		return new BrokerStatsDTO(tradeAccountsOutDTO, sumOutcomesUSD - sumFeesUSD, open, riskBase);
+		return new BrokerStatsDTO(tradeAccountsOutDTO,
+		                          outcomesFees.sumOutcomesUSD - outcomesFees.sumFeesUSD,
+		                          open,
+		                          riskBase);
+	}
+
+	private record OutcomesFees(double sumOutcomesUSD, double sumFeesUSD) {
+	}
+
+	public record Trade(
+			Currency currency, Currency feeCurrency, LocalDateTime dateOpen,
+			double volume, double profit, double loss, double fees, boolean isPartial, boolean isLong,
+			double riskRewardRatio, double slippage, double takeDelta, double stopDelta
+	) {
 	}
 }

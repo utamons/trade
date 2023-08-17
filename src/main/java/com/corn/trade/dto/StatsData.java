@@ -32,6 +32,7 @@ public class StatsData {
 	private BigDecimal profitVolumePc; // Profit/Volume
 	private BigDecimal profitCapitalPc; // Profit/Capital (at the start of the period)
 	// Loss
+    private BigDecimal loss;
 	private BigDecimal lossPerTradeAvg;
 	private BigDecimal lossPerTradeMax;
 	// Quality
@@ -43,7 +44,6 @@ public class StatsData {
 	private BigDecimal stopDeltaAvg; // StopLoss real - StopLoss estimate (for negative trades)
 	// Money
 	private BigDecimal capital;
-	private BigDecimal deposit;
 	private BigDecimal refills;
 	private BigDecimal withdrawals;
 	private BigDecimal capitalChange; // Capital - Capital at the start of the period
@@ -53,6 +53,10 @@ public class StatsData {
 
 	public static StatsDataBuilder aStatsData() {
 		return new StatsDataBuilder();
+	}
+
+	public BigDecimal getLoss() {
+		return loss;
 	}
 
 	public Long getTrades() {
@@ -175,10 +179,6 @@ public class StatsData {
 		return capital;
 	}
 
-	public BigDecimal getDeposit() {
-		return deposit;
-	}
-
 	public BigDecimal getRefills() {
 		return refills;
 	}
@@ -213,6 +213,8 @@ public class StatsData {
 		private BigDecimal profitSinglesAvg;
 		private BigDecimal profitVolumePc;
 		private BigDecimal profitCapitalPc;
+
+		private BigDecimal loss;
 		private BigDecimal lossPerTradeAvg;
 		private BigDecimal lossPerTradeMax;
 		private BigDecimal riskRewardRatioAvg;
@@ -222,12 +224,16 @@ public class StatsData {
 		private BigDecimal takeDeltaAvg;
 		private BigDecimal stopDeltaAvg;
 		private BigDecimal capital;
-		private BigDecimal deposit;
 		private BigDecimal refills;
 		private BigDecimal withdrawals;
 		private BigDecimal capitalChange;
 
 		private StatsDataBuilder() {
+		}
+
+		public StatsDataBuilder withLoss(BigDecimal loss) {
+			this.loss = loss;
+			return this;
 		}
 
 		public StatsDataBuilder withTrades(Long trades) {
@@ -380,11 +386,6 @@ public class StatsData {
 			return this;
 		}
 
-		public StatsDataBuilder withDeposit(BigDecimal deposit) {
-			this.deposit = deposit;
-			return this;
-		}
-
 		public StatsDataBuilder withRefills(BigDecimal refills) {
 			this.refills = refills;
 			return this;
@@ -403,7 +404,6 @@ public class StatsData {
 		public StatsData build() {
 			StatsData statsData = new StatsData();
 			statsData.slippageAvg = this.slippageAvg;
-			statsData.deposit = this.deposit;
 			statsData.profitPerTradeAvg = this.profitPerTradeAvg;
 			statsData.lossPerTradeMax = this.lossPerTradeMax;
 			statsData.takeDeltaAvg = this.takeDeltaAvg;
@@ -436,6 +436,7 @@ public class StatsData {
 			statsData.trades = this.trades;
 			statsData.profit = this.profit;
 			statsData.profitPartialsAvg = this.profitPartialsAvg;
+			statsData.loss = this.loss;
 			return statsData;
 		}
 	}
