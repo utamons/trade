@@ -1,5 +1,5 @@
 import React, { Dispatch, useContext, useEffect, useState } from 'react'
-import { Box, styled } from '@mui/material'
+import { Box, Grid, styled } from '@mui/material'
 import { remCalc } from '../../utils/utils'
 import { TradeContext } from '../../trade-context'
 import Select from '../tools/select'
@@ -7,6 +7,8 @@ import { getFieldValue, useForm } from '../dialogs/dialogUtils'
 import { fetchStats } from '../../api'
 import { FormAction, FormActionPayload, FormState, ItemType, StatsType } from 'types'
 import { TimePeriod } from '../../utils/constants'
+import StatsCard from './card'
+import StatsFieldBox from './statsFieldBox'
 
 const FilterContainer = styled(Box)(({ theme }) => ({
     display: 'flex',
@@ -17,6 +19,12 @@ const FilterContainer = styled(Box)(({ theme }) => ({
     justifyContent: 'flex-start',
     gap: remCalc(20),
     borderColor: theme.palette.text.primary,
+    padding: `${remCalc(15)} ${remCalc(20)} 0 ${remCalc(20)}`
+}))
+
+const MainContainer = styled(Grid)(({ theme }) => ({
+    color: theme.palette.text.primary,
+    backgroundColor: theme.palette.background.default,
     padding: `${remCalc(15)} ${remCalc(20)} 0 ${remCalc(20)}`
 }))
 
@@ -98,10 +106,15 @@ const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>) => 
     dispatch({ type: 'init', payload })
 }
 
+const StatsContainer = styled(Box)(() => ({
+    padding: remCalc(10)
+}))
+
+
 const Stats = () => {
     const { brokers, currencies } = useContext(TradeContext)
     const { formState, dispatch } = useForm()
-    const [ stats, setStats ] = useState<StatsType>()
+    const [stats, setStats] = useState<StatsType>()
 
     initFormState(formState, dispatch)
 
@@ -147,31 +160,111 @@ const Stats = () => {
         }).catch((err: any) => {
             console.log('fetchStats error', err)
         })
-    }, [ brokerId, currencyId, dateRange ])
+    }, [brokerId, currencyId, dateRange])
 
-    return <FilterContainer>
+    return <><FilterContainer>
         <Select
             label="Broker"
             items={brokerItems}
             value={brokerId as unknown as string}
             name={'brokerId'}
             variant={'medium'}
-            dispatch={dispatch} />
+            dispatch={dispatch}/>
         <Select
             label="Currency"
             items={currencyItems}
             value={currencyId as unknown as string}
             name={'currencyId'}
             variant={'medium'}
-            dispatch={dispatch} />
+            dispatch={dispatch}/>
         <Select
             label="Date range"
             items={dateRangeItems}
             value={dateRange as unknown as string}
             name={'dateRange'}
             variant={'medium'}
-            dispatch={dispatch} />
+            dispatch={dispatch}/>
     </FilterContainer>
+        <Box sx={{ width: '80%' }}>
+            <MainContainer container columns={{ xs: 8 }} spacing={{ xs: 3 }}>
+                <Grid item xs={2}>
+                    <StatsCard title={'Common data'}>
+                        <StatsContainer>
+                            <StatsFieldBox label={'Total trades'} value={stats?.trades}/>
+                            <StatsFieldBox label={'Days with trade'} value={stats?.dayWithTradesDayRatio}/>
+                            <StatsFieldBox label={'Trades / day (max)'} value={stats?.tradesPerDayMax}/>
+                            <StatsFieldBox label={'Trades / day (avg)'} value={stats?.tradesPerDayAvg}/>
+                        </StatsContainer>
+                    </StatsCard>
+                </Grid>
+                <Grid item xs={2}>
+                    <StatsCard title={'Volume'}>
+                        <StatsContainer>
+                            <StatsFieldBox label={'Volume / trade (max)'} value={stats?.volumePerTradeMax}/>
+                            <StatsFieldBox label={'Volume / trade (avg)'} value={stats?.volumePerTradeAvg}/>
+                            <StatsFieldBox label={'Volume / day (max)'} value={stats?.volumePerDayMax}/>
+                            <StatsFieldBox label={'Volume / day (avg)'} value={stats?.volumePerDayAvg}/>
+                            <StatsFieldBox label={'Volume'} value={stats?.volume}/>
+                        </StatsContainer>
+                    </StatsCard>
+                </Grid>
+                <Grid item xs={2}>
+                    <StatsCard title={'Quality'}>
+                        <StatsContainer>
+                            <StatsFieldBox variant={'pc'} label={'R/R (avg)'} value={stats?.riskRewardRatioAvg}/>
+                            <StatsFieldBox variant={'pc'} label={'R/R (max)'} value={stats?.riskRewardRatioMax}/>
+                            <StatsFieldBox variant={'pc'} label={'Win rate'} value={stats?.lossPerTradeMax}/>
+                            <StatsFieldBox variant={'pc'} label={'Capital turnover'} value={stats?.capitalTurnover}/>
+                            <StatsFieldBox label={'Slippage (avg)'} value={stats?.lossPerTradeMax}/>
+                            <StatsFieldBox label={'Take delta (avg)'} value={stats?.takeDeltaAvg}/>
+                            <StatsFieldBox label={'Stop delta (avg)'} value={stats?.stopDeltaAvg}/>
+                        </StatsContainer>
+                    </StatsCard>
+                </Grid>
+                <Grid item xs={2}>
+                    <StatsCard title={'Profit'}>
+                        <StatsContainer>
+                            <StatsFieldBox label={'Profit / trade (avg)'} value={stats?.profitPerTradeAvg}/>
+                            <StatsFieldBox label={'Profit / day (avg)'} value={stats?.profitPerDayAvg}/>
+                            <StatsFieldBox label={'Profit / day (max)'} value={stats?.profitPerDayMax}/>
+                            <StatsFieldBox label={'Profit partials (avg)'} value={stats?.profitPartialsAvg}/>
+                            <StatsFieldBox label={'Profit singles (avg)'} value={stats?.profitSinglesAvg}/>
+                            <StatsFieldBox label={'Profit'} value={stats?.profit}/>
+                            <StatsFieldBox variant={'pc'} label={'Profit / volume'} value={stats?.profitVolumePc}/>
+                            <StatsFieldBox variant={'pc'} label={'Profit / capital'} value={stats?.profitCapitalPc}/>
+                        </StatsContainer>
+                    </StatsCard>
+                </Grid>
+                <Grid item xs={2}>
+                    <StatsCard title={'Commissions'}>
+                        <StatsContainer>
+                            <StatsFieldBox label={'Comm. / trade (max)'} value={stats?.commissionsPerTradeAvg}/>
+                            <StatsFieldBox label={'Commissions'} value={stats?.commissions}/>
+                        </StatsContainer>
+                    </StatsCard>
+                </Grid>
+                <Grid item xs={2}>
+                    <StatsCard title={'Loss'}>
+                        <StatsContainer>
+                            <StatsFieldBox label={'Losses'} value={stats?.loss}/>
+                            <StatsFieldBox label={'Loss / trade (avg)'} value={stats?.lossPerTradeAvg}/>
+                            <StatsFieldBox label={'Loss / trade (max)'} value={stats?.lossPerTradeMax}/>
+                        </StatsContainer>
+                    </StatsCard>
+                </Grid>
+                <Grid item xs={2}>
+                    <StatsCard title={'Money'}>
+                        <StatsContainer>
+                            <StatsFieldBox label={'Capital'} value={stats?.capital}/>
+                            <StatsFieldBox label={'Refills'} value={stats?.refills}/>
+                            <StatsFieldBox label={'Withdrawals'} value={stats?.withdrawals}/>
+                            <StatsFieldBox label={'Capital change'} value={stats?.capitalChange}/>
+                        </StatsContainer>
+                    </StatsCard>
+                </Grid>
+            </MainContainer>
+        </Box>
+    </>
 }
 
 export default Stats
