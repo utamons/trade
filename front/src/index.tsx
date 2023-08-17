@@ -27,6 +27,26 @@ const Outer = () => {
                             }
                         }
                     },
+                    MuiCardHeader: {
+                        styleOverrides: {
+                            root: {
+                                padding: '5px 0 5px 10px',
+                                color: prefersDarkMode ? 'firebrick' : 'brown'
+                            }
+                        },
+                        defaultProps: {
+                            titleTypographyProps: {
+                                fontSize: 15
+                            }
+                        }
+                    },
+                    MuiCardContent: {
+                        styleOverrides: {
+                            root: {
+                                padding: '5px'
+                            }
+                        }
+                    },
                     MuiMenu: {
                         styleOverrides: {
                             paper: {
