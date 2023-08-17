@@ -155,7 +155,7 @@ const Stats = () => {
         const ti = dateRangeItems.find((elem: DateRange) => {
             return elem.id == dateRange
         }) ?? dateRangeItems[0]
-        fetchStats(ti.enum, brokerId, currencyId).then((data: StatsType) => {
+        fetchStats(ti.enum, currencyId, brokerId).then((data: StatsType) => {
             setStats(data)
         }).catch((err: any) => {
             console.log('fetchStats error', err)
@@ -213,9 +213,9 @@ const Stats = () => {
                         <StatsContainer>
                             <StatsFieldBox variant={'pc'} label={'R/R (avg)'} value={stats?.riskRewardRatioAvg}/>
                             <StatsFieldBox variant={'pc'} label={'R/R (max)'} value={stats?.riskRewardRatioMax}/>
-                            <StatsFieldBox variant={'pc'} label={'Win rate'} value={stats?.lossPerTradeMax}/>
+                            <StatsFieldBox variant={'pc'} label={'Win rate'} value={stats?.winRate}/>
                             <StatsFieldBox variant={'pc'} label={'Capital turnover'} value={stats?.capitalTurnover}/>
-                            <StatsFieldBox label={'Slippage (avg)'} value={stats?.lossPerTradeMax}/>
+                            <StatsFieldBox label={'Slippage (avg)'} value={stats?.slippageAvg}/>
                             <StatsFieldBox label={'Take delta (avg)'} value={stats?.takeDeltaAvg}/>
                             <StatsFieldBox label={'Stop delta (avg)'} value={stats?.stopDeltaAvg}/>
                         </StatsContainer>

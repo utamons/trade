@@ -79,7 +79,7 @@ public class StatsService {
 
 		List<Trade> trades;
 
-		if (currencyId == null)
+		if (currencyId == null || currencyId == 0)
 			trades = tradesAllCurrencies;
 		else
 			trades = tradesAllCurrencies.stream().filter(trade -> trade.currency().getId() == currencyId).toList();
@@ -157,7 +157,7 @@ public class StatsService {
 		double riskRewardRatioMax =
 				trades.stream().filter(t -> t.profit > 0).mapToDouble(Trade::riskRewardRatio).max().orElse(0.0) * 100.0;
 
-		double winRate = trades.isEmpty() ? 0.0 : positiveCount / (double) trades.size() * 100.0;
+		double winRate = trades.isEmpty() ? 0.0 : (double) positiveCount / (double) trades.size() * 100.0;
 
 		double slippageAvg = trades.isEmpty() ? 0.0 :trades.stream().mapToDouble(Trade::slippage).sum() / trades.size();
 
