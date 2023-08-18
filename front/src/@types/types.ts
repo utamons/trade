@@ -53,9 +53,10 @@ type TradeContextType = {
     close: (close: PositionCloseType) => void
     page: (page: number) => void
     setCurrentBrokerId: (id: number) => void
-    refill: (currencyId: number, amount: number) => void
-    correction: (currencyId: number, amount: number) => void
-    exchange: (currencyFromId: number,
+    refill: (currentBrokerId: number, currencyId: number, amount: number) => void
+    correction: (currentBrokerId: number, currencyId: number, amount: number) => void
+    exchange: (currentBrokerId: number,
+               currencyFromId: number,
                currencyToId: number,
                amountFrom: number,
                amountTo: number) => Promise<any>,

@@ -142,7 +142,7 @@ const useTrade = (): TradeContextType => {
         }
     })
 
-    const refill = (currencyId: number, amount: number) => {
+    const refill = (currentBrokerId: number, currencyId: number, amount: number) => {
         postRefill({
             brokerId: currentBrokerId,
             currencyId,
@@ -153,7 +153,7 @@ const useTrade = (): TradeContextType => {
         })
     }
 
-    const correction = (currencyId: number, amount: number) => {
+    const correction = (currentBrokerId: number, currencyId: number, amount: number) => {
         postCorrection({
             brokerId: currentBrokerId,
             currencyId,
@@ -169,7 +169,9 @@ const useTrade = (): TradeContextType => {
         setPageLogKey('' + Date.now())
     }
 
-    const exchange = async (currencyFromId: number,
+    const exchange = async (
+        currentBrokerId: number,
+        currencyFromId: number,
         currencyToId: number,
         amountFrom: number,
         amountTo: number) => {

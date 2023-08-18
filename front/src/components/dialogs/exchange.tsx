@@ -68,7 +68,7 @@ const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, cur
 
 export default ({ open, onClose, currencies }: ExchangeDialogProps) => {
     const [ apiError, setApiError ] = useState<string | undefined>(undefined)
-    const { exchange } = useContext(TradeContext)
+    const { currentBroker, exchange } = useContext(TradeContext)
     const { formState, dispatch } = useForm()
 
     initFormState(formState, dispatch, currencies ? currencies[0].id : 0)
@@ -103,12 +103,12 @@ export default ({ open, onClose, currencies }: ExchangeDialogProps) => {
         }
         if (valueTo == undefined || valueFrom == undefined || valueTo <= 0 || valueFrom <= 0 || !isValid)
             return
-        exchange(Number(currencyFromId), Number(currencyToId), valueFrom, valueTo).then(() => {
+        exchange(currentBroker?.id ?? 0, Number(currencyFromId), Number(currencyToId), valueFrom, valueTo).then(() => {
             handleClose()
         }).catch((err) => {
            setApiError(err)
         })
-    }, [valueFrom, valueTo, isValid, currencyFromId, currencyToId])
+    }, [valueFrom, valueTo, isValid, currencyFromId, currencyToId, currentBroker])
 
     return <Dialog open={open}>
         <DialogContent>

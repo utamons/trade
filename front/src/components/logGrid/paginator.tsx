@@ -89,10 +89,9 @@ const PaginatorInt = ({ first, last, totalPages, number, page }: PaginatorProps)
 }
 
 export default () => {
-    const { all } = useContext(TradeContext)
-    if (!all)
+    const { isLoading, logPage, page } = useContext(TradeContext)
+    if (isLoading)
         return <></>
-    const { logPage, page } = all
     if (!logPage)
         return <></>
 
