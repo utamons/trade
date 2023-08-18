@@ -1,5 +1,5 @@
 import Checkbox from '@mui/material/Checkbox'
-import { FieldBox, FieldName } from '../../styles/style'
+import { FieldBox, FieldName } from '../../../styles/style'
 import { Grid } from '@mui/material'
 import React from 'react'
 

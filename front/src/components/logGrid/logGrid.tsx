@@ -3,7 +3,7 @@ import { Grid } from '@mui/material'
 import { TradeLog, TradeLogPageType } from 'types'
 import { LogHeader } from './logHeader'
 import { LogRow } from './logRow'
-import CloseDialog from './dialogs/closeDialog'
+import CloseDialog from '../dialogs/closeDialog'
 import { TradeContext } from '../../trade-context'
 
 const getRows = (logPage: TradeLogPageType) => {

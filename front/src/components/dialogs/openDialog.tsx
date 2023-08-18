@@ -3,24 +3,25 @@
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import Dialog from '@mui/material/Dialog'
-import { BLUE, greaterColor, remCalc, roundTo2, takeColor } from '../../../utils/utils'
-import Button from '../../tools/button'
+import { BLUE, greaterColor, remCalc, roundTo2, takeColor } from '../../utils/utils'
+import Button from '../tools/button'
 import React, { Dispatch, useCallback, useContext, useEffect, useState } from 'react'
-import { ButtonContainerStyled, FieldName, NoteBox, RedSwitch, SwitchBox } from '../../../styles/style'
-import { Grid } from '@mui/material'
+import { ButtonContainerStyled, FieldName, NoteBox, RedSwitch, SwitchBox } from '../../styles/style'
+import { Box, Grid } from '@mui/material'
 import TextField from '@mui/material/TextField'
 import { FormAction, FormActionPayload, FormState, OpenDialogProps, TickerType } from 'types'
-import { postEval, postEvalToFit } from '../../../api'
+import { postEval, postEvalToFit } from '../../api'
 import { useTheme } from '@emotion/react'
 import CircularProgress from '@mui/material/CircularProgress'
-import { getFieldErrorText, getFieldValue, isFieldValid, useForm } from '../../dialogs/dialogUtils'
-import NumberFieldBox from '../../dialogs/numberFieldBox'
-import SelectFieldBox from '../../dialogs/selectFieldBox'
-import ValueFieldBox from '../../dialogs/valueFieldBox'
-import DatePickerBox from '../../dialogs/datePickerBox'
-import { MAX_DEPOSIT_PC, MAX_RISK_PC, MAX_RISK_REWARD_PC } from '../../../utils/constants'
-import CheckFieldBox from '../../dialogs/checkFieldBox'
-import { TradeContext } from '../../../trade-context'
+import { getFieldErrorText, getFieldValue, isFieldValid, useForm } from './dialogUtils'
+import NumberFieldBox from './components/numberFieldBox'
+import SelectFieldBox from './components/selectFieldBox'
+import ValueFieldBox from './components/valueFieldBox'
+import DatePickerBox from './components/datePickerBox'
+import { MAX_DEPOSIT_PC, MAX_RISK_PC, MAX_RISK_REWARD_PC } from '../../utils/constants'
+import CheckFieldBox from './components/checkFieldBox'
+import { TradeContext } from '../../trade-context'
+import Alert from '@mui/material/Alert'
 
 
 const positions = [
@@ -191,6 +192,8 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
     const [evaluate, setEvaluate] = useState(true)
     const [isLoading, setLoading] = useState(false)
     const [technicalStop, setTechnicalStop] = useState(false)
+    const [warning, setWarning] = useState<'set'|'unset'|'disabled'>('unset')
+    const [warningText, setWarningText] = useState<string>('')
 
     console.log('openDialog', formState)
 
@@ -461,10 +464,11 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
     }
 
     const validOpen = () => {
-        console.log('validOpen isShort', isShort())
-        console.log('validOpen totalBought', totalBought)
-        console.log('validOpen totalSold', totalSold)
         let state = validEval()
+        if (Date.now() - date.getTime() < 5 * 60 * 1000 && warning == 'unset') {
+            setWarning('set')
+            setWarningText('Date is too close to now')
+        }
         if (levelPrice == undefined) {
             dispatch({ type: 'set', payload: { name: 'levelPrice', valid: false, errorText: 'required' } })
             state = false
@@ -581,6 +585,8 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
         dispatch({ type: 'clearErrors', payload: {} })
         dispatch({ type: 'reset', payload: {} })
         setTechnicalStop(false)
+        setWarning('unset')
+        setWarningText('')
     }, [])
 
     return <Dialog
@@ -589,7 +595,7 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
     >
         <DialogContent sx={{ fontSize: remCalc(14), fontFamily: 'sans-serif' }}>
             <Grid sx={{ width: remCalc(700) }} container columns={2}>
-                <Grid item xs={2}>
+                <Grid item xs={1}>
                     <SwitchBox>
                         <FieldName>Open:</FieldName>
                         <RedSwitch
@@ -598,6 +604,11 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
                             onChange={handleSwitch}
                         />
                     </SwitchBox>
+                </Grid>
+                <Grid item xs={1}>
+                    {warning == 'set' ? <Box sx={{ height: '15px', cursor: 'pointer' }}>
+                        <Alert onClick={()=>setWarning('disabled')} severity={'warning'}>{warningText}</Alert>
+                    </Box> : <></>}
                 </Grid>
                 <Grid item xs={1}>
                     <Grid container columns={1}>
@@ -767,6 +778,7 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
         </DialogContent>
 
         <DialogActions sx={{ justifyContent: 'center' }}>
+
             <ButtonContainerStyled>
                 {isLoading ? < CircularProgress size={20}/> :
                     <>{evaluate ? <Button style={{ minWidth: remCalc(101) }} text="Evaluate To Fit"

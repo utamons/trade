@@ -1,5 +1,5 @@
-import { FieldBox, FieldName, FieldValue } from '../../styles/style'
-import Select from '../tools/select'
+import { FieldBox, FieldName, FieldValue } from '../../../styles/style'
+import Select from '../../tools/select'
 import { Grid } from '@mui/material'
 import React from 'react'
 import { SelectFieldBoxProps } from 'types'
