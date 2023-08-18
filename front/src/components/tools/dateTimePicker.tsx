@@ -43,6 +43,7 @@ export const BasicDateTimePicker = ({ name, dispatch }: DatePickerProps) => {
                 inputFormat="YYYY-MM-DD HH:mm"
                 onChange={handleChange}
                 onAccept={handleChange}
+                disableFuture
             />
         </LocalizationProvider>
     )

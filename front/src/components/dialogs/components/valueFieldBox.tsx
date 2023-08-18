@@ -1,5 +1,5 @@
 import { ValueFieldBoxProps } from 'types'
-import { FieldBox, FieldName, FieldValue } from '../../styles/style'
+import { FieldBox, FieldName, FieldValue } from '../../../styles/style'
 import { Grid } from '@mui/material'
 import React from 'react'
 

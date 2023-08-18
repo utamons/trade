@@ -5,9 +5,9 @@ import TradeLog from './components/logGrid/tradeLog'
 import { remCalc } from './utils/utils'
 import { MainMenu } from './components/menu/mainMenu'
 import { LOG_VIEW, STATS_VIEW, TradeContext } from './trade-context'
-import Open from './components/logGrid/dialogs/openDialog'
+import Open from './components/dialogs/openDialog'
 import Refill from './components/dialogs/refill'
-import Exchange from './components/dialogs/exchange'
+import Exchange from './components/dialogs/exchangeDialog'
 import Stats from './components/stats/stats'
 
 

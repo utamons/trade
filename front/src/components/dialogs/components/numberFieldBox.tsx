@@ -1,7 +1,7 @@
 import { NumberFieldBoxProps } from 'types'
 import { Grid } from '@mui/material'
-import { FieldBox, FieldName, FieldValue } from '../../styles/style'
-import NumberInput from '../tools/numberInput'
+import { FieldBox, FieldName, FieldValue } from '../../../styles/style'
+import NumberInput from '../../tools/numberInput'
 import React from 'react'
 
 export default ({
