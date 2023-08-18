@@ -44,6 +44,7 @@ const StatsView = () => {
 
 export default () => {
     const {
+        currentBroker,
         isLoading,
         openDialogVisible,
         setOpenDialogVisible,
@@ -64,14 +65,14 @@ export default () => {
     }, [])
 
     const commitRefill = useCallback((currencyId: number, amount: number) => {
-        refill(currencyId, amount)
+        refill(currentBroker?.id ?? 0, currencyId, amount)
         setRefillDialogVisible(false)
-    }, [])
+    }, [currentBroker])
 
     const commitCorrection = useCallback((currencyId: number, amount: number) => {
-        correction(currencyId, amount)
+        correction(currentBroker?.id ?? 0, currencyId, amount)
         setCorrectionDialogVisible(false)
-    }, [])
+    }, [currentBroker])
 
     const cancelRefill = useCallback(() => {
         setRefillDialogVisible(false)
