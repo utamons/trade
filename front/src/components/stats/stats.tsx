@@ -191,7 +191,7 @@ const Stats = () => {
                     <StatsCard title={'Common data'}>
                         <StatsContainer>
                             <StatsFieldBox label={'Total trades'} value={stats?.trades}/>
-                            <StatsFieldBox label={'Days with trade'} value={stats?.dayWithTradesDayRatio}/>
+                            <StatsFieldBox pc label={'Trade days'} value={stats?.dayWithTradesDayRatio}/>
                             <StatsFieldBox label={'Trades / day (max)'} value={stats?.tradesPerDayMax}/>
                             <StatsFieldBox label={'Trades / day (avg)'} value={stats?.tradesPerDayAvg}/>
                         </StatsContainer>
@@ -211,10 +211,10 @@ const Stats = () => {
                 <Grid item xs={2}>
                     <StatsCard title={'Quality'}>
                         <StatsContainer>
-                            <StatsFieldBox variant={'pc'} label={'R/R (avg)'} value={stats?.riskRewardRatioAvg}/>
-                            <StatsFieldBox variant={'pc'} label={'R/R (max)'} value={stats?.riskRewardRatioMax}/>
-                            <StatsFieldBox variant={'pc'} label={'Win rate'} value={stats?.winRate}/>
-                            <StatsFieldBox variant={'pc'} label={'Capital turnover'} value={stats?.capitalTurnover}/>
+                            <StatsFieldBox pc label={'R/R (avg)'} value={stats?.riskRewardRatioAvg}/>
+                            <StatsFieldBox pc label={'R/R (max)'} value={stats?.riskRewardRatioMax}/>
+                            <StatsFieldBox pc label={'Win rate'} value={stats?.winRate}/>
+                            <StatsFieldBox pc label={'Capital turnover'} value={stats?.capitalTurnover}/>
                             <StatsFieldBox label={'Slippage (avg)'} value={stats?.slippageAvg}/>
                             <StatsFieldBox label={'Take delta (avg)'} value={stats?.takeDeltaAvg}/>
                             <StatsFieldBox label={'Stop delta (avg)'} value={stats?.stopDeltaAvg}/>
@@ -230,8 +230,8 @@ const Stats = () => {
                             <StatsFieldBox label={'Profit partials (avg)'} value={stats?.profitPartialsAvg}/>
                             <StatsFieldBox label={'Profit singles (avg)'} value={stats?.profitSinglesAvg}/>
                             <StatsFieldBox label={'Profit'} value={stats?.profit}/>
-                            <StatsFieldBox variant={'pc'} label={'Profit / volume'} value={stats?.profitVolumePc}/>
-                            <StatsFieldBox variant={'pc'} label={'Profit / capital'} value={stats?.profitCapitalPc}/>
+                            <StatsFieldBox pc label={'Profit / volume'} value={stats?.profitVolumePc}/>
+                            <StatsFieldBox pc label={'Profit / capital'} value={stats?.profitCapitalPc}/>
                         </StatsContainer>
                     </StatsCard>
                 </Grid>
@@ -259,6 +259,7 @@ const Stats = () => {
                             <StatsFieldBox label={'Refills'} value={stats?.refills}/>
                             <StatsFieldBox label={'Withdrawals'} value={stats?.withdrawals}/>
                             <StatsFieldBox label={'Capital change'} value={stats?.capitalChange}/>
+                            <StatsFieldBox label={'Outcome'} value={((stats?.profit ?? 0) - (stats?.loss ?? 0))}/>
                         </StatsContainer>
                     </StatsCard>
                 </Grid>

@@ -27,11 +27,15 @@ export const FieldName = styled(Box)(() => ({
     width: remCalc(230)
 }))
 
-export default ({ label, value, variant, color } : ValueFieldBoxProps) => (
+interface StatsFieldBoxProps extends ValueFieldBoxProps {
+    pc?: boolean
+}
+
+export default ({ label, value, pc, color } : StatsFieldBoxProps) => (
     <Grid item xs={1}>
         <FieldBox>
             <FieldName>{label}</FieldName>
-            <FieldValue sx={color}>{value ?? ''}{variant == 'pc'?' %':''}</FieldValue>
+            <FieldValue sx={color}>{value ?? ''}{pc?' %':''}</FieldValue>
         </FieldBox>
     </Grid>
 )

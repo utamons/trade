@@ -362,7 +362,6 @@ type StatsType = {
     volumePerTradeAvg: number,
     volumePerDayMax: number,
     volumePerDayAvg: number,
-    capitalTurnover: number, // Capital turnover
     volume: number,
     // Commissions
     commissionsPerTradeAvg: number,
@@ -384,6 +383,7 @@ type StatsType = {
     riskRewardRatioAvg: number,
     riskRewardRatioMax: number,
     winRate: number, // Trades with profit / Total trades
+    capitalTurnover: number, // Capital turnover
     slippageAvg: number,
     takeDeltaAvg: number, // TakeProfit estimate - TakeProfit real (for positive trades)
     stopDeltaAvg: number, // StopLoss estimate - StopLoss real (for negative trades)
