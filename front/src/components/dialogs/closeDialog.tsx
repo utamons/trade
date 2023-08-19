@@ -5,15 +5,16 @@ import DialogActions from '@mui/material/DialogActions'
 import Dialog from '@mui/material/Dialog'
 import { remCalc } from '../../utils/utils'
 import Button from '../tools/button'
-import React, { Dispatch, useCallback, useContext, useEffect } from 'react'
+import React, { Dispatch, useCallback, useContext, useEffect, useState } from 'react'
 import { ButtonContainerStyled, NoteBox } from '../../styles/style'
-import { Grid } from '@mui/material'
+import { Box, Grid } from '@mui/material'
 import TextField from '@mui/material/TextField'
 import { FormAction, FormActionPayload, FormState, TradeLog } from 'types'
 import { getFieldErrorText, getFieldValue, isFieldValid, useForm } from './dialogUtils'
 import DatePickerBox from './components/datePickerBox'
 import NumberFieldBox from './components/numberFieldBox'
 import { TradeContext } from '../../trade-context'
+import Alert from '@mui/material/Alert'
 
 interface CloseDialogProps {
     position: TradeLog,
@@ -88,6 +89,8 @@ const initFormState = (
 export default ({ onClose, isOpen, position }: CloseDialogProps) => {
     const { close } = useContext(TradeContext)
     const { formState, dispatch } = useForm()
+    const [warning, setWarning] = useState<'set'|'unset'|'disabled'>('unset')
+    const [warningText, setWarningText] = useState<string>('')
 
     useEffect(() => {
         let quantity = position.itemBought ?? position.itemSold ?? 0
@@ -121,6 +124,9 @@ export default ({ onClose, isOpen, position }: CloseDialogProps) => {
         if (date == undefined) {
             dispatch({ type: 'set', payload: { name: 'date', valid: false, errorText: 'required' } })
             state = false
+        } else if (Date.now() - date.getTime() < 5 * 60 * 1000 && warning == 'unset') {
+            setWarning('set')
+            setWarningText('Date is too close to now')
         }
         if (items == undefined) {
             dispatch({ type: 'set', payload: { name: 'items', valid: false, errorText: 'required' } })
@@ -178,6 +184,7 @@ export default ({ onClose, isOpen, position }: CloseDialogProps) => {
     }, [total, items, date, note, brokerInterest, closeCommission, finalStopLoss, finalTakeProfit])
 
     return <Dialog
+        sx={{ '& .MuiDialog-paper': { minHeight: (warning == 'set' ? remCalc(505) : '') } }}
         maxWidth={false}
         open={isOpen}
     >
@@ -247,6 +254,11 @@ export default ({ onClose, isOpen, position }: CloseDialogProps) => {
                             })}
                         />
                     </NoteBox>
+                </Grid>
+                <Grid item xs={1}>
+                    {warning == 'set' ? <Box sx={{ height: '15px', cursor: 'pointer' }}>
+                        <Alert onClick={()=>setWarning('disabled')} severity={'warning'}>{warningText}</Alert>
+                    </Box> : <></>}
                 </Grid>
             </Grid>
         </DialogContent>
