@@ -63,6 +63,11 @@ const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, tic
     const payload: FormActionPayload = {
         valuesNumeric: [
             {
+                name: 'currentPrice',
+                valid: true,
+                value: undefined
+            },
+            {
                 name: 'openCommission',
                 valid: true,
                 value: undefined
@@ -185,6 +190,13 @@ const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, tic
     dispatch({ type: 'init', payload })
 }
 
+const getCorrectedAtr = (atr: number, currentPrice: number, levelPrice: number) => {
+    if (currentPrice) {
+        return atr - Math.abs(currentPrice - levelPrice)
+    }
+    return atr
+}
+
 export default ({ onClose, isOpen }: OpenDialogProps) => {
     const { currentBroker, markets, tickers, open } = useContext(TradeContext)
     const { formState, dispatch } = useForm()
@@ -194,8 +206,6 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
     const [technicalStop, setTechnicalStop] = useState(false)
     const [warning, setWarning] = useState<'set'|'unset'|'disabled'>('unset')
     const [warningText, setWarningText] = useState<string>('')
-
-    console.log('openDialog', formState)
 
     if (!currentBroker)
         return null
@@ -208,6 +218,7 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
 
     const { isValid } = formState
 
+    const currentPrice = getFieldValue('currentPrice', formState) as number
     const tickerId = '' + getFieldValue('tickerId', formState)
     const marketId = '' + getFieldValue('marketId', formState)
     const positionId = '' + getFieldValue('positionId', formState)
@@ -355,12 +366,13 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
     // noinspection DuplicatedCode
     const handleEvalToFit = useCallback(async () => {
         if (evaluate && validEvalToFit()) {
+            const correctedAtr = getCorrectedAtr(atr, currentPrice, levelPrice)
             setLoading(true)
             const ev: EvalToFit = await postEvalToFit({
                 brokerId: currentBroker.id,
                 tickerId: Number(tickerId),
                 levelPrice,
-                atr,
+                atr: correctedAtr,
                 riskPc,
                 riskRewardPc,
                 depositPc,
@@ -369,7 +381,6 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
                 short: positionId == '1',
                 technicalStop
             })
-            console.log('ev', ev)
             setLoading(false)
             dispatch({ type: 'set', payload: { name: 'outcomeExp', valueNum: ev.outcomeExp, valid: true } })
             dispatch({ type: 'set', payload: { name: 'gainPc', valueNum: ev.gainPc, valid: true } })
@@ -396,7 +407,8 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
         riskRewardPc,
         depositPc,
         technicalStop,
-        positionId
+        positionId,
+        currentPrice
     ])
 
     const validEval = () => {
@@ -491,10 +503,11 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
 
     const handleOpen = useCallback(async () => {
         if (evaluate && validEval()) {
+            const correctedAtr = getCorrectedAtr(atr, currentPrice, levelPrice)
             const ev: Eval = await postEval({
                 brokerId: currentBroker.id,
                 tickerId: Number(tickerId),
-                atr,
+                atr: correctedAtr,
                 takeProfit,
                 price,
                 items,
@@ -559,6 +572,7 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
         takeProfit,
         totalBought,
         totalSold,
+        currentPrice,
         outcomeExp])
 
     useEffect(() => {
@@ -688,12 +702,12 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
                             fieldName={'atr'}
                             dispatch={dispatch}/>
                         <NumberFieldBox
-                            label={'Vol./depo. (%):'}
-                            value={depositPc}
-                            valid={isFieldValid('depositPc', formState)}
-                            errorText={getFieldErrorText('depositPc', formState)}
+                            label={'Curr. price:'}
+                            value={currentPrice}
+                            valid={isFieldValid('currentPrice', formState)}
+                            errorText={getFieldErrorText('currentPrice', formState)}
                             color={greaterColor(depositPc, defaultColor, MAX_DEPOSIT_PC)}
-                            fieldName={'depositPc'}
+                            fieldName={'currentPrice'}
                             dispatch={dispatch}/>
                     </Grid>
                 </Grid>
@@ -724,6 +738,14 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
                             value={riskRewardPc}
                             dispatch={dispatch}
                         />
+                        <NumberFieldBox
+                            label={'Vol./depo. (%):'}
+                            value={depositPc}
+                            valid={isFieldValid('depositPc', formState)}
+                            errorText={getFieldErrorText('depositPc', formState)}
+                            color={greaterColor(depositPc, defaultColor, MAX_DEPOSIT_PC)}
+                            fieldName={'depositPc'}
+                            dispatch={dispatch}/>
                         {isShort() ? <NumberFieldBox
                             label={'Total (SLD):'}
                             fieldName={'totalSold'}

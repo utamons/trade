@@ -682,7 +682,7 @@ public class CashService {
 	}
 
 	public double getRiskBase(double capital) {
-		return capital;
+		return Math.min(capital, 5000.0);
 	}
 
 	/**
@@ -734,7 +734,7 @@ public class CashService {
 	                        double depositPc,
 	                        double price,
 	                        Currency currency) throws JsonProcessingException {
-		double maxVolumeUSD = capital * depositPc / 100.0;
+		double maxVolumeUSD = getRiskBase(capital) * depositPc / 100.0;
 		double priceUSD     = currencyRateService.convertToUSD(currency.getId(), price, LocalDate.now());
 		return (long) (maxVolumeUSD / priceUSD);
 	}
