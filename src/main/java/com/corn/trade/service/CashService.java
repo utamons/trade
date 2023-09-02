@@ -808,7 +808,7 @@ public class CashService {
 		Double    atr        = evalDTO.atr();
 		Currency  currency   = tickerRepo.getReferenceById(evalDTO.tickerId()).getCurrency();
 		Broker    broker     = brokerRepo.getReferenceById(evalDTO.brokerId());
-		double    price      = levelPrice + (shortC * 0.05);
+		double    price      = levelPrice + (shortC * 0.06);
 		double    capital    = getCapital(broker, null);
 		if (capital == 0.0) {
 			throw new IllegalStateException("No capital for broker " + broker.getName());
@@ -816,8 +816,8 @@ public class CashService {
 		// calculated stop loss is 0.2% of the level price (for US stocks)
 		double stopLoss =
 				evalDTO.stopLoss() == null ? levelPrice - (shortC * levelPrice / 100 * 0.2) : evalDTO.stopLoss();
-		// calculated take profit is 70% of ATR
-		double takeProfit = price + (shortC * atr * 0.7);
+		// calculated take profit is 65% of ATR
+		double takeProfit = price + (shortC * atr * 0.65);
 
 		EvalToFitRecord evalToFitRecord;
 
