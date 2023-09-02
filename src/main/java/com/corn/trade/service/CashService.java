@@ -773,7 +773,7 @@ public class CashService {
 		do {
 			double volume    = price * items;
 			double volumeUSD = currencyRateService.convertToUSD(currency.getId(), volume, LocalDate.now());
-			volumePc = volumeUSD / capital * 100.0;
+			volumePc = volumeUSD / getRiskBase(capital) * 100.0;
 			dto = new EvalInDTO(
 					evalDTO.brokerId(),
 					evalDTO.tickerId(),
