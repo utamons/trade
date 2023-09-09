@@ -56,6 +56,58 @@ interface EvalToFit {
     risk: number
 }
 
+const resetPayload = (levelPrice: number | undefined, atr: number | undefined, tickerId: string, marketId: string, positionId: string ) => {
+    return {
+        values: [
+            {
+                name: 'levelPrice',
+                valid: true,
+                value: levelPrice
+            },
+            {
+                name: 'atr',
+                valid: true,
+                value: atr
+            },
+            {
+                name: 'tickerId',
+                valid: true,
+                value: tickerId
+            },
+            {
+                name: 'marketId',
+                valid: true,
+                value: marketId
+            },
+            {
+                name: 'positionId',
+                valid: true,
+                value: positionId
+            },
+            {
+                name: 'riskRewardPc',
+                valid: true,
+                value: MAX_RISK_REWARD_PC
+            },
+            {
+                name: 'depositPc',
+                valid: true,
+                value: MAX_DEPOSIT_PC
+            },
+            {
+                name: 'riskPc',
+                valid: true,
+                value: MAX_RISK_PC
+            },
+            {
+                name: 'date',
+                valid: true,
+                value: new Date()
+            }
+        ]
+    }
+}
+
 const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, tickerId: number, marketId: number, positionId: number) => {
     if (formState.isInitialized)
         return
@@ -590,61 +642,13 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
     }, [])
 
     const handleCancel = useCallback(() => {
-        dispatch({ type: 'reset', payload: {} })
+        dispatch({ type: 'reset', payload: resetPayload(undefined, undefined, ''+tickers[0].id, ''+markets[0].id, ''+positions[0].id) })
         onClose()
     }, [])
 
     const handleReset = useCallback(() => {
         dispatch({ type: 'clearErrors', payload: {} })
-        dispatch({ type: 'reset', payload: {
-            values: [
-                {
-                    name: 'levelPrice',
-                    valid: true,
-                    value: levelPrice
-                },
-                {
-                    name: 'atr',
-                    valid: true,
-                    value: atr
-                },
-                {
-                    name: 'tickerId',
-                    valid: true,
-                    value: tickerId
-                },
-                {
-                    name: 'marketId',
-                    valid: true,
-                    value: marketId
-                },
-                {
-                    name: 'positionId',
-                    valid: true,
-                    value: positionId
-                },
-                {
-                    name: 'riskRewardPc',
-                    valid: true,
-                    value: MAX_RISK_REWARD_PC
-                },
-                {
-                    name: 'depositPc',
-                    valid: true,
-                    value: MAX_DEPOSIT_PC
-                },
-                {
-                    name: 'riskPc',
-                    valid: true,
-                    value: MAX_RISK_PC
-                },
-                {
-                    name: 'date',
-                    valid: true,
-                    value: new Date()
-                }
-            ]
-            } })
+        dispatch({ type: 'reset', payload: resetPayload(levelPrice, atr, tickerId, marketId, positionId) })
         setTechnicalStop(false)
         setWarning('unset')
         setWarningText('')
