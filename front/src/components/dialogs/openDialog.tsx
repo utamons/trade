@@ -56,13 +56,13 @@ interface EvalToFit {
     risk: number
 }
 
-const resetPayload = (levelPrice: number | undefined, atr: number | undefined, tickerId: string, marketId: string, positionId: string ) => {
+const resetPayload = (stopPrice: number | undefined, atr: number | undefined, tickerId: string, marketId: string, positionId: string ) => {
     return {
         values: [
             {
-                name: 'levelPrice',
+                name: 'stopPrice',
                 valid: true,
-                value: levelPrice
+                value: stopPrice
             },
             {
                 name: 'atr',
@@ -165,7 +165,7 @@ const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, tic
                 value: positionId
             },
             {
-                name: 'price',
+                name: 'limit',
                 valid: true,
                 value: undefined
             },
@@ -205,7 +205,7 @@ const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, tic
                 value: undefined
             },
             {
-                name: 'levelPrice',
+                name: 'stopPrice',
                 valid: true,
                 value: undefined
             },
@@ -240,9 +240,9 @@ const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, tic
     dispatch({ type: 'init', payload })
 }
 
-const getCorrectedAtr = (atr: number, currentPrice: number, levelPrice: number) => {
+const getCorrectedAtr = (atr: number, currentPrice: number, stopPrice: number) => {
     if (currentPrice) {
-        return atr - Math.abs(currentPrice - levelPrice)
+        return atr - Math.abs(currentPrice - stopPrice)
     }
     return atr
 }
@@ -272,7 +272,7 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
     const tickerId = '' + getFieldValue('tickerId', formState)
     const marketId = '' + getFieldValue('marketId', formState)
     const positionId = '' + getFieldValue('positionId', formState)
-    const price = getFieldValue('price', formState) as number
+    const limit = getFieldValue('limit', formState) as number
     const items = getFieldValue('items', formState) as number
     const stopLoss = getFieldValue('stopLoss', formState) as number
     const takeProfit = getFieldValue('takeProfit', formState) as number
@@ -284,7 +284,7 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
     const fees = getFieldValue('fees', formState) as number
     const note = getFieldValue('note', formState) as string
     const date = getFieldValue('date', formState) as Date
-    const levelPrice = getFieldValue('levelPrice', formState) as number
+    const stopPrice = getFieldValue('stopPrice', formState) as number
     const atr = getFieldValue('atr', formState) as number
     const volume = getFieldValue('volume', formState) as number
     const gainPc = getFieldValue('gainPc', formState) as number
@@ -296,22 +296,22 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
     const isShort = () => positionId == '1'
 
     const breakEvenPercentageStr = () => {
-        if (breakEven && price)
-            return `(${roundTo2(Math.abs(breakEven / (price / 100) - 100))}%)`
+        if (breakEven && limit)
+            return `(${roundTo2(Math.abs(breakEven / (limit / 100) - 100))}%)`
         else
             return ''
     }
 
     const validateStopLoss = (state: boolean) => {
-        if (price > 0 && stopLoss > 0 && isShort() && price > stopLoss) {
+        if (limit > 0 && stopLoss > 0 && isShort() && limit > stopLoss) {
             dispatch({
                 type: 'set',
-                payload: { name: 'stopLoss', valid: false, errorText: 'must be greater than price' }
+                payload: { name: 'stopLoss', valid: false, errorText: 'must be greater than limit' }
             })
             state = false
         }
-        if (price > 0 && stopLoss > 0 && !isShort() && price < stopLoss) {
-            dispatch({ type: 'set', payload: { name: 'stopLoss', valid: false, errorText: 'must be less than price' } })
+        if (limit > 0 && stopLoss > 0 && !isShort() && limit < stopLoss) {
+            dispatch({ type: 'set', payload: { name: 'stopLoss', valid: false, errorText: 'must be less than limit' } })
             state = false
         }
         return state
@@ -320,17 +320,17 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
     const validEvalToFit = () => {
         dispatch({ type: 'clearErrors', payload: {} })
         let state = true
-        if (levelPrice == undefined) {
+        if (stopPrice == undefined) {
             dispatch({
                 type: 'set',
-                payload: { name: 'levelPrice', value: undefined, valid: false, errorText: 'required' }
+                payload: { name: 'stopPrice', value: undefined, valid: false, errorText: 'required' }
             })
             state = false
         }
-        if (levelPrice < 0) {
+        if (stopPrice < 0) {
             dispatch({
                 type: 'set',
-                payload: { name: 'levelPrice', value: levelPrice, valid: false, errorText: 'must be greater than 0' }
+                payload: { name: 'stopPrice', value: stopPrice, valid: false, errorText: 'must be greater than 0' }
             })
             state = false
         }
@@ -416,13 +416,13 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
     // noinspection DuplicatedCode
     const handleEvalToFit = useCallback(async () => {
         if (evaluate && validEvalToFit()) {
-            const correctedAtr = getCorrectedAtr(atr, currentPrice, levelPrice)
+            const correctedAtr = getCorrectedAtr(atr, currentPrice, stopPrice)
             setLoading(true)
             console.log('handleEvalToFit')
             const ev: EvalToFit = await postEvalToFit({
                 brokerId: currentBroker.id,
                 tickerId: Number(tickerId),
-                levelPrice,
+                levelPrice: stopPrice,
                 atr: correctedAtr,
                 riskPc,
                 riskRewardPc,
@@ -436,7 +436,7 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
             dispatch({ type: 'set', payload: { name: 'outcomeExp', value: ev.outcomeExp, valid: true } })
             dispatch({ type: 'set', payload: { name: 'gainPc', value: ev.gainPc, valid: true } })
             dispatch({ type: 'set', payload: { name: 'fees', value: ev.fees, valid: true } })
-            dispatch({ type: 'set', payload: { name: 'price', value: ev.price, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'limit', value: ev.price, valid: true } })
             dispatch({ type: 'set', payload: { name: 'riskPc', value: ev.riskPc, valid: true } })
             dispatch({ type: 'set', payload: { name: 'riskRewardPc', value: ev.riskRewardPc, valid: true } })
             dispatch({ type: 'set', payload: { name: 'breakEven', value: ev.breakEven, valid: true } })
@@ -452,7 +452,7 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
     }, [
         evaluate,
         stopLoss,
-        levelPrice,
+        stopPrice,
         atr,
         riskPc,
         riskRewardPc,
@@ -465,12 +465,12 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
     const validEval = () => {
         dispatch({ type: 'clearErrors', payload: {} })
         let state = true
-        if (price == undefined) {
-            dispatch({ type: 'set', payload: { name: 'price', valid: false, errorText: 'required' } })
+        if (limit == undefined) {
+            dispatch({ type: 'set', payload: { name: 'limit', valid: false, errorText: 'required' } })
             state = false
         }
-        if (price <= 0) {
-            dispatch({ type: 'set', payload: { name: 'price', valid: false, errorText: 'must be greater than 0' } })
+        if (limit <= 0) {
+            dispatch({ type: 'set', payload: { name: 'limit', valid: false, errorText: 'must be greater than 0' } })
             state = false
         }
         if (items == undefined) {
@@ -509,17 +509,17 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
             state = false
         }
         state = validateStopLoss(state)
-        if (price > 0 && takeProfit > 0 && isShort() && price < takeProfit) {
+        if (limit > 0 && takeProfit > 0 && isShort() && limit < takeProfit) {
             dispatch({
                 type: 'set',
-                payload: { name: 'takeProfit', valid: false, errorText: 'must be less than price' }
+                payload: { name: 'takeProfit', valid: false, errorText: 'must be less than limit' }
             })
             state = false
         }
-        if (price > 0 && takeProfit > 0 && !isShort() && price > takeProfit) {
+        if (limit > 0 && takeProfit > 0 && !isShort() && limit > takeProfit) {
             dispatch({
                 type: 'set',
-                payload: { name: 'takeProfit', valid: false, errorText: 'must be greater than price' }
+                payload: { name: 'takeProfit', valid: false, errorText: 'must be greater than limit' }
             })
             state = false
         }
@@ -532,8 +532,8 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
             setWarning('set')
             setWarningText('Date is too close to now')
         }
-        if (levelPrice == undefined) {
-            dispatch({ type: 'set', payload: { name: 'levelPrice', valid: false, errorText: 'required' } })
+        if (stopPrice == undefined) {
+            dispatch({ type: 'set', payload: { name: 'stopPrice', valid: false, errorText: 'required' } })
             state = false
         }
         if (openCommission == undefined) {
@@ -554,13 +554,13 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
 
     const handleOpen = useCallback(async () => {
         if (evaluate && validEval()) {
-            const correctedAtr = getCorrectedAtr(atr, currentPrice, levelPrice)
+            const correctedAtr = getCorrectedAtr(atr, currentPrice, stopPrice)
             const ev: Eval = await postEval({
                 brokerId: currentBroker.id,
                 tickerId: Number(tickerId),
                 atr: correctedAtr,
                 takeProfit,
-                price,
+                price : limit,
                 items,
                 stopLoss,
                 date: date.toISOString(),
@@ -585,13 +585,13 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
                 marketId: Number(marketId),
                 tickerId: Number(tickerId),
 
-                estimatedPriceOpen: price,
+                estimatedPriceOpen: limit,
                 estimatedFees: fees,
                 estimatedBreakEven: breakEven,
                 estimatedItems: items,
                 riskToCapitalPc: riskPc,
                 risk,
-                levelPrice,
+                levelPrice: stopPrice,
                 atr,
 
                 openStopLoss: stopLoss,
@@ -611,7 +611,7 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
         positionId,
         marketId,
         tickerId,
-        price,
+        limit,
         items,
         atr,
         stopLoss,
@@ -648,11 +648,11 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
 
     const handleReset = useCallback(() => {
         dispatch({ type: 'clearErrors', payload: {} })
-        dispatch({ type: 'reset', payload: resetPayload(levelPrice, atr, tickerId, marketId, positionId) })
+        dispatch({ type: 'reset', payload: resetPayload(stopPrice, atr, tickerId, marketId, positionId) })
         setTechnicalStop(false)
         setWarning('unset')
         setWarningText('')
-    }, [levelPrice, atr, tickerId, marketId, positionId])
+    }, [stopPrice, atr, tickerId, marketId, positionId])
 
     console.log('openDialog render ', getFieldErrorText('riskPc', formState))
 
@@ -709,14 +709,6 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
                             label="Ticker:"
                             variant="small"/>
                         <NumberFieldBox
-                            label={`Price: (${currentTicker ? (currentTicker.currency.name) : '???'})`}
-                            value={price}
-                            fieldName={'price'}
-                            valid={isFieldValid('price', formState)}
-                            errorText={getFieldErrorText('price', formState)}
-                            color={BLUE}
-                            dispatch={dispatch}/>
-                        <NumberFieldBox
                             label={'Items:'}
                             value={items}
                             color={BLUE}
@@ -733,7 +725,7 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
                             fieldName={'stopLoss'}
                             dispatch={dispatch}/>
                         <NumberFieldBox
-                            color={takeColor(takeProfit, price, atr)}
+                            color={takeColor(takeProfit, limit, atr)}
                             label={'Take Profit:'}
                             value={takeProfit}
                             valid={isFieldValid('takeProfit', formState)}
@@ -741,11 +733,19 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
                             fieldName={'takeProfit'}
                             dispatch={dispatch}/>
                         <NumberFieldBox
-                            label={'Level Price:'}
-                            value={levelPrice}
-                            valid={isFieldValid('levelPrice', formState)}
-                            errorText={getFieldErrorText('levelPrice', formState)}
-                            fieldName={'levelPrice'}
+                            label={`Limit: (${currentTicker ? (currentTicker.currency.name) : '???'})`}
+                            value={limit}
+                            fieldName={'limit'}
+                            valid={isFieldValid('limit', formState)}
+                            errorText={getFieldErrorText('limit', formState)}
+                            color={BLUE}
+                            dispatch={dispatch}/>
+                        <NumberFieldBox
+                            label={'Stop:'}
+                            value={stopPrice}
+                            valid={isFieldValid('stopPrice', formState)}
+                            errorText={getFieldErrorText('stopPrice', formState)}
+                            fieldName={'stopPrice'}
                             dispatch={dispatch}/>
                         <NumberFieldBox
                             label={'ATR:'}
