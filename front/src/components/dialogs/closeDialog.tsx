@@ -35,7 +35,7 @@ const initFormState = (
         return
 
     const payload: FormActionPayload = {
-        valuesNumeric: [
+        values: [
             {
                 name: 'items',
                 valid: true,
@@ -65,16 +65,12 @@ const initFormState = (
                 name: 'brokerInterest',
                 valid: true,
                 value: brokerInterest
-            }
-        ],
-        valuesString: [
+            },
             {
                 name: 'note',
                 valid: true,
                 value: note
-            }
-        ],
-        valuesDate: [
+            },
             {
                 name: 'date',
                 valid: true,
@@ -250,7 +246,7 @@ export default ({ onClose, isOpen, position }: CloseDialogProps) => {
                             style={{ width: '100%', fontSize: remCalc(14) }}
                             onChange={(event) => dispatch({
                                 type: 'set',
-                                payload: { name: 'note', valueStr: event.target.value, valid: true }
+                                payload: { name: 'note', value: event.target.value, valid: true }
                             })}
                         />
                     </NoteBox>

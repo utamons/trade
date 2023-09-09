@@ -24,9 +24,9 @@ export default ({ color, name, dispatch, label, value, valid, errorText }: Numbe
 
     const handleInput = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         setValue((event.target.value))
-        const valueNum = Number(event.target.value)
-        if (event.target.value != '' && !isNaN(valueNum))
-            dispatch({ type: 'set', payload: { name, valueNum } })
+        const value = Number(event.target.value)
+        if (event.target.value != '' && !isNaN(value))
+            dispatch({ type: 'set', payload: { name, value } })
     }, [name])
 
     const handleValidate =
@@ -46,12 +46,12 @@ export default ({ color, name, dispatch, label, value, valid, errorText }: Numbe
     const validate = (value: string): boolean => {
         const num = Number(value)
         if (value && isNaN(num)) {
-            dispatch({ type: 'set', payload: { name, valueStr: value, valid: false, errorText: 'Non-numeric value' } })
+            dispatch({ type: 'set', payload: { name, value: value, valid: false, errorText: 'Non-numeric value' } })
             return true
         }
         setError(false)
         setErrorText('')
-        dispatch({ type: 'set', payload: { name, valueNum: num, valid: true } })
+        dispatch({ type: 'set', payload: { name, value: num, valid: true } })
         return false
     }
 

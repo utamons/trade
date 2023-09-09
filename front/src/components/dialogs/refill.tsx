@@ -30,7 +30,7 @@ const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, cur
         return
 
     const payload: FormActionPayload = {
-        valuesNumeric: [
+        values: [
             {
                 name: 'currencyId',
                 valid: true,

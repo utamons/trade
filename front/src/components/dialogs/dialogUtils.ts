@@ -1,128 +1,112 @@
-import { FormAction, FormOptions, FormState } from 'types'
+import { FormAction, FormField, FormOptions, FormState } from 'types'
 import { useReducer } from 'react'
 import { roundTo2 } from '../../utils/utils'
 
 export const getFieldValue = (name: string, state: FormState): number | string | Date | undefined => {
-    const numericField = state.valuesNumeric.find((field) => field.name === name)
-    if (numericField) {
-        return numericField.value
-    }
-
-    const stringField = state.valuesString.find((field) => field.name === name)
-    if (stringField) {
-        return stringField.value
-    }
-
-    const dateField = state.valuesDate.find((field) => field.name === name)
-    if (dateField) {
-        return dateField.value
+    const field = state.values.find((field) => field.name === name)
+    if (field) {
+        return field.value
     }
 
     return undefined
 }
 
 export const getFieldErrorText = (name: string, state: FormState): string | undefined => {
-    const numericField = state.valuesNumeric.find((field) => field.name === name)
-    if (numericField) {
-        return numericField.errorText
+    const field = state.values.find((field) => field.name === name)
+    if (field) {
+        return field.errorText
     }
     return undefined
 }
 
 export const isFieldValid = (name: string, state: FormState): boolean => {
-    const numericField = state.valuesNumeric.find((field) => field.name === name)
-    if (numericField) {
-        return numericField.valid
+    const field = state.values.find((field) => field.name === name)
+    if (field) {
+        return field.valid
     }
     return true
 }
 
+const reset = (values: FormField[],
+    payloadValues: FormField[])  => {
+    return values.map((field) => {
+        const payloadField = payloadValues.find((pf: FormField) => pf.name === field.name)
+        if (payloadField) {
+            return {
+                ...field,
+                value: payloadField.value,
+                valid: payloadField.valid,
+                errorText: payloadField.errorText
+            }
+        }
+        return {
+            ...field,
+            value: undefined,
+            valid: true,
+            errorText: undefined
+        }
+    })
+}
+
 const formReducer = (state: FormState, action: FormAction): FormState => {
+    console.log('formReducer', action)
     switch (action.type) {
         case 'clearErrors': {
-            const updatedValuesNumeric = state.valuesNumeric.map((field) => ({ ...field, valid: true, errorText: undefined }))
-            const updatedValuesString = state.valuesString.map((field) => ({ ...field, valid: true }))
-            const updatedValuesDate = state.valuesDate.map((field) => ({ ...field, valid: true }))
+            const updatedValues = state.values.map((field) => ({
+                ...field,
+                valid: true,
+                errorText: undefined
+            }))
             return {
                 ...state,
                 isValid: true,
-                valuesNumeric: updatedValuesNumeric,
-                valuesString: updatedValuesString,
-                valuesDate: updatedValuesDate
+                values: updatedValues
             }
         }
         case 'set': {
-            const { name, valueNum, valueStr, valueDate, valid, errorText } = action.payload
+            const { name, value, valid, errorText } = action.payload
 
-            let updatedValuesNumeric = state.valuesNumeric
-            let updatedValuesString = state.valuesString
-            let updatedValuesDate = state.valuesDate
+            let updatedValues = state.values
 
-            updatedValuesNumeric = state.valuesNumeric.map((field) =>
+            updatedValues = state.values.map((field) =>
                 field.name === name ? {
                     ...field,
-                    value: roundTo2(valueNum) ?? valueStr,
+                    value: (value && typeof value == 'number') ? (roundTo2(value) ?? value) : value,
                     valid: valid ?? true,
                     errorText: errorText
                 } : field
             )
 
-            updatedValuesString = state.valuesString.map((field) =>
-                field.name === name ? {
-                    ...field,
-                    value: valueStr ? valueStr : field.value,
-                    valid: valid ?? true
-                } : field
-            )
-
-            updatedValuesDate = state.valuesDate.map((field) =>
-                field.name === name ? {
-                    ...field,
-                    value: valueDate ? valueDate : field.value,
-                    valid: valid ?? true
-                } : field
-            )
-
-            const allFields = [...updatedValuesNumeric, ...updatedValuesString, ...updatedValuesDate]
-            const isValid = allFields.every((field) => field.valid)
+            const isValid = updatedValues.every((field) => field.valid)
 
             return {
                 ...state,
                 isValid,
-                valuesNumeric: updatedValuesNumeric,
-                valuesString: updatedValuesString,
-                valuesDate: updatedValuesDate
+                values: updatedValues
             }
         }
         case 'reset': {
             return {
                 ...state,
-                isValid: false,
-                isInitialized: false,
-                valuesNumeric: state.valuesNumeric.map((field) => ({ ...field, value: undefined, valid: true })),
-                valuesString: state.valuesString.map((field) => ({ ...field, value: undefined, valid: true })),
-                valuesDate: state.valuesDate.map((field) => ({ ...field, value: undefined, valid: true }))
+                values: action.payload.values ?
+                    reset(state.values, action.payload.values) :
+                    state.values.map((field) => ({ ...field, value: undefined, valid: true }))
             }
         }
         case 'init': {
-            const { valuesNumeric, valuesDate, valuesString } = action.payload
+            const { values } = action.payload
 
             return {
                 isValid: true,
                 isInitialized: true,
-                valuesNumeric: valuesNumeric || [],
-                valuesDate: valuesDate || [],
-                valuesString: valuesString || []
+                values: values || []
             }
         }
         case 'remove': {
             const newState = { ...state }
             const { name } = action.payload
 
-            newState.valuesNumeric = newState.valuesNumeric.filter(field => field.name !== name)
-            newState.valuesString = newState.valuesString.filter(field => field.name !== name)
-            newState.valuesDate = newState.valuesDate.filter(field => field.name !== name)
-
+            newState.values = newState.values.filter(field => field.name !== name)
             return newState
         }
         default:
@@ -134,9 +118,7 @@ export const useForm = (): FormOptions => {
     const [state, dispatch] = useReducer(formReducer, {
         isInitialized: false,
         isValid: true,
-        valuesNumeric: [],
-        valuesString: [],
-        valuesDate: []
+        values: []
     })
     return { formState: state, dispatch }
 }

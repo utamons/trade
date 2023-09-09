@@ -38,7 +38,7 @@ const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, cur
         return
 
     const payload: FormActionPayload = {
-        valuesNumeric: [
+        values: [
             {
                 name: 'currencyFromId',
                 valid: true,
@@ -81,8 +81,8 @@ export default ({ open, onClose, currencies }: ExchangeDialogProps) => {
     const currencyToId = '' + getFieldValue('currencyToId', formState)
 
     const handleClose = useCallback(() => {
-         dispatch({ type: 'set', payload: { name: 'valueTo', valueNum: undefined } })
-         dispatch({ type: 'set', payload: { name: 'valueFrom', valueNum: undefined } })
+         dispatch({ type: 'set', payload: { name: 'valueTo', value: undefined } })
+         dispatch({ type: 'set', payload: { name: 'valueFrom', value: undefined } })
          setApiError(undefined)
          onClose()
     }, [])
