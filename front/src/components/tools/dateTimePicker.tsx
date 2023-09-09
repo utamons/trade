@@ -31,7 +31,7 @@ export const BasicDateTimePicker = ({ name, dispatch }: DatePickerProps) => {
     const handleChange = useCallback((value: Dayjs | null) => {
         if (value) {
             setValue(value)
-            dispatch({ type: 'set', payload: { name, valueDate: value.toDate() } })
+            dispatch({ type: 'set', payload: { name, value: value.toDate() } })
         }
     }, [])
 

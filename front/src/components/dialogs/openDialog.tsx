@@ -61,7 +61,7 @@ const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, tic
         return
 
     const payload: FormActionPayload = {
-        valuesNumeric: [
+        values: [
             {
                 name: 'currentPrice',
                 valid: true,
@@ -171,14 +171,12 @@ const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>, tic
                 name: 'fees',
                 valid: true,
                 value: undefined
-            }],
-        valuesString: [
+            },
             {
                 name: 'note',
                 valid: true,
                 value: undefined
-            }],
-        valuesDate: [
+            },
             {
                 name: 'date',
                 valid: true,
@@ -242,6 +240,7 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
     const totalSold = getFieldValue('totalSold', formState) as number
     const openCommission = getFieldValue('openCommission', formState) as number
     const risk = getFieldValue('risk', formState) as number
+
     const isShort = () => positionId == '1'
 
     const breakEvenPercentageStr = () => {
@@ -272,49 +271,49 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
         if (levelPrice == undefined) {
             dispatch({
                 type: 'set',
-                payload: { name: 'levelPrice', valueNum: undefined, valid: false, errorText: 'required' }
+                payload: { name: 'levelPrice', value: undefined, valid: false, errorText: 'required' }
             })
             state = false
         }
         if (levelPrice < 0) {
             dispatch({
                 type: 'set',
-                payload: { name: 'levelPrice', valueNum: levelPrice, valid: false, errorText: 'must be greater than 0' }
+                payload: { name: 'levelPrice', value: levelPrice, valid: false, errorText: 'must be greater than 0' }
             })
             state = false
         }
         if (atr == undefined) {
             dispatch({
                 type: 'set',
-                payload: { name: 'atr', valueNum: undefined, valid: false, errorText: 'required' }
+                payload: { name: 'atr', value: undefined, valid: false, errorText: 'required' }
             })
             state = false
         }
         if (atr < 0) {
             dispatch({
                 type: 'set',
-                payload: { name: 'atr', valueNum: atr, valid: false, errorText: 'must be greater than 0' }
+                payload: { name: 'atr', value: atr, valid: false, errorText: 'must be greater than 0' }
             })
             state = false
         }
         if (riskPc == undefined) {
             dispatch({
                 type: 'set',
-                payload: { name: 'riskPc', valueNum: undefined, valid: false, errorText: 'required' }
+                payload: { name: 'riskPc', value: undefined, valid: false, errorText: 'required' }
             })
             state = false
         }
         if (riskPc < 0) {
             dispatch({
                 type: 'set',
-                payload: { name: 'riskPc', valueNum: riskPc, valid: false, errorText: 'must be greater than 0' }
+                payload: { name: 'riskPc', value: riskPc, valid: false, errorText: 'must be greater than 0' }
             })
             state = false
         }
         if (riskRewardPc == undefined) {
             dispatch({
                 type: 'set',
-                payload: { name: 'riskRewardPc', valueNum: undefined, valid: false, errorText: 'required' }
+                payload: { name: 'riskRewardPc', value: undefined, valid: false, errorText: 'required' }
             })
             state = false
         }
@@ -323,7 +322,7 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
                 type: 'set',
                 payload: {
                     name: 'riskRewardPc',
-                    valueNum: riskRewardPc,
+                    value: riskRewardPc,
                     valid: false,
                     errorText: 'must be greater than 0'
                 }
@@ -333,33 +332,32 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
         if (depositPc == undefined) {
             dispatch({
                 type: 'set',
-                payload: { name: 'depositPc', valueNum: undefined, valid: false, errorText: 'required' }
+                payload: { name: 'depositPc', value: undefined, valid: false, errorText: 'required' }
             })
             state = false
         }
         if (depositPc < 0) {
             dispatch({
                 type: 'set',
-                payload: { name: 'depositPc', valueNum: depositPc, valid: false, errorText: 'must be greater than 0' }
+                payload: { name: 'depositPc', value: depositPc, valid: false, errorText: 'must be greater than 0' }
             })
             state = false
         }
         if (stopLoss != undefined && stopLoss < 0) {
             dispatch({
                 type: 'set',
-                payload: { name: 'stopLoss', valueNum: stopLoss, valid: false, errorText: 'must be greater than 0' }
+                payload: { name: 'stopLoss', value: stopLoss, valid: false, errorText: 'must be greater than 0' }
             })
             state = false
         }
         state = validateStopLoss(state)
-
         return state
     }
 
     const handleTechnicalStop = useCallback((technicalStop: boolean) => {
         setTechnicalStop(technicalStop)
         if (technicalStop) {
-            dispatch({ type: 'set', payload: { name: 'stopLoss', valueNum: undefined, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'stopLoss', value: undefined, valid: true } })
         }
     }, [])
 
@@ -368,6 +366,7 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
         if (evaluate && validEvalToFit()) {
             const correctedAtr = getCorrectedAtr(atr, currentPrice, levelPrice)
             setLoading(true)
+            console.log('handleEvalToFit')
             const ev: EvalToFit = await postEvalToFit({
                 brokerId: currentBroker.id,
                 tickerId: Number(tickerId),
@@ -382,19 +381,19 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
                 technicalStop
             })
             setLoading(false)
-            dispatch({ type: 'set', payload: { name: 'outcomeExp', valueNum: ev.outcomeExp, valid: true } })
-            dispatch({ type: 'set', payload: { name: 'gainPc', valueNum: ev.gainPc, valid: true } })
-            dispatch({ type: 'set', payload: { name: 'fees', valueNum: ev.fees, valid: true } })
-            dispatch({ type: 'set', payload: { name: 'price', valueNum: ev.price, valid: true } })
-            dispatch({ type: 'set', payload: { name: 'riskPc', valueNum: ev.riskPc, valid: true } })
-            dispatch({ type: 'set', payload: { name: 'riskRewardPc', valueNum: ev.riskRewardPc, valid: true } })
-            dispatch({ type: 'set', payload: { name: 'breakEven', valueNum: ev.breakEven, valid: true } })
-            dispatch({ type: 'set', payload: { name: 'stopLoss', valueNum: ev.stopLoss, valid: true } })
-            dispatch({ type: 'set', payload: { name: 'takeProfit', valueNum: ev.takeProfit, valid: true } })
-            dispatch({ type: 'set', payload: { name: 'items', valueNum: ev.items, valid: true } })
-            dispatch({ type: 'set', payload: { name: 'volume', valueNum: ev.volume, valid: true } })
-            dispatch({ type: 'set', payload: { name: 'depositPc', valueNum: ev.depositPc, valid: true } })
-            dispatch({ type: 'set', payload: { name: 'risk', valueNum: ev.risk, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'outcomeExp', value: ev.outcomeExp, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'gainPc', value: ev.gainPc, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'fees', value: ev.fees, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'price', value: ev.price, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'riskPc', value: ev.riskPc, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'riskRewardPc', value: ev.riskRewardPc, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'breakEven', value: ev.breakEven, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'stopLoss', value: ev.stopLoss, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'takeProfit', value: ev.takeProfit, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'items', value: ev.items, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'volume', value: ev.volume, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'depositPc', value: ev.depositPc, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'risk', value: ev.risk, valid: true } })
 
             return
         }
@@ -516,14 +515,14 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
                 short: positionId == '1'
             })
             // noinspection DuplicatedCode
-            dispatch({ type: 'set', payload: { name: 'outcomeExp', valueNum: ev.outcomeExp, valid: true } })
-            dispatch({ type: 'set', payload: { name: 'gainPc', valueNum: ev.gainPc, valid: true } })
-            dispatch({ type: 'set', payload: { name: 'fees', valueNum: ev.fees, valid: true } })
-            dispatch({ type: 'set', payload: { name: 'riskPc', valueNum: ev.riskPc, valid: true } })
-            dispatch({ type: 'set', payload: { name: 'riskRewardPc', valueNum: ev.riskRewardPc, valid: true } })
-            dispatch({ type: 'set', payload: { name: 'breakEven', valueNum: ev.breakEven, valid: true } })
-            dispatch({ type: 'set', payload: { name: 'volume', valueNum: ev.volume, valid: true } })
-            dispatch({ type: 'set', payload: { name: 'risk', valueNum: ev.risk, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'outcomeExp', value: ev.outcomeExp, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'gainPc', value: ev.gainPc, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'fees', value: ev.fees, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'riskPc', value: ev.riskPc, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'riskRewardPc', value: ev.riskRewardPc, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'breakEven', value: ev.breakEven, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'volume', value: ev.volume, valid: true } })
+            dispatch({ type: 'set', payload: { name: 'risk', value: ev.risk, valid: true } })
             return
         }
         if (!evaluate && validOpen() && riskPc != undefined && fees != undefined && outcomeExp != undefined && breakEven != undefined && depositPc != undefined) {
@@ -597,11 +596,61 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
 
     const handleReset = useCallback(() => {
         dispatch({ type: 'clearErrors', payload: {} })
-        dispatch({ type: 'reset', payload: {} })
+        dispatch({ type: 'reset', payload: {
+            values: [
+                {
+                    name: 'levelPrice',
+                    valid: true,
+                    value: levelPrice
+                },
+                {
+                    name: 'atr',
+                    valid: true,
+                    value: atr
+                },
+                {
+                    name: 'tickerId',
+                    valid: true,
+                    value: tickerId
+                },
+                {
+                    name: 'marketId',
+                    valid: true,
+                    value: marketId
+                },
+                {
+                    name: 'positionId',
+                    valid: true,
+                    value: positionId
+                },
+                {
+                    name: 'riskRewardPc',
+                    valid: true,
+                    value: MAX_RISK_REWARD_PC
+                },
+                {
+                    name: 'depositPc',
+                    valid: true,
+                    value: MAX_DEPOSIT_PC
+                },
+                {
+                    name: 'riskPc',
+                    valid: true,
+                    value: MAX_RISK_PC
+                },
+                {
+                    name: 'date',
+                    valid: true,
+                    value: new Date()
+                }
+            ]
+            } })
         setTechnicalStop(false)
         setWarning('unset')
         setWarningText('')
-    }, [])
+    }, [levelPrice, atr, tickerId, marketId, positionId])
+
+    console.log('openDialog render ', getFieldErrorText('riskPc', formState))
 
     return <Dialog
         maxWidth={false}
@@ -791,7 +840,7 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
                             style={{ width: '100%', fontSize: remCalc(14) }}
                             onChange={(event) => dispatch({
                                 type: 'set',
-                                payload: { name: 'note', valueStr: event.target.value, valid: true }
+                                payload: { name: 'note', value: event.target.value, valid: true }
                             })}
                         />
                     </NoteBox>

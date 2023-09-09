@@ -84,7 +84,7 @@ const initFormState = (formState: FormState, dispatch: Dispatch<FormAction>) => 
         return
 
     const payload: FormActionPayload = {
-        valuesNumeric: [
+        values: [
             {
                 name: 'brokerId',
                 valid: true,

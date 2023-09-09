@@ -262,43 +262,25 @@ type PositionCloseType = {
     finalTakeProfit: number | undefined
 }
 
-type FormFieldNumeric = {
+type FormField = {
     name: string,
-    value: number | string | undefined,
-    valid: boolean
-    errorText?: string
-}
-
-type FormFieldString = {
-    name: string,
-    value: string | undefined,
-    valid: boolean
-}
-
-type FormFieldDate = {
-    name: string,
-    value: Date | undefined,
+    value: number | string | Date | undefined,
+    errorText?: string,
     valid: boolean
 }
 
 type FormState = {
     isInitialized: boolean,
     isValid: boolean,
-    valuesNumeric: FormFieldNumeric[],
-    valuesString: FormFieldString[],
-    valuesDate: FormFieldDate[]
+    values: FormField[]
 }
 
 type FormActionPayload = {
     name?: string,
-    valueNum?: number,
-    valueStr?: string,
-    valueDate?: Date,
+    value?: number | string | Date | undefined,
     valid?: boolean,
     errorText?: string,
-    valuesNumeric?: FormFieldNumeric[],
-    valuesString?: FormFieldString[],
-    valuesDate?: FormFieldDate[]
+    values?: FormField[]
 }
 
 type FormOptions = {
@@ -422,9 +404,7 @@ export {
     CloseButtonProps,
     ExpandableProps,
     FormState,
-    FormFieldNumeric,
-    FormFieldString,
-    FormFieldDate,
+    FormField,
     FormAction,
     FormActionPayload,
     FormOptions,
