@@ -741,7 +741,7 @@ export default ({ onClose, isOpen }: OpenDialogProps) => {
                             color={BLUE}
                             dispatch={dispatch}/>
                         <NumberFieldBox
-                            label={'Stop:'}
+                            label={'Stop (level):'}
                             value={stopPrice}
                             valid={isFieldValid('stopPrice', formState)}
                             errorText={getFieldErrorText('stopPrice', formState)}

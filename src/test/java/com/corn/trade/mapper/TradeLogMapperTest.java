@@ -36,7 +36,7 @@ class TradeLogMapperTest {
 				95L, // estimatedItems
 				195.0, // riskToCapitalPc
 				955.0, // risk
-				95.0, // levelPrice
+				95.0, // price
 				925.0, // atr
 				90.0, // openStopLoss
 				80.0, // openTakeProfit

@@ -40,7 +40,7 @@ public record TradeLogOpenDTO(
 			@JsonProperty("estimatedItems") Long estimatedItems,
 			@JsonProperty("riskToCapitalPc") Double riskToCapitalPc,
 			@JsonProperty("risk") Double risk,
-			@JsonProperty("levelPrice") Double levelPrice,
+			@JsonProperty("price") Double levelPrice,
 			@JsonProperty("atr") Double atr,
 			@JsonProperty("openStopLoss") Double openStopLoss,
 			@JsonProperty("openTakeProfit") Double openTakeProfit,
