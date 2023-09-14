@@ -32,19 +32,19 @@ public class CashService {
 	public static final  String                    TRADE                        = "trade";
 	public static final  String                    FEE                          = "fee";
 	public static final  String                    TRADE_LOG_RECORD_IS_REQUIRED = "Trade log record is required";
-	public static final  String                    BORROWED                    = "borrowed";
-	public static final  String                    ACCOUNT_TYPES_ARE_NOT_FOUND = "Account types are not found";
-	public static final  String                    OPEN                        = "open";
-	public static final  String                    OUTCOME                     = "outcome";
-	public static final  String                    FREEDOM_FN                  = "FreedomFN";
-	public static final  String                    INTERACTIVE                 = "Interactive";
-	public static final  String                    USD                         = "USD";
-	public static final  String                    KZT                         = "KZT";
-	public static final  String                    EUR                         = "EUR";
-	private static final Logger                    logger                      =
+	public static final  String                    BORROWED                     = "borrowed";
+	public static final  String                    ACCOUNT_TYPES_ARE_NOT_FOUND  = "Account types are not found";
+	public static final  String                    OPEN                         = "open";
+	public static final  String                    OUTCOME                      = "outcome";
+	public static final  String                    FREEDOM_FN                   = "FreedomFN";
+	public static final  String                    INTERACTIVE                  = "Interactive";
+	public static final  String                    USD                          = "USD";
+	public static final  String                    KZT                          = "KZT";
+	public static final  String                    EUR                          = "EUR";
+	public static final  String                    INCOME                       = "income";
+	public static final  String                    WITHDRAWAL                   = "withdraw";
+	private static final Logger                    logger                       =
 			LoggerFactory.getLogger(CashService.class);
-	public static final  String                    INCOME                      = "income";
-	public static final String WITHDRAWAL = "withdraw";
 	private final        CashAccountRepository     accountRepo;
 	private final        CashFlowRepository        cashFlowRepo;
 	private final        BrokerRepository          brokerRepo;
@@ -91,7 +91,7 @@ public class CashService {
 		predicates.add(cb.equal(tradeLogRoot.get("position"), position));
 
 		if (date == null) { // get open positions at the moment
-            predicates.add(cb.isNull(tradeLogRoot.get("dateClose")));
+			predicates.add(cb.isNull(tradeLogRoot.get("dateClose")));
 		} else {
 			predicates.add(cb.lessThanOrEqualTo(tradeLogRoot.get("dateOpen"), date));
 			predicates.add(cb.greaterThan(tradeLogRoot.get("dateClose"), date));
@@ -624,7 +624,7 @@ public class CashService {
 		List<CashAccount> accounts = broker == null ? accountRepo.findAllByType(toWithdrawal) :
 				accountRepo.findAllByBrokerAndType(broker, toWithdrawal);
 		double    withdrawals = 0.0;
-		LocalDate today   = LocalDate.now();
+		LocalDate today       = LocalDate.now();
 		for (CashAccount account : accounts) {
 			double amount = Math.abs(getAccountTotal(account, localDateTime));
 			withdrawals += currencyRateService.convertToUSD(
@@ -806,39 +806,34 @@ public class CashService {
 	 * @throws JsonProcessingException if currency rate service fails.
 	 */
 	public EvalToFitRecord evalToFit2(EvalInFitDTO evalDTO,
-	                                 Currency currency,
-	                                 Double atr,
-	                                 Double stopLoss,
-	                                 Double takeProfit,
-	                                 double capital) throws JsonProcessingException {
+	                                  Currency currency,
+	                                  Double atr,
+	                                  Double stopLoss,
+	                                  Double takeProfit,
+	                                  double capital) throws JsonProcessingException {
 		Map<Double, EvalToFitRecord> priceOutputMap = new HashMap<>();
-		long shortC = evalDTO.isShort() ? -1 : 1;
+		long                         shortC         = evalDTO.isShort() ? -1 : 1;
 		logger.debug("shortC {} stopLoss {} takeProfit {}", shortC, stopLoss, takeProfit);
 		double maxPrice = 0;
-		try {
-			for (double price = stopLoss+(shortC*0.01);
-			     evalDTO.isShort() ? price > takeProfit : price < takeProfit;
-				 price += (shortC*0.01)) {
-				EvalToFitRecord evalToFitRecord = evalToFit(evalDTO, currency, atr, stopLoss, takeProfit, price, capital);
-				if (evalToFitRecord.eval.riskPc() <= evalDTO.riskPc() && evalToFitRecord.eval.riskRewardPc() <= evalDTO.riskRewardPc()) {
-					priceOutputMap.put(price, evalToFitRecord);
-				}
+		for (double price = stopLoss + (shortC * 0.01);
+		     evalDTO.isShort() ? price > takeProfit : price < takeProfit;
+		     price += (shortC * 0.01)) {
+			EvalToFitRecord evalToFitRecord = evalToFit(evalDTO, currency, atr, stopLoss, takeProfit, price, capital);
+			if (evalToFitRecord.eval.riskPc() <= evalDTO.riskPc() &&
+			    evalToFitRecord.eval.riskRewardPc() <= evalDTO.riskRewardPc()) {
+				priceOutputMap.put(price, evalToFitRecord);
 			}
-			if (priceOutputMap.isEmpty()) {
-				logger.debug("priceOutputMap is empty");
-				return evalToFit(evalDTO, currency, atr, stopLoss, takeProfit, stopLoss, capital);
-			}
-			if (evalDTO.isShort()) {
-				double minPrice = priceOutputMap.keySet().stream().min(Double::compareTo).get();
-				logger.debug("minPrice {}", minPrice);
-				return priceOutputMap.get(minPrice);
-			}
-			maxPrice = priceOutputMap.keySet().stream().max(Double::compareTo).get();
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
 		}
-		logger.debug("maxPrice {}", maxPrice);
+		if (priceOutputMap.isEmpty()) {
+			logger.debug("priceOutputMap is empty");
+			return evalToFit(evalDTO, currency, atr, stopLoss, takeProfit, stopLoss, capital);
+		}
+		if (evalDTO.isShort()) {
+			double minPrice = priceOutputMap.keySet().stream().min(Double::compareTo).get();
+			logger.debug("minPrice {}", minPrice);
+			return priceOutputMap.get(minPrice);
+		}
+		maxPrice = priceOutputMap.keySet().stream().max(Double::compareTo).get();
 		return priceOutputMap.get(maxPrice);
 	}
 
@@ -855,12 +850,12 @@ public class CashService {
 	 * @throws JsonProcessingException if a currency rate is not available
 	 */
 	public EvalOutFitDTO evalToFit(EvalInFitDTO evalDTO) throws JsonProcessingException {
-		final int shortC     = evalDTO.isShort() ? -1 : 1;
-		Double    price = evalDTO.levelPrice();
-		Double    atr        = evalDTO.atr();
-		Currency  currency   = tickerRepo.getReferenceById(evalDTO.tickerId()).getCurrency();
-		Broker    broker     = brokerRepo.getReferenceById(evalDTO.brokerId());
-		double    capital    = getCapital(broker, null);
+		final int shortC   = evalDTO.isShort() ? -1 : 1;
+		Double    price    = evalDTO.levelPrice();
+		Double    atr      = evalDTO.atr();
+		Currency  currency = tickerRepo.getReferenceById(evalDTO.tickerId()).getCurrency();
+		Broker    broker   = brokerRepo.getReferenceById(evalDTO.brokerId());
+		double    capital  = getCapital(broker, null);
 		if (capital == 0.0) {
 			throw new IllegalStateException("No capital for broker " + broker.getName());
 		}
@@ -896,7 +891,7 @@ public class CashService {
 	}
 
 	private double getTechnicalStop(Broker broker,
-									EvalInFitDTO evalDTO,
+	                                EvalInFitDTO evalDTO,
 	                                int shortC,
 	                                Double atr,
 	                                Currency currency,
@@ -947,7 +942,7 @@ public class CashService {
 
 		final double netOutcome = round(abs(grossProfit - openCommission - closeCommission), 2);
 
-		final double riskRewardPc = netOutcome == 0? 0.0 : round(risk / netOutcome * 100, 2);
+		final double riskRewardPc = netOutcome == 0 ? 0.0 : round(risk / netOutcome * 100, 2);
 
 		final double riskPc = round(getRiskPc(risk, capital, evalDTO.date(), currencyDTO), 2);
 
