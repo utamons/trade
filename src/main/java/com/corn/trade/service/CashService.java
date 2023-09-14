@@ -16,7 +16,9 @@ import javax.persistence.criteria.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.corn.trade.util.Util.round;
 import static java.lang.Math.abs;
@@ -787,7 +789,47 @@ public class CashService {
 			eval = eval(dto, broker.getName(), currencyDTO, capital);
 			items--;
 		} while (eval.riskPc() > evalDTO.riskPc() && eval.riskRewardPc() < evalDTO.riskRewardPc());
-		return new EvalToFitRecord(items, volumePc, eval);
+		return new EvalToFitRecord(items, volumePc, price, eval);
+	}
+
+	/**
+	 * Calculates an optimal number of items and price for a trade based on
+	 * allowed risk, risk/reward ratio and maximum volume per trade.
+	 *
+	 * @param evalDTO    evaluation parameters
+	 * @param currency   currency of the trade
+	 * @param atr        average true range
+	 * @param stopLoss   stop loss
+	 * @param takeProfit take profit
+	 * @param capital    capital by a broker
+	 * @return calculation results
+	 * @throws JsonProcessingException if currency rate service fails.
+	 */
+	public EvalToFitRecord evalToFit2(EvalInFitDTO evalDTO,
+	                                 Currency currency,
+	                                 Double atr,
+	                                 Double stopLoss,
+	                                 Double takeProfit,
+	                                 double capital) throws JsonProcessingException {
+		Map<Double, EvalToFitRecord> priceOutputMap = new HashMap<>();
+		long shortC = evalDTO.isShort() ? -1 : 1;
+		for (double price = stopLoss+(shortC*0.01);
+		     evalDTO.isShort() ? price > takeProfit : price < takeProfit;
+			 price += (shortC*0.01)) {
+			EvalToFitRecord evalToFitRecord = evalToFit(evalDTO, currency, atr, stopLoss, takeProfit, price, capital);
+			if (evalToFitRecord.eval.riskPc() <= evalDTO.riskPc() && evalToFitRecord.eval.riskRewardPc() <= evalDTO.riskRewardPc()) {
+				priceOutputMap.put(price, evalToFitRecord);
+			}
+		}
+		if (priceOutputMap.isEmpty()) {
+			return evalToFit(evalDTO, currency, atr, stopLoss, takeProfit, stopLoss, capital);
+		}
+		if (evalDTO.isShort()) {
+			double minPrice = priceOutputMap.keySet().stream().min(Double::compareTo).get();
+			return priceOutputMap.get(minPrice);
+		}
+		double maxPrice = priceOutputMap.keySet().stream().max(Double::compareTo).get();
+		return priceOutputMap.get(maxPrice);
 	}
 
 	/**
@@ -804,28 +846,27 @@ public class CashService {
 	 */
 	public EvalOutFitDTO evalToFit(EvalInFitDTO evalDTO) throws JsonProcessingException {
 		final int shortC     = evalDTO.isShort() ? -1 : 1;
-		Double    levelPrice = evalDTO.levelPrice();
+		Double    price = evalDTO.levelPrice();
 		Double    atr        = evalDTO.atr();
 		Currency  currency   = tickerRepo.getReferenceById(evalDTO.tickerId()).getCurrency();
 		Broker    broker     = brokerRepo.getReferenceById(evalDTO.brokerId());
-		double    price      = levelPrice + (shortC * 0.06);
 		double    capital    = getCapital(broker, null);
 		if (capital == 0.0) {
 			throw new IllegalStateException("No capital for broker " + broker.getName());
 		}
-		// calculated stop loss is 0.2% of the level price (for US stocks)
+		// calculated stop loss is 0.2% of the price (for US stocks)
 		double stopLoss =
-				evalDTO.stopLoss() == null ? levelPrice - (shortC * levelPrice / 100 * 0.2) : evalDTO.stopLoss();
-		// calculated take profit is 65% of ATR
-		double takeProfit = price + (shortC * atr * 0.65);
+				evalDTO.stopLoss() == null ? price - (shortC * price / 100 * 0.2) : evalDTO.stopLoss();
+		// calculated take profit is 70% of ATR
+		double takeProfit = price + (shortC * atr * 0.7);
 
 		EvalToFitRecord evalToFitRecord;
 
-		if (evalDTO.technicalStop()) { // if we want a technical stop instead of a calculated one
+		/*if (evalDTO.technicalStop()) { // if we want a technical stop instead of a calculated one
 			stopLoss = getTechnicalStop(broker, evalDTO, shortC, atr, currency, price, stopLoss, takeProfit);
 			stopLoss = stopLoss + (shortC * 0.01);
-		}
-		evalToFitRecord = evalToFit(evalDTO, currency, atr, stopLoss, takeProfit, price, capital);
+		}*/
+		evalToFitRecord = evalToFit2(evalDTO, currency, atr, stopLoss, takeProfit, capital);
 
 		return new EvalOutFitDTO(
 				evalToFitRecord.eval.fees(),
@@ -834,7 +875,7 @@ public class CashService {
 				takeProfit,
 				evalToFitRecord.eval.outcomeExp(),
 				stopLoss,
-				price,
+				evalToFitRecord.price(),
 				evalToFitRecord.items + 1,
 				evalToFitRecord.eval.volume(),
 				evalToFitRecord.eval.gainPc(),
@@ -1031,7 +1072,7 @@ public class CashService {
 		transfer(abs(amount), null, broker, currency, from, to, LocalDateTime.now());
 	}
 
-	public record EvalToFitRecord(long items, double volumePc, EvalOutDTO eval) {
+	public record EvalToFitRecord(long items, double volumePc, double price, EvalOutDTO eval) {
 	}
 }
 
