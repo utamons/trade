@@ -813,22 +813,32 @@ public class CashService {
 	                                 double capital) throws JsonProcessingException {
 		Map<Double, EvalToFitRecord> priceOutputMap = new HashMap<>();
 		long shortC = evalDTO.isShort() ? -1 : 1;
-		for (double price = stopLoss+(shortC*0.01);
-		     evalDTO.isShort() ? price > takeProfit : price < takeProfit;
-			 price += (shortC*0.01)) {
-			EvalToFitRecord evalToFitRecord = evalToFit(evalDTO, currency, atr, stopLoss, takeProfit, price, capital);
-			if (evalToFitRecord.eval.riskPc() <= evalDTO.riskPc() && evalToFitRecord.eval.riskRewardPc() <= evalDTO.riskRewardPc()) {
-				priceOutputMap.put(price, evalToFitRecord);
+		logger.debug("shortC {} stopLoss {} takeProfit {}", shortC, stopLoss, takeProfit);
+		double maxPrice = 0;
+		try {
+			for (double price = stopLoss+(shortC*0.01);
+			     evalDTO.isShort() ? price > takeProfit : price < takeProfit;
+				 price += (shortC*0.01)) {
+				EvalToFitRecord evalToFitRecord = evalToFit(evalDTO, currency, atr, stopLoss, takeProfit, price, capital);
+				if (evalToFitRecord.eval.riskPc() <= evalDTO.riskPc() && evalToFitRecord.eval.riskRewardPc() <= evalDTO.riskRewardPc()) {
+					priceOutputMap.put(price, evalToFitRecord);
+				}
 			}
+			if (priceOutputMap.isEmpty()) {
+				logger.debug("priceOutputMap is empty");
+				return evalToFit(evalDTO, currency, atr, stopLoss, takeProfit, stopLoss, capital);
+			}
+			if (evalDTO.isShort()) {
+				double minPrice = priceOutputMap.keySet().stream().min(Double::compareTo).get();
+				logger.debug("minPrice {}", minPrice);
+				return priceOutputMap.get(minPrice);
+			}
+			maxPrice = priceOutputMap.keySet().stream().max(Double::compareTo).get();
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
-		if (priceOutputMap.isEmpty()) {
-			return evalToFit(evalDTO, currency, atr, stopLoss, takeProfit, stopLoss, capital);
-		}
-		if (evalDTO.isShort()) {
-			double minPrice = priceOutputMap.keySet().stream().min(Double::compareTo).get();
-			return priceOutputMap.get(minPrice);
-		}
-		double maxPrice = priceOutputMap.keySet().stream().max(Double::compareTo).get();
+		logger.debug("maxPrice {}", maxPrice);
 		return priceOutputMap.get(maxPrice);
 	}
 
@@ -937,7 +947,7 @@ public class CashService {
 
 		final double netOutcome = round(abs(grossProfit - openCommission - closeCommission), 2);
 
-		final double riskRewardPc = round(risk / netOutcome * 100, 2);
+		final double riskRewardPc = netOutcome == 0? 0.0 : round(risk / netOutcome * 100, 2);
 
 		final double riskPc = round(getRiskPc(risk, capital, evalDTO.date(), currencyDTO), 2);
 
