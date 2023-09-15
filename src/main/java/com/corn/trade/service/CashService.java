@@ -828,13 +828,24 @@ public class CashService {
 			logger.debug("priceOutputMap is empty");
 			return evalToFit(evalDTO, currency, atr, stopLoss, takeProfit, stopLoss, capital);
 		}
+		EvalToFitRecord evalToFitRecord;
 		if (evalDTO.isShort()) {
 			double minPrice = priceOutputMap.keySet().stream().min(Double::compareTo).get();
 			logger.debug("minPrice {}", minPrice);
-			return priceOutputMap.get(minPrice);
+			evalToFitRecord = priceOutputMap.get(minPrice);
+
+		} else {
+			maxPrice = priceOutputMap.keySet().stream().max(Double::compareTo).get();
+			logger.debug("maxPrice {}", maxPrice);
+			evalToFitRecord = priceOutputMap.get(maxPrice);
 		}
-		maxPrice = priceOutputMap.keySet().stream().max(Double::compareTo).get();
-		return priceOutputMap.get(maxPrice);
+
+		if (evalToFitRecord.eval.outcomeExp() == 0) {
+			logger.debug("evalToFitRecord.eval.outcomeExp() == 0");
+			return evalToFit(evalDTO, currency, atr, stopLoss, takeProfit, stopLoss, capital);
+		}
+
+		return evalToFitRecord;
 	}
 
 	/**
