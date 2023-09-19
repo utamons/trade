@@ -820,7 +820,10 @@ public class CashService {
 		     price += (shortC * 0.01)) {
 			EvalToFitRecord evalToFitRecord = evalToFit(evalDTO, currency, atr, stopLoss, takeProfit, price, capital);
 			if (evalToFitRecord.eval.riskPc() <= evalDTO.riskPc() &&
-			    evalToFitRecord.eval.riskRewardPc() <= evalDTO.riskRewardPc()) {
+			    evalToFitRecord.eval.riskRewardPc() <= evalDTO.riskRewardPc() &&
+			    (evalDTO.isShort() && price < evalDTO.levelPrice() &&  evalDTO.levelPrice() - price >= 0.05 ||
+			     !evalDTO.isShort() && price > evalDTO.levelPrice() && price - evalDTO.levelPrice() >= 0.05)
+			) {
 				priceOutputMap.put(price, evalToFitRecord);
 			}
 		}
@@ -873,8 +876,8 @@ public class CashService {
 		// calculated stop loss is 0.2% of the price (for US stocks)
 		double stopLoss =
 				evalDTO.stopLoss() == null ? price - (shortC * price / 100 * 0.2) : evalDTO.stopLoss();
-		// calculated take profit is 70% of ATR
-		double takeProfit = price + (shortC * atr * 0.7);
+		// calculated take profit is 80% of ATR
+		double takeProfit = price + (shortC * atr * 0.8);
 
 		EvalToFitRecord evalToFitRecord;
 
