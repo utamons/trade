@@ -815,7 +815,7 @@ public class CashService {
 		long                         shortC         = evalDTO.isShort() ? -1 : 1;
 		logger.debug("shortC {} stopLoss {} takeProfit {}", shortC, stopLoss, takeProfit);
 		double maxPrice = 0;
-		for (double price = stopLoss + (shortC * 0.01);
+		for (double price =  evalDTO.levelPrice() + (shortC * 0.04);
 		     evalDTO.isShort() ? price > takeProfit : price < takeProfit;
 		     price += (shortC * 0.01)) {
 			EvalToFitRecord evalToFitRecord = evalToFit(evalDTO, currency, atr, stopLoss, takeProfit, price, capital);
@@ -829,7 +829,7 @@ public class CashService {
 		}
 		if (priceOutputMap.isEmpty()) {
 			logger.debug("priceOutputMap is empty");
-			return evalToFit(evalDTO, currency, atr, stopLoss, takeProfit, stopLoss, capital);
+			return evalToFit(evalDTO, currency, atr, stopLoss, takeProfit, evalDTO.levelPrice() + (shortC * 0.04), capital);
 		}
 		EvalToFitRecord evalToFitRecord;
 		if (evalDTO.isShort()) {
@@ -845,7 +845,7 @@ public class CashService {
 
 		if (evalToFitRecord.eval.outcomeExp() == 0) {
 			logger.debug("evalToFitRecord.eval.outcomeExp() == 0");
-			return evalToFit(evalDTO, currency, atr, stopLoss, takeProfit, stopLoss, capital);
+			return evalToFit(evalDTO, currency, atr, stopLoss, takeProfit, evalDTO.levelPrice() + (shortC * 0.04), capital);
 		}
 
 		return evalToFitRecord;
