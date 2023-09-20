@@ -876,16 +876,16 @@ public class CashService {
 		// calculated stop loss is 0.2% of the price (for US stocks)
 		double stopLoss =
 				evalDTO.stopLoss() == null ? price - (shortC * price / 100 * 0.2) : evalDTO.stopLoss();
-		// calculated take profit is 80% of ATR
-		double takeProfit = price + (shortC * atr * 0.8);
+		// calculated take profit is 65% of ATR
+		double takeProfit = price + (shortC * atr * 0.65);
 
 		EvalToFitRecord evalToFitRecord;
 
-		/*if (evalDTO.technicalStop()) { // if we want a technical stop instead of a calculated one
-			stopLoss = getTechnicalStop(broker, evalDTO, shortC, atr, currency, price, stopLoss, takeProfit);
-			stopLoss = stopLoss + (shortC * 0.01);
-		}*/
-		evalToFitRecord = evalToFit2(evalDTO, currency, atr, stopLoss, takeProfit, capital);
+		if (evalDTO.technicalStop()) { // if we want a technical stop instead of a calculated one
+			evalToFitRecord = evalToFit2(evalDTO, currency, atr, stopLoss, takeProfit, capital);
+		} else {
+			evalToFitRecord = evalToFit(evalDTO, currency, atr, stopLoss, takeProfit, price + (shortC * 0.05), capital);
+		}
 
 		return new EvalOutFitDTO(
 				evalToFitRecord.eval.fees(),
