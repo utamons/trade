@@ -684,7 +684,7 @@ public class CashService {
 	}
 
 	public double getRiskBase(double capital) {
-		return Math.min(capital, 5000.0);
+		return Math.min(capital, 4000.0);
 	}
 
 	/**

@@ -64,7 +64,7 @@ export const takeColor = (take:number | undefined, price:number | undefined, atr
         const rangeToAtr = roundTo2(range / atr) ?? 0
         if (range > atr)
             return RED
-        if (rangeToAtr > 0.8)
+        if (rangeToAtr > 0.65)
             return ORANGE
     }
     return BLUE
