@@ -71,6 +71,8 @@ type TradeContextType = {
     setCorrectionDialogVisible: (visible: boolean) => void
     currentView: 0 | 1,
     setCurrentView: (view: 0 | 1) => void
+    tradeCalculatorVisible: boolean,
+    setTradeCalculatorVisible: (visible: boolean) => void
 }
 
 type ButtonProps = {

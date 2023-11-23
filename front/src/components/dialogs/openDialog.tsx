@@ -24,7 +24,7 @@ import { TradeContext } from '../../trade-context'
 import Alert from '@mui/material/Alert'
 
 
-const positions = [
+export const positions = [
     { id: 0, name: 'long (buy)' },
     { id: 1, name: 'short (sell)' }
 ]

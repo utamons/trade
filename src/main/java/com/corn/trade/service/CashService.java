@@ -684,7 +684,7 @@ public class CashService {
 	}
 
 	public double getRiskBase(double capital) {
-		return Math.min(capital, 4000.0);
+		return Math.min(capital, 5000.0);
 	}
 
 	/**
@@ -876,8 +876,8 @@ public class CashService {
 		// calculated stop loss is 0.2% of the price (for US stocks)
 		double stopLoss =
 				evalDTO.stopLoss() == null ? price - (shortC * price / 100 * 0.2) : evalDTO.stopLoss();
-		// calculated take profit is 65% of ATR
-		double takeProfit = price + (shortC * atr * 0.65);
+		// calculated take profit is 80% of ATR
+		double takeProfit = price + (shortC * atr * 0.8);
 
 		EvalToFitRecord evalToFitRecord;
 

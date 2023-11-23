@@ -121,6 +121,7 @@ const useTrade = (): TradeContextType => {
     const [moneyStateKey, setMoneyStateKey] = useState('moneyKey')
     const [pageLogKey, setPageLogKey] = useState('pageLogKey')
     const [pageNum, setPageNum] = useState(0)
+    const [tradeCalculatorVisible, setTradeCalculatorVisible] = useState(false)
     const [openDialogVisible, setOpenDialogVisible] = useState(false)
     const [exchangeDialogVisible, setExchangeDialogVisible] = useState(false)
     const [refillDialogVisible, setRefillDialogVisible] = useState(false)
@@ -241,6 +242,8 @@ const useTrade = (): TradeContextType => {
         setRefillDialogVisible,
         correctionDialogVisible,
         setCorrectionDialogVisible,
+        tradeCalculatorVisible,
+        setTradeCalculatorVisible,
         currentView,
         setCurrentView
     }
@@ -308,7 +311,9 @@ const defaultTradeContext: TradeContextType = {
     correctionDialogVisible: false,
     setCorrectionDialogVisible: () => null,
     currentView: LOG_VIEW,
-    setCurrentView: () => null
+    setCurrentView: () => null,
+    tradeCalculatorVisible: false,
+    setTradeCalculatorVisible: () => null
 }
 
 export const TradeContext = createContext(defaultTradeContext)

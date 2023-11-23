@@ -9,6 +9,7 @@ import Open from './components/dialogs/openDialog'
 import Refill from './components/dialogs/refill'
 import Exchange from './components/dialogs/exchangeDialog'
 import Stats from './components/stats/stats'
+import TradeCalculator from './components/TradeCalculator'
 
 
 const MainStyled = styled(Box)(({ theme }) => ({
@@ -54,6 +55,8 @@ export default () => {
         refillDialogVisible,
         correctionDialogVisible,
         exchangeDialogVisible,
+        tradeCalculatorVisible,
+        setTradeCalculatorVisible,
         currencies,
         refill,
         correction,
@@ -62,6 +65,10 @@ export default () => {
 
     const handleCloseOpenDialog = useCallback(() => {
         setOpenDialogVisible(false)
+    }, [])
+
+    const handleCloseTradeCalculator = useCallback(() => {
+        setTradeCalculatorVisible(false)
     }, [])
 
     const commitRefill = useCallback((currencyId: number, amount: number) => {
@@ -98,6 +105,7 @@ export default () => {
                 <StatsView/>
             </Grid>
             {isLoading ? <></> : <>
+                <TradeCalculator open={tradeCalculatorVisible} onClose={handleCloseTradeCalculator}/>
                 <Open isOpen={openDialogVisible} onClose={handleCloseOpenDialog}/>
                 <Refill open={refillDialogVisible} negativeAllowed={false} title="Refill" onSubmit={commitRefill}
                         onCancel={cancelRefill}
