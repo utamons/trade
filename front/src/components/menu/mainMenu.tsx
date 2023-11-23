@@ -27,7 +27,9 @@ export const MainMenu = () => {
         setCurrentBrokerId,
         currentView,
         setCurrentView,
-        setOpenDialogVisible } = useContext(TradeContext)
+        setOpenDialogVisible,
+        setTradeCalculatorVisible
+    } = useContext(TradeContext)
 
     const brokerOptions = []
 
@@ -47,6 +49,7 @@ export const MainMenu = () => {
     ]
 
     const actionsOptions = [
+        { name: 'Trade Calculator', onClick: () => setTradeCalculatorVisible(true) },
         { name: 'Open', onClick: () => setOpenDialogVisible(true) },
         { name: 'Refill', onClick: () => setRefillDialogVisible(true) },
         { name: 'Correction', onClick: () => setCorrectionDialogVisible(true) },
