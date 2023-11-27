@@ -27,9 +27,9 @@
 	</properties>
 	<dependencies>
 		<dependency>
-			<groupId>io.github.vincenzopalazzo</groupId>
-			<artifactId>material-ui-swing</artifactId>
-			<version>1.1.2</version>
+			<groupId>com.github.weisj</groupId>
+			<artifactId>darklaf-core</artifactId>
+			<version>3.0.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

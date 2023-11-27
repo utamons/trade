@@ -1,62 +1,27 @@
 package com.corn.trade.desktop;
 
-import mdlaf.MaterialLookAndFeel;
-import mdlaf.themes.JMarsDarkTheme;
-import mdlaf.themes.MaterialLiteTheme;
+import com.github.weisj.darklaf.LafManager;
+import com.github.weisj.darklaf.theme.IntelliJTheme;
+import com.github.weisj.darklaf.theme.OneDarkTheme;
+import com.github.weisj.darklaf.theme.Theme;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
-/**
- *
- */
 public class App {
-	private static final Point point = new Point();
+
+	public static final Theme DARK_THEME = new OneDarkTheme();
+	public static final Theme LIGHT_THEME = new IntelliJTheme();
 
 	public static void main(String[] args) {
 		SwingUtilities.invokeLater(() -> {
-			try {
-				UIManager.setLookAndFeel(new MaterialLookAndFeel(new MaterialLiteTheme()));
-			} catch (UnsupportedLookAndFeelException e) {
-				throw new RuntimeException(e);
-			}
+			LafManager.install();
+
+			setDefaultFont("Arial", Font.PLAIN, 14);
 
 			JFrame frame = new JFrame("Light/Dark Mode Toggle");
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setSize(500, 500);
-
-			// Custom title bar panel
-			JPanel titleBar = new JPanel();
-			//titleBar.setBackground(Color.GRAY); // Example color
-			titleBar.setPreferredSize(new Dimension(500, 30)); // Set preferred size
-
-			// Title label
-			JLabel titleLabel = new JLabel("My Custom Title Bar", JLabel.CENTER);
-			titleBar.add(titleLabel);
-
-			// Close button
-			JButton closeButton = new JButton("X");
-			closeButton.addActionListener(e -> System.exit(0));
-			titleBar.add(closeButton);
-
-			// Add mouse listener for dragging the window
-			titleBar.addMouseListener(new MouseAdapter() {
-				public void mousePressed(MouseEvent e) {
-					point.x = e.getX();
-					point.y = e.getY();
-				}
-			});
-			titleBar.addMouseMotionListener(new MouseAdapter() {
-				public void mouseDragged(MouseEvent e) {
-					Point p = frame.getLocation();
-					frame.setLocation(p.x + e.getX() - point.x, p.y + e.getY() - point.y);
-					System.out.println(frame.getLocation().x + " " + frame.getLocation().y);
-				}
-			});
-
-			frame.getContentPane().add(titleBar, BorderLayout.NORTH);
 
 			// Table data and column names
 			String[] columnNames = {"Column 1", "Column 2"};
@@ -70,7 +35,7 @@ public class App {
 			JScrollPane scrollPane = new JScrollPane(table);
 			table.setFillsViewportHeight(false);
 			table.setPreferredScrollableViewportSize(new Dimension(500, 70));
-			table.setEnabled(false);
+			table.setEnabled(true);
 
 			JLabel quantityLabel = new JLabel("Quantity:");
 			JTextField quantityField = new JTextField(10);
@@ -82,15 +47,16 @@ public class App {
 			topPanel.add(quantityField);
 
 
-			JToggleButton toggleButton = getjToggleButton(frame);
+			JToggleButton toggleButton = getjToggleButton(table);
+			toggleButton.setMaximumSize(new Dimension(50, 50));
+			JPanel bottomPanel = new JPanel();
+			bottomPanel.add(toggleButton);
 
 			frame.getContentPane().setLayout(new BorderLayout());
-			frame.getContentPane().add(titleBar, BorderLayout.NORTH);
-			//  frame.getContentPane().add(topPanel, BorderLayout.NORTH);
-			frame.getContentPane().add(toggleButton, BorderLayout.SOUTH);
-			frame.getContentPane().add(scrollPane, BorderLayout.CENTER); // Add the table in a scroll pane
+			frame.getContentPane().add(topPanel, BorderLayout.NORTH);
+			frame.getContentPane().add(bottomPanel, BorderLayout.SOUTH);
+			frame.getContentPane().add(scrollPane, BorderLayout.CENTER);
 
-			frame.setUndecorated(true);
 			frame.setLocationRelativeTo(null);
 			frame.pack();
 
@@ -98,31 +64,36 @@ public class App {
 		});
 	}
 
-	private static JToggleButton getjToggleButton(JFrame frame) {
-		JToggleButton toggleButton = new JToggleButton("Toggle Light/Dark Mode");
+	private static JToggleButton getjToggleButton(JTable table) {
+		JToggleButton toggleButton = new JToggleButton("Dark Mode");
 
 		// Action listener for the toggle button
 		toggleButton.addActionListener(e -> {
 			if (toggleButton.isSelected()) {
 				// Dark mode
-				try {
-					UIManager.setLookAndFeel(new MaterialLookAndFeel(new JMarsDarkTheme()));
-					SwingUtilities.updateComponentTreeUI(frame);
-					frame.pack();
-				} catch (UnsupportedLookAndFeelException eX) {
-					throw new RuntimeException(eX);
-				}
+				LafManager.install(DARK_THEME);
+				table.setForeground(Color.GREEN);
+				toggleButton.setText("Light Mode");
 			} else {
 				// Light mode
-				try {
-					UIManager.setLookAndFeel(new MaterialLookAndFeel(new MaterialLiteTheme()));
-					SwingUtilities.updateComponentTreeUI(frame);
-					frame.pack();
-				} catch (UnsupportedLookAndFeelException eX) {
-					throw new RuntimeException(eX);
-				}
+				LafManager.install(LIGHT_THEME);
+				table.setForeground(Color.BLACK);
+				toggleButton.setText("Dark Mode");
 			}
 		});
 		return toggleButton;
+	}
+
+	private static void setDefaultFont(String fontName, int style, int size) {
+		UIManager.put("Label.font", new Font(fontName, style, size));
+		UIManager.put("Button.font", new Font(fontName, style, size));
+		// Add other components here
+
+		// For a comprehensive approach, iterate over all keys
+		for (Object key : UIManager.getDefaults().keySet()) {
+			if (UIManager.get(key) instanceof Font) {
+				UIManager.put(key, new Font(fontName, style, size));
+			}
+		}
 	}
 }
