@@ -1,15 +1,16 @@
 package com.corn.trade.mapper;
 
-import com.corn.trade.dto.TradeLogDTO;
-import com.corn.trade.dto.TradeLogOpenDTO;
-import com.corn.trade.entity.*;
-import com.corn.trade.service.CurrencyRateService;
+import com.corn.trade.web.dto.TradeLogDTO;
+import com.corn.trade.web.dto.TradeLogOpenDTO;
+import com.corn.trade.web.entity.*;
+import com.corn.trade.web.mapper.TradeLogMapper;
+import com.corn.trade.web.service.CurrencyRateService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 
-import static com.corn.trade.util.Util.round;
+import static com.corn.trade.web.util.Util.round;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -19,9 +20,9 @@ class TradeLogMapperTest {
 	@Test
 	void testToOpen_LongPosition() {
 		// Arrange
-		Broker broker = mock(Broker.class);
-		Market market = mock(Market.class);
-		Ticker ticker = mock(Ticker.class);
+		Broker   broker   = mock(Broker.class);
+		Market   market   = mock(Market.class);
+		Ticker   ticker   = mock(Ticker.class);
 		Currency currency = mock(Currency.class);
 		// TradeLog initialisation
 		TradeLogOpenDTO openDTO = new TradeLogOpenDTO(
