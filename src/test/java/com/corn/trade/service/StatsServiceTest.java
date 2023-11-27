@@ -1,15 +1,18 @@
 package com.corn.trade.service;
 
-import com.corn.trade.dto.BrokerStatsDTO;
-import com.corn.trade.dto.MoneyStateDTO;
-import com.corn.trade.entity.Broker;
-import com.corn.trade.entity.CashAccount;
-import com.corn.trade.entity.CashAccountType;
-import com.corn.trade.entity.Currency;
-import com.corn.trade.repository.BrokerRepository;
-import com.corn.trade.repository.CashAccountRepository;
-import com.corn.trade.repository.CashAccountTypeRepository;
-import com.corn.trade.repository.TradeLogRepository;
+import com.corn.trade.web.dto.BrokerStatsDTO;
+import com.corn.trade.web.dto.MoneyStateDTO;
+import com.corn.trade.web.entity.Broker;
+import com.corn.trade.web.entity.CashAccount;
+import com.corn.trade.web.entity.CashAccountType;
+import com.corn.trade.web.entity.Currency;
+import com.corn.trade.web.repository.BrokerRepository;
+import com.corn.trade.web.repository.CashAccountRepository;
+import com.corn.trade.web.repository.CashAccountTypeRepository;
+import com.corn.trade.web.repository.TradeLogRepository;
+import com.corn.trade.web.service.CashService;
+import com.corn.trade.web.service.CurrencyRateService;
+import com.corn.trade.web.service.StatsService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,8 +21,8 @@ import javax.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.corn.trade.service.CashService.*;
-import static com.corn.trade.util.Util.round;
+import static com.corn.trade.web.service.CashService.*;
+import static com.corn.trade.web.util.Util.round;
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 

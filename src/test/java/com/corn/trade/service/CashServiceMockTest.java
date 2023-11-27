@@ -1,11 +1,14 @@
 package com.corn.trade.service;
 
-import com.corn.trade.dto.CurrencyDTO;
-import com.corn.trade.entity.Broker;
-import com.corn.trade.entity.CashAccountType;
-import com.corn.trade.entity.Currency;
-import com.corn.trade.entity.TradeLog;
-import com.corn.trade.repository.*;
+import com.corn.trade.web.dto.CurrencyDTO;
+import com.corn.trade.web.entity.Broker;
+import com.corn.trade.web.entity.CashAccountType;
+import com.corn.trade.web.entity.Currency;
+import com.corn.trade.web.entity.TradeLog;
+import com.corn.trade.web.repository.*;
+import com.corn.trade.web.service.CashService;
+import com.corn.trade.web.service.Commission;
+import com.corn.trade.web.service.CurrencyRateService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,7 +20,7 @@ import javax.persistence.EntityManager;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import static com.corn.trade.service.CashService.*;
+import static com.corn.trade.web.service.CashService.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;

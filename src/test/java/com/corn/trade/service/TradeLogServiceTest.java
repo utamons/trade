@@ -1,13 +1,15 @@
 package com.corn.trade.service;
 
-import com.corn.trade.dto.TradeLogCloseDTO;
-import com.corn.trade.dto.TradeLogOpenDTO;
-import com.corn.trade.entity.*;
-import com.corn.trade.mapper.TradeLogMapper;
-import com.corn.trade.repository.BrokerRepository;
-import com.corn.trade.repository.MarketRepository;
-import com.corn.trade.repository.TickerRepository;
-import com.corn.trade.repository.TradeLogRepository;
+import com.corn.trade.web.dto.TradeLogCloseDTO;
+import com.corn.trade.web.dto.TradeLogOpenDTO;
+import com.corn.trade.web.entity.*;
+import com.corn.trade.web.mapper.TradeLogMapper;
+import com.corn.trade.web.repository.BrokerRepository;
+import com.corn.trade.web.repository.MarketRepository;
+import com.corn.trade.web.repository.TickerRepository;
+import com.corn.trade.web.repository.TradeLogRepository;
+import com.corn.trade.web.service.CashService;
+import com.corn.trade.web.service.TradeLogService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -16,7 +18,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDateTime;
 
-import static com.corn.trade.service.TradeLogService.validateOpenCommon;
+import static com.corn.trade.web.service.TradeLogService.validateOpenCommon;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -77,9 +79,9 @@ class TradeLogServiceTest {
 
 		// Set other necessary fields in the openDTO
 		Currency currency = new Currency("TestCurrency");
-		Broker broker = new Broker("TestBroker", currency);
-		Market market = new Market("TestMarket");
-		Ticker ticker = new Ticker("TestTicker", "TestTickerCode", currency);
+		Broker   broker   = new Broker("TestBroker", currency);
+		Market   market   = new Market("TestMarket");
+		Ticker   ticker   = new Ticker("TestTicker", "TestTickerCode", currency);
 
 		TradeLog tradeLog = TradeLogMapper.toOpen(openDTO, broker, market, ticker, currency);
 

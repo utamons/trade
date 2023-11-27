@@ -1,8 +1,10 @@
 package com.corn.trade.service;
 
-import com.corn.trade.dto.*;
-import com.corn.trade.entity.*;
-import com.corn.trade.repository.*;
+import com.corn.trade.web.dto.*;
+import com.corn.trade.web.entity.*;
+import com.corn.trade.web.repository.*;
+import com.corn.trade.web.service.CashService;
+import com.corn.trade.web.service.Commission;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.assertj.core.data.TemporalUnitWithinOffset;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,7 +20,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
-import static com.corn.trade.util.Util.round;
+import static com.corn.trade.web.util.Util.round;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -147,8 +149,8 @@ class CashServiceTest {
 		conversionAccountEUR = new CashAccount("conversion/Test Broker/EUR", currencyEUR, brokerUSD, conversionType);
 		conversionAccountEUR = cashAccountRepository.save(conversionAccountEUR);
 
-		LocalDateTime dateTime = LocalDateTime.now();
-		CurrencyRate euroToUsd = new CurrencyRate(dateTime.toLocalDate(), currencyEUR, 0.8);
+		LocalDateTime dateTime  = LocalDateTime.now();
+		CurrencyRate  euroToUsd = new CurrencyRate(dateTime.toLocalDate(), currencyEUR, 0.8);
 		currencyRateRepository.save(euroToUsd);
 		CurrencyRate kztToUsd = new CurrencyRate(dateTime.toLocalDate(), currencyKZT, 0.0025);
 		currencyRateRepository.save(kztToUsd);
@@ -1529,7 +1531,7 @@ class CashServiceTest {
 	@Test
 	void testEstimatedCommission_UnsupportedBroker() {
 		// Arrange
-		CurrencyDTO currencyDTO          = new CurrencyDTO(1L, "USD");
+		CurrencyDTO currencyDTO = new CurrencyDTO(1L, "USD");
 
 		// Act
 		Exception exception = assertThrows(IllegalArgumentException.class,
