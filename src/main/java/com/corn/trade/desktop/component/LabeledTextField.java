@@ -1,5 +1,6 @@
 package com.corn.trade.desktop.component;
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 
 public class LabeledTextField extends JPanel {
@@ -8,10 +9,15 @@ public class LabeledTextField extends JPanel {
 	private Color textFieldColor;
 
 	// Constructor
-	public LabeledTextField(String labelText, int columns, Color textColor) {
+	public LabeledTextField(String labelText, int columns, Color textColor, int padding, int height) {
 		// Initialize label and text field
 		JLabel label = new JLabel(labelText);
 		textField = new JTextField(columns);
+		this.setMaximumSize(new Dimension(5000,height));
+		this.setMinimumSize(new Dimension(50,height));
+		this.setPreferredSize(new Dimension(100,height));
+		Border emptyBorder = BorderFactory.createEmptyBorder(padding, padding, padding, padding);
+		this.setBorder(emptyBorder);
 		this.textFieldColor = textColor;
 
 		// Set text field color
