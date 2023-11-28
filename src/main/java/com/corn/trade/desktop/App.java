@@ -1,6 +1,6 @@
 package com.corn.trade.desktop;
 
-import com.corn.trade.desktop.panel.InputPanel;
+import com.corn.trade.desktop.panel.*;
 import com.github.weisj.darklaf.LafManager;
 import com.github.weisj.darklaf.theme.*;
 import com.github.weisj.darklaf.theme.event.ThemePreferenceChangeEvent;
@@ -12,6 +12,7 @@ import java.awt.*;
 
 public class App {
 
+	private static final int FIELD_HEIGHT = 40;
 	public static final Theme DARK_THEME = new DarculaTheme();
 	public static final Theme LIGHT_THEME = new IntelliJTheme();
 
@@ -28,18 +29,46 @@ public class App {
 
 			JFrame frame = new JFrame("Trade Calculator");
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			frame.setSize(500, 500);
+			frame.setSize(700, 630);
 
-			InputPanel inputPanel1 = new InputPanel();
+			InputPanel inputPanel = new InputPanel(
+					new Dimension(300, 300),
+					new Dimension(300, 300),
+					5, FIELD_HEIGHT);
+			PowerPanel powerPanel= new PowerPanel(
+					new Dimension(300, 300),
+					new Dimension(300, 300),
+					5, FIELD_HEIGHT);
+			TradePanel tradePanel = new TradePanel(
+					new Dimension(300, 300),
+					new Dimension(300, 300),
+					5, FIELD_HEIGHT);
+			RiskPanel riskPanel = new RiskPanel(
+					new Dimension(300, 300),
+					new Dimension(300, 300),
+					5, FIELD_HEIGHT);
+			OrderPanel orderPanel = new OrderPanel(
+					new Dimension(300, 300),
+					new Dimension(300, 300),
+					5, FIELD_HEIGHT);
 
-			frame.getContentPane().setLayout(new GridLayout(2, 2, 1, 1));
-			frame.getContentPane().add(inputPanel1);
-			frame.getContentPane().add(new InputPanel());
-			frame.getContentPane().add(new InputPanel());
-			frame.getContentPane().add(new InputPanel());
+			frame.getContentPane().setLayout(new GridLayout(1, 2));
+
+			JPanel leftPanel = new JPanel();
+			leftPanel.setLayout(new GridLayout(2, 1));
+			leftPanel.add(inputPanel);
+			leftPanel.add(tradePanel);
+
+			JPanel rightPanel = new JPanel();
+			rightPanel.setLayout(new GridLayout(3, 1));
+			rightPanel.add(powerPanel);
+			rightPanel.add(riskPanel);
+			rightPanel.add(orderPanel);
+
+			frame.getContentPane().add(leftPanel);
+			frame.getContentPane().add(rightPanel);
 
 			frame.setLocationRelativeTo(null);
-			frame.pack();
 
 			LafManager.enabledPreferenceChangeReporting(true);
 
