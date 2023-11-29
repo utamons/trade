@@ -13,24 +13,45 @@ public class TradePanel extends BasePanel {
 		LayoutManager layout = new BoxLayout(this, BoxLayout.Y_AXIS);
 		this.setLayout(layout);
 
-		this.add(new LabeledDoubleField("Quantity:",
-		                                10,
-		                                null,
-		                                spacing,
-		                                fieldHeight,
-		                                calculator::setQuantity));
-		this.add(new LabeledDoubleField("Stop Loss:",
-		                                10,
-		                                null,
-		                                spacing,
-		                                fieldHeight,
-		                                calculator::setStopLoss));
-		this.add(new LabeledDoubleField("Take profit:",
-		                                10,
-		                                null,
-		                                spacing,
-		                                fieldHeight,
-		                                calculator::setTakeProfit));
-		this.add(new LabeledDoubleField("Break even:", 10, null, spacing, fieldHeight, null));
+		LabeledDoubleField quantity = new LabeledDoubleField("Quantity:",
+		                                                 10,
+		                                                 null,
+		                                                 spacing,
+		                                                 fieldHeight,
+		                                                 calculator::setQuantity);
+
+		LabeledDoubleField stopLoss = new LabeledDoubleField("Stop Loss:",
+		                                                 10,
+		                                                 null,
+		                                                 spacing,
+		                                                 fieldHeight,
+		                                                 calculator::setStopLoss);
+
+		LabeledDoubleField take = new LabeledDoubleField("Take profit:",
+		                                                 10,
+		                                                 null,
+		                                                 spacing,
+		                                                 fieldHeight,
+		                                                 calculator::setTakeProfit);
+
+		LabeledDoubleField breakEven = new LabeledDoubleField("Break even:",
+		                                                 10,
+		                                                 null,
+		                                                 spacing,
+		                                                 fieldHeight,
+		                                                 null);
+		this.add(breakEven);
+		this.add(quantity);
+		this.add(stopLoss);
+		this.add(take);
+
+		calculator.addTrigger(
+				() -> {
+					breakEven.setValue(calculator.getBreakEven());
+					quantity.setValue(calculator.getQuantity() == null ? null : (double) calculator.getQuantity());
+					stopLoss.setValue(calculator.getStopLoss());
+					take.setValue(calculator.getTakeProfit());
+				}
+		);
 	}
 }

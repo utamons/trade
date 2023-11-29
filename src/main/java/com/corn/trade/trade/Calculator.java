@@ -9,11 +9,16 @@ import java.util.List;
 
 import static com.corn.trade.util.Util.log;
 import static com.corn.trade.util.Util.round;
+import static java.lang.Math.abs;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "FieldCanBeLocal"})
 public class Calculator {
 
+	private final Double MAX_VOLUME = 5000.0;
+	private final Double ORDER_LUFT = 0.02;
+
 	private final List<Trigger>  triggers = new ArrayList<>();
+	private final Component frame;
 	private       PositionType   positionType;
 	private       EstimationType estimationType;
 	private       Double         spread;
@@ -30,9 +35,7 @@ public class Calculator {
 	private       Double         riskRewardRatioPercent;
 	private       Double         orderLimit;
 	private       Double         orderStop;
-	private       int            quantity;
-
-	private final Component frame;
+	private       Integer        quantity;
 
 	public Calculator(Component frame) {
 		this.frame = frame;
@@ -72,7 +75,7 @@ public class Calculator {
 	}
 
 	public Double getPowerReserve() {
-		return powerReserve;
+		return round(powerReserve);
 	}
 
 	public void setPowerReserve(Double powerReserve) {
@@ -112,7 +115,7 @@ public class Calculator {
 	}
 
 	public Double getStopLoss() {
-		return stopLoss;
+		return round(stopLoss);
 	}
 
 	public void setStopLoss(Double stopLoss) {
@@ -120,7 +123,7 @@ public class Calculator {
 	}
 
 	public Double getTakeProfit() {
-		return takeProfit;
+		return round(takeProfit);
 	}
 
 	public void setTakeProfit(Double takeProfit) {
@@ -128,30 +131,30 @@ public class Calculator {
 	}
 
 	public Double getBreakEven() {
-		return breakEven;
+		return round(breakEven);
 	}
 
 	public Double getRisk() {
-		return risk;
+		return round(risk);
 	}
 
 	public Double getRiskPercent() {
-		return riskPercent;
+		return round(riskPercent);
 	}
 
 	public Double getRiskRewardRatioPercent() {
-		return riskRewardRatioPercent;
+		return round(riskRewardRatioPercent);
 	}
 
 	public Double getOrderLimit() {
-		return orderLimit;
+		return round(orderLimit);
 	}
 
 	public Double getOrderStop() {
-		return orderStop;
+		return round(orderStop);
 	}
 
-	public int getQuantity() {
+	public Integer getQuantity() {
 		return quantity;
 	}
 
@@ -201,5 +204,76 @@ public class Calculator {
 			return "level must be between lowDay and highDay\n ";
 		}
 		return null;
+	}
+
+	// For Interactive Brokers
+	public double estimatedCommissionUSD(double price) {
+		double max    = quantity * price / 100.0;
+		double min    = quantity * 0.005;
+		double amount = Math.min(max, min);
+		return amount < 1 ? 1 : amount;
+	}
+	public double getBreakEven(double price) {
+		double openCommission  = estimatedCommissionUSD(price);
+		double priceClose      = price;
+		double closeCommission = openCommission;
+		double profit          = abs(priceClose - price) * quantity;
+		double taxes           = getTaxes(profit);
+		double increment       = positionType.equals(PositionType.LONG) ? 0.01 : -0.01;
+
+		while (profit < openCommission + closeCommission + taxes) {
+			priceClose = priceClose + increment;
+			closeCommission = estimatedCommissionUSD(priceClose);
+			profit          = abs(priceClose - price) * quantity;
+			taxes = getTaxes(profit);
+		}
+
+		return priceClose + (positionType.equals(PositionType.LONG) ? spread : -spread);
+	}
+
+	private double getTaxes(double sum) {
+		return sum * 0.1; // ИПН
+	}
+
+	private String validEstimation() {
+		if (level == null) {
+			return "Level must be set\n ";
+		}
+		if (spread == null) {
+			return "Spread must be set\n ";
+		}
+		if (powerReserve == null) {
+			return "Power reserve must be set\n ";
+		}
+		if (powerReserve <= 0) {
+			return "Power reserve must be greater than 0\n ";
+		}
+		if (level <= 0) {
+			return "Level must be greater than 0\n ";
+		}
+		if (spread <= 0) {
+			return "Spread must be greater than 0\n ";
+		}
+		return null;
+	}
+
+	public void estimate() {
+		String error = validEstimation();
+		if (error != null) {
+			log("Invalid estimation - level: {}, spread: {}, powerReserve: {}", level, spread, powerReserve);
+			JOptionPane.showMessageDialog(frame, error, "Error", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		if (quantity == null)
+			quantity = maxQuantity();
+		orderStop = level + (positionType.equals(PositionType.LONG) ? ORDER_LUFT : -ORDER_LUFT);
+		orderLimit = orderStop + (positionType.equals(PositionType.LONG) ? spread : -spread);
+		breakEven = getBreakEven(orderLimit);
+		log("Break even: {}", breakEven);
+		announce();
+	}
+
+	private int maxQuantity() {
+		return (int) (MAX_VOLUME / level);
 	}
 }

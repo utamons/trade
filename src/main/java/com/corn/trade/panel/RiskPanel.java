@@ -10,8 +10,20 @@ public class RiskPanel extends BasePanel {
 	public RiskPanel(Calculator calculator, Dimension maxSize, Dimension minSize, int spacing, int fieldHeight) {
 		super("Risk", calculator, maxSize, minSize);
 
-		this.add(new LabeledDoubleField("Risk:", 10, null, spacing, fieldHeight, null));
-		this.add(new LabeledDoubleField("Risk (%):", 10, null, spacing, fieldHeight, null));
-		this.add(new LabeledDoubleField("R/R:", 10, null, spacing, fieldHeight, null));
+		LabeledDoubleField risk = new LabeledDoubleField("Risk:", 10, null, spacing, fieldHeight, null);
+
+		LabeledDoubleField riskPc = new LabeledDoubleField("Risk (%):", 10, null, spacing, fieldHeight, null);
+
+		LabeledDoubleField riskReward = new LabeledDoubleField("R/R:", 10, null, spacing, fieldHeight, null);
+
+		this.add(riskReward);
+		this.add(risk);
+		this.add(riskPc);
+
+		calculator.addTrigger(() -> {
+			risk.setValue(calculator.getRisk());
+			riskPc.setValue(calculator.getRiskPercent());
+			riskReward.setValue(calculator.getRiskRewardRatioPercent());
+		});
 	}
 }

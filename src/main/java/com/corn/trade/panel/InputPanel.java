@@ -36,8 +36,7 @@ public class InputPanel extends BasePanel {
 		                                                    spacing,
 		                                                    fieldHeight,
 		                                                    (value) -> calculator.setEstimationType(EstimationType.fromString(value)));
-		this.add(positionBox);
-		this.add(estimationBox);
+
 
 		calculator.setPositionType(PositionType.fromString(positionBox.getSelectedItem()));
 		calculator.setEstimationType(EstimationType.fromString(estimationBox.getSelectedItem()));
@@ -48,27 +47,36 @@ public class InputPanel extends BasePanel {
 		                                                   spacing,
 		                                                   fieldHeight,
 		                                                   calculator::setSpread);
-		this.add(spread);
+
 		LabeledDoubleField powerReserve = new LabeledDoubleField("Power reserve:",
 		                                                 10,
 		                                                 null,
 		                                                 spacing,
 		                                                 fieldHeight,
 		                                                 calculator::setPowerReserve);
-		this.add(powerReserve);
-		this.add(new LabeledDoubleField("Level:",
-		                                10,
-		                                null,
-		                                spacing,
-		                                fieldHeight,
-		                                calculator::setLevel));
+
+		LabeledDoubleField level = new LabeledDoubleField("Level:",
+		                                                 10,
+		                                                 null,
+		                                                 spacing,
+		                                                 fieldHeight,
+		                                                 calculator::setLevel);
 
 		ButtonRowPanel buttonRowPanel = new ButtonRowPanel();
 
-		buttonRowPanel.add(new JButton("Estimate"));
+		JButton estimate = new JButton("Estimate");
+		buttonRowPanel.add(estimate);
 		buttonRowPanel.add(new JButton("Reset"));
 
 		calculator.addTrigger(() -> powerReserve.setValue(calculator.getPowerReserve()));
+
+		estimate.addActionListener(e -> calculator.estimate());
+
+		this.add(positionBox);
+		this.add(estimationBox);
+		this.add(spread);
+		this.add(powerReserve);
+		this.add(level);
 
 		this.add(buttonRowPanel);
 	}
