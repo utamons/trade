@@ -31,7 +31,7 @@ public class InputPanel extends BasePanel {
 		LabeledComboBox estimationBox = new LabeledComboBox("Estimation:",
 		                                                    new String[]{
 				                                                    EstimationType.MAX_STOP_LOSS.toString(),
-				                                                    EstimationType.MAX_TAKE_PROFIT.toString()
+				                                                    EstimationType.MAX_GAIN.toString()
 		                                                    },
 		                                                    spacing,
 		                                                    fieldHeight,

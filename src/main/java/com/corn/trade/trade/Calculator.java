@@ -13,14 +13,18 @@ import static java.lang.Math.abs;
 
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
 public class Calculator {
-
-	private final Double MAX_VOLUME = 5000.0;
-	private final Double ORDER_LUFT = 0.02;
+	private final Double MAX_VOLUME                    = 5000.0;
+	private final double MAX_RISK_PERCENT              = 0.5;
+	private final double MAX_RISK_REWARD_RATIO_PERCENT = 33.0;
+	private final Double REALISTIC_POWER_RESERVE       = 0.8;
+	private final Double ORDER_LUFT                    = 0.02;
 
 	private final List<Trigger>  triggers = new ArrayList<>();
-	private final Component frame;
+	private final Component      frame;
 	private       PositionType   positionType;
 	private       EstimationType estimationType;
+	private       Double         outputExpected;
+	private       Double         gain;
 	private       Double         spread;
 	private       Double         powerReserve;
 	private       Double         level;
@@ -47,6 +51,14 @@ public class Calculator {
 
 	public void addTrigger(Trigger trigger) {
 		triggers.add(trigger);
+	}
+
+	public Double getOutputExpected() {
+		return round(outputExpected);
+	}
+
+	public Double getGain() {
+		return round(gain);
 	}
 
 	public PositionType getPositionType() {
@@ -171,7 +183,7 @@ public class Calculator {
 		}
 
 		double techAtr = highDay - lowDay;
-		double realAtr = techAtr > atr ? techAtr : atr;
+		double realAtr = Math.max(techAtr, atr * REALISTIC_POWER_RESERVE);
 
 		if (positionType == PositionType.LONG) {
 			powerReserve = round(realAtr - (level - lowDay));
@@ -213,22 +225,23 @@ public class Calculator {
 		double amount = Math.min(max, min);
 		return amount < 1 ? 1 : amount;
 	}
+
 	public double getBreakEven(double price) {
 		double openCommission  = estimatedCommissionUSD(price);
 		double priceClose      = price;
 		double closeCommission = openCommission;
 		double profit          = abs(priceClose - price) * quantity;
 		double taxes           = getTaxes(profit);
-		double increment       = positionType.equals(PositionType.LONG) ? 0.01 : -0.01;
+		double increment       = isLong() ? 0.01 : -0.01;
 
 		while (profit < openCommission + closeCommission + taxes) {
 			priceClose = priceClose + increment;
 			closeCommission = estimatedCommissionUSD(priceClose);
-			profit          = abs(priceClose - price) * quantity;
+			profit = abs(priceClose - price) * quantity;
 			taxes = getTaxes(profit);
 		}
 
-		return priceClose + (positionType.equals(PositionType.LONG) ? spread : -spread);
+		return priceClose + (isLong() ? spread : -spread);
 	}
 
 	private double getTaxes(double sum) {
@@ -264,13 +277,39 @@ public class Calculator {
 			JOptionPane.showMessageDialog(frame, error, "Error", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
-		if (quantity == null)
+		if (quantity == null || estimationType == EstimationType.MAX_GAIN)
 			quantity = maxQuantity();
-		orderStop = level + (positionType.equals(PositionType.LONG) ? ORDER_LUFT : -ORDER_LUFT);
-		orderLimit = orderStop + (positionType.equals(PositionType.LONG) ? spread : -spread);
-		breakEven = getBreakEven(orderLimit);
-		log("Break even: {}", breakEven);
+		orderStop = level + (isLong() ? ORDER_LUFT : -ORDER_LUFT);
+		orderLimit = orderStop + (isLong() ? spread : -spread);
+		do {
+			breakEven = getBreakEven(orderLimit);
+
+			takeProfit = isLong() ? level + powerReserve : level - powerReserve;
+			double reward = abs(takeProfit - breakEven);
+			risk = reward / 3;
+
+			/*
+			 * The stop loss is corrected by the spread because the stop loss order might be executed by the worst price
+			 * and this value should be a base for further calculations.
+			 */
+			stopLoss = isLong() ? breakEven - risk + spread : breakEven + risk - spread;
+
+			riskRewardRatioPercent = risk / reward * 100;
+			outputExpected = reward * quantity;
+			gain = outputExpected / (orderLimit * quantity) * 100;
+			risk = risk * quantity;
+			riskPercent = risk / MAX_VOLUME * 100;
+			if ((isLong() && stopLoss == level - ORDER_LUFT) || (!isLong() && stopLoss == level + ORDER_LUFT))
+				break; // todo fix this
+			if (riskPercent > MAX_RISK_PERCENT)
+				quantity--;
+		} while (riskPercent > MAX_RISK_PERCENT);
+
 		announce();
+	}
+
+	private boolean isLong() {
+		return positionType.equals(PositionType.LONG);
 	}
 
 	private int maxQuantity() {

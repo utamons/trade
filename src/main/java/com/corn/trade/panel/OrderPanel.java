@@ -26,10 +26,20 @@ public class OrderPanel extends BasePanel {
 		                                                 spacing,
 		                                                 fieldHeight,
 		                                                 null);
+
+		LabeledDoubleField quantity = new LabeledDoubleField("Quantity:",
+		                                                     10,
+		                                                     null,
+		                                                     spacing,
+		                                                     fieldHeight,
+		                                                     calculator::setQuantity);
+
+		this.add(quantity);
 		this.add(limit);
 		this.add(stop);
 
 		calculator.addTrigger(() -> {
+			quantity.setValue(calculator.getQuantity() == null ? null : (double) calculator.getQuantity());
 			limit.setValue(calculator.getOrderLimit());
 			stop.setValue(calculator.getOrderStop());
 		});
