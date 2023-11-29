@@ -4,6 +4,8 @@ import com.corn.trade.component.ButtonRowPanel;
 import com.corn.trade.component.LabeledComboBox;
 import com.corn.trade.component.LabeledDoubleField;
 import com.corn.trade.trade.Calculator;
+import com.corn.trade.trade.EstimationType;
+import com.corn.trade.trade.PositionType;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,17 +18,29 @@ public class InputPanel extends BasePanel {
 		this.setLayout(layout);
 
 
-		LabeledComboBox positionBox = new LabeledComboBox("Position:", new String[]{"Long", "Short"}, spacing, fieldHeight);
-		this.add(positionBox);
+		LabeledComboBox positionBox = new LabeledComboBox("Position:",
+		                                                  new String[]{
+				                                                  PositionType.LONG.toString(),
+				                                                  PositionType.SHORT.toString()
+		                                                  },
+		                                                  spacing,
+		                                                  fieldHeight,
+		                                                  (value) -> calculator.setPositionType(PositionType.fromString(value)));
+
 
 		LabeledComboBox estimationBox = new LabeledComboBox("Estimation:",
 		                                                    new String[]{
-				                                                    "Max. stop loss.",
-				                                                    "Max. take profit."
+				                                                    EstimationType.MAX_STOP_LOSS.toString(),
+				                                                    EstimationType.MAX_TAKE_PROFIT.toString()
 		                                                    },
 		                                                    spacing,
-		                                                    fieldHeight);
+		                                                    fieldHeight,
+		                                                    (value) -> calculator.setEstimationType(EstimationType.fromString(value)));
+		this.add(positionBox);
 		this.add(estimationBox);
+
+		calculator.setPositionType(PositionType.fromString(positionBox.getSelectedItem()));
+		calculator.setEstimationType(EstimationType.fromString(estimationBox.getSelectedItem()));
 
 		LabeledDoubleField spread = new LabeledDoubleField("Spread:",
 		                                                   10,
@@ -35,12 +49,13 @@ public class InputPanel extends BasePanel {
 		                                                   fieldHeight,
 		                                                   calculator::setSpread);
 		this.add(spread);
-		this.add(new LabeledDoubleField("Power reserve:",
-		                                10,
-		                                null,
-		                                spacing,
-		                                fieldHeight,
-		                                calculator::setPowerReserve));
+		LabeledDoubleField powerReserve = new LabeledDoubleField("Power reserve:",
+		                                                 10,
+		                                                 null,
+		                                                 spacing,
+		                                                 fieldHeight,
+		                                                 calculator::setPowerReserve);
+		this.add(powerReserve);
 		this.add(new LabeledDoubleField("Level:",
 		                                10,
 		                                null,
@@ -53,7 +68,7 @@ public class InputPanel extends BasePanel {
 		buttonRowPanel.add(new JButton("Estimate"));
 		buttonRowPanel.add(new JButton("Reset"));
 
-		calculator.addTrigger(() -> spread.setValue(calculator.getSpread()));
+		calculator.addTrigger(() -> powerReserve.setValue(calculator.getPowerReserve()));
 
 		this.add(buttonRowPanel);
 	}

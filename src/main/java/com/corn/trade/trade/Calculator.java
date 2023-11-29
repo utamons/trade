@@ -1,31 +1,42 @@
 package com.corn.trade.trade;
 
-import com.corn.trade.util.Trigger;
+import com.corn.trade.util.functional.Trigger;
 
+import javax.swing.*;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.corn.trade.util.Util.log;
+import static com.corn.trade.util.Util.round;
 
 @SuppressWarnings("unused")
 public class Calculator {
 
-	private final List<Trigger> triggers = new ArrayList<>();
-	private       PositionType  positionType;
-	private EstimationType estimationType;
-	private Double         spread;
-	private Double         powerReserve;
-	private Double         level;
-	private Double         atr;
-	private Double         highDay;
-	private Double lowDay;
-	private Double stopLoss;
-	private Double takeProfit;
-	private Double breakEven;
-	private Double risk;
-	private Double riskPercent;
-	private Double riskRewardRatioPercent;
-	private Double orderLimit;
-	private Double orderStop;
-	private int quantity;
+	private final List<Trigger>  triggers = new ArrayList<>();
+	private       PositionType   positionType;
+	private       EstimationType estimationType;
+	private       Double         spread;
+	private       Double         powerReserve;
+	private       Double         level;
+	private       Double         atr;
+	private       Double         highDay;
+	private       Double         lowDay;
+	private       Double         stopLoss;
+	private       Double         takeProfit;
+	private       Double         breakEven;
+	private       Double         risk;
+	private       Double         riskPercent;
+	private       Double         riskRewardRatioPercent;
+	private       Double         orderLimit;
+	private       Double         orderStop;
+	private       int            quantity;
+
+	private final Component frame;
+
+	public Calculator(Component frame) {
+		this.frame = frame;
+	}
 
 	private void announce() {
 		triggers.forEach(Trigger::trigger);
@@ -48,6 +59,7 @@ public class Calculator {
 	}
 
 	public void setEstimationType(EstimationType estimationType) {
+		System.out.println("Estimation type set to " + estimationType);
 		this.estimationType = estimationType;
 	}
 
@@ -145,5 +157,49 @@ public class Calculator {
 
 	public void setQuantity(Double quantity) {
 		this.quantity = quantity.intValue();
+	}
+
+	public void calculatePowerReserve() {
+		String error = validPowerReserve();
+		if (error != null) {
+			log("Invalid power reserve - atr: {}, lowDay: {}, highDay: {}, level: {}", atr, lowDay, highDay, level);
+			JOptionPane.showMessageDialog(frame, error, "Error", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+		double techAtr = highDay - lowDay;
+		double realAtr = techAtr > atr ? techAtr : atr;
+
+		if (positionType == PositionType.LONG) {
+			powerReserve = round(realAtr - (level - lowDay));
+		} else {
+			powerReserve = round(realAtr - (highDay - level));
+		}
+		announce();
+	}
+
+	private String validPowerReserve() {
+		if (atr == null || lowDay == null || highDay == null || level == null) {
+			return "atr, lowDay, highDay and level must be set\n ";
+		}
+		if (atr <= 0) {
+			return "atr must be greater than 0\n ";
+		}
+		if (lowDay <= 0) {
+			return "lowDay must be greater than 0\n ";
+		}
+		if (highDay <= 0) {
+			return "highDay must be greater than 0\n ";
+		}
+		if (level <= 0) {
+			return "level must be greater than 0\n ";
+		}
+		if (lowDay >= highDay) {
+			return "lowDay must be less than highDay\n ";
+		}
+		if (level <= lowDay || level >= highDay) {
+			return "level must be between lowDay and highDay\n ";
+		}
+		return null;
 	}
 }

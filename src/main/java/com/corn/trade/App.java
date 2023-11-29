@@ -32,7 +32,7 @@ public class App {
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setSize(700, 630);
 
-			Calculator calculator = new Calculator();
+			Calculator calculator = new Calculator(frame);
 
 			InputPanel inputPanel = new InputPanel(
 					calculator,

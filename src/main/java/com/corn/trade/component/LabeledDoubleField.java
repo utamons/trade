@@ -1,11 +1,11 @@
 package com.corn.trade.component;
-import com.corn.trade.util.DoubleConsumer;
 
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public class LabeledDoubleField extends JPanel {
@@ -14,7 +14,7 @@ public class LabeledDoubleField extends JPanel {
 	private Color textFieldColor;
 
 	// Constructor
-	public LabeledDoubleField(String labelText, int columns, Color textColor, int padding, int height, DoubleConsumer consumer) {
+	public LabeledDoubleField(String labelText, int columns, Color textColor, int padding, int height, Consumer<Double> consumer) {
 		// Initialize label and text field
 		JLabel label = new JLabel(labelText);
 		textField = new JTextField(columns);
