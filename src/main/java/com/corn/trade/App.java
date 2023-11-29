@@ -1,6 +1,7 @@
 package com.corn.trade;
 
 import com.corn.trade.panel.*;
+import com.corn.trade.trade.Calculator;
 import com.github.weisj.darklaf.LafManager;
 import com.github.weisj.darklaf.theme.*;
 import com.github.weisj.darklaf.theme.event.ThemePreferenceChangeEvent;
@@ -31,23 +32,30 @@ public class App {
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setSize(700, 630);
 
+			Calculator calculator = new Calculator();
+
 			InputPanel inputPanel = new InputPanel(
+					calculator,
 					new Dimension(300, 300),
 					new Dimension(300, 300),
 					5, FIELD_HEIGHT);
 			PowerPanel powerPanel= new PowerPanel(
+					calculator,
 					new Dimension(300, 300),
 					new Dimension(300, 300),
 					5, FIELD_HEIGHT);
 			TradePanel tradePanel = new TradePanel(
+					calculator,
 					new Dimension(300, 300),
 					new Dimension(300, 300),
 					5, FIELD_HEIGHT);
 			RiskPanel riskPanel = new RiskPanel(
+					calculator,
 					new Dimension(300, 300),
 					new Dimension(300, 300),
 					5, FIELD_HEIGHT);
 			OrderPanel orderPanel = new OrderPanel(
+					calculator,
 					new Dimension(300, 300),
 					new Dimension(300, 300),
 					5, FIELD_HEIGHT);
@@ -86,11 +94,6 @@ public class App {
 	}
 
 	private static void setDefaultFont() {
-		UIManager.put("Label.font", new Font("Arial", Font.PLAIN, 14));
-		UIManager.put("Button.font", new Font("Arial", Font.PLAIN, 14));
-		// Add other components here
-
-		// For a comprehensive approach, iterate over all keys
 		for (Object key : UIManager.getDefaults().keySet()) {
 			if (UIManager.get(key) instanceof Font) {
 				UIManager.put(key, new Font("Arial", Font.PLAIN, 14));

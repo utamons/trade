@@ -1,5 +1,7 @@
 package com.corn.trade.panel;
 
+import com.corn.trade.trade.Calculator;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
@@ -7,7 +9,9 @@ import java.awt.*;
 
 public abstract class BasePanel extends JPanel {
 
-	public BasePanel(String title, Dimension maxSize, Dimension minSize) {
+	protected Calculator calculator;
+
+	public BasePanel(String title, Calculator calculator, Dimension maxSize, Dimension minSize) {
 		super();
 		LayoutManager layout = new BoxLayout(this, BoxLayout.Y_AXIS);
 		this.setLayout(layout);
@@ -21,5 +25,6 @@ public abstract class BasePanel extends JPanel {
 		this.setBorder(BorderFactory.createCompoundBorder(compoundBorder, emptyBorder));
 		this.setMaximumSize(maxSize);
 		this.setMinimumSize(minSize);
+		this.calculator = calculator;
 	}
 }
