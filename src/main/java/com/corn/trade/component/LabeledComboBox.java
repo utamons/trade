@@ -25,17 +25,14 @@ public class LabeledComboBox extends JPanel {
 		add(comboBox, BorderLayout.EAST);
 	}
 
-	// Method to add a change listener to the combo box
 	public void addChangeListener(ActionListener listener) {
 		comboBox.addActionListener(listener);
 	}
 
-	// Getter for the selected item
 	public String getSelectedItem() {
 		return (String) comboBox.getSelectedItem();
 	}
 
-	// Setter for the selected item
 	public void setSelectedItem(String item) {
 		comboBox.setSelectedItem(item);
 	}
