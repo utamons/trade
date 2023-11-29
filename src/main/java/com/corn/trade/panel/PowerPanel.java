@@ -33,7 +33,11 @@ public class PowerPanel extends BasePanel {
 
 		ButtonRowPanel buttonRowPanel = new ButtonRowPanel();
 
-		buttonRowPanel.add(new JButton("Caclulate P/R"));
+		JButton button = new JButton("Calculate P/R");
+
+		button.addActionListener(e -> calculator.calculatePowerReserve());
+
+		buttonRowPanel.add(button);
 
 		this.add(buttonRowPanel);
 	}
