@@ -13,17 +13,25 @@ public class OrderPanel extends BasePanel {
 		LayoutManager layout = new BoxLayout(this, BoxLayout.Y_AXIS);
 		this.setLayout(layout);
 
-		this.add(new LabeledDoubleField("Limit:",
-		                                10,
-		                                null,
-		                                spacing,
-		                                fieldHeight,
-		                                null));
-		this.add(new LabeledDoubleField("Stop:",
-		                                10,
-		                                null,
-		                                spacing,
-		                                fieldHeight,
-		                                null));
+		LabeledDoubleField limit = new LabeledDoubleField("Limit:",
+		                                                 10,
+		                                                 null,
+		                                                 spacing,
+		                                                 fieldHeight,
+		                                                 null);
+
+		LabeledDoubleField stop = new LabeledDoubleField("Stop:",
+		                                                 10,
+		                                                 null,
+		                                                 spacing,
+		                                                 fieldHeight,
+		                                                 null);
+		this.add(limit);
+		this.add(stop);
+
+		calculator.addTrigger(() -> {
+			limit.setValue(calculator.getOrderLimit());
+			stop.setValue(calculator.getOrderStop());
+		});
 	}
 }
