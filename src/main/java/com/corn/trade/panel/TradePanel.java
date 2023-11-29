@@ -13,13 +13,6 @@ public class TradePanel extends BasePanel {
 		LayoutManager layout = new BoxLayout(this, BoxLayout.Y_AXIS);
 		this.setLayout(layout);
 
-		LabeledDoubleField quantity = new LabeledDoubleField("Quantity:",
-		                                                 10,
-		                                                 null,
-		                                                 spacing,
-		                                                 fieldHeight,
-		                                                 calculator::setQuantity);
-
 		LabeledDoubleField stopLoss = new LabeledDoubleField("Stop Loss:",
 		                                                 10,
 		                                                 null,
@@ -40,17 +33,31 @@ public class TradePanel extends BasePanel {
 		                                                 spacing,
 		                                                 fieldHeight,
 		                                                 null);
+		LabeledDoubleField outputEx = new LabeledDoubleField("Output ex.:",
+		                                                      10,
+		                                                      null,
+		                                                      spacing,
+		                                                      fieldHeight,
+		                                                      null);
+		LabeledDoubleField gain = new LabeledDoubleField("Gain:",
+		                                                      10,
+		                                                      null,
+		                                                      spacing,
+		                                                      fieldHeight,
+		                                                      null);
 		this.add(breakEven);
-		this.add(quantity);
 		this.add(stopLoss);
 		this.add(take);
+		this.add(outputEx);
+		this.add(gain);
 
 		calculator.addTrigger(
 				() -> {
 					breakEven.setValue(calculator.getBreakEven());
-					quantity.setValue(calculator.getQuantity() == null ? null : (double) calculator.getQuantity());
 					stopLoss.setValue(calculator.getStopLoss());
 					take.setValue(calculator.getTakeProfit());
+					outputEx.setValue(calculator.getOutputExpected());
+					gain.setValue(calculator.getGain());
 				}
 		);
 	}

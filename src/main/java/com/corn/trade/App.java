@@ -14,7 +14,7 @@ import java.awt.*;
 public class App {
 
 	private static final int FIELD_HEIGHT = 40;
-	public static final Theme DARK_THEME = new DarculaTheme();
+	public static final Theme DARK_THEME = new OneDarkTheme();
 	public static final Theme LIGHT_THEME = new IntelliJTheme();
 
 	static class CustomThemeListener implements ThemePreferenceListener {
@@ -36,8 +36,8 @@ public class App {
 
 			InputPanel inputPanel = new InputPanel(
 					calculator,
-					new Dimension(300, 300),
-					new Dimension(300, 300),
+					new Dimension(500, 300),
+					new Dimension(500, 300),
 					5, FIELD_HEIGHT);
 			PowerPanel powerPanel= new PowerPanel(
 					calculator,
@@ -47,7 +47,7 @@ public class App {
 			TradePanel tradePanel = new TradePanel(
 					calculator,
 					new Dimension(300, 300),
-					new Dimension(300, 300),
+					new Dimension(300, 100),
 					5, FIELD_HEIGHT);
 			RiskPanel riskPanel = new RiskPanel(
 					calculator,
@@ -57,7 +57,7 @@ public class App {
 			OrderPanel orderPanel = new OrderPanel(
 					calculator,
 					new Dimension(300, 300),
-					new Dimension(300, 300),
+					new Dimension(300, 100),
 					5, FIELD_HEIGHT);
 
 			frame.getContentPane().setLayout(new GridLayout(1, 2));

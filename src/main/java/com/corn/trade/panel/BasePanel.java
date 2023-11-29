@@ -14,7 +14,6 @@ public abstract class BasePanel extends JPanel {
 	public BasePanel(String title, Calculator calculator, Dimension maxSize, Dimension minSize) {
 		super();
 		LayoutManager layout = new BoxLayout(this, BoxLayout.Y_AXIS);
-		this.setLayout(layout);
 		Border       emptyBorder  = BorderFactory.createEmptyBorder(5, 5, 5, 5);
 		Border       lineBorder   = BorderFactory.createLineBorder(Color.LIGHT_GRAY); // Padding
 		TitledBorder titledBorder = BorderFactory.createTitledBorder(lineBorder, title);
@@ -24,7 +23,9 @@ public abstract class BasePanel extends JPanel {
 
 		this.setBorder(BorderFactory.createCompoundBorder(compoundBorder, emptyBorder));
 		this.setMaximumSize(maxSize);
+		this.setPreferredSize(maxSize);
 		this.setMinimumSize(minSize);
+		this.setLayout(layout);
 		this.calculator = calculator;
 	}
 }

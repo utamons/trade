@@ -16,6 +16,7 @@ public class LabeledComboBox extends JPanel {
 		JLabel label = new JLabel(labelText);
 		comboBox = new JComboBox<>(items);
 		this.setMaximumSize(new Dimension(5000,height));
+		this.setMinimumSize(new Dimension(500,height));
 		Border emptyBorder = BorderFactory.createEmptyBorder(padding, padding, padding, padding);
 		this.setBorder(emptyBorder);
 
