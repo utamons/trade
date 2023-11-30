@@ -73,7 +73,7 @@ public class LabeledDoubleField extends JPanel {
 	public void setValue(Double value) {
 		if (value == null)
 			textField.setText("");
-		else if (value == 0) {
+		else if (value <= 0) {
 			textField.setText(value.toString());
 			setError(true);
 		} else {

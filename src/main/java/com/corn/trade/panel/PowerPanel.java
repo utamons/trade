@@ -48,6 +48,9 @@ public class PowerPanel extends BasePanel {
 		this.add(buttonRowPanel);
 
 		calculator.addTrigger(() -> {
+			atr.setValue(calculator.getAtr());
+			high.setValue(calculator.getHighDay());
+			low.setValue(calculator.getLowDay());
 			atr.setError(calculator.isAtrError());
 			high.setError(calculator.isHighDayError());
 			low.setError(calculator.isLowDayError());

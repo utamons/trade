@@ -45,11 +45,12 @@ public class TradePanel extends BasePanel {
 		                                                      spacing,
 		                                                      fieldHeight,
 		                                                      null);
-		this.add(breakEven);
+
 		this.add(stopLoss);
 		this.add(take);
 		this.add(outputEx);
 		this.add(gain);
+		this.add(breakEven);
 
 		calculator.addTrigger(
 				() -> {
