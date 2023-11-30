@@ -58,6 +58,9 @@ public class TradePanel extends BasePanel {
 					take.setValue(calculator.getTakeProfit());
 					outputEx.setValue(calculator.getOutputExpected());
 					gain.setValue(calculator.getGain());
+
+					stopLoss.setError(calculator.isStopLossError());
+					take.setError(calculator.isTakeProfitError());
 				}
 		);
 	}

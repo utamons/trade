@@ -68,7 +68,12 @@ public class InputPanel extends BasePanel {
 		buttonRowPanel.add(estimate);
 		buttonRowPanel.add(new JButton("Reset"));
 
-		calculator.addTrigger(() -> powerReserve.setValue(calculator.getPowerReserve()));
+		calculator.addTrigger(() -> {
+			powerReserve.setValue(calculator.getPowerReserve());
+			spread.setError(calculator.isSpreadError());
+			level.setError(calculator.isLevelError());
+			powerReserve.setError(calculator.isPowerReserveError());
+		});
 
 		estimate.addActionListener(e -> calculator.estimate());
 
