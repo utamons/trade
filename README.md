@@ -1,7 +1,7 @@
 # trade
 
 As of now, it's a simple calculator for traders.
-It allows to calculate basic trade params as stop-loss, take-profit, risks and so on..
+It allows to calculate basic trade params like stop-loss, take-profit, risks and so on..
 
 This is a Java Swing app, so you need Java installed (v.19 and upper)
 Also you need Maven to build it.
