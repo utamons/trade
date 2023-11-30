@@ -6,7 +6,11 @@ It allows to calculate basic trade params as stop-loss, take-profit, risks and s
 This is a Java Swing app, so you need Java installed (v.19 and upper)
 Also you need Maven to build it.
 
-After mvn package you would get an executable jar which you can run with
+After 
+
+mvn package 
+
+you would get an executable jar which you can run with
 
 java -jar trade.jar.
 
