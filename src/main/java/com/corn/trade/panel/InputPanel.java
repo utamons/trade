@@ -31,7 +31,9 @@ public class InputPanel extends BasePanel {
 		LabeledComboBox estimationBox = new LabeledComboBox("Estimation:",
 		                                                    new String[]{
 				                                                    EstimationType.MAX_STOP_LOSS.toString(),
-				                                                    EstimationType.MAX_GAIN.toString()
+				                                                    EstimationType.MAX_GAIN_MAX_STOP_LOSS.toString(),
+				                                                    EstimationType.MIN_STOP_LOSS.toString(),
+				                                                    EstimationType.MAX_GAIN_MIN_STOP_LOSS.toString()
 		                                                    },
 		                                                    spacing,
 		                                                    fieldHeight,
@@ -65,10 +67,14 @@ public class InputPanel extends BasePanel {
 		ButtonRowPanel buttonRowPanel = new ButtonRowPanel();
 
 		JButton estimate = new JButton("Estimate");
+		JButton reset = new JButton("Reset");
+
 		buttonRowPanel.add(estimate);
-		buttonRowPanel.add(new JButton("Reset"));
+		buttonRowPanel.add(reset);
 
 		calculator.addTrigger(() -> {
+			spread.setValue(calculator.getSpread());
+			level.setValue(calculator.getLevel());
 			powerReserve.setValue(calculator.getPowerReserve());
 			spread.setError(calculator.isSpreadError());
 			level.setError(calculator.isLevelError());
@@ -76,6 +82,7 @@ public class InputPanel extends BasePanel {
 		});
 
 		estimate.addActionListener(e -> calculator.estimate());
+		reset.addActionListener(e -> calculator.reset());
 
 		this.add(positionBox);
 		this.add(estimationBox);
