@@ -25,21 +25,39 @@ public class Calculator {
 	private       EstimationType estimationType;
 	private       Double         outputExpected;
 	private       Double         gain;
-	private       Double         spread;
-	private       Double         powerReserve;
-	private       Double         level;
-	private       Double         atr;
-	private       Double         highDay;
-	private       Double         lowDay;
-	private       Double         stopLoss;
-	private       Double         takeProfit;
-	private       Double         breakEven;
-	private       Double         risk;
-	private       Double         riskPercent;
-	private       Double         riskRewardRatioPercent;
-	private       Double         orderLimit;
-	private       Double         orderStop;
-	private       Integer        quantity;
+	private Double  spread;
+
+	private boolean spreadError = false;
+	private Double  powerReserve;
+
+	private boolean powerReserveError = false;
+	private Double  level;
+
+	private boolean levelError = false;
+	private Double  atr;
+
+	private boolean atrError = false;
+	private Double  highDay;
+
+	private boolean highDayError = false;
+	private Double  lowDay;
+
+	private boolean lowDayError = false;
+	private Double  stopLoss;
+
+	private boolean stopLossError = false;
+	private Double  takeProfit;
+
+	private boolean takeProfitError = false;
+	private Double  breakEven;
+	private Double  risk;
+	private Double  riskPercent;
+	private Double  riskRewardRatioPercent;
+	private Double  orderLimit;
+	private Double  orderStop;
+	private Integer quantity;
+
+	private boolean quantityError = false;
 
 	public Calculator(Component frame) {
 		this.frame = frame;
@@ -51,6 +69,41 @@ public class Calculator {
 
 	public void addTrigger(Trigger trigger) {
 		triggers.add(trigger);
+	}
+
+	public boolean isSpreadError() {
+		return spreadError;
+	}
+
+	public boolean isPowerReserveError() {
+		return powerReserveError;
+	}
+
+	public boolean isLevelError() {
+		return levelError;
+	}
+
+	public boolean isAtrError() {
+		return atrError;
+	}
+
+	public boolean isHighDayError() {
+		return highDayError;
+	}
+
+	public boolean isLowDayError() {
+		return lowDayError;
+	}
+
+	public boolean isStopLossError() {
+		return stopLossError;
+	}
+	public boolean isQuantityError() {
+		return quantityError;
+	}
+
+	public boolean isTakeProfitError() {
+		return takeProfitError;
 	}
 
 	public Double getOutputExpected() {
@@ -179,6 +232,7 @@ public class Calculator {
 		if (error != null) {
 			log("Invalid power reserve - atr: {}, lowDay: {}, highDay: {}, level: {}", atr, lowDay, highDay, level);
 			JOptionPane.showMessageDialog(frame, error, "Error", JOptionPane.ERROR_MESSAGE);
+			announce();
 			return;
 		}
 
@@ -194,25 +248,48 @@ public class Calculator {
 	}
 
 	private String validPowerReserve() {
-		if (atr == null || lowDay == null || highDay == null || level == null) {
-			return "atr, lowDay, highDay and level must be set\n ";
+		atrError = false;
+		lowDayError = false;
+		highDayError = false;
+		levelError = false;
+		if (atr == null) {
+			atrError = true;
+			return "atr must be set\n ";
+		}
+		if (lowDay == null) {
+			lowDayError = true;
+			return "lowDay must be set\n ";
+		}
+		if (highDay == null) {
+			highDayError = true;
+			return "highDay must be set\n ";
+		}
+		if (level == null) {
+			levelError = true;
+			return "level must be set\n ";
 		}
 		if (atr <= 0) {
+			atrError = true;
 			return "atr must be greater than 0\n ";
 		}
 		if (lowDay <= 0) {
+			lowDayError = true;
 			return "lowDay must be greater than 0\n ";
 		}
 		if (highDay <= 0) {
+			highDayError = true;
 			return "highDay must be greater than 0\n ";
 		}
 		if (level <= 0) {
+			levelError = true;
 			return "level must be greater than 0\n ";
 		}
 		if (lowDay >= highDay) {
+			lowDayError = true;
 			return "lowDay must be less than highDay\n ";
 		}
 		if (level <= lowDay || level >= highDay) {
+			levelError = true;
 			return "level must be between lowDay and highDay\n ";
 		}
 		return null;
@@ -249,43 +326,69 @@ public class Calculator {
 	}
 
 	private String validEstimation() {
+		levelError = false;
+		spreadError = false;
+		powerReserveError = false;
+		quantityError = false;
 		if (level == null) {
+			levelError = true;
 			return "Level must be set\n ";
 		}
 		if (spread == null) {
+			spreadError = true;
 			return "Spread must be set\n ";
 		}
 		if (powerReserve == null) {
+			powerReserveError = true;
 			return "Power reserve must be set\n ";
 		}
 		if (powerReserve <= 0) {
+			powerReserveError = true;
 			return "Power reserve must be greater than 0\n ";
 		}
 		if (level <= 0) {
+			levelError = true;
 			return "Level must be greater than 0\n ";
 		}
 		if (spread <= 0) {
+			spreadError = true;
 			return "Spread must be greater than 0\n ";
+		}
+		if (quantity != null && quantity <= 0) {
+			quantityError = true;
+			return "Quantity must be greater than 0\n ";
 		}
 		return null;
 	}
 
 	public void estimate() {
 		String error = validEstimation();
+		takeProfitError = false;
+		stopLossError = false;
 		if (error != null) {
 			log("Invalid estimation - level: {}, spread: {}, powerReserve: {}", level, spread, powerReserve);
 			JOptionPane.showMessageDialog(frame, error, "Error", JOptionPane.ERROR_MESSAGE);
+			announce();
 			return;
 		}
 		if (quantity == null || estimationType == EstimationType.MAX_GAIN)
 			quantity = maxQuantity();
 		orderStop = level + (isLong() ? ORDER_LUFT : -ORDER_LUFT);
 		orderLimit = orderStop + (isLong() ? spread : -spread);
+		takeProfit = isLong() ? level + powerReserve : level - powerReserve;
+
 		do {
 			breakEven = getBreakEven(orderLimit);
-
-			takeProfit = isLong() ? level + powerReserve : level - powerReserve;
-			double reward = abs(takeProfit - breakEven);
+			if (takeProfit < breakEven) {
+				log("Take profit is less than break even");
+				JOptionPane.showMessageDialog(frame, "Cannot fit to risk limits!", "Error", JOptionPane.ERROR_MESSAGE);
+				takeProfitError = true;
+				stopLossError = ((isLong() && stopLoss >= level - ORDER_LUFT - spread) ||
+				                 (!isLong() && stopLoss <= level + ORDER_LUFT + spread));
+				announce();
+				break;
+			}
+			double reward = isLong() ? takeProfit - breakEven : breakEven - takeProfit;
 			risk = reward / 3;
 
 			/*
@@ -293,17 +396,23 @@ public class Calculator {
 			 * and this value should be a base for further calculations.
 			 */
 			stopLoss = isLong() ? breakEven - risk + spread : breakEven + risk - spread;
+			if ((isLong() && stopLoss >= level - ORDER_LUFT - spread) ||
+			    (!isLong() && stopLoss <= level + ORDER_LUFT + spread)) {
+				takeProfit = isLong() ? takeProfit - 0.01 : takeProfit + 0.01;
+				log("Take profit is corrected to {}", takeProfit);
+			}
 
 			riskRewardRatioPercent = risk / reward * 100;
 			outputExpected = reward * quantity;
 			gain = outputExpected / (orderLimit * quantity) * 100;
 			risk = risk * quantity;
 			riskPercent = risk / MAX_VOLUME * 100;
-			if ((isLong() && stopLoss == level - ORDER_LUFT) || (!isLong() && stopLoss == level + ORDER_LUFT))
-				break; // todo fix this
+
 			if (riskPercent > MAX_RISK_PERCENT)
 				quantity--;
-		} while (riskPercent > MAX_RISK_PERCENT);
+		} while (riskPercent > MAX_RISK_PERCENT ||
+		         ((isLong() && stopLoss >= level - ORDER_LUFT - spread) ||
+		          (!isLong() && stopLoss <= level + ORDER_LUFT + spread)));
 
 		announce();
 	}

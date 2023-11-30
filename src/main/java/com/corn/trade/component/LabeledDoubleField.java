@@ -11,16 +11,21 @@ import java.util.function.Consumer;
 public class LabeledDoubleField extends JPanel {
 
 	private final JTextField textField;
-	private Color textFieldColor;
+	private       Color      textFieldColor;
 
 	// Constructor
-	public LabeledDoubleField(String labelText, int columns, Color textColor, int padding, int height, Consumer<Double> consumer) {
+	public LabeledDoubleField(String labelText,
+	                          int columns,
+	                          Color textColor,
+	                          int padding,
+	                          int height,
+	                          Consumer<Double> consumer) {
 		// Initialize label and text field
 		JLabel label = new JLabel(labelText);
 		textField = new JTextField(columns);
-		this.setMaximumSize(new Dimension(5000,height));
-		this.setMinimumSize(new Dimension(50,height));
-		this.setPreferredSize(new Dimension(100,height));
+		this.setMaximumSize(new Dimension(5000, height));
+		this.setMinimumSize(new Dimension(50, height));
+		this.setPreferredSize(new Dimension(100, height));
 		Border emptyBorder = BorderFactory.createEmptyBorder(padding, padding, padding, padding);
 		this.setBorder(emptyBorder);
 		this.textFieldColor = textColor;
@@ -48,11 +53,10 @@ public class LabeledDoubleField extends JPanel {
 		add(textField, BorderLayout.EAST);
 	}
 
-	// Method to validate the text field content as a double
 	public boolean isValidDouble() {
 		try {
-			Double.parseDouble(textField.getText());
-			return true;
+			double value = Double.parseDouble(textField.getText());
+			return value > 0;
 		} catch (NumberFormatException e) {
 			return false;
 		}
@@ -69,8 +73,13 @@ public class LabeledDoubleField extends JPanel {
 	public void setValue(Double value) {
 		if (value == null)
 			textField.setText("");
-		else
+		else if (value == 0) {
 			textField.setText(value.toString());
+			setError(true);
+		} else {
+			setError(false);
+			textField.setText(String.format("%.2f", value));
+		}
 	}
 
 	public Color getTextFieldColor() {
@@ -80,5 +89,16 @@ public class LabeledDoubleField extends JPanel {
 	public void setTextFieldColor(Color color) {
 		this.textFieldColor = color;
 		textField.setForeground(color);
+	}
+
+	public void setError(boolean error) {
+		if (error && textField.getText().isEmpty())
+			textField.setBackground(Color.RED);
+		else if (error)
+			textField.setForeground(Color.RED);
+		else {
+			textField.setForeground(UIManager.getColor("TextField.foreground"));
+			textField.setBackground(UIManager.getColor("TextField.background"));
+		}
 	}
 }
