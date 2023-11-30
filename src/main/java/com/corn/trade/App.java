@@ -2,6 +2,7 @@ package com.corn.trade;
 
 import com.corn.trade.panel.*;
 import com.corn.trade.trade.Calculator;
+import com.corn.trade.util.Util;
 import com.github.weisj.darklaf.LafManager;
 import com.github.weisj.darklaf.theme.*;
 import com.github.weisj.darklaf.theme.event.ThemePreferenceChangeEvent;
@@ -26,6 +27,7 @@ public class App {
 
 	public static void main(String[] args) {
 		SwingUtilities.invokeLater(() -> {
+			Util.log("Calculator version 1.0.0");
 			setDefaultFont();
 
 			JFrame frame = new JFrame("Trade Calculator");
@@ -90,6 +92,7 @@ public class App {
 			));
 
 			frame.setVisible(true);
+			Util.log("Application started");
 		});
 	}
 
