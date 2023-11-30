@@ -128,7 +128,6 @@ public class Calculator {
 	}
 
 	public void setEstimationType(EstimationType estimationType) {
-		System.out.println("Estimation type set to " + estimationType);
 		this.estimationType = estimationType;
 	}
 
