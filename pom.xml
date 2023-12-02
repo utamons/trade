@@ -25,31 +25,24 @@
 	</properties>
 	<dependencies>
 		<dependency>
+			<groupId>com.interactivebrokers</groupId>
+			<artifactId>tws-api</artifactId>
+			<version>9.73.01-SNAPSHOT</version>
+		</dependency>
+		<dependency>
 			<groupId>com.github.weisj</groupId>
 			<artifactId>darklaf-core</artifactId>
 			<version>3.0.2</version>
 		</dependency>
 		<dependency>
-			<groupId>org.liquibase</groupId>
-			<artifactId>liquibase-core</artifactId>
-			<version>4.25.0</version>
+			<groupId>org.hsqldb</groupId>
+			<artifactId>hsqldb</artifactId>
+			<version>2.7.2</version>
 		</dependency>
 		<dependency>
-			<groupId>org.mariadb.jdbc</groupId>
-			<artifactId>mariadb-java-client</artifactId>
-			<version>3.1.2</version>
-		</dependency>
-		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
-			<version>2.2.224</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.hamcrest</groupId>
-			<artifactId>hamcrest</artifactId>
-			<version>2.2</version>
-			<scope>test</scope>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-core</artifactId>
+			<version>6.4.0.Final</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jacoco</groupId>
@@ -58,7 +51,6 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-
 	<build>
 		<plugins>
 			<plugin>
