@@ -7,7 +7,6 @@ import com.ib.controller.ApiController;
 import com.ib.controller.ApiController.IConnectionHandler;
 import com.ib.controller.Formats;
 
-import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
 
