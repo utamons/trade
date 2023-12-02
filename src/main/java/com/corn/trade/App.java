@@ -1,5 +1,7 @@
 package com.corn.trade;
 
+import com.corn.trade.entity.MyEntity;
+import com.corn.trade.ibkr.Ibkr;
 import com.corn.trade.panel.*;
 import com.corn.trade.trade.Calculator;
 import com.corn.trade.util.Util;
@@ -8,26 +10,25 @@ import com.github.weisj.darklaf.theme.*;
 import com.github.weisj.darklaf.theme.event.ThemePreferenceChangeEvent;
 import com.github.weisj.darklaf.theme.event.ThemePreferenceListener;
 import com.github.weisj.darklaf.theme.info.DefaultThemeProvider;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.Persistence;
 
 import javax.swing.*;
 import java.awt.*;
 
+import static com.corn.trade.util.Util.log;
+
 public class App {
 
-	private static final int FIELD_HEIGHT = 40;
-	public static final Theme DARK_THEME = new OneDarkTheme();
-	public static final Theme LIGHT_THEME = new IntelliJTheme();
-
-	static class CustomThemeListener implements ThemePreferenceListener {
-
-		public void themePreferenceChanged(final ThemePreferenceChangeEvent e) {
-			LafManager.installTheme(e.getPreferredThemeStyle());
-		}
-	}
+	public static final  Theme DARK_THEME   = new OneDarkTheme();
+	public static final  Theme LIGHT_THEME  = new IntelliJTheme();
+	private static final int   FIELD_HEIGHT = 40;
 
 	public static void main(String[] args) {
 		SwingUtilities.invokeLater(() -> {
-			Util.log("Calculator version 1.0.0");
+			log("Calculator version 1.0.0");
 			setDefaultFont();
 
 			JFrame frame = new JFrame("Trade Calculator");
@@ -41,7 +42,7 @@ public class App {
 					new Dimension(500, 300),
 					new Dimension(500, 300),
 					5, FIELD_HEIGHT);
-			PowerPanel powerPanel= new PowerPanel(
+			PowerPanel powerPanel = new PowerPanel(
 					calculator,
 					new Dimension(300, 300),
 					new Dimension(300, 300),
@@ -92,8 +93,34 @@ public class App {
 			));
 
 			frame.setVisible(true);
-			Util.log("Application started");
+			log("Application started");
 		});
+		//Ibkr ibkr = new Ibkr();
+		//ibkr.run();
+		Util.log("START");
+		EntityManagerFactory emf = Persistence.createEntityManagerFactory("TradePersistenceUnit");
+
+		EntityManager em = emf.createEntityManager();
+
+	/*	transaction.begin();
+
+		MyEntity entity = new MyEntity();
+		entity.setName("Test");
+		Util.log("CREATING");
+		em.persist(entity);
+		Util.log("PERSISTING");
+
+		transaction.commit();
+
+		Util.log("ID: {}", entity.getId());*/
+
+		java.util.List<MyEntity> entities = em.createQuery("SELECT e FROM MyEntity e", MyEntity.class).getResultList();
+
+		entities.forEach(
+				e->log("id: {}", e.getId())
+		);
+
+		em.close();
 	}
 
 	private static void setDefaultFont() {
@@ -101,6 +128,13 @@ public class App {
 			if (UIManager.get(key) instanceof Font) {
 				UIManager.put(key, new Font("Arial", Font.PLAIN, 14));
 			}
+		}
+	}
+
+	static class CustomThemeListener implements ThemePreferenceListener {
+
+		public void themePreferenceChanged(final ThemePreferenceChangeEvent e) {
+			LafManager.installTheme(e.getPreferredThemeStyle());
 		}
 	}
 }
