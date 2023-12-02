@@ -102,7 +102,9 @@ public class App {
 
 		EntityManager em = emf.createEntityManager();
 
-	/*	transaction.begin();
+	/*	EntityTransaction transaction = em.getTransaction()
+
+		transaction.begin();
 
 		MyEntity entity = new MyEntity();
 		entity.setName("Test");
