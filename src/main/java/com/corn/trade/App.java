@@ -2,6 +2,7 @@ package com.corn.trade;
 
 import com.corn.trade.entity.MyEntity;
 import com.corn.trade.ibkr.Ibkr;
+import com.corn.trade.jpa.JpaRepo;
 import com.corn.trade.panel.*;
 import com.corn.trade.trade.Calculator;
 import com.corn.trade.util.Util;
@@ -97,32 +98,6 @@ public class App {
 		});
 		//Ibkr ibkr = new Ibkr();
 		//ibkr.run();
-		Util.log("START");
-		EntityManagerFactory emf = Persistence.createEntityManagerFactory("TradePersistenceUnit");
-
-		EntityManager em = emf.createEntityManager();
-
-	/*	EntityTransaction transaction = em.getTransaction()
-
-		transaction.begin();
-
-		MyEntity entity = new MyEntity();
-		entity.setName("Test");
-		Util.log("CREATING");
-		em.persist(entity);
-		Util.log("PERSISTING");
-
-		transaction.commit();
-
-		Util.log("ID: {}", entity.getId());*/
-
-		java.util.List<MyEntity> entities = em.createQuery("SELECT e FROM MyEntity e", MyEntity.class).getResultList();
-
-		entities.forEach(
-				e->log("id: {}", e.getId())
-		);
-
-		em.close();
 	}
 
 	private static void setDefaultFont() {
