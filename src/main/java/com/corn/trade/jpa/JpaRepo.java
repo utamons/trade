@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
 
+@SuppressWarnings("unused")
 public class JpaRepo<T, ID extends Serializable> {
 
 	private final Class<T>             type;
@@ -29,7 +30,7 @@ public class JpaRepo<T, ID extends Serializable> {
 	public void save(T entity) {
 		try {
 			entityManager.getTransaction().begin();
-			entityManager.merge(entity); // Using merge
+			entityManager.merge(entity);
 			entityManager.getTransaction().commit();
 		} catch (Exception e) {
 			entityManager.getTransaction().rollback();
