@@ -4,27 +4,27 @@ import com.corn.trade.component.ButtonRowPanel;
 import com.corn.trade.component.LabeledComboBox;
 import com.corn.trade.component.LabeledDoubleField;
 import com.corn.trade.component.LabeledLookup;
+import com.corn.trade.trade.AutoUpdate;
 import com.corn.trade.trade.Calculator;
 import com.corn.trade.trade.EstimationType;
 import com.corn.trade.trade.PositionType;
+import com.corn.trade.util.Util;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
-import java.util.Vector;
-
-import static com.corn.trade.util.Util.log;
 
 public class InputPanel extends BasePanel {
+	public InputPanel(Calculator calculator, AutoUpdate autoUpdate, Dimension maxSize, Dimension minSize, int spacing, int fieldHeight) {
+		super("Input", calculator, autoUpdate, maxSize, minSize);
+		this.setLayout(new BorderLayout());
 
-	public InputPanel(Calculator calculator, Dimension maxSize, Dimension minSize, int spacing, int fieldHeight) {
-		super("Input", calculator, maxSize, minSize);
-		LayoutManager layout = new BoxLayout(this, BoxLayout.Y_AXIS);
-		this.setLayout(layout);
+		JPanel panel = new JPanel();
+		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
 		List<String> items = List.of("AAPL", "TSLA", "AMZN", "GOOG", "MSFT");
 
-		LabeledLookup labeledLookup = new LabeledLookup("Ticker", items, spacing, fieldHeight, (ticker) -> log(ticker));
+		LabeledLookup labeledLookup = new LabeledLookup("Ticker:", items, spacing, fieldHeight, Util::log);
 
 
 		LabeledComboBox positionBox = new LabeledComboBox("Position:",
@@ -46,7 +46,8 @@ public class InputPanel extends BasePanel {
 		                                                    },
 		                                                    spacing,
 		                                                    fieldHeight,
-		                                                    (value) -> calculator.setEstimationType(EstimationType.fromString(value)));
+		                                                    (value) -> calculator.setEstimationType(EstimationType.fromString(
+				                                                    value)));
 
 
 		calculator.setPositionType(PositionType.fromString(positionBox.getSelectedItem()));
@@ -57,27 +58,71 @@ public class InputPanel extends BasePanel {
 		                                                   null,
 		                                                   spacing,
 		                                                   fieldHeight,
+		                                                   autoUpdate.isAutoUpdate(),
 		                                                   calculator::setSpread);
+		autoUpdate.addListener(spread::setAutoSwitchVisible);
 
 		LabeledDoubleField powerReserve = new LabeledDoubleField("Power reserve:",
-		                                                 10,
-		                                                 null,
-		                                                 spacing,
-		                                                 fieldHeight,
-		                                                 calculator::setPowerReserve);
+		                                                         10,
+		                                                         null,
+		                                                         spacing,
+		                                                         fieldHeight,
+		                                                         autoUpdate.isAutoUpdate(),
+		                                                         calculator::setPowerReserve);
 
-		LabeledDoubleField level = new LabeledDoubleField("Level:",
-		                                                 10,
-		                                                 null,
-		                                                 spacing,
-		                                                 fieldHeight,
-		                                                 calculator::setLevel);
+		autoUpdate.addListener(powerReserve::setAutoSwitchVisible);
+
+		LabeledDoubleField level = new LabeledDoubleField("Temp. Level:",
+		                                                  10,
+		                                                  null,
+		                                                  spacing,
+		                                                  fieldHeight,
+		                                                  false,
+		                                                  calculator::setLevel);
+
+		LabeledDoubleField price = new LabeledDoubleField("Price:",
+		                                                  10,
+		                                                  null,
+		                                                  spacing,
+		                                                  fieldHeight,
+		                                                  autoUpdate.isAutoUpdate(),
+		                                                  calculator::setPrice);
+
+		autoUpdate.addListener(price::setAutoSwitchVisible);
+
+		LabeledDoubleField support = new LabeledDoubleField("Min.take (support):",
+		                                                    10,
+		                                                    null,
+		                                                    spacing,
+		                                                    fieldHeight,
+															autoUpdate.isAutoUpdate(),
+		                                                    calculator::setMinTake);
+
+		autoUpdate.addListener(support::setAutoSwitchVisible);
+
+		LabeledDoubleField resistance = new LabeledDoubleField("Max take (resistance):",
+		                                                       10,
+		                                                       null,
+		                                                       spacing,
+		                                                       fieldHeight,
+															   autoUpdate.isAutoUpdate(),
+		                                                       calculator::setMaxTake);
+
+		autoUpdate.addListener(resistance::setAutoSwitchVisible);
 
 		ButtonRowPanel buttonRowPanel = new ButtonRowPanel();
 
+		JCheckBox checkBox = new JCheckBox("Auto-update");
 		JButton estimate = new JButton("Estimate");
-		JButton reset = new JButton("Reset");
+		JButton reset    = new JButton("Reset");
 
+		checkBox.addActionListener(e -> {
+			autoUpdate.setAutoUpdate(checkBox.isSelected());
+			estimate.setEnabled(!checkBox.isSelected());
+			reset.setEnabled(!checkBox.isSelected());
+		});
+
+		buttonRowPanel.add(checkBox);
 		buttonRowPanel.add(estimate);
 		buttonRowPanel.add(reset);
 
@@ -93,13 +138,17 @@ public class InputPanel extends BasePanel {
 		estimate.addActionListener(e -> calculator.estimate());
 		reset.addActionListener(e -> calculator.reset());
 
-		this.add(labeledLookup);
-		this.add(positionBox);
-		this.add(estimationBox);
-		this.add(spread);
-		this.add(powerReserve);
-		this.add(level);
+		panel.add(labeledLookup);
+		panel.add(positionBox);
+		panel.add(estimationBox);
+		panel.add(spread);
+		panel.add(powerReserve);
+		panel.add(price);
+		panel.add(level);
+		panel.add(support);
+		panel.add(resistance);
 
-		this.add(buttonRowPanel);
+		this.add(panel, BorderLayout.NORTH);
+		this.add(buttonRowPanel, BorderLayout.SOUTH);
 	}
 }

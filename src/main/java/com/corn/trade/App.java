@@ -1,20 +1,13 @@
 package com.corn.trade;
 
-import com.corn.trade.entity.MyEntity;
-import com.corn.trade.ibkr.Ibkr;
-import com.corn.trade.jpa.JpaRepo;
 import com.corn.trade.panel.*;
+import com.corn.trade.trade.AutoUpdate;
 import com.corn.trade.trade.Calculator;
-import com.corn.trade.util.Util;
 import com.github.weisj.darklaf.LafManager;
 import com.github.weisj.darklaf.theme.*;
 import com.github.weisj.darklaf.theme.event.ThemePreferenceChangeEvent;
 import com.github.weisj.darklaf.theme.event.ThemePreferenceListener;
 import com.github.weisj.darklaf.theme.info.DefaultThemeProvider;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.EntityTransaction;
-import jakarta.persistence.Persistence;
 
 import javax.swing.*;
 import java.awt.*;
@@ -26,6 +19,8 @@ public class App {
 	public static final  Theme DARK_THEME   = new OneDarkTheme();
 	public static final  Theme LIGHT_THEME  = new IntelliJTheme();
 	private static final int   FIELD_HEIGHT = 40;
+	public static final int PREF_HEIGHT = 250;
+	public static final int PREF_WIDTH = 330;
 
 	public static void main(String[] args) {
 		SwingUtilities.invokeLater(() -> {
@@ -37,61 +32,72 @@ public class App {
 			frame.setSize(700, 630);
 
 			Calculator calculator = new Calculator(frame);
+			AutoUpdate autoUpdate = new AutoUpdate();
+			autoUpdate.addListener(calculator::setAutoUpdate);
 
 			InputPanel inputPanel = new InputPanel(
 					calculator,
-					new Dimension(500, 300),
-					new Dimension(500, 300),
+					autoUpdate,
+					new Dimension(PREF_WIDTH, PREF_HEIGHT),
+					new Dimension(PREF_WIDTH, PREF_HEIGHT),
 					5, FIELD_HEIGHT);
 			PowerPanel powerPanel = new PowerPanel(
 					calculator,
-					new Dimension(300, 300),
-					new Dimension(300, 300),
+					autoUpdate,
+					new Dimension(PREF_WIDTH, PREF_HEIGHT),
+					new Dimension(PREF_WIDTH, PREF_HEIGHT),
 					5, FIELD_HEIGHT);
 			TradePanel tradePanel = new TradePanel(
 					calculator,
-					new Dimension(300, 300),
-					new Dimension(300, 100),
+					autoUpdate,
+					new Dimension(PREF_WIDTH, PREF_HEIGHT),
+					new Dimension(PREF_WIDTH, PREF_HEIGHT),
 					5, FIELD_HEIGHT);
 			RiskPanel riskPanel = new RiskPanel(
 					calculator,
-					new Dimension(300, 300),
-					new Dimension(300, 300),
+					autoUpdate,
+					new Dimension(PREF_WIDTH, PREF_HEIGHT),
+					new Dimension(PREF_WIDTH, PREF_HEIGHT),
 					5, FIELD_HEIGHT);
 			OrderPanel orderPanel = new OrderPanel(
 					calculator,
-					new Dimension(300, 300),
-					new Dimension(300, 100),
+					autoUpdate,
+					new Dimension(PREF_WIDTH, PREF_HEIGHT),
+					new Dimension(PREF_WIDTH, PREF_HEIGHT),
 					5, FIELD_HEIGHT);
 
-			frame.getContentPane().setLayout(new GridLayout(1, 2));
+			frame.getContentPane().setLayout(new GridLayout(1, 3));
 
 			JPanel leftPanel = new JPanel();
-			leftPanel.setLayout(new GridLayout(2, 1));
+			leftPanel.setLayout(new GridLayout(1, 1));
 			leftPanel.add(inputPanel);
-			leftPanel.add(tradePanel);
 
-			JPanel rightPanel = new JPanel();
-			rightPanel.setLayout(new GridLayout(3, 1));
-			rightPanel.add(powerPanel);
-			rightPanel.add(riskPanel);
-			rightPanel.add(orderPanel);
+			JPanel rightPanel1 = new JPanel();
+			rightPanel1.setLayout(new GridLayout(2, 1));
+			rightPanel1.add(tradePanel);
+			rightPanel1.add(powerPanel);
+
+			JPanel rightPanel2 = new JPanel();
+			rightPanel2.setLayout(new GridLayout(2, 1));
+			rightPanel2.add(riskPanel);
+			rightPanel2.add(orderPanel);
 
 			frame.getContentPane().add(leftPanel);
-			frame.getContentPane().add(rightPanel);
+			frame.getContentPane().add(rightPanel1);
+			frame.getContentPane().add(rightPanel2);
 
 			frame.setLocationRelativeTo(null);
 
 			LafManager.enabledPreferenceChangeReporting(true);
-
 			LafManager.addThemePreferenceChangeListener(new CustomThemeListener());
-
 			LafManager.setThemeProvider(new DefaultThemeProvider(
 					LIGHT_THEME,
 					DARK_THEME,
 					new HighContrastLightTheme(),
 					new HighContrastDarkTheme()
 			));
+
+			frame.pack();
 
 			frame.setVisible(true);
 			log("Application started");

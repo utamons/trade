@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 public class LabeledDoubleField extends JPanel {
 
 	private final JTextField textField;
+	private final JCheckBox autoSwitch;
 	private       Color      textFieldColor;
 
 	// Constructor
@@ -19,6 +20,7 @@ public class LabeledDoubleField extends JPanel {
 	                          Color textColor,
 	                          int padding,
 	                          int height,
+	                          boolean hasAutoSwitch,
 	                          Consumer<Double> consumer) {
 		// Initialize label and text field
 		JLabel label = new JLabel(labelText);
@@ -47,10 +49,18 @@ public class LabeledDoubleField extends JPanel {
 			}
 		});
 
+		autoSwitch = new JCheckBox();
+		autoSwitch.setVisible(hasAutoSwitch);
+
 		// Set layout
 		setLayout(new BorderLayout());
 		add(label, BorderLayout.WEST);
-		add(textField, BorderLayout.EAST);
+
+		JPanel panel = new JPanel();
+		panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+		panel.add(autoSwitch);
+		panel.add(textField);
+		add(panel, BorderLayout.EAST);
 	}
 
 	public boolean isValidDouble() {
@@ -100,5 +110,13 @@ public class LabeledDoubleField extends JPanel {
 			textField.setForeground(UIManager.getColor("TextField.foreground"));
 			textField.setBackground(UIManager.getColor("TextField.background"));
 		}
+	}
+
+	public void setEditable(boolean editable) {
+		textField.setEditable(editable);
+	}
+
+	public void setAutoSwitchVisible(boolean visible) {
+		autoSwitch.setVisible(visible);
 	}
 }

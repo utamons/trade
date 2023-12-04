@@ -2,6 +2,7 @@ package com.corn.trade.panel;
 
 import com.corn.trade.component.ButtonRowPanel;
 import com.corn.trade.component.LabeledDoubleField;
+import com.corn.trade.trade.AutoUpdate;
 import com.corn.trade.trade.Calculator;
 
 import javax.swing.*;
@@ -9,14 +10,19 @@ import java.awt.*;
 
 public class PowerPanel extends BasePanel {
 
-	public PowerPanel(Calculator calculator, Dimension maxSize, Dimension minSize, int spacing, int fieldHeight) {
-		super("Power", calculator, maxSize, minSize);
+	public PowerPanel(Calculator calculator, AutoUpdate autoUpdate, Dimension maxSize, Dimension minSize, int spacing, int fieldHeight) {
+		super("Power", calculator, autoUpdate, maxSize, minSize);
+		this.setLayout(new BorderLayout());
+
+		JPanel panel = new JPanel();
+		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
 		LabeledDoubleField atr = new LabeledDoubleField("ATR (day):",
 		                                                 10,
 		                                                 null,
 		                                                 spacing,
 		                                                 fieldHeight,
+														 false,
 		                                                 calculator::setAtr);
 
 		LabeledDoubleField high = new LabeledDoubleField("High (day):",
@@ -24,6 +30,7 @@ public class PowerPanel extends BasePanel {
 		                                                 null,
 		                                                 spacing,
 		                                                 fieldHeight,
+														 false,
 		                                                 calculator::setHighDay);
 
 		LabeledDoubleField low = new LabeledDoubleField("Low (day):",
@@ -31,21 +38,24 @@ public class PowerPanel extends BasePanel {
 		                                                 null,
 		                                                 spacing,
 		                                                 fieldHeight,
+														 false,
 		                                                 calculator::setLowDay);
 
-		this.add(atr);
-		this.add(high);
-		this.add(low);
+		panel.add(atr);
+		panel.add(high);
+		panel.add(low);
 
 		ButtonRowPanel buttonRowPanel = new ButtonRowPanel();
 
 		JButton button = new JButton("Calculate P/R");
 
 		button.addActionListener(e -> calculator.calculatePowerReserve());
+		autoUpdate.addListener((isAutoUpdate) -> button.setEnabled(!isAutoUpdate));
 
 		buttonRowPanel.add(button);
 
-		this.add(buttonRowPanel);
+		this.add(panel, BorderLayout.NORTH);
+		this.add(buttonRowPanel, BorderLayout.SOUTH);
 
 		calculator.addTrigger(() -> {
 			atr.setValue(calculator.getAtr());
