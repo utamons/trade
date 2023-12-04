@@ -1,5 +1,6 @@
 package com.corn.trade.panel;
 
+import com.corn.trade.trade.AutoUpdate;
 import com.corn.trade.trade.Calculator;
 
 import javax.swing.*;
@@ -11,7 +12,9 @@ public abstract class BasePanel extends JPanel {
 
 	protected Calculator calculator;
 
-	public BasePanel(String title, Calculator calculator, Dimension maxSize, Dimension minSize) {
+	protected AutoUpdate autoUpdate;
+
+	public BasePanel(String title, Calculator calculator, AutoUpdate autoUpdate, Dimension preferredSize, Dimension minSize) {
 		super();
 		LayoutManager layout = new BoxLayout(this, BoxLayout.Y_AXIS);
 		Border       emptyBorder  = BorderFactory.createEmptyBorder(5, 5, 5, 5);
@@ -22,10 +25,10 @@ public abstract class BasePanel extends JPanel {
 		Border compoundBorder = BorderFactory.createCompoundBorder(emptyBorder, titledBorder);
 
 		this.setBorder(BorderFactory.createCompoundBorder(compoundBorder, emptyBorder));
-		this.setMaximumSize(maxSize);
-		this.setPreferredSize(maxSize);
+		this.setPreferredSize(preferredSize);
 		this.setMinimumSize(minSize);
 		this.setLayout(layout);
 		this.calculator = calculator;
+		this.autoUpdate = autoUpdate;
 	}
 }

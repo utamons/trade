@@ -8,19 +8,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.corn.trade.util.Util.log;
-import static com.corn.trade.util.Util.round;
 import static java.lang.Math.abs;
 
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
 public class Calculator {
-	private final Double MAX_VOLUME                    = 5000.0;
+	private final Double MAX_VOLUME              = 5000.0;
 	private final double MAX_RISK_PERCENT        = 0.5;
 	private final double MAX_RISK_REWARD_RATIO   = 3.0;
 	private final Double REALISTIC_POWER_RESERVE = 0.8;
 	private final Double ORDER_LUFT              = 0.02;
 
-	private final List<Trigger>  triggers = new ArrayList<>();
+	private final List<Trigger> triggers = new ArrayList<>();
 	private final Component      frame;
+	private       boolean        autoUpdate = false;
 	private       PositionType   positionType;
 	private       EstimationType estimationType;
 	private       Double         outputExpected;
@@ -56,11 +56,56 @@ public class Calculator {
 	private Double  orderLimit;
 	private Double  orderStop;
 	private Integer quantity;
-
-	private boolean quantityError = false;
+	private boolean quantityError   = false;
+	private Double  price;
+	private boolean priceError      = false;
+	private Double minTake;
+	private Double maxTake;
+	private boolean supportError = false;
+	private boolean resistanceError = false;
 
 	public Calculator(Component frame) {
 		this.frame = frame;
+	}
+
+	public void setAutoUpdate(boolean autoUpdate) {
+		this.autoUpdate = autoUpdate;
+	}
+
+	public boolean isSupportError() {
+		return supportError;
+	}
+
+	public boolean isResistanceError() {
+		return resistanceError;
+	}
+
+	public Double getMaxTake() {
+		return maxTake;
+	}
+
+	public void setMaxTake(Double maxTake) {
+		this.maxTake = maxTake;
+	}
+
+	public Double getMinTake() {
+		return minTake;
+	}
+
+	public void setMinTake(Double minTake) {
+		this.minTake = minTake;
+	}
+
+	private boolean isPriceError() {
+		return priceError;
+	}
+
+	public Double getPrice() {
+		return price;
+	}
+
+	public void setPrice(Double price) {
+		this.price = price;
 	}
 
 	private void announce() {
@@ -108,11 +153,11 @@ public class Calculator {
 	}
 
 	public Double getOutputExpected() {
-		return round(outputExpected);
+		return outputExpected;
 	}
 
 	public Double getGain() {
-		return round(gain);
+		return gain;
 	}
 
 	public PositionType getPositionType() {
@@ -140,7 +185,7 @@ public class Calculator {
 	}
 
 	public Double getPowerReserve() {
-		return round(powerReserve);
+		return powerReserve;
 	}
 
 	public void setPowerReserve(Double powerReserve) {
@@ -180,7 +225,7 @@ public class Calculator {
 	}
 
 	public Double getStopLoss() {
-		return round(stopLoss);
+		return stopLoss;
 	}
 
 	public void setStopLoss(Double stopLoss) {
@@ -188,7 +233,7 @@ public class Calculator {
 	}
 
 	public Double getTakeProfit() {
-		return round(takeProfit);
+		return takeProfit;
 	}
 
 	public void setTakeProfit(Double takeProfit) {
@@ -196,27 +241,27 @@ public class Calculator {
 	}
 
 	public Double getBreakEven() {
-		return round(breakEven);
+		return breakEven;
 	}
 
 	public Double getRisk() {
-		return round(risk);
+		return risk;
 	}
 
 	public Double getRiskPercent() {
-		return round(riskPercent);
+		return riskPercent;
 	}
 
 	public Double getRiskRewardRatioPercent() {
-		return round(riskRewardRatioPercent);
+		return riskRewardRatioPercent;
 	}
 
 	public Double getOrderLimit() {
-		return round(orderLimit);
+		return orderLimit;
 	}
 
 	public Double getOrderStop() {
-		return round(orderStop);
+		return orderStop;
 	}
 
 	public Integer getQuantity() {
@@ -231,7 +276,7 @@ public class Calculator {
 		String error = validPowerReserve();
 		if (error != null) {
 			log("Invalid power reserve - atr: {}, lowDay: {}, highDay: {}, level: {}", atr, lowDay, highDay, level);
-			JOptionPane.showMessageDialog(frame, error, "Error", JOptionPane.ERROR_MESSAGE);
+			showMessageDlg(error);
 			announce();
 			return;
 		}
@@ -240,11 +285,16 @@ public class Calculator {
 		double realAtr = Math.max(techAtr, atr * REALISTIC_POWER_RESERVE);
 
 		if (positionType == PositionType.LONG) {
-			powerReserve = round(realAtr - (level - lowDay));
+			powerReserve = realAtr - (level - lowDay);
 		} else {
-			powerReserve = round(realAtr - (highDay - level));
+			powerReserve = realAtr - (highDay - level);
 		}
 		announce();
+	}
+
+	private void showMessageDlg(String error) {
+		if (!autoUpdate)
+			JOptionPane.showMessageDialog(frame, error, "Error", JOptionPane.ERROR_MESSAGE);
 	}
 
 	private String validPowerReserve() {
@@ -364,7 +414,7 @@ public class Calculator {
 			    spread,
 			    powerReserve,
 			    quantity);
-			JOptionPane.showMessageDialog(frame, error, "Error", JOptionPane.ERROR_MESSAGE);
+			showMessageDlg(error);
 			announce();
 		}
 		return error == null;
@@ -434,8 +484,8 @@ public class Calculator {
 
 		if (estimationType == EstimationType.MIN_STOP_LOSS ||
 		    estimationType == EstimationType.MAX_GAIN_MIN_STOP_LOSS) {
-			double minStopLoss = isLong() ? level - Math.max(ORDER_LUFT,spread) : level + Math.max(ORDER_LUFT,spread);
-			return  isLong() ? Math.max(stopLoss, minStopLoss) : Math.min(stopLoss, minStopLoss);
+			double minStopLoss = isLong() ? level - Math.max(ORDER_LUFT, spread) : level + Math.max(ORDER_LUFT, spread);
+			return isLong() ? Math.max(stopLoss, minStopLoss) : Math.min(stopLoss, minStopLoss);
 		}
 
 		return stopLoss;
@@ -444,7 +494,7 @@ public class Calculator {
 	private boolean areRiskLimitsFailed() {
 		if ((isLong() && takeProfit < breakEven) || (isShort() && takeProfit > breakEven)) {
 			log("Take profit is less than break even");
-			JOptionPane.showMessageDialog(frame, "Cannot fit to risk limits!", "Error", JOptionPane.ERROR_MESSAGE);
+			showMessageDlg("Cannot fit to risk limits!");
 			takeProfitError = true;
 			stopLossError = stopLossTooLow();
 			gain = 0.0;
@@ -457,7 +507,7 @@ public class Calculator {
 		}
 		if (quantity <= 0) {
 			log("Cannot fit to risk limits");
-			JOptionPane.showMessageDialog(frame, "Cannot fit to risk limits!", "Error", JOptionPane.ERROR_MESSAGE);
+			showMessageDlg("Cannot fit to risk limits!");
 			announce();
 			return true;
 		}
@@ -482,7 +532,7 @@ public class Calculator {
 	}
 
 	private boolean stopLossTooLow() {
-		return (isLong() && stopLoss > level - Math.max(ORDER_LUFT,spread)) ||
+		return (isLong() && stopLoss > level - Math.max(ORDER_LUFT, spread)) ||
 		       (isShort() && stopLoss < level + Math.max(ORDER_LUFT, spread));
 	}
 
