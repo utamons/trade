@@ -13,7 +13,7 @@ import java.util.List;
 
 public class InputPanel extends BasePanel {
 
-	private final JCheckBox autoAupdateCheckBox;
+	private final JCheckBox autoUpdateCheckBox;
 
 	public InputPanel(Calculator calculator, AutoUpdate autoUpdate, Dimension maxSize, Dimension minSize, int spacing, int fieldHeight) {
 		super("Input", calculator, autoUpdate, maxSize, minSize);
@@ -123,21 +123,18 @@ public class InputPanel extends BasePanel {
 
 		ButtonRowPanel buttonRowPanel = new ButtonRowPanel();
 
-		autoAupdateCheckBox = new JCheckBox("Auto-update");
-
-		if (!autoUpdate.isReady())
-			autoAupdateCheckBox.setEnabled(false);
+		autoUpdateCheckBox = new JCheckBox("Auto-update");
 
 		JButton estimate = new JButton("Estimate");
 		JButton reset    = new JButton("Reset");
 
-		autoAupdateCheckBox.addActionListener(e -> {
-			autoUpdate.setAutoUpdate(autoAupdateCheckBox.isSelected());
-			estimate.setEnabled(!autoAupdateCheckBox.isSelected());
-			reset.setEnabled(!autoAupdateCheckBox.isSelected());
+		autoUpdateCheckBox.addActionListener(e -> {
+			autoUpdate.setAutoUpdate(autoUpdateCheckBox.isSelected());
+			estimate.setEnabled(!autoUpdateCheckBox.isSelected());
+			reset.setEnabled(!autoUpdateCheckBox.isSelected());
 		});
 
-		buttonRowPanel.add(autoAupdateCheckBox);
+		buttonRowPanel.add(autoUpdateCheckBox);
 		buttonRowPanel.add(estimate);
 		buttonRowPanel.add(reset);
 
@@ -169,6 +166,6 @@ public class InputPanel extends BasePanel {
 	}
 
 	public void enableAutoUpdateCheckBox(boolean enabled) {
-		autoAupdateCheckBox.setEnabled(enabled);
+		autoUpdateCheckBox.setEnabled(enabled);
 	}
 }
