@@ -1,5 +1,7 @@
 package com.corn.trade.component;
 
+import com.corn.trade.util.Util;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
@@ -102,6 +104,11 @@ public class LabeledLookup extends JPanel {
 				consumer.accept(searchField.getText());
 			}
 		});
+	}
+
+	public void setSuccessStatus(boolean successStatus) {
+		Util.log("Setting lookup successStatus to " + successStatus);
+		searchField.setBackground(successStatus ? UIManager.getColor("TextField.background") : Color.RED);
 	}
 
 	private void updatePopupMenu(char keyChar, Consumer<String> consumer) {

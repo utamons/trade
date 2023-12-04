@@ -1,6 +1,6 @@
 package com.corn.trade.panel;
 
-import com.corn.trade.trade.AutoUpdate;
+import com.corn.trade.ibkr.AutoUpdate;
 import com.corn.trade.trade.Calculator;
 
 import javax.swing.*;

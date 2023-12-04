@@ -2,7 +2,7 @@ package com.corn.trade.panel;
 
 import com.corn.trade.component.ButtonRowPanel;
 import com.corn.trade.component.LabeledDoubleField;
-import com.corn.trade.trade.AutoUpdate;
+import com.corn.trade.ibkr.AutoUpdate;
 import com.corn.trade.trade.Calculator;
 
 import javax.swing.*;
@@ -41,7 +41,7 @@ public class OrderPanel extends BasePanel {
 		                                                     fieldHeight,
 		                                                     autoUpdate.isAutoUpdate(),
 		                                                     calculator::setQuantity);
-		autoUpdate.addListener(quantity::setAutoSwitchVisible);
+		autoUpdate.addActivateListener(quantity::setAutoSwitchVisible);
 
 		panel.add(quantity);
 		panel.add(limit);

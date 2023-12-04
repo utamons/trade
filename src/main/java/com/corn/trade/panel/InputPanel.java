@@ -4,11 +4,8 @@ import com.corn.trade.component.ButtonRowPanel;
 import com.corn.trade.component.LabeledComboBox;
 import com.corn.trade.component.LabeledDoubleField;
 import com.corn.trade.component.LabeledLookup;
-import com.corn.trade.trade.AutoUpdate;
-import com.corn.trade.trade.Calculator;
-import com.corn.trade.trade.EstimationType;
-import com.corn.trade.trade.PositionType;
-import com.corn.trade.util.Util;
+import com.corn.trade.ibkr.AutoUpdate;
+import com.corn.trade.trade.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -24,8 +21,19 @@ public class InputPanel extends BasePanel {
 
 		List<String> items = List.of("AAPL", "TSLA", "AMZN", "GOOG", "MSFT");
 
-		LabeledLookup labeledLookup = new LabeledLookup("Ticker:", items, spacing, fieldHeight, Util::log);
+		LabeledLookup tickerLookup = new LabeledLookup("Ticker:", items, spacing, fieldHeight, autoUpdate::setTicker);
+		autoUpdate.setTickerUpdateSuccessListener(tickerLookup::setSuccessStatus);
 
+		LabeledComboBox exchangeBox = new LabeledComboBox("Exchange:",
+		                                                  new String[]{
+				                                                  ExchangeType.NASDAQ.toString(),
+				                                                  ExchangeType.NYSE.toString()
+		                                                  },
+		                                                  spacing,
+		                                                  fieldHeight,
+		                                                  autoUpdate::setExchange);
+
+		exchangeBox.setSelectedItem(autoUpdate.getExchange());
 
 		LabeledComboBox positionBox = new LabeledComboBox("Position:",
 		                                                  new String[]{
@@ -60,7 +68,7 @@ public class InputPanel extends BasePanel {
 		                                                   fieldHeight,
 		                                                   autoUpdate.isAutoUpdate(),
 		                                                   calculator::setSpread);
-		autoUpdate.addListener(spread::setAutoSwitchVisible);
+		autoUpdate.addActivateListener(spread::setAutoSwitchVisible);
 
 		LabeledDoubleField powerReserve = new LabeledDoubleField("Power reserve:",
 		                                                         10,
@@ -70,7 +78,7 @@ public class InputPanel extends BasePanel {
 		                                                         autoUpdate.isAutoUpdate(),
 		                                                         calculator::setPowerReserve);
 
-		autoUpdate.addListener(powerReserve::setAutoSwitchVisible);
+		autoUpdate.addActivateListener(powerReserve::setAutoSwitchVisible);
 
 		LabeledDoubleField level = new LabeledDoubleField("Temp. Level:",
 		                                                  10,
@@ -88,7 +96,7 @@ public class InputPanel extends BasePanel {
 		                                                  autoUpdate.isAutoUpdate(),
 		                                                  calculator::setPrice);
 
-		autoUpdate.addListener(price::setAutoSwitchVisible);
+		autoUpdate.addActivateListener(price::setAutoSwitchVisible);
 
 		LabeledDoubleField support = new LabeledDoubleField("Min.take (support):",
 		                                                    10,
@@ -98,7 +106,7 @@ public class InputPanel extends BasePanel {
 															autoUpdate.isAutoUpdate(),
 		                                                    calculator::setMinTake);
 
-		autoUpdate.addListener(support::setAutoSwitchVisible);
+		autoUpdate.addActivateListener(support::setAutoSwitchVisible);
 
 		LabeledDoubleField resistance = new LabeledDoubleField("Max take (resistance):",
 		                                                       10,
@@ -108,7 +116,7 @@ public class InputPanel extends BasePanel {
 															   autoUpdate.isAutoUpdate(),
 		                                                       calculator::setMaxTake);
 
-		autoUpdate.addListener(resistance::setAutoSwitchVisible);
+		autoUpdate.addActivateListener(resistance::setAutoSwitchVisible);
 
 		ButtonRowPanel buttonRowPanel = new ButtonRowPanel();
 
@@ -138,7 +146,8 @@ public class InputPanel extends BasePanel {
 		estimate.addActionListener(e -> calculator.estimate());
 		reset.addActionListener(e -> calculator.reset());
 
-		panel.add(labeledLookup);
+		panel.add(exchangeBox);
+		panel.add(tickerLookup);
 		panel.add(positionBox);
 		panel.add(estimationBox);
 		panel.add(spread);

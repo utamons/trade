@@ -18,12 +18,18 @@ public class Ibkr implements IConnectionHandler  {
 	private ApiController m_controller;
 	private final List<String> m_acctList = new ArrayList<>();
 
+	private ContractLookuper m_lookuper = contract -> com.ib.client.Util.lookupContract(controller(), contract);
+
 	public void run() {
 		controller().connect(
 				m_connectionConfiguration.getDefaultHost(),
 				m_connectionConfiguration.getDefaultPort(),
 				0,
 				m_connectionConfiguration.getDefaultConnectOptions() );
+	}
+
+	public List<ContractDetails> lookupContract(Contract contract) {
+		return m_lookuper.lookupContract(contract);
 	}
 
 	@Override public void connected() {
