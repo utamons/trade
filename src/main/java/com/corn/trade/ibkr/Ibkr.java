@@ -28,6 +28,10 @@ public class Ibkr implements IConnectionHandler  {
 				m_connectionConfiguration.getDefaultConnectOptions() );
 	}
 
+	public boolean isConnected() {
+		return controller().client().isConnected();
+	}
+
 	public List<ContractDetails> lookupContract(Contract contract) {
 		return m_lookuper.lookupContract(contract);
 	}
