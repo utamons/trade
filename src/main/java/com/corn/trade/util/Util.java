@@ -1,9 +1,20 @@
 package com.corn.trade.util;
 
+import javax.swing.*;
+import java.awt.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 public class Util {
+
+	public static void showErrorDlg(Component frame, String error) {
+		JOptionPane.showMessageDialog(frame, error, "Error", JOptionPane.ERROR_MESSAGE);
+	}
+
+	public static void showWarningDlg(Component frame, String warning) {
+		JOptionPane.showMessageDialog(frame, warning, "Warning", JOptionPane.WARNING_MESSAGE);
+	}
+
 	public static void log(String message, Object... args) {
 		int argIndex = 0;
 		StringBuilder builder = new StringBuilder();

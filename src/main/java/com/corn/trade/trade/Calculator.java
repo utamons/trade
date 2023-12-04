@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.corn.trade.util.Util.log;
+import static com.corn.trade.util.Util.showErrorDlg;
 import static java.lang.Math.abs;
 
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
@@ -18,7 +19,7 @@ public class Calculator {
 	private final Double REALISTIC_POWER_RESERVE = 0.8;
 	private final Double ORDER_LUFT              = 0.02;
 
-	private final List<Trigger> triggers = new ArrayList<>();
+	private final List<Trigger>  triggers   = new ArrayList<>();
 	private final Component      frame;
 	private       boolean        autoUpdate = false;
 	private       PositionType   positionType;
@@ -59,9 +60,9 @@ public class Calculator {
 	private boolean quantityError   = false;
 	private Double  price;
 	private boolean priceError      = false;
-	private Double minTake;
-	private Double maxTake;
-	private boolean supportError = false;
+	private Double  minTake;
+	private Double  maxTake;
+	private boolean supportError    = false;
 	private boolean resistanceError = false;
 
 	public Calculator(Component frame) {
@@ -276,7 +277,7 @@ public class Calculator {
 		String error = validPowerReserve();
 		if (error != null) {
 			log("Invalid power reserve - atr: {}, lowDay: {}, highDay: {}, level: {}", atr, lowDay, highDay, level);
-			showMessageDlg(error);
+			showErrorDlg(frame, error);
 			announce();
 			return;
 		}
@@ -290,11 +291,6 @@ public class Calculator {
 			powerReserve = realAtr - (highDay - level);
 		}
 		announce();
-	}
-
-	private void showMessageDlg(String error) {
-		if (!autoUpdate)
-			JOptionPane.showMessageDialog(frame, error, "Error", JOptionPane.ERROR_MESSAGE);
 	}
 
 	private String validPowerReserve() {
@@ -414,7 +410,7 @@ public class Calculator {
 			    spread,
 			    powerReserve,
 			    quantity);
-			showMessageDlg(error);
+			showErrorDlg(frame, error);
 			announce();
 		}
 		return error == null;
@@ -494,7 +490,7 @@ public class Calculator {
 	private boolean areRiskLimitsFailed() {
 		if ((isLong() && takeProfit < breakEven) || (isShort() && takeProfit > breakEven)) {
 			log("Take profit is less than break even");
-			showMessageDlg("Cannot fit to risk limits!");
+			showErrorDlg(frame,"Cannot fit to risk limits!");
 			takeProfitError = true;
 			stopLossError = stopLossTooLow();
 			gain = 0.0;
@@ -507,7 +503,7 @@ public class Calculator {
 		}
 		if (quantity <= 0) {
 			log("Cannot fit to risk limits");
-			showMessageDlg("Cannot fit to risk limits!");
+			showErrorDlg(frame,"Cannot fit to risk limits!");
 			announce();
 			return true;
 		}

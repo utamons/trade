@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import static com.corn.trade.util.Util.showErrorDlg;
+
 public class AutoUpdate {
 	private final Ibkr ibkr;
 	private final JFrame                 frame;
@@ -26,6 +28,10 @@ public class AutoUpdate {
 		this.frame = frame;
 	}
 
+	public boolean isReady() {
+		return ibkr.isConnected();
+	}
+
 	public void setTickerUpdateSuccessListener(Consumer<Boolean> tickerUpdateSuccessListener) {
 		this.tickerUpdateSuccessListener = tickerUpdateSuccessListener;
 	}
@@ -40,7 +46,7 @@ public class AutoUpdate {
 	}
 
 	public void setTicker(String ticker) {
-		if (ticker == null || ticker.equals(this.ticker)) {
+		if (ticker == null || ticker.equals(this.ticker) || !isReady()) {
 			return;
 		}
 		contractDetails = null;
@@ -67,23 +73,13 @@ public class AutoUpdate {
 		contract.secType("STK");
 		List<ContractDetails> contractDetailsList = ibkr.lookupContract(contract);
 		if (contractDetailsList.isEmpty()) {
-			JOptionPane.showMessageDialog(frame,
-			                              "No contract details found for " + ticker,
-			                              "Error",
-			                              JOptionPane.ERROR_MESSAGE);
+			showErrorDlg(frame, "No contract details found for " + ticker);
 			return false;
 		} else if (contractDetailsList.size() > 1) {
-			JOptionPane.showMessageDialog(frame,
-			                              "Multiple contract details found for " + ticker,
-			                              "Error",
-			                              JOptionPane.ERROR_MESSAGE);
-			contractDetailsList.forEach(contractDetails -> Util.log(contractDetails.contract().toString()));
+			showErrorDlg(frame, "Multiple contract details found for " + ticker);
 			return false;
 		} else if (!contractDetailsList.get(0).contract().primaryExch().equals(exchange)) {
-			JOptionPane.showMessageDialog(frame,
-			                              "Probably wrong exchange for " + ticker,
-			                              "Error",
-			                              JOptionPane.ERROR_MESSAGE);
+			showErrorDlg(frame, "Probably wrong exchange for " + ticker);
 			return false;
 		}
 		contractDetails = contractDetailsList.get(0);

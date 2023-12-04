@@ -14,6 +14,7 @@ import javax.swing.*;
 import java.awt.*;
 
 import static com.corn.trade.util.Util.log;
+import static com.corn.trade.util.Util.showWarningDlg;
 
 public class App {
 
@@ -105,6 +106,12 @@ public class App {
 
 			frame.setVisible(true);
 			log("Application started");
+
+			if (!ibkr.isConnected()) {
+				showWarningDlg(frame, "Not connected to IBKR. Auto update and orders will not work.");
+				inputPanel.enableAutoUpdateCheckBox(false);
+				orderPanel.enableOrderButtons(false);
+			}
 		});
 	}
 
