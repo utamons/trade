@@ -1,7 +1,8 @@
 package com.corn.trade;
 
+import com.corn.trade.ibkr.Ibkr;
 import com.corn.trade.panel.*;
-import com.corn.trade.trade.AutoUpdate;
+import com.corn.trade.ibkr.AutoUpdate;
 import com.corn.trade.trade.Calculator;
 import com.github.weisj.darklaf.LafManager;
 import com.github.weisj.darklaf.theme.*;
@@ -31,9 +32,12 @@ public class App {
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setSize(700, 630);
 
+			Ibkr ibkr = new Ibkr();
+			ibkr.run();
+
 			Calculator calculator = new Calculator(frame);
-			AutoUpdate autoUpdate = new AutoUpdate();
-			autoUpdate.addListener(calculator::setAutoUpdate);
+			AutoUpdate autoUpdate = new AutoUpdate(frame, ibkr);
+			autoUpdate.addActivateListener(calculator::setAutoUpdate);
 
 			InputPanel inputPanel = new InputPanel(
 					calculator,
@@ -102,8 +106,6 @@ public class App {
 			frame.setVisible(true);
 			log("Application started");
 		});
-		//Ibkr ibkr = new Ibkr();
-		//ibkr.run();
 	}
 
 	private static void setDefaultFont() {
