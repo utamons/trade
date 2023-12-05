@@ -2,7 +2,6 @@ package com.corn.trade.trade;
 
 import com.corn.trade.util.functional.Trigger;
 
-import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,26 +58,14 @@ public class Calculator {
 	private Integer quantity;
 	private boolean quantityError   = false;
 	private Double  price;
-	private boolean priceError      = false;
 	private Double  minTake;
 	private Double  maxTake;
-	private boolean supportError    = false;
-	private boolean resistanceError = false;
-
 	public Calculator(Component frame) {
 		this.frame = frame;
 	}
 
 	public void setAutoUpdate(boolean autoUpdate) {
 		this.autoUpdate = autoUpdate;
-	}
-
-	public boolean isSupportError() {
-		return supportError;
-	}
-
-	public boolean isResistanceError() {
-		return resistanceError;
 	}
 
 	public Double getMaxTake() {
@@ -97,10 +84,6 @@ public class Calculator {
 		this.minTake = minTake;
 	}
 
-	private boolean isPriceError() {
-		return priceError;
-	}
-
 	public Double getPrice() {
 		return price;
 	}
@@ -113,7 +96,7 @@ public class Calculator {
 		triggers.forEach(Trigger::trigger);
 	}
 
-	public void addTrigger(Trigger trigger) {
+	public void addUpdater(Trigger trigger) {
 		triggers.add(trigger);
 	}
 
