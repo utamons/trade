@@ -57,7 +57,7 @@ public class PowerPanel extends BasePanel {
 		this.add(panel, BorderLayout.NORTH);
 		this.add(buttonRowPanel, BorderLayout.SOUTH);
 
-		calculator.addTrigger(() -> {
+		calculator.addUpdater(() -> {
 			atr.setValue(calculator.getAtr());
 			high.setValue(calculator.getHighDay());
 			low.setValue(calculator.getLowDay());

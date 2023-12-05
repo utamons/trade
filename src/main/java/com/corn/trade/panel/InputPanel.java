@@ -31,7 +31,7 @@ public class InputPanel extends BasePanel {
 		                                                  new String[]{
 				                                                  ExchangeType.NASDAQ.toString(),
 				                                                  ExchangeType.NYSE.toString(),
-				                                                  ExchangeType.SEHK.toString()
+				                                                  //ExchangeType.SEHK.toString()
 		                                                  },
 		                                                  spacing,
 		                                                  fieldHeight,
@@ -139,13 +139,18 @@ public class InputPanel extends BasePanel {
 		buttonRowPanel.add(estimate);
 		buttonRowPanel.add(reset);
 
-		calculator.addTrigger(() -> {
+		calculator.addUpdater(() -> {
 			spread.setValue(calculator.getSpread());
 			level.setValue(calculator.getLevel());
 			powerReserve.setValue(calculator.getPowerReserve());
 			spread.setError(calculator.isSpreadError());
 			level.setError(calculator.isLevelError());
 			powerReserve.setError(calculator.isPowerReserveError());
+		});
+
+		autoUpdate.addUpdater(() -> {
+			price.setValue(autoUpdate.getLastPrice());
+			spread.setValue(autoUpdate.getSpread());
 		});
 
 		estimate.addActionListener(e -> calculator.estimate());

@@ -65,7 +65,7 @@ public class OrderPanel extends BasePanel {
 		this.add(panel, BorderLayout.NORTH);
 		this.add(buttonRowPanel, BorderLayout.SOUTH);
 
-		calculator.addTrigger(() -> {
+		calculator.addUpdater(() -> {
 			quantity.setValue(calculator.getQuantity() == null ? null : (double) calculator.getQuantity());
 			limit.setValue(calculator.getOrderLimit());
 			stop.setValue(calculator.getOrderStop());

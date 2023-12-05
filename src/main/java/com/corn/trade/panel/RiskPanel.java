@@ -21,7 +21,7 @@ public class RiskPanel extends BasePanel {
 		this.add(risk);
 		this.add(riskPc);
 
-		calculator.addTrigger(() -> {
+		calculator.addUpdater(() -> {
 			risk.setValue(calculator.getRisk());
 			riskPc.setValue(calculator.getRiskPercent());
 			riskReward.setValue(calculator.getRiskRewardRatioPercent());

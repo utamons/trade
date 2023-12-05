@@ -1,31 +1,42 @@
 package com.corn.trade.ibkr;
 
 import com.corn.trade.util.Util;
-import com.ib.client.Contract;
-import com.ib.client.ContractDetails;
+import com.corn.trade.util.functional.Trigger;
+import com.ib.client.*;
+import com.ib.controller.ApiController;
+import com.ib.controller.ApiController.ITopMktDataHandler;
 
 import javax.swing.*;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 
 import static com.corn.trade.util.Util.showErrorDlg;
 
 public class AutoUpdate {
-	private final Ibkr ibkr;
+	private final Ibkr                   ibkr;
 	private final JFrame                 frame;
 	private final Set<Consumer<Boolean>> activateListeners = new HashSet<>();
 
 	private Consumer<Boolean> tickerUpdateSuccessListener;
 	private boolean           autoUpdate;
-	private String  ticker;
-	private String  exchange = "NYSE";
-	private ContractDetails contractDetails;
+	private String            ticker;
+	private String            exchange = "NYSE";
+	private ContractDetails   contractDetails;
+
+	private ITopMktDataHandler mktDataHandler;
+
+	private final List<Trigger> triggers = new ArrayList<>();
+
+	private Double lastPrice;
+
+	private double askPrice = 0;
+
+	private double bidPrice = 0;
 
 	public AutoUpdate(JFrame frame, Ibkr ibkr) {
 		this.ibkr = ibkr;
 		this.frame = frame;
+		initHandlers();
 	}
 
 	public boolean isReady() {
@@ -100,9 +111,85 @@ public class AutoUpdate {
 	public void setAutoUpdate(boolean autoUpdate) {
 		this.autoUpdate = autoUpdate;
 		activateListeners.forEach(listener -> listener.accept(autoUpdate));
+
+		if (autoUpdate) {
+			ibkr.controller().reqTopMktData(contractDetails.contract(),
+			                                "",
+			                                false,
+			                                false,
+			                                mktDataHandler
+			                                );
+		} else {
+			ibkr.controller().cancelTopMktData(mktDataHandler);
+		}
 	}
 
 	public void addActivateListener(Consumer<Boolean> listener) {
 		activateListeners.add(listener);
+	}
+
+	public void addUpdater(Trigger trigger) {
+		triggers.add(trigger);
+	}
+
+	private void announce() {
+		triggers.forEach(Trigger::trigger);
+	}
+
+	public Double getLastPrice() {
+		return lastPrice;
+	}
+
+	public double getSpread() {
+		return Math.abs(askPrice - bidPrice);
+	}
+
+	private void initHandlers() {
+		mktDataHandler = new ApiController.TopMktDataAdapter() {
+			@Override
+			public void tickPrice(TickType tickType, double price, TickAttrib attribs) {
+				if (tickType == TickType.LAST) {
+					lastPrice = price;
+					announce();
+				}
+				if (tickType == TickType.ASK) {
+					askPrice = price;
+					announce();
+				}
+				if (tickType == TickType.BID) {
+					bidPrice = price;
+					announce();
+				}
+				Util.log("tickPrice: " + tickType + " " + price);
+			}
+
+			@Override
+			public void tickSize(TickType tickType, Decimal size) {
+				Util.log("tickSize: " + tickType + " " + size);
+			}
+
+			@Override
+			public void tickString(TickType tickType, String value) {
+				Util.log("tickString: " + tickType + " " + value);
+			}
+
+			@Override
+			public void tickSnapshotEnd() {
+				Util.log("tickSnapshotEnd");
+			}
+
+			@Override
+			public void marketDataType(int marketDataType) {
+				Util.log("marketDataType: " + marketDataType);
+			}
+
+			@Override
+			public void tickReqParams(int tickerId,
+			                          double minTick,
+			                          String bboExchange,
+			                          int snapshotPermissions) {
+				Util.log("tickReqParams: " + tickerId + " " + minTick + " " + bboExchange + " " + snapshotPermissions);
+			}
+		};
 	}
 }
