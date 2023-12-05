@@ -1,5 +1,7 @@
 # trade
 
+UNDER CONSTRUCTION - it's not ready yet.
+
 As of now, it's a simple calculator for traders.
 It allows to calculate basic trade params like stop-loss, take-profit, risks and so on..
 
