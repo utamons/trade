@@ -14,6 +14,8 @@ public class LabeledDoubleField extends JPanel {
 	private final JCheckBox autoSwitch;
 	private       Color      textFieldColor;
 
+	private boolean autoUpdate = false;
+
 	// Constructor
 	public LabeledDoubleField(String labelText,
 	                          int columns,
@@ -51,6 +53,10 @@ public class LabeledDoubleField extends JPanel {
 
 		autoSwitch = new JCheckBox();
 		autoSwitch.setVisible(hasAutoSwitch);
+		autoSwitch.addActionListener(e -> {
+			autoUpdate = !autoSwitch.isSelected();
+			textField.setEditable(!autoUpdate);
+		});
 
 		// Set layout
 		setLayout(new BorderLayout());
@@ -106,10 +112,11 @@ public class LabeledDoubleField extends JPanel {
 			textField.setBackground(Color.RED);
 		else if (error)
 			textField.setForeground(Color.RED);
-		else {
+		else if (textField.isEditable()){
 			textField.setForeground(UIManager.getColor("TextField.foreground"));
 			textField.setBackground(UIManager.getColor("TextField.background"));
-		}
+		} else
+			textField.setForeground(UIManager.getColor("TextField.foreground"));
 	}
 
 	public void setEditable(boolean editable) {
@@ -118,5 +125,12 @@ public class LabeledDoubleField extends JPanel {
 
 	public void setAutoSwitchVisible(boolean visible) {
 		autoSwitch.setVisible(visible);
+		autoUpdate = visible;
+		textField.setEditable(!autoUpdate);
+	}
+
+	public void setAutoUpdate(boolean autoUpdate) {
+		this.autoUpdate = autoUpdate;
+		textField.setEditable(!autoUpdate);
 	}
 }

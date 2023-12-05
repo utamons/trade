@@ -57,9 +57,9 @@ public class Calculator {
 	private Double  orderStop;
 	private Integer quantity;
 	private boolean quantityError   = false;
-	private Double  price;
-	private Double  minTake;
-	private Double  maxTake;
+	private Double price;
+	private Double minLevel;
+	private Double maxLevel;
 	public Calculator(Component frame) {
 		this.frame = frame;
 	}
@@ -68,20 +68,20 @@ public class Calculator {
 		this.autoUpdate = autoUpdate;
 	}
 
-	public Double getMaxTake() {
-		return maxTake;
+	public Double getMaxLevel() {
+		return maxLevel;
 	}
 
-	public void setMaxTake(Double maxTake) {
-		this.maxTake = maxTake;
+	public void setMaxLevel(Double maxLevel) {
+		this.maxLevel = maxLevel;
 	}
 
-	public Double getMinTake() {
-		return minTake;
+	public Double getMinLevel() {
+		return minLevel;
 	}
 
-	public void setMinTake(Double minTake) {
-		this.minTake = minTake;
+	public void setMinLevel(Double minLevel) {
+		this.minLevel = minLevel;
 	}
 
 	public Double getPrice() {

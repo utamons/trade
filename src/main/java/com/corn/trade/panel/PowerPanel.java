@@ -58,20 +58,21 @@ public class PowerPanel extends BasePanel {
 		JButton button = new JButton("Calculate P/R");
 
 		button.addActionListener(e -> calculator.calculatePowerReserve());
-		autoUpdate.addActivateListener((isAutoUpdate) -> button.setEnabled(!isAutoUpdate));
+		autoUpdate.addActivateListener(
+				(isAutoUpdate) -> {
+					button.setEnabled(!isAutoUpdate);
+					high.setAutoUpdate(isAutoUpdate);
+					low.setAutoUpdate(isAutoUpdate);
+				});
+
+		autoUpdate.addUpdater(() -> {
+			high.setValue(autoUpdate.getHigh());
+			low.setValue(autoUpdate.getLow());
+		});
 
 		buttonRowPanel.add(button);
 
 		this.add(panel, BorderLayout.NORTH);
 		this.add(buttonRowPanel, BorderLayout.SOUTH);
-
-		calculator.addUpdater(() -> {
-			atr.setValue(calculator.getAtr());
-			high.setValue(calculator.getHighDay());
-			low.setValue(calculator.getLowDay());
-			atr.setError(calculator.isAtrError());
-			high.setError(calculator.isHighDayError());
-			low.setError(calculator.isLowDayError());
-		});
 	}
 }

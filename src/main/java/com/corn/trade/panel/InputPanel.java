@@ -5,7 +5,10 @@ import com.corn.trade.component.LabeledComboBox;
 import com.corn.trade.component.LabeledDoubleField;
 import com.corn.trade.component.LabeledLookup;
 import com.corn.trade.ibkr.AutoUpdate;
-import com.corn.trade.trade.*;
+import com.corn.trade.trade.Calculator;
+import com.corn.trade.trade.EstimationType;
+import com.corn.trade.trade.ExchangeType;
+import com.corn.trade.trade.PositionType;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,7 +18,12 @@ public class InputPanel extends BasePanel {
 
 	private final JCheckBox autoUpdateCheckBox;
 
-	public InputPanel(Calculator calculator, AutoUpdate autoUpdate, Dimension maxSize, Dimension minSize, int spacing, int fieldHeight) {
+	public InputPanel(Calculator calculator,
+	                  AutoUpdate autoUpdate,
+	                  Dimension maxSize,
+	                  Dimension minSize,
+	                  int spacing,
+	                  int fieldHeight) {
 		super("Input", calculator, autoUpdate, maxSize, minSize);
 		this.setLayout(new BorderLayout());
 
@@ -46,7 +54,10 @@ public class InputPanel extends BasePanel {
 		                                                  },
 		                                                  spacing,
 		                                                  fieldHeight,
-		                                                  (value) -> calculator.setPositionType(PositionType.fromString(value)));
+		                                                  (value) -> {
+			                                                  calculator.setPositionType(PositionType.fromString(value));
+															  autoUpdate.setLong(PositionType.fromString(value) == PositionType.LONG);
+		                                                  });
 
 
 		LabeledComboBox estimationBox = new LabeledComboBox("Estimation:",
@@ -92,7 +103,7 @@ public class InputPanel extends BasePanel {
 		                                                  false,
 		                                                  calculator::setLevel);
 
-		LabeledDoubleField price = new LabeledDoubleField("Price:",
+		LabeledDoubleField price = new LabeledDoubleField("Best Price:",
 		                                                  10,
 		                                                  null,
 		                                                  spacing,
@@ -102,25 +113,21 @@ public class InputPanel extends BasePanel {
 
 		autoUpdate.addActivateListener(price::setAutoSwitchVisible);
 
-		LabeledDoubleField support = new LabeledDoubleField("Min.take (support):",
+		LabeledDoubleField support = new LabeledDoubleField("Min/Support:",
 		                                                    10,
 		                                                    null,
 		                                                    spacing,
 		                                                    fieldHeight,
-															autoUpdate.isAutoUpdate(),
-		                                                    calculator::setMinTake);
+		                                                    false,
+		                                                    calculator::setMinLevel);
 
-		autoUpdate.addActivateListener(support::setAutoSwitchVisible);
-
-		LabeledDoubleField resistance = new LabeledDoubleField("Max take (resistance):",
+		LabeledDoubleField resistance = new LabeledDoubleField("Max/Resistance:",
 		                                                       10,
 		                                                       null,
 		                                                       spacing,
 		                                                       fieldHeight,
-															   autoUpdate.isAutoUpdate(),
-		                                                       calculator::setMaxTake);
-
-		autoUpdate.addActivateListener(resistance::setAutoSwitchVisible);
+		                                                       false,
+		                                                       calculator::setMaxLevel);
 
 		ButtonRowPanel buttonRowPanel = new ButtonRowPanel();
 
@@ -153,7 +160,7 @@ public class InputPanel extends BasePanel {
 				autoUpdateCheckBox.setSelected(false);
 				return;
 			}
-			price.setValue(autoUpdate.getLastPrice());
+			price.setValue(autoUpdate.getBestPrice());
 			spread.setValue(autoUpdate.getSpread());
 		});
 
