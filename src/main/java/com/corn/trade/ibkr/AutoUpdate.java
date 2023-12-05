@@ -67,10 +67,15 @@ public class AutoUpdate {
 	private boolean lookup(String ticker) {
 		Contract contract = new Contract();
 		contract.symbol(ticker);
-		contract.primaryExch(exchange);
-		contract.exchange("SMART");
-		contract.currency("USD");
 		contract.secType("STK");
+		contract.primaryExch(exchange);
+
+		if (exchange.equals("NYSE") || exchange.equals("NASDAQ")) {
+			contract.exchange("SMART");
+			contract.currency("USD");
+		} else
+			contract.exchange(exchange);
+
 		List<ContractDetails> contractDetailsList = ibkr.lookupContract(contract);
 		if (contractDetailsList.isEmpty()) {
 			showErrorDlg(frame, "No contract details found for " + ticker);
