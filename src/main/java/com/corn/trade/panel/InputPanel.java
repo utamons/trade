@@ -30,7 +30,8 @@ public class InputPanel extends BasePanel {
 		LabeledComboBox exchangeBox = new LabeledComboBox("Exchange:",
 		                                                  new String[]{
 				                                                  ExchangeType.NASDAQ.toString(),
-				                                                  ExchangeType.NYSE.toString()
+				                                                  ExchangeType.NYSE.toString(),
+				                                                  ExchangeType.SEHK.toString()
 		                                                  },
 		                                                  spacing,
 		                                                  fieldHeight,
