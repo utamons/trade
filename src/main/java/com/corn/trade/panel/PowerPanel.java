@@ -10,7 +10,12 @@ import java.awt.*;
 
 public class PowerPanel extends BasePanel {
 
-	public PowerPanel(Calculator calculator, AutoUpdate autoUpdate, Dimension maxSize, Dimension minSize, int spacing, int fieldHeight) {
+	public PowerPanel(Calculator calculator,
+	                  AutoUpdate autoUpdate,
+	                  Dimension maxSize,
+	                  Dimension minSize,
+	                  int spacing,
+	                  int fieldHeight) {
 		super("Power", calculator, autoUpdate, maxSize, minSize);
 		this.setLayout(new BorderLayout());
 
@@ -18,28 +23,31 @@ public class PowerPanel extends BasePanel {
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
 		LabeledDoubleField atr = new LabeledDoubleField("ATR (day):",
-		                                                 10,
-		                                                 null,
-		                                                 spacing,
-		                                                 fieldHeight,
-														 false,
-		                                                 calculator::setAtr);
+		                                                10,
+		                                                null,
+		                                                spacing,
+		                                                fieldHeight,
+		                                                false,
+		                                                (value) -> {
+			                                                calculator.setAtr(value);
+			                                                autoUpdate.setAtr(value);
+		                                                });
 
 		LabeledDoubleField high = new LabeledDoubleField("High (day):",
 		                                                 10,
 		                                                 null,
 		                                                 spacing,
 		                                                 fieldHeight,
-														 false,
+		                                                 false,
 		                                                 calculator::setHighDay);
 
 		LabeledDoubleField low = new LabeledDoubleField("Low (day):",
-		                                                 10,
-		                                                 null,
-		                                                 spacing,
-		                                                 fieldHeight,
-														 false,
-		                                                 calculator::setLowDay);
+		                                                10,
+		                                                null,
+		                                                spacing,
+		                                                fieldHeight,
+		                                                false,
+		                                                calculator::setLowDay);
 
 		panel.add(atr);
 		panel.add(high);

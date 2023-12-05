@@ -149,6 +149,10 @@ public class InputPanel extends BasePanel {
 		});
 
 		autoUpdate.addUpdater(() -> {
+			if (!autoUpdate.isAutoUpdate()) {
+				autoUpdateCheckBox.setSelected(false);
+				return;
+			}
 			price.setValue(autoUpdate.getLastPrice());
 			spread.setValue(autoUpdate.getSpread());
 		});
