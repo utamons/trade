@@ -1,5 +1,7 @@
 package com.corn.trade.component;
 
+import com.corn.trade.util.Util;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
@@ -14,6 +16,8 @@ public class LabeledDoubleField extends JPanel {
 	private final JCheckBox autoSwitch;
 	private       Color      textFieldColor;
 
+	private final Consumer<Double> consumer;
+
 	private boolean autoUpdate = false;
 
 	// Constructor
@@ -25,6 +29,7 @@ public class LabeledDoubleField extends JPanel {
 	                          boolean hasAutoSwitch,
 	                          Consumer<Double> consumer) {
 		// Initialize label and text field
+		this.consumer = consumer;
 		JLabel label = new JLabel(labelText);
 		textField = new JTextField(columns);
 		this.setMaximumSize(new Dimension(5000, height));
@@ -51,6 +56,18 @@ public class LabeledDoubleField extends JPanel {
 			}
 		});
 
+		textField.addActionListener(e -> {
+			if (!textField.getText().isEmpty()) {
+				Util.log("Action performed");
+				if (!isValidDouble())
+					textField.setForeground(Color.RED);
+				else if (consumer != null) {
+					consumer.accept(Double.parseDouble(textField.getText()));
+					textField.setForeground(textFieldColor);
+				}
+			}
+		});
+
 		autoSwitch = new JCheckBox();
 		autoSwitch.setVisible(hasAutoSwitch);
 		autoSwitch.addActionListener(e -> {
@@ -69,6 +86,7 @@ public class LabeledDoubleField extends JPanel {
 		add(panel, BorderLayout.EAST);
 	}
 
+	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
 	public boolean isValidDouble() {
 		try {
 			double value = Double.parseDouble(textField.getText());
@@ -87,6 +105,8 @@ public class LabeledDoubleField extends JPanel {
 	}
 
 	public void setValue(Double value) {
+		if (!autoUpdate)
+			return;
 		if (value == null)
 			textField.setText("");
 		else if (value <= 0) {
@@ -95,6 +115,9 @@ public class LabeledDoubleField extends JPanel {
 		} else {
 			setError(false);
 			textField.setText(String.format("%.2f", value));
+			if (consumer != null) {
+				consumer.accept(value);
+			}
 		}
 	}
 
