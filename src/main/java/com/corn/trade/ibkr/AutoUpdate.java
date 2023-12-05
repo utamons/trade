@@ -4,7 +4,9 @@ import com.corn.trade.util.Util;
 import com.corn.trade.util.functional.Trigger;
 import com.ib.client.*;
 import com.ib.controller.ApiController;
+import com.ib.controller.ApiController.IHistoricalDataHandler;
 import com.ib.controller.ApiController.ITopMktDataHandler;
+import com.ib.controller.Bar;
 
 import javax.swing.*;
 import java.util.ArrayList;
@@ -26,7 +28,9 @@ public class AutoUpdate {
 	private String            exchange = "NYSE";
 	private ContractDetails   contractDetails;
 	private ITopMktDataHandler mktDataHandler;
-	private Double lastPrice;
+
+	private IHistoricalDataHandler historicalDataHandler;
+	private Double                 bestPrice;
 
 	private double askPrice = 0;
 
@@ -34,10 +38,22 @@ public class AutoUpdate {
 
 	private double atr = 0;
 
+	private double high = 0;
+
+	private double low = 0;
+
+	private boolean isLong = true;
+
 	public AutoUpdate(JFrame frame, Ibkr ibkr) {
 		this.ibkr = ibkr;
 		this.frame = frame;
 		initHandlers();
+	}
+
+	public void setLong(boolean aLong) {
+		isLong = aLong;
+		bestPrice = aLong ? askPrice : bidPrice;
+		announce();
 	}
 
 	public void setAtr(double atr) {
@@ -58,7 +74,6 @@ public class AutoUpdate {
 
 	public void setExchange(String exchange) {
 		this.exchange = exchange;
-		Util.log("Exchange set to " + exchange);
 	}
 
 	public void setTicker(String ticker) {
@@ -127,8 +142,18 @@ public class AutoUpdate {
 			                                false,
 			                                mktDataHandler
 			);
+			ibkr.controller().reqHistoricalData(contractDetails.contract(),
+			                                    "",
+			                                    1,
+			                                    Types.DurationUnit.DAY,
+			                                    Types.BarSize._1_day,
+			                                    Types.WhatToShow.TRADES,
+			                                    true,
+			                                    true,
+			                                    historicalDataHandler);
 		} else {
 			ibkr.controller().cancelTopMktData(mktDataHandler);
+			ibkr.controller().cancelHistoricalData(historicalDataHandler);
 		}
 	}
 
@@ -161,60 +186,51 @@ public class AutoUpdate {
 		triggers.forEach(Trigger::trigger);
 	}
 
-	public Double getLastPrice() {
-		return lastPrice;
+	public Double getBestPrice() {
+		return bestPrice;
 	}
 
 	public double getSpread() {
 		return Math.abs(askPrice - bidPrice);
 	}
 
+	public double getHigh() {
+		return high;
+	}
+
+	public double getLow() {
+		return low;
+	}
+
 	private void initHandlers() {
 		mktDataHandler = new ApiController.TopMktDataAdapter() {
 			@Override
 			public void tickPrice(TickType tickType, double price, TickAttrib attribs) {
-				if (tickType == TickType.LAST) {
-					lastPrice = price;
-					announce();
-				}
 				if (tickType == TickType.ASK) {
+					if (isLong)
+						bestPrice = price;
 					askPrice = price;
 					announce();
 				}
 				if (tickType == TickType.BID) {
+					if (!isLong)
+						bestPrice = price;
 					bidPrice = price;
 					announce();
 				}
-				Util.log("tickPrice: " + tickType + " " + price);
-			}
-
-			@Override
-			public void tickSize(TickType tickType, Decimal size) {
-				Util.log("tickSize: " + tickType + " " + size);
-			}
-
-			@Override
-			public void tickString(TickType tickType, String value) {
-				Util.log("tickString: " + tickType + " " + value);
-			}
-
-			@Override
-			public void tickSnapshotEnd() {
-				Util.log("tickSnapshotEnd");
-			}
-
-			@Override
-			public void marketDataType(int marketDataType) {
-				Util.log("marketDataType: " + marketDataType);
-			}
-
-			@Override
-			public void tickReqParams(int tickerId,
-			                          double minTick,
-			                          String bboExchange,
-			                          int snapshotPermissions) {
-				Util.log("tickReqParams: " + tickerId + " " + minTick + " " + bboExchange + " " + snapshotPermissions);
 			}
 		};
+		historicalDataHandler = new IHistoricalDataHandler() {
+			@Override
+			public void historicalData(Bar bar) {
+				high = bar.high();
+				low = bar.low();
+				announce();
+			}
+
+			@Override
+			public void historicalDataEnd() {}
+		};
 	}
+
 }
