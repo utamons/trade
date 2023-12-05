@@ -7,7 +7,10 @@ import com.ib.controller.ApiController;
 import com.ib.controller.ApiController.ITopMktDataHandler;
 
 import javax.swing.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import static com.corn.trade.util.Util.showErrorDlg;
@@ -16,27 +19,29 @@ public class AutoUpdate {
 	private final Ibkr                   ibkr;
 	private final JFrame                 frame;
 	private final Set<Consumer<Boolean>> activateListeners = new HashSet<>();
-
+	private final List<Trigger> triggers = new ArrayList<>();
 	private Consumer<Boolean> tickerUpdateSuccessListener;
 	private boolean           autoUpdate;
 	private String            ticker;
 	private String            exchange = "NYSE";
 	private ContractDetails   contractDetails;
-
 	private ITopMktDataHandler mktDataHandler;
-
-	private final List<Trigger> triggers = new ArrayList<>();
-
 	private Double lastPrice;
 
 	private double askPrice = 0;
 
 	private double bidPrice = 0;
 
+	private double atr = 0;
+
 	public AutoUpdate(JFrame frame, Ibkr ibkr) {
 		this.ibkr = ibkr;
 		this.frame = frame;
 		initHandlers();
+	}
+
+	public void setAtr(double atr) {
+		this.atr = atr;
 	}
 
 	public boolean isReady() {
@@ -109,6 +114,9 @@ public class AutoUpdate {
 	}
 
 	public void setAutoUpdate(boolean autoUpdate) {
+		if (!validate(autoUpdate)) {
+			return;
+		}
 		this.autoUpdate = autoUpdate;
 		activateListeners.forEach(listener -> listener.accept(autoUpdate));
 
@@ -118,10 +126,27 @@ public class AutoUpdate {
 			                                false,
 			                                false,
 			                                mktDataHandler
-			                                );
+			);
 		} else {
 			ibkr.controller().cancelTopMktData(mktDataHandler);
 		}
+	}
+
+	private boolean validate(boolean autoUpdate) {
+		if (!autoUpdate) {
+			return true;
+		}
+		if (contractDetails == null) {
+			showErrorDlg(frame, "Ticker not set");
+			announce();
+			return false;
+		}
+		if (atr == 0) {
+			showErrorDlg(frame, "ATR not set");
+			announce();
+			return false;
+		}
+		return true;
 	}
 
 	public void addActivateListener(Consumer<Boolean> listener) {
