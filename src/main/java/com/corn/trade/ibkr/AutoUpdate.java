@@ -121,10 +121,10 @@ public class AutoUpdate {
 
 		List<ContractDetails> contractDetailsList = ibkr.lookupContract(contract);
 		if (contractDetailsList.isEmpty()) {
-			showErrorDlg(frame, "No contract details found for " + ticker);
+			showErrorDlg(frame, "No contract details found for " + ticker, true);
 			return false;
 		} else if (contractDetailsList.size() > 1) {
-			showErrorDlg(frame, "Multiple contract details found for " + ticker);
+			showErrorDlg(frame, "Multiple contract details found for " + ticker, true);
 			return false;
 		} else if (!contractDetailsList.get(0).contract().primaryExch().equals(exchange)) {
 			Exchange exchangeFound =
@@ -133,7 +133,7 @@ public class AutoUpdate {
 					         .findFirst()
 					         .orElse(null);
 			if (exchangeFound == null) {
-				showErrorDlg(frame, "Probably wrong exchange for " + ticker);
+				showErrorDlg(frame, "Probably wrong exchange for " + ticker, true);
 				return false;
 			} else {
 				exchange = exchangeFound.getName();
@@ -190,12 +190,12 @@ public class AutoUpdate {
 			return true;
 		}
 		if (contractDetails == null) {
-			showErrorDlg(frame, "Ticker not set");
+			showErrorDlg(frame, "Ticker not set", true);
 			announce();
 			return false;
 		}
 		if (atr == 0) {
-			showErrorDlg(frame, "ATR not set");
+			showErrorDlg(frame, "ATR not set", true);
 			announce();
 			return false;
 		}

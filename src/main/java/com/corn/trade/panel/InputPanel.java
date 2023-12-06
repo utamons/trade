@@ -102,13 +102,13 @@ public class InputPanel extends BasePanel {
 
 		autoUpdate.addActivateListener(powerReserve::setAutoSwitchVisible);
 
-		LabeledDoubleField level = new LabeledDoubleField("Temp. Level:",
+		LabeledDoubleField tempLevel = new LabeledDoubleField("Temp. Level:",
 		                                                  10,
 		                                                  null,
 		                                                  spacing,
 		                                                  fieldHeight,
 		                                                  false,
-		                                                  calculator::setLevel);
+		                                                  calculator::setTempLevel);
 
 		LabeledDoubleField price = new LabeledDoubleField("Best Price:",
 		                                                  10,
@@ -116,7 +116,7 @@ public class InputPanel extends BasePanel {
 		                                                  spacing,
 		                                                  fieldHeight,
 		                                                  autoUpdate.isAutoUpdate(),
-		                                                  calculator::setPrice);
+		                                                  calculator::setBestPrice);
 
 		autoUpdate.addActivateListener(price::setAutoSwitchVisible);
 
@@ -126,7 +126,7 @@ public class InputPanel extends BasePanel {
 		                                                    spacing,
 		                                                    fieldHeight,
 		                                                    false,
-		                                                    calculator::setMinLevel);
+		                                                    calculator::setSupport);
 
 		LabeledDoubleField resistance = new LabeledDoubleField("Max/Resistance:",
 		                                                       10,
@@ -134,7 +134,7 @@ public class InputPanel extends BasePanel {
 		                                                       spacing,
 		                                                       fieldHeight,
 		                                                       false,
-		                                                       calculator::setMaxLevel);
+		                                                       calculator::setResistance);
 
 		RowPanel rowPanel = new RowPanel();
 
@@ -145,6 +145,7 @@ public class InputPanel extends BasePanel {
 
 		autoUpdateCheckBox.addActionListener(e -> {
 			autoUpdate.setAutoUpdate(autoUpdateCheckBox.isSelected());
+			calculator.setAutoUpdate(autoUpdateCheckBox.isSelected());
 			estimate.setEnabled(!autoUpdateCheckBox.isSelected());
 			reset.setEnabled(!autoUpdateCheckBox.isSelected());
 		});
@@ -155,11 +156,13 @@ public class InputPanel extends BasePanel {
 
 		calculator.addUpdater(() -> {
 			spread.setValue(calculator.getSpread());
-			level.setValue(calculator.getLevel());
+			tempLevel.setValue(calculator.getTempLevel());
 			powerReserve.setValue(calculator.getPowerReserve());
 			spread.setError(calculator.isSpreadError());
-			level.setError(calculator.isLevelError());
+			tempLevel.setError(calculator.isTempLevelError());
 			powerReserve.setError(calculator.isPowerReserveError());
+			support.setError(calculator.isSupportError());
+			resistance.setError(calculator.isResistanceError());
 		});
 
 		autoUpdate.addUpdater(() -> exchangeBox.setSelectedItem(autoUpdate.getExchange()));
@@ -170,7 +173,9 @@ public class InputPanel extends BasePanel {
 				return;
 			}
 			price.setValue(autoUpdate.getBestPrice());
+			calculator.setBestPrice(autoUpdate.getBestPrice());
 			spread.setValue(autoUpdate.getSpread());
+			calculator.setSpread(autoUpdate.getSpread());
 		});
 
 		estimate.addActionListener(e -> calculator.estimate());
@@ -183,7 +188,7 @@ public class InputPanel extends BasePanel {
 		panel.add(spread);
 		panel.add(powerReserve);
 		panel.add(price);
-		panel.add(level);
+		panel.add(tempLevel);
 		panel.add(support);
 		panel.add(resistance);
 

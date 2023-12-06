@@ -1,7 +1,5 @@
 package com.corn.trade.component;
 
-import com.corn.trade.util.Util;
-
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
@@ -9,16 +7,16 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.util.function.Consumer;
 
+import static com.corn.trade.util.Util.log;
+
 @SuppressWarnings("unused")
 public class LabeledDoubleField extends JPanel {
 
-	private final JTextField textField;
-	private final JCheckBox autoSwitch;
-	private       Color      textFieldColor;
-
-	private final Consumer<Double> consumer;
-
-	private boolean autoUpdate = false;
+	private final JTextField       textField;
+	private final JCheckBox        autoSwitch;
+	private       Color            textFieldColor;
+	private       boolean autoUpdate;
+	private final Border  errorBorder;
 
 	// Constructor
 	public LabeledDoubleField(String labelText,
@@ -29,7 +27,6 @@ public class LabeledDoubleField extends JPanel {
 	                          boolean hasAutoSwitch,
 	                          Consumer<Double> consumer) {
 		// Initialize label and text field
-		this.consumer = consumer;
 		JLabel label = new JLabel(labelText);
 		textField = new JTextField(columns);
 		this.setMaximumSize(new Dimension(5000, height));
@@ -38,6 +35,7 @@ public class LabeledDoubleField extends JPanel {
 		Border emptyBorder = BorderFactory.createEmptyBorder(padding, padding, padding, padding);
 		this.setBorder(emptyBorder);
 		this.textFieldColor = textColor;
+		this.errorBorder = BorderFactory.createLineBorder(Color.RED, 3);
 
 		if (textColor != null)
 			textField.setForeground(textColor);
@@ -45,30 +43,30 @@ public class LabeledDoubleField extends JPanel {
 		textField.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				if (!textField.getText().isEmpty()) {
-					if (!isValidDouble())
-						textField.setForeground(Color.RED);
-					else if (consumer != null) {
-						consumer.accept(Double.parseDouble(textField.getText()));
-						textField.setForeground(textFieldColor);
-					}
+				log("Focus lost");
+				if (!textField.getText().isEmpty() && !isValidDouble())
+					setError(true);
+				else {
+					setError(false);
+					feedConsumer(consumer);
 				}
 			}
 		});
 
 		textField.addActionListener(e -> {
-			if (!textField.getText().isEmpty()) {
-				Util.log("Action performed");
-				if (!isValidDouble())
-					textField.setForeground(Color.RED);
-				else if (consumer != null) {
-					consumer.accept(Double.parseDouble(textField.getText()));
-					textField.setForeground(textFieldColor);
-				}
+			log("Action performed");
+			if (!textField.getText().isEmpty() && !isValidDouble())
+				setError(true);
+			else {
+				setError(false);
+				feedConsumer(consumer);
 			}
 		});
 
 		autoSwitch = new JCheckBox();
+
+		autoUpdate = !hasAutoSwitch;
+
 		autoSwitch.setVisible(hasAutoSwitch);
 		autoSwitch.addActionListener(e -> {
 			autoUpdate = !autoSwitch.isSelected();
@@ -84,6 +82,17 @@ public class LabeledDoubleField extends JPanel {
 		panel.add(autoSwitch);
 		panel.add(textField);
 		add(panel, BorderLayout.EAST);
+	}
+
+	private void feedConsumer(Consumer<Double> consumer) {
+		if (textField.getText().isEmpty() && consumer != null) {
+			consumer.accept(null);
+			return;
+		}
+		if (consumer != null) {
+			consumer.accept(Double.parseDouble(textField.getText()));
+			textField.setForeground(textFieldColor);
+		}
 	}
 
 	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
@@ -107,17 +116,14 @@ public class LabeledDoubleField extends JPanel {
 	public void setValue(Double value) {
 		if (!autoUpdate)
 			return;
-		if (value == null)
+		if (value == null) {
 			textField.setText("");
-		else if (value <= 0) {
+		} else if (value <= 0) {
 			textField.setText(value.toString());
 			setError(true);
 		} else {
 			setError(false);
 			textField.setText(String.format("%.2f", value));
-			if (consumer != null) {
-				consumer.accept(value);
-			}
 		}
 	}
 
@@ -131,15 +137,20 @@ public class LabeledDoubleField extends JPanel {
 	}
 
 	public void setError(boolean error) {
-		if (error && textField.getText().isEmpty())
-			textField.setBackground(Color.RED);
-		else if (error)
-			textField.setForeground(Color.RED);
-		else if (textField.isEditable()){
+		if (error) {
+			textField.setBorder(errorBorder);
+		} else if (textField.isEditable()) {
+			restoreDefaultBorder();
 			textField.setForeground(UIManager.getColor("TextField.foreground"));
 			textField.setBackground(UIManager.getColor("TextField.background"));
-		} else
+		} else {
+			restoreDefaultBorder();
 			textField.setForeground(UIManager.getColor("TextField.foreground"));
+		}
+	}
+
+	private void restoreDefaultBorder() {
+		textField.setBorder((Border) UIManager.get("TextField.border"));
 	}
 
 	public void setEditable(boolean editable) {

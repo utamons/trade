@@ -2,13 +2,12 @@ package com.corn.trade.util;
 
 import javax.swing.*;
 import java.awt.*;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 public class Util {
 
-	public static void showErrorDlg(Component frame, String error) {
-		JOptionPane.showMessageDialog(frame, error, "Error", JOptionPane.ERROR_MESSAGE);
+	public static void showErrorDlg(Component frame, String error, boolean errorEnabled) {
+		if (errorEnabled)
+			JOptionPane.showMessageDialog(frame, error, "Error", JOptionPane.ERROR_MESSAGE);
 	}
 
 	public static void showWarningDlg(Component frame, String warning) {

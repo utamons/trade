@@ -29,7 +29,7 @@ public class App {
 			log("Calculator version 1.0.0");
 			setDefaultFont();
 
-			JFrame frame = new JFrame("Trade Calculator");
+			JFrame frame = new JFrame("Trade Calculator v. 1.0");
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setSize(700, 630);
 
@@ -117,6 +117,9 @@ public class App {
 
 	private static void setDefaultFont() {
 		for (Object key : UIManager.getDefaults().keySet()) {
+			if (key.toString().toLowerCase().contains("border")) {
+				log("{} {}",key, UIManager.get(key).getClass());
+			}
 			if (UIManager.get(key) instanceof Font) {
 				UIManager.put(key, new Font("Arial", Font.PLAIN, 14));
 			}

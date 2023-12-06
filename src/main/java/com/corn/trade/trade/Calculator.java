@@ -31,9 +31,9 @@ public class Calculator {
 	private Double  powerReserve;
 
 	private boolean powerReserveError = false;
-	private Double  level;
+	private Double  tempLevel;
 
-	private boolean levelError = false;
+	private boolean tempLevelError = false;
 	private Double  atr;
 
 	private boolean atrError = false;
@@ -57,39 +57,52 @@ public class Calculator {
 	private Double  orderStop;
 	private Integer quantity;
 	private boolean quantityError   = false;
-	private Double price;
-	private Double minLevel;
-	private Double maxLevel;
+	private Double  bestPrice;
+	private Double  support;
+	private Double  resistance;
+
+	private boolean resistanceError = false;
+
+	private boolean supportError = false;
+
 	public Calculator(Component frame) {
 		this.frame = frame;
+	}
+
+	public boolean isResistanceError() {
+		return resistanceError;
+	}
+
+	public boolean isSupportError() {
+		return supportError;
 	}
 
 	public void setAutoUpdate(boolean autoUpdate) {
 		this.autoUpdate = autoUpdate;
 	}
 
-	public Double getMaxLevel() {
-		return maxLevel;
+	public Double getResistance() {
+		return resistance;
 	}
 
-	public void setMaxLevel(Double maxLevel) {
-		this.maxLevel = maxLevel;
+	public void setResistance(Double resistance) {
+		this.resistance = resistance;
 	}
 
-	public Double getMinLevel() {
-		return minLevel;
+	public Double getSupport() {
+		return support;
 	}
 
-	public void setMinLevel(Double minLevel) {
-		this.minLevel = minLevel;
+	public void setSupport(Double support) {
+		this.support = support;
 	}
 
-	public Double getPrice() {
-		return price;
+	public Double getBestPrice() {
+		return bestPrice;
 	}
 
-	public void setPrice(Double price) {
-		this.price = price;
+	public void setBestPrice(Double bestPrice) {
+		this.bestPrice = bestPrice;
 	}
 
 	private void announce() {
@@ -108,8 +121,8 @@ public class Calculator {
 		return powerReserveError;
 	}
 
-	public boolean isLevelError() {
-		return levelError;
+	public boolean isTempLevelError() {
+		return tempLevelError;
 	}
 
 	public boolean isAtrError() {
@@ -176,12 +189,28 @@ public class Calculator {
 		this.powerReserve = powerReserve;
 	}
 
-	public Double getLevel() {
-		return level;
+	public Double getTempLevel() {
+		return tempLevel;
 	}
 
-	public void setLevel(Double level) {
-		this.level = level;
+	public void setTempLevel(Double tempLevel) {
+		if (this.tempLevel != null && this.tempLevel.equals(tempLevel)) {
+			announce();
+			return;
+		}
+		this.tempLevel = tempLevel;
+		if (tempLevel != null) {
+			if (resistance != null && tempLevel >= resistance) {
+				tempLevelError = true;
+				showErrorDlg(frame, "Temp. level must be less than resistance", !autoUpdate);
+			} else 	if (support != null && tempLevel <= support) {
+				tempLevelError = true;
+				showErrorDlg(frame, "Temp. level must be greater than support", !autoUpdate);
+			} else {
+				tempLevelError = false;
+			}
+		}
+		announce();
 	}
 
 	public Double getAtr() {
@@ -253,14 +282,14 @@ public class Calculator {
 	}
 
 	public void setQuantity(Double quantity) {
-		this.quantity = quantity.intValue();
+		this.quantity = quantity == null ? null : quantity.intValue();
 	}
 
 	public void calculatePowerReserve() {
 		String error = validPowerReserve();
 		if (error != null) {
-			log("Invalid power reserve - atr: {}, lowDay: {}, highDay: {}, level: {}", atr, lowDay, highDay, level);
-			showErrorDlg(frame, error);
+			log("Invalid power reserve - atr: {}, lowDay: {}, highDay: {}, level: {}", atr, lowDay, highDay, tempLevel);
+			showErrorDlg(frame, error, !autoUpdate);
 			announce();
 			return;
 		}
@@ -269,9 +298,9 @@ public class Calculator {
 		double realAtr = Math.max(techAtr, atr * REALISTIC_POWER_RESERVE);
 
 		if (positionType == PositionType.LONG) {
-			powerReserve = realAtr - (level - lowDay);
+			powerReserve = realAtr - (tempLevel - lowDay);
 		} else {
-			powerReserve = realAtr - (highDay - level);
+			powerReserve = realAtr - (highDay - tempLevel);
 		}
 		announce();
 	}
@@ -280,7 +309,7 @@ public class Calculator {
 		atrError = false;
 		lowDayError = false;
 		highDayError = false;
-		levelError = false;
+		tempLevelError = false;
 		if (atr == null) {
 			atrError = true;
 			return "atr must be set\n ";
@@ -293,8 +322,8 @@ public class Calculator {
 			highDayError = true;
 			return "highDay must be set\n ";
 		}
-		if (level == null) {
-			levelError = true;
+		if (tempLevel == null) {
+			tempLevelError = true;
 			return "level must be set\n ";
 		}
 		if (atr <= 0) {
@@ -309,16 +338,16 @@ public class Calculator {
 			highDayError = true;
 			return "highDay must be greater than 0\n ";
 		}
-		if (level <= 0) {
-			levelError = true;
+		if (tempLevel <= 0) {
+			tempLevelError = true;
 			return "level must be greater than 0\n ";
 		}
 		if (lowDay >= highDay) {
 			lowDayError = true;
 			return "lowDay must be less than highDay\n ";
 		}
-		if (level <= lowDay || level >= highDay) {
-			levelError = true;
+		if (tempLevel <= lowDay || tempLevel >= highDay) {
+			tempLevelError = true;
 			return "level must be between lowDay and highDay\n ";
 		}
 		return null;
@@ -357,16 +386,16 @@ public class Calculator {
 	private boolean isValidEstimation() {
 		takeProfitError = false;
 		stopLossError = false;
-		levelError = false;
+		tempLevelError = false;
 		spreadError = false;
 		powerReserveError = false;
 		quantityError = false;
 		String error = null;
-		if (level == null) {
-			levelError = true;
+		if (tempLevel == null) {
+			tempLevelError = true;
 			error = "Level must be set\n ";
-		} else if (level <= 0) {
-			levelError = true;
+		} else if (tempLevel <= 0) {
+			tempLevelError = true;
 			error = "Level must be greater than 0\n ";
 		}
 		if (spread == null) {
@@ -389,11 +418,11 @@ public class Calculator {
 		}
 		if (error != null) {
 			log("Invalid estimation - level: {}, spread: {}, powerReserve: {}, quantity: {}",
-			    level,
+			    tempLevel,
 			    spread,
 			    powerReserve,
 			    quantity);
-			showErrorDlg(frame, error);
+			showErrorDlg(frame, error, !autoUpdate);
 			announce();
 		}
 		return error == null;
@@ -463,7 +492,8 @@ public class Calculator {
 
 		if (estimationType == EstimationType.MIN_STOP_LOSS ||
 		    estimationType == EstimationType.MAX_GAIN_MIN_STOP_LOSS) {
-			double minStopLoss = isLong() ? level - Math.max(ORDER_LUFT, spread) : level + Math.max(ORDER_LUFT, spread);
+			double minStopLoss =
+					isLong() ? tempLevel - Math.max(ORDER_LUFT, spread) : tempLevel + Math.max(ORDER_LUFT, spread);
 			return isLong() ? Math.max(stopLoss, minStopLoss) : Math.min(stopLoss, minStopLoss);
 		}
 
@@ -473,7 +503,7 @@ public class Calculator {
 	private boolean areRiskLimitsFailed() {
 		if ((isLong() && takeProfit < breakEven) || (isShort() && takeProfit > breakEven)) {
 			log("Take profit is less than break even");
-			showErrorDlg(frame,"Cannot fit to risk limits!");
+			showErrorDlg(frame, "Cannot fit to risk limits!", !autoUpdate);
 			takeProfitError = true;
 			stopLossError = stopLossTooLow();
 			gain = 0.0;
@@ -486,7 +516,7 @@ public class Calculator {
 		}
 		if (quantity <= 0) {
 			log("Cannot fit to risk limits");
-			showErrorDlg(frame,"Cannot fit to risk limits!");
+			showErrorDlg(frame, "Cannot fit to risk limits!", !autoUpdate);
 			announce();
 			return true;
 		}
@@ -505,14 +535,14 @@ public class Calculator {
 	}
 
 	private void fillOrder() {
-		orderStop = level;
+		orderStop = tempLevel;
 		orderLimit = orderStop + (isLong() ? spread : -spread);
-		takeProfit = isLong() ? level + powerReserve : level - powerReserve;
+		takeProfit = isLong() ? tempLevel + powerReserve : tempLevel - powerReserve;
 	}
 
 	private boolean stopLossTooLow() {
-		return (isLong() && stopLoss > level - Math.max(ORDER_LUFT, spread)) ||
-		       (isShort() && stopLoss < level + Math.max(ORDER_LUFT, spread));
+		return (isLong() && stopLoss > tempLevel - Math.max(ORDER_LUFT, spread)) ||
+		       (isShort() && stopLoss < tempLevel + Math.max(ORDER_LUFT, spread));
 	}
 
 	private boolean isLong() {
@@ -520,7 +550,7 @@ public class Calculator {
 	}
 
 	private int maxQuantity() {
-		return (int) (MAX_VOLUME / level);
+		return (int) (MAX_VOLUME / tempLevel);
 	}
 
 	public void reset() {
@@ -540,11 +570,11 @@ public class Calculator {
 		lowDay = null;
 		spread = null;
 		powerReserve = null;
-		level = null;
+		tempLevel = null;
 		takeProfitError = false;
 		stopLossError = false;
 		quantityError = false;
-		levelError = false;
+		tempLevelError = false;
 		spreadError = false;
 		powerReserveError = false;
 		atrError = false;
