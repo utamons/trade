@@ -1,6 +1,8 @@
 package com.corn.trade.ibkr;
 
-import com.corn.trade.util.Util;
+import com.corn.trade.entity.Exchange;
+import com.corn.trade.entity.Ticker;
+import com.corn.trade.jpa.JpaRepo;
 import com.corn.trade.util.functional.Trigger;
 import com.ib.client.*;
 import com.ib.controller.ApiController;
@@ -21,13 +23,13 @@ public class AutoUpdate {
 	private final Ibkr                   ibkr;
 	private final JFrame                 frame;
 	private final Set<Consumer<Boolean>> activateListeners = new HashSet<>();
-	private final List<Trigger> triggers = new ArrayList<>();
-	private Consumer<Boolean> tickerUpdateSuccessListener;
-	private boolean           autoUpdate;
-	private String            ticker;
-	private String            exchange = "NYSE";
-	private ContractDetails   contractDetails;
-	private ITopMktDataHandler mktDataHandler;
+	private final List<Trigger>          triggers          = new ArrayList<>();
+	private       Consumer<Boolean>      tickerUpdateSuccessListener;
+	private       boolean                autoUpdate;
+	private       String                 ticker;
+	private       String                 exchange;
+	private       ContractDetails        contractDetails;
+	private       ITopMktDataHandler     mktDataHandler;
 
 	private IHistoricalDataHandler historicalDataHandler;
 	private Double                 bestPrice;
@@ -44,10 +46,20 @@ public class AutoUpdate {
 
 	private boolean isLong = true;
 
+	private final List<Exchange> exchanges;
+	private final List<Ticker>   tickers;
+	private final JpaRepo<Ticker, Long> tickerRepo;
 	public AutoUpdate(JFrame frame, Ibkr ibkr) {
 		this.ibkr = ibkr;
 		this.frame = frame;
 		initHandlers();
+		JpaRepo<Exchange, Long> exchangeRepo = new JpaRepo<>(Exchange.class);
+		tickerRepo   = new JpaRepo<>(Ticker.class);
+
+		exchanges = exchangeRepo.findAll().stream().sorted().toList();
+		tickers = tickerRepo.findAll().stream().sorted().toList();
+		if (!exchanges.isEmpty())
+			exchange = exchanges.get(0).getName();
 	}
 
 	public void setLong(boolean aLong) {
@@ -115,11 +127,27 @@ public class AutoUpdate {
 			showErrorDlg(frame, "Multiple contract details found for " + ticker);
 			return false;
 		} else if (!contractDetailsList.get(0).contract().primaryExch().equals(exchange)) {
-			showErrorDlg(frame, "Probably wrong exchange for " + ticker);
-			return false;
+			Exchange exchangeFound =
+					exchanges.stream()
+					         .filter(e -> e.getName().equals(contractDetailsList.get(0).contract().primaryExch()))
+					         .findFirst()
+					         .orElse(null);
+			if (exchangeFound == null) {
+				showErrorDlg(frame, "Probably wrong exchange for " + ticker);
+				return false;
+			} else {
+				exchange = exchangeFound.getName();
+				announce();
+			}
 		}
 		contractDetails = contractDetailsList.get(0);
-		Util.log("Contract details found for " + ticker);
+
+		if (tickers.stream().noneMatch(t -> t.getName().equals(ticker))) {
+			Ticker tickerEntity = new Ticker();
+			tickerEntity.setName(ticker);
+			tickerEntity.setExchange(exchanges.stream().filter(e -> e.getName().equals(exchange)).findFirst().orElse(null));
+			tickerRepo.save(tickerEntity);
+		}
 
 		return true;
 	}
@@ -229,7 +257,8 @@ public class AutoUpdate {
 			}
 
 			@Override
-			public void historicalDataEnd() {}
+			public void historicalDataEnd() {
+			}
 		};
 	}
 

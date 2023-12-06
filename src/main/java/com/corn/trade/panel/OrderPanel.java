@@ -12,8 +12,6 @@ public class OrderPanel extends BasePanel {
 
 	private final JButton stopLimitBtn;
 	private final JButton marketBtn;
-	private final JButton closeAllBtn;
-
 	public OrderPanel(Calculator calculator, AutoUpdate autoUpdate, Dimension maxSize, Dimension minSize, int spacing, int fieldHeight) {
 		super("Order", calculator, autoUpdate, maxSize, minSize);
 
@@ -55,12 +53,9 @@ public class OrderPanel extends BasePanel {
 
 		stopLimitBtn = new JButton("Stop-limit");
 		marketBtn = new JButton("Market");
-		closeAllBtn = new JButton("Close All");
-		closeAllBtn.setBackground(new Color(100, 0, 0));
 
 		rowPanel.add(stopLimitBtn);
 		rowPanel.add(marketBtn);
-		rowPanel.add(closeAllBtn);
 
 		this.add(panel, BorderLayout.NORTH);
 		this.add(rowPanel, BorderLayout.SOUTH);
@@ -75,6 +70,5 @@ public class OrderPanel extends BasePanel {
 	public void enableOrderButtons(boolean enabled) {
 		stopLimitBtn.setEnabled(enabled);
 		marketBtn.setEnabled(enabled);
-		closeAllBtn.setEnabled(enabled);
 	}
 }

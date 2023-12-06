@@ -1,13 +1,15 @@
 package com.corn.trade.panel;
 
-import com.corn.trade.component.RowPanel;
 import com.corn.trade.component.LabeledComboBox;
 import com.corn.trade.component.LabeledDoubleField;
 import com.corn.trade.component.LabeledLookup;
+import com.corn.trade.component.RowPanel;
+import com.corn.trade.entity.Exchange;
+import com.corn.trade.entity.Ticker;
 import com.corn.trade.ibkr.AutoUpdate;
+import com.corn.trade.jpa.JpaRepo;
 import com.corn.trade.trade.Calculator;
 import com.corn.trade.trade.EstimationType;
-import com.corn.trade.trade.ExchangeType;
 import com.corn.trade.trade.PositionType;
 
 import javax.swing.*;
@@ -25,22 +27,26 @@ public class InputPanel extends BasePanel {
 	                  int spacing,
 	                  int fieldHeight) {
 		super("Input", calculator, autoUpdate, maxSize, minSize);
+
+		JpaRepo<Exchange, Long> exchangeRepo = new JpaRepo<>(Exchange.class);
+		JpaRepo<Ticker, Long>   tickerRepo   = new JpaRepo<>(Ticker.class);
+
+		List<Exchange> exchanges = exchangeRepo.findAll().stream().sorted().toList();
+		List<Ticker>   tickers   = tickerRepo.findAll().stream().sorted().toList();
+
 		this.setLayout(new BorderLayout());
 
 		JPanel panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-		List<String> items = List.of("AAPL", "TSLA", "AMZN", "GOOG", "MSFT");
+		List<String> items = tickers.stream().map(Ticker::getName).toList();
 
 		LabeledLookup tickerLookup = new LabeledLookup("Ticker:", items, spacing, fieldHeight, autoUpdate::setTicker);
 		autoUpdate.setTickerUpdateSuccessListener(tickerLookup::setSuccessStatus);
 
+
 		LabeledComboBox exchangeBox = new LabeledComboBox("Exchange:",
-		                                                  new String[]{
-				                                                  ExchangeType.NASDAQ.toString(),
-				                                                  ExchangeType.NYSE.toString(),
-				                                                  //ExchangeType.SEHK.toString()
-		                                                  },
+		                                                  exchanges.stream().map(Exchange::getName).toArray(String[]::new),
 		                                                  spacing,
 		                                                  fieldHeight,
 		                                                  autoUpdate::setExchange);
@@ -56,7 +62,8 @@ public class InputPanel extends BasePanel {
 		                                                  fieldHeight,
 		                                                  (value) -> {
 			                                                  calculator.setPositionType(PositionType.fromString(value));
-															  autoUpdate.setLong(PositionType.fromString(value) == PositionType.LONG);
+			                                                  autoUpdate.setLong(PositionType.fromString(value) ==
+			                                                                     PositionType.LONG);
 		                                                  });
 
 
@@ -154,6 +161,8 @@ public class InputPanel extends BasePanel {
 			level.setError(calculator.isLevelError());
 			powerReserve.setError(calculator.isPowerReserveError());
 		});
+
+		autoUpdate.addUpdater(() -> exchangeBox.setSelectedItem(autoUpdate.getExchange()));
 
 		autoUpdate.addUpdater(() -> {
 			if (!autoUpdate.isAutoUpdate()) {
