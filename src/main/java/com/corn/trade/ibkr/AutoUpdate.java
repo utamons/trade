@@ -107,7 +107,7 @@ public class AutoUpdate {
 		} else
 			contract.exchange(exchange);
 
-		List<ContractDetails> contractDetailsList = ibkr.lookupContract(contract);
+		List<ContractDetails> contractDetailsList = ibkr.controller().cancelPositions().lookupContract(contract);
 		if (contractDetailsList.isEmpty()) {
 			showErrorDlg(frame, "No contract details found for " + ticker);
 			return false;

@@ -1,6 +1,6 @@
 package com.corn.trade.panel;
 
-import com.corn.trade.component.ButtonRowPanel;
+import com.corn.trade.component.RowPanel;
 import com.corn.trade.component.LabeledComboBox;
 import com.corn.trade.component.LabeledDoubleField;
 import com.corn.trade.component.LabeledLookup;
@@ -129,7 +129,7 @@ public class InputPanel extends BasePanel {
 		                                                       false,
 		                                                       calculator::setMaxLevel);
 
-		ButtonRowPanel buttonRowPanel = new ButtonRowPanel();
+		RowPanel rowPanel = new RowPanel();
 
 		autoUpdateCheckBox = new JCheckBox("Auto-update");
 
@@ -142,9 +142,9 @@ public class InputPanel extends BasePanel {
 			reset.setEnabled(!autoUpdateCheckBox.isSelected());
 		});
 
-		buttonRowPanel.add(autoUpdateCheckBox);
-		buttonRowPanel.add(estimate);
-		buttonRowPanel.add(reset);
+		rowPanel.add(autoUpdateCheckBox);
+		rowPanel.add(estimate);
+		rowPanel.add(reset);
 
 		calculator.addUpdater(() -> {
 			spread.setValue(calculator.getSpread());
@@ -179,7 +179,7 @@ public class InputPanel extends BasePanel {
 		panel.add(resistance);
 
 		this.add(panel, BorderLayout.NORTH);
-		this.add(buttonRowPanel, BorderLayout.SOUTH);
+		this.add(rowPanel, BorderLayout.SOUTH);
 	}
 
 	public void enableAutoUpdateCheckBox(boolean enabled) {

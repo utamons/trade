@@ -1,6 +1,6 @@
 package com.corn.trade.panel;
 
-import com.corn.trade.component.ButtonRowPanel;
+import com.corn.trade.component.RowPanel;
 import com.corn.trade.component.LabeledDoubleField;
 import com.corn.trade.ibkr.AutoUpdate;
 import com.corn.trade.trade.Calculator;
@@ -51,19 +51,19 @@ public class OrderPanel extends BasePanel {
 		panel.add(limit);
 		panel.add(stop);
 
-		ButtonRowPanel buttonRowPanel = new ButtonRowPanel();
+		RowPanel rowPanel = new RowPanel();
 
 		stopLimitBtn = new JButton("Stop-limit");
 		marketBtn = new JButton("Market");
 		closeAllBtn = new JButton("Close All");
 		closeAllBtn.setBackground(new Color(100, 0, 0));
 
-		buttonRowPanel.add(stopLimitBtn);
-		buttonRowPanel.add(marketBtn);
-		buttonRowPanel.add(closeAllBtn);
+		rowPanel.add(stopLimitBtn);
+		rowPanel.add(marketBtn);
+		rowPanel.add(closeAllBtn);
 
 		this.add(panel, BorderLayout.NORTH);
-		this.add(buttonRowPanel, BorderLayout.SOUTH);
+		this.add(rowPanel, BorderLayout.SOUTH);
 
 		calculator.addUpdater(() -> {
 			quantity.setValue(calculator.getQuantity() == null ? null : (double) calculator.getQuantity());

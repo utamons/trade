@@ -34,12 +34,4 @@ public class Util {
 
 		System.out.println(builder);
 	}
-
-	public static Double round(Double value) {
-		if (value == null)
-			return null;
-		return BigDecimal.valueOf(value)
-		                 .setScale(2, RoundingMode.HALF_UP)
-		                 .doubleValue();
-	}
 }

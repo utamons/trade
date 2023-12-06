@@ -1,6 +1,6 @@
 package com.corn.trade.panel;
 
-import com.corn.trade.component.ButtonRowPanel;
+import com.corn.trade.component.RowPanel;
 import com.corn.trade.component.LabeledDoubleField;
 import com.corn.trade.ibkr.AutoUpdate;
 import com.corn.trade.trade.Calculator;
@@ -53,7 +53,7 @@ public class PowerPanel extends BasePanel {
 		panel.add(high);
 		panel.add(low);
 
-		ButtonRowPanel buttonRowPanel = new ButtonRowPanel();
+		RowPanel rowPanel = new RowPanel();
 
 		JButton button = new JButton("Calculate P/R");
 
@@ -70,9 +70,9 @@ public class PowerPanel extends BasePanel {
 			low.setValue(autoUpdate.getLow());
 		});
 
-		buttonRowPanel.add(button);
+		rowPanel.add(button);
 
 		this.add(panel, BorderLayout.NORTH);
-		this.add(buttonRowPanel, BorderLayout.SOUTH);
+		this.add(rowPanel, BorderLayout.SOUTH);
 	}
 }

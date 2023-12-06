@@ -3,11 +3,11 @@ package com.corn.trade.component;
 import javax.swing.*;
 import java.awt.*;
 
-public class ButtonRowPanel extends JPanel {
+public class RowPanel extends JPanel {
 
 	private final JPanel buttonPanel;
 
-	public ButtonRowPanel() {
+	public RowPanel() {
 		setLayout(new BorderLayout());
 
 		buttonPanel = new JPanel();
