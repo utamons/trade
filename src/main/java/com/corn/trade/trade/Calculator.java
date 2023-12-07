@@ -10,100 +10,53 @@ import static java.lang.Math.abs;
 
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
 public class Calculator extends Notifier {
-	private final Double MAX_VOLUME              = 5000.0;
-	private final double MAX_RISK_PERCENT        = 0.5;
-	private final double MAX_RISK_REWARD_RATIO   = 3.0;
-	private final Double ORDER_LUFT              = 0.02;
+	private final Double         MAX_VOLUME            = 5000.0;
+	private final double         MAX_RISK_PERCENT      = 0.5;
+	private final double         MAX_RISK_REWARD_RATIO = 3.0;
+	private final Double         ORDER_LUFT            = 0.02;
 	private final Component      frame;
-	private       boolean        autoUpdate = false;
+	private final Levels         levels;
+	private       boolean        autoUpdate            = false;
 	private       PositionType   positionType;
 	private       EstimationType estimationType;
 	private       Double         outputExpected;
 	private       Double         gain;
 	private       Double         spread;
+	private       Double         pivotPoint;
+	private       Double         powerReserve;
+	private       boolean        spreadError           = false;
+	private       Double         stopLoss;
+	private       boolean        stopLossError         = false;
+	private       Double         takeProfit;
+	private       boolean        takeProfitError       = false;
+	private       Double         breakEven;
+	private       Double         risk;
+	private       Double         riskPercent;
+	private       Double         riskRewardRatioPercent;
+	private       Double         orderLimit;
+	private       Double         orderStop;
+	private       Integer        quantity;
+	private       boolean        quantityError         = false;
 
-	private boolean spreadError = false;
-
-	private Double  stopLoss;
-
-	private boolean stopLossError = false;
-	private Double  takeProfit;
-
-	private boolean takeProfitError = false;
-	private Double  breakEven;
-	private Double  risk;
-	private Double  riskPercent;
-	private Double  riskRewardRatioPercent;
-	private Double  orderLimit;
-	private Double  orderStop;
-	private Integer quantity;
-	private boolean quantityError   = false;
-	private Double  bestPrice;
-	private final Levels levels;
-
-	public Calculator(Component frame) {
+	public Calculator(Component frame, Levels levels) {
 		this.frame = frame;
-		levels = new Levels();
+		this.levels = levels;
 	}
 
-	public boolean isResistanceError() {
-		return levels.isResistanceError();
+	public void setPivotPoint(Double pivotPoint) {
+		this.pivotPoint = pivotPoint;
 	}
 
-	public boolean isSupportError() {
-		return levels.isSupportError();
+	public void setPowerReserve(Double powerReserve) {
+		this.powerReserve = powerReserve;
 	}
 
 	public void setAutoUpdate(boolean autoUpdate) {
 		this.autoUpdate = autoUpdate;
 	}
 
-	public Double getResistance() {
-		return levels.getResistance();
-	}
-
-	public void setResistance(Double resistance) {
-		levels.setResistance(resistance);
-	}
-
-	public Double getSupport() {
-		return levels.getSupport();
-	}
-
-	public void setSupport(Double support) {
-		levels.setSupport(support);
-	}
-
-	public Double getBestPrice() {
-		return bestPrice;
-	}
-
-	public void setBestPrice(Double bestPrice) {
-		this.bestPrice = bestPrice;
-	}
-
 	public boolean isSpreadError() {
 		return spreadError;
-	}
-
-	public boolean isPowerReserveError() {
-		return levels.isPowerReserveError();
-	}
-
-	public boolean isTempLevelError() {
-		return levels.isTempLevelError();
-	}
-
-	public boolean isAtrError() {
-		return levels.isAtrError();
-	}
-
-	public boolean isHighDayError() {
-		return levels.isHighDayError();
-	}
-
-	public boolean isLowDayError() {
-		return levels.isLowDayError();
 	}
 
 	public boolean isStopLossError() {
@@ -148,46 +101,6 @@ public class Calculator extends Notifier {
 
 	public void setSpread(Double spread) {
 		this.spread = spread;
-	}
-
-	public Double getPowerReserve() {
-		return levels.getPowerReserve();
-	}
-
-	public void setPowerReserve(Double powerReserve) {
-		levels.setPowerReserve(powerReserve);
-	}
-
-	public Double getTempLevel() {
-		return levels.getTempLevel();
-	}
-
-	public void setTempLevel(Double tempLevel) {
-		levels.setTempLevel(tempLevel);
-	}
-
-	public Double getAtr() {
-		return levels.getAtr();
-	}
-
-	public void setAtr(Double atr) {
-		levels.setAtr(atr);
-	}
-
-	public Double getHighDay() {
-		return levels.getHighDay();
-	}
-
-	public void setHighDay(Double highDay) {
-		levels.setHighDay(highDay);
-	}
-
-	public Double getLowDay() {
-		return levels.getLowDay();
-	}
-
-	public void setLowDay(Double lowDay) {
-		levels.setLowDay(lowDay);
 	}
 
 	public Double getStopLoss() {
@@ -238,17 +151,6 @@ public class Calculator extends Notifier {
 		this.quantity = quantity == null ? null : quantity.intValue();
 	}
 
-	public void calculatePowerReserve() {
-		String error = levels.validate();
-		if (error != null) {
-			showErrorDlg(frame, error, !autoUpdate);
-			announce();
-			return;
-		}
-		levels.calculatePowerReserve(positionType);
-		announce();
-	}
-
 	// For Interactive Brokers
 	public double estimatedCommissionUSD(double price) {
 		double max    = quantity * price / 100.0;
@@ -285,8 +187,11 @@ public class Calculator extends Notifier {
 		spreadError = false;
 		quantityError = false;
 		String error = levels.validate();
-		if (error == null)
-			error = levels.validatePowerReserve();
+		if (error != null) {
+			showErrorDlg(frame, error, !autoUpdate);
+			announce();
+			return false;
+		}
 		if (spread == null) {
 			spreadError = true;
 			error = "Spread must be set\n ";
@@ -299,11 +204,6 @@ public class Calculator extends Notifier {
 			error = "Quantity must be greater than 0\n ";
 		}
 		if (error != null) {
-			log("Invalid estimation - level: {}, spread: {}, powerReserve: {}, quantity: {}",
-			    levels.getTempLevel(),
-			    spread,
-			    levels.getPowerReserve(),
-			    quantity);
 			showErrorDlg(frame, error, !autoUpdate);
 			announce();
 		}
@@ -375,7 +275,8 @@ public class Calculator extends Notifier {
 		if (estimationType == EstimationType.MIN_STOP_LOSS ||
 		    estimationType == EstimationType.MAX_GAIN_MIN_STOP_LOSS) {
 			double minStopLoss =
-					isLong() ? levels.getTempLevel() - Math.max(ORDER_LUFT, spread) : levels.getTempLevel() + Math.max(ORDER_LUFT, spread);
+					isLong() ? pivotPoint - Math.max(ORDER_LUFT, spread) : pivotPoint +
+					                                                       Math.max(ORDER_LUFT, spread);
 			return isLong() ? Math.max(stopLoss, minStopLoss) : Math.min(stopLoss, minStopLoss);
 		}
 
@@ -417,14 +318,14 @@ public class Calculator extends Notifier {
 	}
 
 	private void fillOrder() {
-		orderStop = levels.getTempLevel();
+		orderStop = pivotPoint;
 		orderLimit = orderStop + (isLong() ? spread : -spread);
-		takeProfit = isLong() ? levels.getTempLevel() + levels.getPowerReserve() : levels.getTempLevel() - levels.getPowerReserve();
+		takeProfit = isLong() ? pivotPoint + powerReserve : pivotPoint - powerReserve;
 	}
 
 	private boolean stopLossTooLow() {
-		return (isLong() && stopLoss > levels.getTempLevel() - Math.max(ORDER_LUFT, spread)) ||
-		       (isShort() && stopLoss < levels.getTempLevel() + Math.max(ORDER_LUFT, spread));
+		return (isLong() && stopLoss > pivotPoint - Math.max(ORDER_LUFT, spread)) ||
+		       (isShort() && stopLoss < pivotPoint + Math.max(ORDER_LUFT, spread));
 	}
 
 	private boolean isLong() {
@@ -432,12 +333,11 @@ public class Calculator extends Notifier {
 	}
 
 	private int maxQuantity() {
-		return (int) (MAX_VOLUME / levels.getTempLevel());
+		return (int) (MAX_VOLUME / pivotPoint);
 	}
 
 	@SuppressWarnings("DuplicatedCode")
 	public void reset() {
-		levels.reset();
 		outputExpected = null;
 		gain = null;
 		stopLoss = null;

@@ -4,6 +4,7 @@ import com.corn.trade.component.RowPanel;
 import com.corn.trade.component.LabeledDoubleField;
 import com.corn.trade.ibkr.AutoUpdate;
 import com.corn.trade.trade.Calculator;
+import com.corn.trade.trade.Levels;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,11 +13,12 @@ public class PowerPanel extends BasePanel {
 
 	public PowerPanel(Calculator calculator,
 	                  AutoUpdate autoUpdate,
+					  Levels levels,
 	                  Dimension maxSize,
 	                  Dimension minSize,
 	                  int spacing,
 	                  int fieldHeight) {
-		super("Power", calculator, autoUpdate, maxSize, minSize);
+		super("Power", calculator, autoUpdate, levels, maxSize, minSize);
 		this.setLayout(new BorderLayout());
 
 		JPanel panel = new JPanel();
@@ -29,7 +31,7 @@ public class PowerPanel extends BasePanel {
 		                                                fieldHeight,
 		                                                false,
 		                                                (value) -> {
-			                                                calculator.setAtr(value);
+			                                                levels.setAtr(value);
 			                                                autoUpdate.setAtr(value);
 		                                                });
 
@@ -39,7 +41,7 @@ public class PowerPanel extends BasePanel {
 		                                                 spacing,
 		                                                 fieldHeight,
 		                                                 false,
-		                                                 calculator::setHighDay);
+		                                                 levels::setHighDay);
 
 		LabeledDoubleField low = new LabeledDoubleField("Low (day):",
 		                                                10,
@@ -47,7 +49,7 @@ public class PowerPanel extends BasePanel {
 		                                                spacing,
 		                                                fieldHeight,
 		                                                false,
-		                                                calculator::setLowDay);
+		                                                levels::setLowDay);
 
 		panel.add(atr);
 		panel.add(high);
@@ -57,7 +59,7 @@ public class PowerPanel extends BasePanel {
 
 		JButton button = new JButton("Calculate P/R");
 
-		button.addActionListener(e -> calculator.calculatePowerReserve());
+		button.addActionListener(e -> levels.calculatePowerReserve(calculator.getPositionType()));
 		autoUpdate.addActivateListener(
 				(isAutoUpdate) -> {
 					button.setEnabled(!isAutoUpdate);
@@ -68,11 +70,14 @@ public class PowerPanel extends BasePanel {
 		autoUpdate.addUpdater(() -> {
 			high.setValue(autoUpdate.getHigh());
 			low.setValue(autoUpdate.getLow());
+			levels.setHighDay(autoUpdate.getHigh());
+			levels.setLowDay(autoUpdate.getLow());
 		});
 
-		calculator.addUpdater(() -> {
-			high.setError(calculator.isHighDayError());
-			low.setError(calculator.isLowDayError());
+		levels.addUpdater(() -> {
+			atr.setError(levels.isAtrError());
+			high.setError(levels.isHighDayError());
+			low.setError(levels.isLowDayError());
 		});
 
 		rowPanel.add(button);

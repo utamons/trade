@@ -3,14 +3,15 @@ package com.corn.trade.panel;
 import com.corn.trade.component.LabeledDoubleField;
 import com.corn.trade.ibkr.AutoUpdate;
 import com.corn.trade.trade.Calculator;
+import com.corn.trade.trade.Levels;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class TradePanel extends BasePanel {
 
-	public TradePanel(Calculator calculator, AutoUpdate autoUpdate, Dimension maxSize, Dimension minSize, int spacing, int fieldHeight) {
-		super("Trade", calculator, autoUpdate, maxSize, minSize);
+	public TradePanel(Calculator calculator, AutoUpdate autoUpdate, Levels levels, Dimension maxSize, Dimension minSize, int spacing, int fieldHeight) {
+		super("Trade", calculator, autoUpdate, levels, maxSize, minSize);
 		LayoutManager layout = new BoxLayout(this, BoxLayout.Y_AXIS);
 		this.setLayout(layout);
 

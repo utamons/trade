@@ -10,6 +10,7 @@ import com.corn.trade.ibkr.AutoUpdate;
 import com.corn.trade.jpa.JpaRepo;
 import com.corn.trade.trade.Calculator;
 import com.corn.trade.trade.EstimationType;
+import com.corn.trade.trade.Levels;
 import com.corn.trade.trade.PositionType;
 
 import javax.swing.*;
@@ -22,11 +23,12 @@ public class InputPanel extends BasePanel {
 
 	public InputPanel(Calculator calculator,
 	                  AutoUpdate autoUpdate,
+					  Levels levels,
 	                  Dimension maxSize,
 	                  Dimension minSize,
 	                  int spacing,
 	                  int fieldHeight) {
-		super("Input", calculator, autoUpdate, maxSize, minSize);
+		super("Input", calculator, autoUpdate, levels, maxSize, minSize);
 
 		JpaRepo<Exchange, Long> exchangeRepo = new JpaRepo<>(Exchange.class);
 		JpaRepo<Ticker, Long>   tickerRepo   = new JpaRepo<>(Ticker.class);
@@ -108,33 +110,33 @@ public class InputPanel extends BasePanel {
 		                                                  spacing,
 		                                                  fieldHeight,
 		                                                  false,
-		                                                  calculator::setTempLevel);
+		                                                  levels::setTempLevel);
 
-		LabeledDoubleField price = new LabeledDoubleField("Best Price:",
+		LabeledDoubleField bestPrice = new LabeledDoubleField("Best Price:",
 		                                                  10,
 		                                                  null,
 		                                                  spacing,
 		                                                  fieldHeight,
 		                                                  autoUpdate.isAutoUpdate(),
-		                                                  calculator::setBestPrice);
+		                                                  levels::setBestPrice);
 
-		autoUpdate.addActivateListener(price::setAutoSwitchVisible);
+		autoUpdate.addActivateListener(bestPrice::setAutoSwitchVisible);
 
-		LabeledDoubleField support = new LabeledDoubleField("Min/Support:",
+		LabeledDoubleField support = new LabeledDoubleField("Support:",
 		                                                    10,
 		                                                    null,
 		                                                    spacing,
 		                                                    fieldHeight,
 		                                                    false,
-		                                                    calculator::setSupport);
+		                                                    levels::setSupport);
 
-		LabeledDoubleField resistance = new LabeledDoubleField("Max/Resistance:",
+		LabeledDoubleField resistance = new LabeledDoubleField("Resistance:",
 		                                                       10,
 		                                                       null,
 		                                                       spacing,
 		                                                       fieldHeight,
 		                                                       false,
-		                                                       calculator::setResistance);
+		                                                       levels::setResistance);
 
 		RowPanel rowPanel = new RowPanel();
 
@@ -144,6 +146,7 @@ public class InputPanel extends BasePanel {
 		JButton reset    = new JButton("Reset");
 
 		autoUpdateCheckBox.addActionListener(e -> {
+			levels.setAutoUpdate(autoUpdateCheckBox.isSelected());
 			autoUpdate.setAutoUpdate(autoUpdateCheckBox.isSelected());
 			calculator.setAutoUpdate(autoUpdateCheckBox.isSelected());
 			estimate.setEnabled(!autoUpdateCheckBox.isSelected());
@@ -156,13 +159,18 @@ public class InputPanel extends BasePanel {
 
 		calculator.addUpdater(() -> {
 			spread.setValue(calculator.getSpread());
-			tempLevel.setValue(calculator.getTempLevel());
-			powerReserve.setValue(calculator.getPowerReserve());
 			spread.setError(calculator.isSpreadError());
-			tempLevel.setError(calculator.isTempLevelError());
-			powerReserve.setError(calculator.isPowerReserveError());
-			support.setError(calculator.isSupportError());
-			resistance.setError(calculator.isResistanceError());
+		});
+
+		levels.addUpdater(() -> {
+			support.setValue(levels.getSupport());
+			resistance.setValue(levels.getResistance());
+			tempLevel.setValue(levels.getTempLevel());
+			support.setError(levels.isSupportError());
+			resistance.setError(levels.isResistanceError());
+			tempLevel.setError(levels.isTempLevelError());
+			powerReserve.setValue(levels.getPowerReserve());
+			powerReserve.setError(levels.isPowerReserveError());
 		});
 
 		autoUpdate.addUpdater(() -> exchangeBox.setSelectedItem(autoUpdate.getExchange()));
@@ -172,14 +180,17 @@ public class InputPanel extends BasePanel {
 				autoUpdateCheckBox.setSelected(false);
 				return;
 			}
-			price.setValue(autoUpdate.getBestPrice());
-			calculator.setBestPrice(autoUpdate.getBestPrice());
+			bestPrice.setValue(autoUpdate.getBestPrice());
+			levels.setBestPrice(autoUpdate.getBestPrice());
 			spread.setValue(autoUpdate.getSpread());
 			calculator.setSpread(autoUpdate.getSpread());
 		});
 
 		estimate.addActionListener(e -> calculator.estimate());
-		reset.addActionListener(e -> calculator.reset());
+		reset.addActionListener(e -> {
+			calculator.reset();
+			levels.reset();
+		});
 
 		panel.add(exchangeBox);
 		panel.add(tickerLookup);
@@ -187,10 +198,10 @@ public class InputPanel extends BasePanel {
 		panel.add(estimationBox);
 		panel.add(spread);
 		panel.add(powerReserve);
-		panel.add(price);
+		panel.add(bestPrice);
+		panel.add(resistance);
 		panel.add(tempLevel);
 		panel.add(support);
-		panel.add(resistance);
 
 		this.add(panel, BorderLayout.NORTH);
 		this.add(rowPanel, BorderLayout.SOUTH);

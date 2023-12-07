@@ -4,6 +4,7 @@ import com.corn.trade.component.RowPanel;
 import com.corn.trade.component.LabeledDoubleField;
 import com.corn.trade.ibkr.AutoUpdate;
 import com.corn.trade.trade.Calculator;
+import com.corn.trade.trade.Levels;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,8 +13,8 @@ public class OrderPanel extends BasePanel {
 
 	private final JButton stopLimitBtn;
 	private final JButton marketBtn;
-	public OrderPanel(Calculator calculator, AutoUpdate autoUpdate, Dimension maxSize, Dimension minSize, int spacing, int fieldHeight) {
-		super("Order", calculator, autoUpdate, maxSize, minSize);
+	public OrderPanel(Calculator calculator, AutoUpdate autoUpdate, Levels levels, Dimension maxSize, Dimension minSize, int spacing, int fieldHeight) {
+		super("Order", calculator, autoUpdate, levels, maxSize, minSize);
 
 		this.setLayout(new BorderLayout());
 

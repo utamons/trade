@@ -1,22 +1,43 @@
 package com.corn.trade.trade;
 
-public class Levels {
+import com.corn.trade.common.Notifier;
+
+import javax.swing.*;
+
+import static com.corn.trade.util.Util.showErrorDlg;
+
+public class Levels extends Notifier {
 	@SuppressWarnings("FieldCanBeLocal")
-	private final Double REALISTIC_POWER_RESERVE = 0.8;
-	private       Double atr;
-	private Double tempLevel;
-	private Double resistance;
-	private Double support;
-	private Double  highDay;
-	private Double  lowDay;
-	private Double  powerReserve;
-	private boolean powerReserveError = false;
-	private boolean highDayError = false;
-	private boolean lowDayError = false;
-	private boolean tempLevelError = false;
-	private boolean resistanceError = false;
-	private boolean supportError = false;
-	private boolean atrError= true;
+	private final Double  REALISTIC_POWER_RESERVE = 0.8;
+	private final JFrame  frame;
+	private       Double  atr;
+	private       Double  tempLevel;
+	private       Double  resistance;
+	private       Double  support;
+	private       Double  highDay;
+	private       Double  lowDay;
+	private       Double  powerReserve;
+	private       Double  bestPrice;
+	private       boolean powerReserveError       = false;
+	private       boolean highDayError            = false;
+	private       boolean lowDayError             = false;
+	private       boolean tempLevelError          = false;
+	private       boolean resistanceError         = false;
+	private       boolean supportError            = false;
+	private       boolean atrError                = true;
+	private       boolean autoUpdate              = false;
+
+	public Levels(JFrame frame) {
+		this.frame = frame;
+	}
+
+	public void setBestPrice(Double bestPrice) {
+		this.bestPrice = bestPrice;
+	}
+
+	public void setAutoUpdate(boolean autoUpdate) {
+		this.autoUpdate = autoUpdate;
+	}
 
 	public boolean isPowerReserveError() {
 		return powerReserveError;
@@ -26,16 +47,8 @@ public class Levels {
 		return powerReserve;
 	}
 
-	public void setPowerReserve(Double powerReserve) {
-		this.powerReserve = powerReserve;
-	}
-
 	public boolean isAtrError() {
 		return atrError;
-	}
-
-	public Double getAtr() {
-		return atr;
 	}
 
 	public void setAtr(Double atr) {
@@ -50,16 +63,8 @@ public class Levels {
 		return lowDayError;
 	}
 
-	public Double getHighDay() {
-		return highDay;
-	}
-
 	public void setHighDay(Double highDay) {
 		this.highDay = highDay;
-	}
-
-	public Double getLowDay() {
-		return lowDay;
 	}
 
 	public void setLowDay(Double lowDay) {
@@ -109,56 +114,54 @@ public class Levels {
 		resistanceError = false;
 		supportError = false;
 		atrError = false;
+		String error = null;
 
 		if (atr == null) {
 			atrError = true;
-			return "atr must be set\n ";
-		}
-		if (atr <= 0) {
+			error = "atr must be set\n ";
+		} else if (atr <= 0) {
 			atrError = true;
-			return "atr must be greater than 0\n ";
+			error = "atr must be greater than 0\n ";
 		}
 		if (lowDay == null) {
 			lowDayError = true;
-			return "lowDay must be set\n ";
+			error = "lowDay must be set\n ";
+		} else if (lowDay <= 0) {
+			lowDayError = true;
+			error = "lowDay must be greater than 0\n ";
 		}
 		if (highDay == null) {
 			highDayError = true;
-			return "highDay must be set\n ";
+			error = "highDay must be set\n ";
+		} else if (highDay <= 0) {
+			highDayError = true;
+			error = "highDay must be greater than 0\n ";
 		}
 		if (tempLevel == null && resistance == null && support == null) {
 			tempLevelError = true;
 			resistanceError = true;
 			supportError = true;
-			return "at lease one of levels must be set\n ";
-		}
-		if (lowDay <= 0) {
-			lowDayError = true;
-			return "lowDay must be greater than 0\n ";
-		}
-		if (highDay <= 0) {
-			highDayError = true;
-			return "highDay must be greater than 0\n ";
+			error = "at lease one of levels must be set\n ";
 		}
 
-		if (lowDay >= highDay) {
+		if (highDay != null && lowDay != null && lowDay >= highDay) {
 			lowDayError = true;
-			return "lowDay must be less than highDay\n ";
+			error = "lowDay must be less than highDay\n ";
 		}
 
 		// support validation
 		if (support != null) {
 			if (support <= 0) {
 				supportError = true;
-				return "Support must be greater than 0\n ";
+				error = "Support must be greater than 0\n ";
 			}
-			if (support <= lowDay || support >= highDay) {
+			if (lowDay != null && highDay != null && (support <= lowDay || support >= highDay)) {
 				supportError = true;
-				return "Support must be between lowDay and highDay\n ";
+				error = "Support must be between lowDay and highDay\n ";
 			}
 			if (resistance != null && support >= resistance) {
 				supportError = true;
-				return "Support must be less than resistance";
+				error = "Support must be less than resistance";
 			}
 		}
 
@@ -166,11 +169,11 @@ public class Levels {
 		if (resistance != null) {
 			if (resistance <= 0) {
 				resistanceError = true;
-				return "Resistance must be greater than 0\n ";
+				error = "Resistance must be greater than 0\n ";
 			}
-			if (resistance <= lowDay || resistance >= highDay) {
+			if (lowDay != null && highDay != null && (resistance <= lowDay || resistance >= highDay)) {
 				resistanceError = true;
-				return "Resistance must be between lowDay and highDay\n ";
+				error = "Resistance must be between lowDay and highDay\n ";
 			}
 		}
 
@@ -178,35 +181,22 @@ public class Levels {
 		if (tempLevel != null) {
 			if (tempLevel <= 0) {
 				tempLevelError = true;
-				return "Temp. level must be greater than 0\n ";
+				error = "Temp. level must be greater than 0\n ";
 			}
 			if (tempLevel <= lowDay || tempLevel >= highDay) {
 				tempLevelError = true;
-				return "Temp. level must be between lowDay and highDay\n ";
+				error = "Temp. level must be between lowDay and highDay\n ";
 			}
 			if (resistance != null && tempLevel >= resistance) {
 				tempLevelError = true;
-				return "Temp. level must be less than resistance";
+				error = "Temp. level must be less than resistance";
 			} else if (support != null && tempLevel <= support) {
 				tempLevelError = true;
-				return "Temp. level must be greater than support";
+				error = "Temp. level must be greater than support";
 			}
 		}
-
-		return null;
-	}
-
-	public String validatePowerReserve() {
-		powerReserveError = false;
-		if (powerReserve == null) {
-			powerReserveError = true;
-			return "Power reserve must be set\n ";
-		}
-		if (powerReserve <= 0) {
-			powerReserveError = true;
-			return "Power reserve must be greater than 0\n ";
-		}
-		return null;
+		announce();
+		return error;
 	}
 
 	@SuppressWarnings("DuplicatedCode")
@@ -227,7 +217,30 @@ public class Levels {
 		powerReserveError = false;
 	}
 
+	public String validatePowerReserve() {
+		powerReserveError = false;
+		String error = null;
+		if (powerReserve == null) {
+			powerReserveError = true;
+			error = "Power reserve must be set\n ";
+		} else if (powerReserve <= 0) {
+			powerReserveError = true;
+			error = "Power reserve must be greater than 0\n ";
+		}
+		announce();
+		return error;
+	}
+
 	public void calculatePowerReserve(PositionType positionType) {
+		String error = validate();
+		if (error == null) {
+			error = validatePowerReserve();
+		}
+		if (error != null) {
+			showErrorDlg(frame, error, !autoUpdate);
+			announce();
+			return;
+		}
 		double techAtr = highDay - lowDay;
 		double realAtr = Math.max(techAtr, atr * REALISTIC_POWER_RESERVE);
 
@@ -236,5 +249,6 @@ public class Levels {
 		} else {
 			powerReserve = realAtr - (highDay - tempLevel);
 		}
+		announce();
 	}
 }

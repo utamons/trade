@@ -4,6 +4,7 @@ import com.corn.trade.ibkr.Ibkr;
 import com.corn.trade.panel.*;
 import com.corn.trade.ibkr.AutoUpdate;
 import com.corn.trade.trade.Calculator;
+import com.corn.trade.trade.Levels;
 import com.github.weisj.darklaf.LafManager;
 import com.github.weisj.darklaf.theme.*;
 import com.github.weisj.darklaf.theme.event.ThemePreferenceChangeEvent;
@@ -36,37 +37,43 @@ public class App {
 			Ibkr ibkr = new Ibkr();
 			ibkr.run();
 
-			Calculator calculator = new Calculator(frame);
+			Levels levels = new Levels(frame);
+			Calculator calculator = new Calculator(frame, levels);
 			AutoUpdate autoUpdate = new AutoUpdate(frame, ibkr);
 			autoUpdate.addActivateListener(calculator::setAutoUpdate);
 
 			InputPanel inputPanel = new InputPanel(
 					calculator,
 					autoUpdate,
+					levels,
 					new Dimension(PREF_WIDTH, PREF_HEIGHT),
 					new Dimension(PREF_WIDTH, PREF_HEIGHT),
 					5, FIELD_HEIGHT);
 			PowerPanel powerPanel = new PowerPanel(
 					calculator,
 					autoUpdate,
+					levels,
 					new Dimension(PREF_WIDTH, PREF_HEIGHT),
 					new Dimension(PREF_WIDTH, PREF_HEIGHT),
 					5, FIELD_HEIGHT);
 			TradePanel tradePanel = new TradePanel(
 					calculator,
 					autoUpdate,
+					levels,
 					new Dimension(PREF_WIDTH, PREF_HEIGHT),
 					new Dimension(PREF_WIDTH, PREF_HEIGHT),
 					5, FIELD_HEIGHT);
 			RiskPanel riskPanel = new RiskPanel(
 					calculator,
 					autoUpdate,
+					levels,
 					new Dimension(PREF_WIDTH, PREF_HEIGHT),
 					new Dimension(PREF_WIDTH, PREF_HEIGHT),
 					5, FIELD_HEIGHT);
 			OrderPanel orderPanel = new OrderPanel(
 					calculator,
 					autoUpdate,
+					levels,
 					new Dimension(PREF_WIDTH, PREF_HEIGHT),
 					new Dimension(PREF_WIDTH, PREF_HEIGHT),
 					5, FIELD_HEIGHT);
