@@ -72,6 +72,7 @@ public class PowerPanel extends BasePanel {
 			low.setValue(autoUpdate.getLow());
 			levels.setHighDay(autoUpdate.getHigh());
 			levels.setLowDay(autoUpdate.getLow());
+			levels.calculatePowerReserve(calculator.getPositionType());
 		});
 
 		levels.addUpdater(() -> {

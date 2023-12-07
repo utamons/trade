@@ -100,7 +100,7 @@ public class InputPanel extends BasePanel {
 		                                                         spacing,
 		                                                         fieldHeight,
 		                                                         autoUpdate.isAutoUpdate(),
-		                                                         calculator::setPowerReserve);
+		                                                         levels::setPowerReserve);
 
 		autoUpdate.addActivateListener(powerReserve::setAutoSwitchVisible);
 
@@ -184,6 +184,9 @@ public class InputPanel extends BasePanel {
 			levels.setBestPrice(autoUpdate.getBestPrice());
 			spread.setValue(autoUpdate.getSpread());
 			calculator.setSpread(autoUpdate.getSpread());
+			levels.calculatePowerReserve(calculator.getPositionType());
+			levels.calculatePivotPoint(calculator.getPositionType());
+			calculator.estimate();
 		});
 
 		estimate.addActionListener(e -> calculator.estimate());

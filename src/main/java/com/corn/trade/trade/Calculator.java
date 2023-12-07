@@ -22,8 +22,6 @@ public class Calculator extends Notifier {
 	private       Double         outputExpected;
 	private       Double         gain;
 	private       Double         spread;
-	private       Double         pivotPoint;
-	private       Double         powerReserve;
 	private       boolean        spreadError           = false;
 	private       Double         stopLoss;
 	private       boolean        stopLossError         = false;
@@ -41,14 +39,6 @@ public class Calculator extends Notifier {
 	public Calculator(Component frame, Levels levels) {
 		this.frame = frame;
 		this.levels = levels;
-	}
-
-	public void setPivotPoint(Double pivotPoint) {
-		this.pivotPoint = pivotPoint;
-	}
-
-	public void setPowerReserve(Double powerReserve) {
-		this.powerReserve = powerReserve;
 	}
 
 	public void setAutoUpdate(boolean autoUpdate) {
@@ -203,15 +193,23 @@ public class Calculator extends Notifier {
 			quantityError = true;
 			error = "Quantity must be greater than 0\n ";
 		}
+		if (levels.getPowerReserve() == null) {
+			levels.calculatePowerReserve(positionType);
+			error = levels.validatePowerReserve();
+		}
+		if (levels.getPivotPoint() == null) {
+			levels.calculatePivotPoint(positionType);
+		}
 		if (error != null) {
 			showErrorDlg(frame, error, !autoUpdate);
 			announce();
 		}
+
 		return error == null;
 	}
 
 	public void estimate() {
-		if (!isValidEstimation())
+		if (!isValidEstimation() || levels.getPivotPoint() == null)
 			return;
 
 		fillQuantity();
@@ -275,7 +273,7 @@ public class Calculator extends Notifier {
 		if (estimationType == EstimationType.MIN_STOP_LOSS ||
 		    estimationType == EstimationType.MAX_GAIN_MIN_STOP_LOSS) {
 			double minStopLoss =
-					isLong() ? pivotPoint - Math.max(ORDER_LUFT, spread) : pivotPoint +
+					isLong() ? levels.getPivotPoint() - Math.max(ORDER_LUFT, spread) : levels.getPivotPoint() +
 					                                                       Math.max(ORDER_LUFT, spread);
 			return isLong() ? Math.max(stopLoss, minStopLoss) : Math.min(stopLoss, minStopLoss);
 		}
@@ -318,14 +316,14 @@ public class Calculator extends Notifier {
 	}
 
 	private void fillOrder() {
-		orderStop = pivotPoint;
+		orderStop = levels.getPivotPoint();
 		orderLimit = orderStop + (isLong() ? spread : -spread);
-		takeProfit = isLong() ? pivotPoint + powerReserve : pivotPoint - powerReserve;
+		takeProfit = isLong() ? levels.getPivotPoint() + levels.getPowerReserve() : levels.getPivotPoint() - levels.getPowerReserve();
 	}
 
 	private boolean stopLossTooLow() {
-		return (isLong() && stopLoss > pivotPoint - Math.max(ORDER_LUFT, spread)) ||
-		       (isShort() && stopLoss < pivotPoint + Math.max(ORDER_LUFT, spread));
+		return (isLong() && stopLoss > levels.getPivotPoint() - Math.max(ORDER_LUFT, spread)) ||
+		       (isShort() && stopLoss < levels.getPivotPoint() + Math.max(ORDER_LUFT, spread));
 	}
 
 	private boolean isLong() {
@@ -333,7 +331,7 @@ public class Calculator extends Notifier {
 	}
 
 	private int maxQuantity() {
-		return (int) (MAX_VOLUME / pivotPoint);
+		return (int) (MAX_VOLUME / levels.getPivotPoint());
 	}
 
 	@SuppressWarnings("DuplicatedCode")

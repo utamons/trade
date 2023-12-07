@@ -18,6 +18,7 @@ public class Levels extends Notifier {
 	private       Double  lowDay;
 	private       Double  powerReserve;
 	private       Double  bestPrice;
+	private       Double  pivotPoint;
 	private       boolean powerReserveError       = false;
 	private       boolean highDayError            = false;
 	private       boolean lowDayError             = false;
@@ -33,6 +34,14 @@ public class Levels extends Notifier {
 
 	public void setBestPrice(Double bestPrice) {
 		this.bestPrice = bestPrice;
+	}
+
+	public Double getPivotPoint() {
+		return pivotPoint;
+	}
+
+	public void setPowerReserve(Double powerReserve) {
+		this.powerReserve = powerReserve;
 	}
 
 	public void setAutoUpdate(boolean autoUpdate) {
@@ -245,10 +254,25 @@ public class Levels extends Notifier {
 		double realAtr = Math.max(techAtr, atr * REALISTIC_POWER_RESERVE);
 
 		if (positionType == PositionType.LONG) {
-			powerReserve = realAtr - (tempLevel - lowDay);
+			powerReserve = realAtr - (pivotPoint - lowDay);
 		} else {
-			powerReserve = realAtr - (highDay - tempLevel);
+			powerReserve = realAtr - (highDay - pivotPoint);
 		}
 		announce();
 	}
+
+	public void calculatePivotPoint(PositionType positionType) {
+		pivotPoint = null;
+		String error = validate();
+		if (error != null) {
+			showErrorDlg(frame, error, !autoUpdate);
+			announce();
+			return;
+		}
+		if (positionType == PositionType.LONG) {
+
+
+		}
+	}
+
 }
