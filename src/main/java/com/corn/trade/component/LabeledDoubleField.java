@@ -43,7 +43,6 @@ public class LabeledDoubleField extends JPanel {
 		textField.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				log("Focus lost");
 				if (!textField.getText().isEmpty() && !isValidDouble())
 					setError(true);
 				else {
@@ -105,6 +104,7 @@ public class LabeledDoubleField extends JPanel {
 		}
 	}
 
+	@Override
 	public void setEnabled(boolean enabled) {
 		textField.setEnabled(enabled);
 	}

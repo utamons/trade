@@ -15,9 +15,7 @@ public class Calculator {
 	private final Double MAX_VOLUME              = 5000.0;
 	private final double MAX_RISK_PERCENT        = 0.5;
 	private final double MAX_RISK_REWARD_RATIO   = 3.0;
-	private final Double REALISTIC_POWER_RESERVE = 0.8;
 	private final Double ORDER_LUFT              = 0.02;
-
 	private final List<Trigger>  triggers   = new ArrayList<>();
 	private final Component      frame;
 	private       boolean        autoUpdate = false;
@@ -28,21 +26,7 @@ public class Calculator {
 	private       Double         spread;
 
 	private boolean spreadError = false;
-	private Double  powerReserve;
 
-	private boolean powerReserveError = false;
-	private Double  tempLevel;
-
-	private boolean tempLevelError = false;
-	private Double  atr;
-
-	private boolean atrError = false;
-	private Double  highDay;
-
-	private boolean highDayError = false;
-	private Double  lowDay;
-
-	private boolean lowDayError = false;
 	private Double  stopLoss;
 
 	private boolean stopLossError = false;
@@ -58,23 +42,19 @@ public class Calculator {
 	private Integer quantity;
 	private boolean quantityError   = false;
 	private Double  bestPrice;
-	private Double  support;
-	private Double  resistance;
-
-	private boolean resistanceError = false;
-
-	private boolean supportError = false;
+	private final Levels levels;
 
 	public Calculator(Component frame) {
 		this.frame = frame;
+		levels = new Levels();
 	}
 
 	public boolean isResistanceError() {
-		return resistanceError;
+		return levels.isResistanceError();
 	}
 
 	public boolean isSupportError() {
-		return supportError;
+		return levels.isSupportError();
 	}
 
 	public void setAutoUpdate(boolean autoUpdate) {
@@ -82,19 +62,19 @@ public class Calculator {
 	}
 
 	public Double getResistance() {
-		return resistance;
+		return levels.getResistance();
 	}
 
 	public void setResistance(Double resistance) {
-		this.resistance = resistance;
+		levels.setResistance(resistance);
 	}
 
 	public Double getSupport() {
-		return support;
+		return levels.getSupport();
 	}
 
 	public void setSupport(Double support) {
-		this.support = support;
+		levels.setSupport(support);
 	}
 
 	public Double getBestPrice() {
@@ -118,23 +98,23 @@ public class Calculator {
 	}
 
 	public boolean isPowerReserveError() {
-		return powerReserveError;
+		return levels.isPowerReserveError();
 	}
 
 	public boolean isTempLevelError() {
-		return tempLevelError;
+		return levels.isTempLevelError();
 	}
 
 	public boolean isAtrError() {
-		return atrError;
+		return levels.isAtrError();
 	}
 
 	public boolean isHighDayError() {
-		return highDayError;
+		return levels.isHighDayError();
 	}
 
 	public boolean isLowDayError() {
-		return lowDayError;
+		return levels.isLowDayError();
 	}
 
 	public boolean isStopLossError() {
@@ -182,59 +162,43 @@ public class Calculator {
 	}
 
 	public Double getPowerReserve() {
-		return powerReserve;
+		return levels.getPowerReserve();
 	}
 
 	public void setPowerReserve(Double powerReserve) {
-		this.powerReserve = powerReserve;
+		levels.setPowerReserve(powerReserve);
 	}
 
 	public Double getTempLevel() {
-		return tempLevel;
+		return levels.getTempLevel();
 	}
 
 	public void setTempLevel(Double tempLevel) {
-		if (this.tempLevel != null && this.tempLevel.equals(tempLevel)) {
-			announce();
-			return;
-		}
-		this.tempLevel = tempLevel;
-		if (tempLevel != null) {
-			if (resistance != null && tempLevel >= resistance) {
-				tempLevelError = true;
-				showErrorDlg(frame, "Temp. level must be less than resistance", !autoUpdate);
-			} else 	if (support != null && tempLevel <= support) {
-				tempLevelError = true;
-				showErrorDlg(frame, "Temp. level must be greater than support", !autoUpdate);
-			} else {
-				tempLevelError = false;
-			}
-		}
-		announce();
+		levels.setTempLevel(tempLevel);
 	}
 
 	public Double getAtr() {
-		return atr;
+		return levels.getAtr();
 	}
 
 	public void setAtr(Double atr) {
-		this.atr = atr;
+		levels.setAtr(atr);
 	}
 
 	public Double getHighDay() {
-		return highDay;
+		return levels.getHighDay();
 	}
 
 	public void setHighDay(Double highDay) {
-		this.highDay = highDay;
+		levels.setHighDay(highDay);
 	}
 
 	public Double getLowDay() {
-		return lowDay;
+		return levels.getLowDay();
 	}
 
 	public void setLowDay(Double lowDay) {
-		this.lowDay = lowDay;
+		levels.setLowDay(lowDay);
 	}
 
 	public Double getStopLoss() {
@@ -286,71 +250,14 @@ public class Calculator {
 	}
 
 	public void calculatePowerReserve() {
-		String error = validPowerReserve();
+		String error = levels.validate();
 		if (error != null) {
-			log("Invalid power reserve - atr: {}, lowDay: {}, highDay: {}, level: {}", atr, lowDay, highDay, tempLevel);
 			showErrorDlg(frame, error, !autoUpdate);
 			announce();
 			return;
 		}
-
-		double techAtr = highDay - lowDay;
-		double realAtr = Math.max(techAtr, atr * REALISTIC_POWER_RESERVE);
-
-		if (positionType == PositionType.LONG) {
-			powerReserve = realAtr - (tempLevel - lowDay);
-		} else {
-			powerReserve = realAtr - (highDay - tempLevel);
-		}
+		levels.calculatePowerReserve(positionType);
 		announce();
-	}
-
-	private String validPowerReserve() {
-		atrError = false;
-		lowDayError = false;
-		highDayError = false;
-		tempLevelError = false;
-		if (atr == null) {
-			atrError = true;
-			return "atr must be set\n ";
-		}
-		if (lowDay == null) {
-			lowDayError = true;
-			return "lowDay must be set\n ";
-		}
-		if (highDay == null) {
-			highDayError = true;
-			return "highDay must be set\n ";
-		}
-		if (tempLevel == null) {
-			tempLevelError = true;
-			return "level must be set\n ";
-		}
-		if (atr <= 0) {
-			atrError = true;
-			return "atr must be greater than 0\n ";
-		}
-		if (lowDay <= 0) {
-			lowDayError = true;
-			return "lowDay must be greater than 0\n ";
-		}
-		if (highDay <= 0) {
-			highDayError = true;
-			return "highDay must be greater than 0\n ";
-		}
-		if (tempLevel <= 0) {
-			tempLevelError = true;
-			return "level must be greater than 0\n ";
-		}
-		if (lowDay >= highDay) {
-			lowDayError = true;
-			return "lowDay must be less than highDay\n ";
-		}
-		if (tempLevel <= lowDay || tempLevel >= highDay) {
-			tempLevelError = true;
-			return "level must be between lowDay and highDay\n ";
-		}
-		return null;
 	}
 
 	// For Interactive Brokers
@@ -386,18 +293,11 @@ public class Calculator {
 	private boolean isValidEstimation() {
 		takeProfitError = false;
 		stopLossError = false;
-		tempLevelError = false;
 		spreadError = false;
-		powerReserveError = false;
 		quantityError = false;
-		String error = null;
-		if (tempLevel == null) {
-			tempLevelError = true;
-			error = "Level must be set\n ";
-		} else if (tempLevel <= 0) {
-			tempLevelError = true;
-			error = "Level must be greater than 0\n ";
-		}
+		String error = levels.validate();
+		if (error == null)
+			error = levels.validatePowerReserve();
 		if (spread == null) {
 			spreadError = true;
 			error = "Spread must be set\n ";
@@ -405,22 +305,15 @@ public class Calculator {
 			spreadError = true;
 			error = "Spread must be greater than 0\n ";
 		}
-		if (powerReserve == null) {
-			powerReserveError = true;
-			error = "Power reserve must be set\n ";
-		} else if (powerReserve <= 0) {
-			powerReserveError = true;
-			error = "Power reserve must be greater than 0\n ";
-		}
 		if (quantity != null && quantity <= 0) {
 			quantityError = true;
 			error = "Quantity must be greater than 0\n ";
 		}
 		if (error != null) {
 			log("Invalid estimation - level: {}, spread: {}, powerReserve: {}, quantity: {}",
-			    tempLevel,
+			    levels.getTempLevel(),
 			    spread,
-			    powerReserve,
+			    levels.getPowerReserve(),
 			    quantity);
 			showErrorDlg(frame, error, !autoUpdate);
 			announce();
@@ -493,7 +386,7 @@ public class Calculator {
 		if (estimationType == EstimationType.MIN_STOP_LOSS ||
 		    estimationType == EstimationType.MAX_GAIN_MIN_STOP_LOSS) {
 			double minStopLoss =
-					isLong() ? tempLevel - Math.max(ORDER_LUFT, spread) : tempLevel + Math.max(ORDER_LUFT, spread);
+					isLong() ? levels.getTempLevel() - Math.max(ORDER_LUFT, spread) : levels.getTempLevel() + Math.max(ORDER_LUFT, spread);
 			return isLong() ? Math.max(stopLoss, minStopLoss) : Math.min(stopLoss, minStopLoss);
 		}
 
@@ -535,14 +428,14 @@ public class Calculator {
 	}
 
 	private void fillOrder() {
-		orderStop = tempLevel;
+		orderStop = levels.getTempLevel();
 		orderLimit = orderStop + (isLong() ? spread : -spread);
-		takeProfit = isLong() ? tempLevel + powerReserve : tempLevel - powerReserve;
+		takeProfit = isLong() ? levels.getTempLevel() + levels.getPowerReserve() : levels.getTempLevel() - levels.getPowerReserve();
 	}
 
 	private boolean stopLossTooLow() {
-		return (isLong() && stopLoss > tempLevel - Math.max(ORDER_LUFT, spread)) ||
-		       (isShort() && stopLoss < tempLevel + Math.max(ORDER_LUFT, spread));
+		return (isLong() && stopLoss > levels.getTempLevel() - Math.max(ORDER_LUFT, spread)) ||
+		       (isShort() && stopLoss < levels.getTempLevel() + Math.max(ORDER_LUFT, spread));
 	}
 
 	private boolean isLong() {
@@ -550,10 +443,12 @@ public class Calculator {
 	}
 
 	private int maxQuantity() {
-		return (int) (MAX_VOLUME / tempLevel);
+		return (int) (MAX_VOLUME / levels.getTempLevel());
 	}
 
+	@SuppressWarnings("DuplicatedCode")
 	public void reset() {
+		levels.reset();
 		outputExpected = null;
 		gain = null;
 		stopLoss = null;
@@ -565,21 +460,11 @@ public class Calculator {
 		orderLimit = null;
 		orderStop = null;
 		quantity = null;
-		atr = null;
-		highDay = null;
-		lowDay = null;
 		spread = null;
-		powerReserve = null;
-		tempLevel = null;
 		takeProfitError = false;
 		stopLossError = false;
 		quantityError = false;
-		tempLevelError = false;
 		spreadError = false;
-		powerReserveError = false;
-		atrError = false;
-		lowDayError = false;
-		highDayError = false;
 		announce();
 	}
 }

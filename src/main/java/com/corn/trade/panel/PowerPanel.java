@@ -70,6 +70,11 @@ public class PowerPanel extends BasePanel {
 			low.setValue(autoUpdate.getLow());
 		});
 
+		calculator.addUpdater(() -> {
+			high.setError(calculator.isHighDayError());
+			low.setError(calculator.isLowDayError());
+		});
+
 		rowPanel.add(button);
 
 		this.add(panel, BorderLayout.NORTH);
