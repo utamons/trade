@@ -1,9 +1,9 @@
 package com.corn.trade.ibkr;
 
+import com.corn.trade.common.Notifier;
 import com.corn.trade.entity.Exchange;
 import com.corn.trade.entity.Ticker;
 import com.corn.trade.jpa.JpaRepo;
-import com.corn.trade.util.functional.Trigger;
 import com.ib.client.*;
 import com.ib.controller.ApiController;
 import com.ib.controller.ApiController.IHistoricalDataHandler;
@@ -11,7 +11,6 @@ import com.ib.controller.ApiController.ITopMktDataHandler;
 import com.ib.controller.Bar;
 
 import javax.swing.*;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -19,11 +18,10 @@ import java.util.function.Consumer;
 
 import static com.corn.trade.util.Util.showErrorDlg;
 
-public class AutoUpdate {
+public class AutoUpdate extends Notifier {
 	private final Ibkr                   ibkr;
 	private final JFrame                 frame;
 	private final Set<Consumer<Boolean>> activateListeners = new HashSet<>();
-	private final List<Trigger>          triggers          = new ArrayList<>();
 	private       Consumer<Boolean>      tickerUpdateSuccessListener;
 	private       boolean                autoUpdate;
 	private       String                 ticker;
@@ -204,14 +202,6 @@ public class AutoUpdate {
 
 	public void addActivateListener(Consumer<Boolean> listener) {
 		activateListeners.add(listener);
-	}
-
-	public void addUpdater(Trigger trigger) {
-		triggers.add(trigger);
-	}
-
-	private void announce() {
-		triggers.forEach(Trigger::trigger);
 	}
 
 	public Double getBestPrice() {

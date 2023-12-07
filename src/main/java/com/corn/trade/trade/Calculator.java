@@ -1,22 +1,19 @@
 package com.corn.trade.trade;
 
-import com.corn.trade.util.functional.Trigger;
+import com.corn.trade.common.Notifier;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
 
 import static com.corn.trade.util.Util.log;
 import static com.corn.trade.util.Util.showErrorDlg;
 import static java.lang.Math.abs;
 
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
-public class Calculator {
+public class Calculator extends Notifier {
 	private final Double MAX_VOLUME              = 5000.0;
 	private final double MAX_RISK_PERCENT        = 0.5;
 	private final double MAX_RISK_REWARD_RATIO   = 3.0;
 	private final Double ORDER_LUFT              = 0.02;
-	private final List<Trigger>  triggers   = new ArrayList<>();
 	private final Component      frame;
 	private       boolean        autoUpdate = false;
 	private       PositionType   positionType;
@@ -83,14 +80,6 @@ public class Calculator {
 
 	public void setBestPrice(Double bestPrice) {
 		this.bestPrice = bestPrice;
-	}
-
-	private void announce() {
-		triggers.forEach(Trigger::trigger);
-	}
-
-	public void addUpdater(Trigger trigger) {
-		triggers.add(trigger);
 	}
 
 	public boolean isSpreadError() {
