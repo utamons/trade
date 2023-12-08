@@ -59,7 +59,11 @@ public class PowerPanel extends BasePanel {
 
 		JButton button = new JButton("Calculate P/R");
 
-		button.addActionListener(e -> levels.calculatePowerReserve(calculator.getPositionType()));
+		button.addActionListener(e -> {
+			levels.calculatePivotPoint(calculator.getPositionType());
+			levels.calculatePowerReserve(calculator.getPositionType());
+		});
+
 		autoUpdate.addActivateListener(
 				(isAutoUpdate) -> {
 					button.setEnabled(!isAutoUpdate);
@@ -68,14 +72,16 @@ public class PowerPanel extends BasePanel {
 				});
 
 		autoUpdate.addUpdater(() -> {
-			high.setValue(autoUpdate.getHigh());
-			low.setValue(autoUpdate.getLow());
-			levels.setHighDay(autoUpdate.getHigh());
-			levels.setLowDay(autoUpdate.getLow());
-			levels.calculatePowerReserve(calculator.getPositionType());
+			if (autoUpdate.isAutoUpdate()) {
+				high.setValue(autoUpdate.getHigh());
+				low.setValue(autoUpdate.getLow());
+			}
 		});
 
 		levels.addUpdater(() -> {
+			atr.setValue(levels.getAtr());
+			high.setValue(levels.getHighDay());
+			low.setValue(levels.getLowDay());
 			atr.setError(levels.isAtrError());
 			high.setError(levels.isHighDayError());
 			low.setError(levels.isLowDayError());

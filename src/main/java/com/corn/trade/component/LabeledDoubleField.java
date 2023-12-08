@@ -110,6 +110,8 @@ public class LabeledDoubleField extends JPanel {
 	}
 
 	public Double getValue() {
+		if (textField.getText().isEmpty())
+			return null;
 		return Double.parseDouble(textField.getText());
 	}
 

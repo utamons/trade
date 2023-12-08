@@ -3,6 +3,11 @@ package com.corn.trade.trade;
 import com.corn.trade.common.Notifier;
 
 import javax.swing.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 import static com.corn.trade.util.Util.showErrorDlg;
 
@@ -19,6 +24,10 @@ public class Levels extends Notifier {
 	private       Double  powerReserve;
 	private       Double  bestPrice;
 	private       Double  pivotPoint;
+	private       boolean pivotPointTempLevel;
+	private       boolean pivotPointResistance;
+	private       boolean pivotPointSupport;
+	private       boolean pivotPointBestPrice;
 	private       boolean powerReserveError       = false;
 	private       boolean highDayError            = false;
 	private       boolean lowDayError             = false;
@@ -27,6 +36,23 @@ public class Levels extends Notifier {
 	private       boolean supportError            = false;
 	private       boolean atrError                = true;
 	private       boolean autoUpdate              = false;
+	private       boolean bestPriceError          = false;
+
+	public boolean isPivotPointTempLevel() {
+		return pivotPointTempLevel;
+	}
+
+	public boolean isPivotPointResistance() {
+		return pivotPointResistance;
+	}
+
+	public boolean isPivotPointSupport() {
+		return pivotPointSupport;
+	}
+
+	public boolean isPivotPointBestPrice() {
+		return pivotPointBestPrice;
+	}
 
 	public Levels(JFrame frame) {
 		this.frame = frame;
@@ -40,8 +66,27 @@ public class Levels extends Notifier {
 		return pivotPoint;
 	}
 
-	public void setPowerReserve(Double powerReserve) {
-		this.powerReserve = powerReserve;
+	private void resetPivotFlags() {
+		pivotPointTempLevel = false;
+		pivotPointResistance = false;
+		pivotPointSupport = false;
+		pivotPointBestPrice = false;
+	}
+
+
+	private void setPivotPointFlag() {
+		resetPivotFlags();
+		if (pivotPoint != null) {
+			if (pivotPoint.equals(tempLevel)) {
+				pivotPointTempLevel = true;
+			} else if (pivotPoint.equals(resistance)) {
+				pivotPointResistance = true;
+			} else if (pivotPoint.equals(support)) {
+				pivotPointSupport = true;
+			} else if (pivotPoint.equals(bestPrice)) {
+				pivotPointBestPrice = true;
+			}
+		}
 	}
 
 	public void setAutoUpdate(boolean autoUpdate) {
@@ -54,6 +99,14 @@ public class Levels extends Notifier {
 
 	public Double getPowerReserve() {
 		return powerReserve;
+	}
+
+	public void setPowerReserve(Double powerReserve) {
+		this.powerReserve = powerReserve;
+	}
+
+	public boolean isBestPriceError() {
+		return bestPriceError;
 	}
 
 	public boolean isAtrError() {
@@ -123,6 +176,7 @@ public class Levels extends Notifier {
 		resistanceError = false;
 		supportError = false;
 		atrError = false;
+		bestPriceError = false;
 		String error = null;
 
 		if (atr == null) {
@@ -146,10 +200,11 @@ public class Levels extends Notifier {
 			highDayError = true;
 			error = "highDay must be greater than 0\n ";
 		}
-		if (tempLevel == null && resistance == null && support == null) {
+		if (tempLevel == null && resistance == null && support == null && bestPrice == null) {
 			tempLevelError = true;
 			resistanceError = true;
 			supportError = true;
+			bestPriceError = true;
 			error = "at lease one of levels must be set\n ";
 		}
 
@@ -210,6 +265,7 @@ public class Levels extends Notifier {
 
 	@SuppressWarnings("DuplicatedCode")
 	public void reset() {
+		bestPrice = null;
 		atr = null;
 		tempLevel = null;
 		resistance = null;
@@ -224,55 +280,98 @@ public class Levels extends Notifier {
 		atrError = false;
 		powerReserve = null;
 		powerReserveError = false;
-	}
-
-	public String validatePowerReserve() {
-		powerReserveError = false;
-		String error = null;
-		if (powerReserve == null) {
-			powerReserveError = true;
-			error = "Power reserve must be set\n ";
-		} else if (powerReserve <= 0) {
-			powerReserveError = true;
-			error = "Power reserve must be greater than 0\n ";
-		}
+		resetPivotFlags();
 		announce();
-		return error;
 	}
 
 	public void calculatePowerReserve(PositionType positionType) {
 		String error = validate();
-		if (error == null) {
-			error = validatePowerReserve();
-		}
 		if (error != null) {
 			showErrorDlg(frame, error, !autoUpdate);
 			announce();
 			return;
 		}
+
 		double techAtr = highDay - lowDay;
 		double realAtr = Math.max(techAtr, atr * REALISTIC_POWER_RESERVE);
 
-		if (positionType == PositionType.LONG) {
-			powerReserve = realAtr - (pivotPoint - lowDay);
+		// Assuming pivotPoint, support, and resistance are already calculated/set before this method is called
+		if (positionType == PositionType.LONG && resistance != null && resistance > pivotPoint) {
+			powerReserve = Math.abs(pivotPoint - resistance);
+		} else if (positionType == PositionType.SHORT && support != null && support < pivotPoint) {
+			powerReserve = Math.abs(pivotPoint - support);
 		} else {
-			powerReserve = realAtr - (highDay - pivotPoint);
+			// Original calculation if no levels are defined
+			if (positionType == PositionType.LONG) { // No levels above pivot point
+				powerReserve = realAtr - (pivotPoint - lowDay);
+			} else { // No levels below pivot point
+				powerReserve = realAtr - (highDay - pivotPoint);
+			}
 		}
 		announce();
 	}
 
 	public void calculatePivotPoint(PositionType positionType) {
 		pivotPoint = null;
+		Double pivot = null;
 		String error = validate();
 		if (error != null) {
 			showErrorDlg(frame, error, !autoUpdate);
 			announce();
 			return;
 		}
-		if (positionType == PositionType.LONG) {
+		List<Double> definedLevels = Stream.of(tempLevel, resistance, support)
+		                                   .filter(Objects::nonNull)
+		                                   .toList();
 
+		if (definedLevels.isEmpty()) {
+			pivot = bestPrice;
+		} else if (bestPrice != null) {
+			Double closestLevel = definedLevels.stream()
+			                                   .min(Comparator.comparingDouble(level -> Math.abs(level - bestPrice)))
+			                                   .orElseThrow(() -> new IllegalArgumentException("No closest level found"));
 
+			if (positionType == PositionType.LONG) {
+				pivot = bestPrice >= closestLevel ? bestPrice : closestLevel;
+			} else {
+				pivot = bestPrice <= closestLevel ? bestPrice : closestLevel;
+			}
+		} else {
+			switch (definedLevels.size()) {
+				case 1:
+					pivot = definedLevels.get(0);
+					break;
+				case 2:
+				case 3:
+					if (positionType == PositionType.LONG) {
+						pivot = Collections.min(definedLevels);
+					} else {
+						pivot = Collections.max(definedLevels);
+					}
+					break;
+				default:
+					break; // All cases are covered, no default action required
+			}
 		}
+
+		this.pivotPoint = pivot; // Set the calculated pivot point
+		setPivotPointFlag();
+		announce(); // Announce update
 	}
 
+	public Double getBestPrice() {
+		return bestPrice;
+	}
+
+	public Double getAtr() {
+		return atr;
+	}
+
+	public Double getHighDay() {
+		return highDay;
+	}
+
+	public Double getLowDay() {
+		return lowDay;
+	}
 }

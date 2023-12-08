@@ -36,7 +36,7 @@ public class AutoUpdate extends Notifier {
 
 	private double bidPrice = 0;
 
-	private double atr = 0;
+	private Double atr = null;
 
 	private double high = 0;
 
@@ -66,7 +66,7 @@ public class AutoUpdate extends Notifier {
 		announce();
 	}
 
-	public void setAtr(double atr) {
+	public void setAtr(Double atr) {
 		this.atr = atr;
 	}
 
@@ -192,7 +192,7 @@ public class AutoUpdate extends Notifier {
 			announce();
 			return false;
 		}
-		if (atr == 0) {
+		if (atr == null) {
 			showErrorDlg(frame, "ATR not set", true);
 			announce();
 			return false;

@@ -151,6 +151,7 @@ public class InputPanel extends BasePanel {
 			calculator.setAutoUpdate(autoUpdateCheckBox.isSelected());
 			estimate.setEnabled(!autoUpdateCheckBox.isSelected());
 			reset.setEnabled(!autoUpdateCheckBox.isSelected());
+			powerReserve.setAutoUpdate(true);
 		});
 
 		rowPanel.add(autoUpdateCheckBox);
@@ -171,6 +172,13 @@ public class InputPanel extends BasePanel {
 			tempLevel.setError(levels.isTempLevelError());
 			powerReserve.setValue(levels.getPowerReserve());
 			powerReserve.setError(levels.isPowerReserveError());
+			bestPrice.setError(levels.isBestPriceError());
+			bestPrice.setValue(levels.getBestPrice());
+
+			resistance.setTextFieldColor(levels.isPivotPointResistance()? Color.GREEN : UIManager.getColor("TextField.foreground"));
+			support.setTextFieldColor(levels.isPivotPointSupport()? Color.GREEN : UIManager.getColor("TextField.foreground"));
+			tempLevel.setTextFieldColor(levels.isPivotPointTempLevel()? Color.GREEN : UIManager.getColor("TextField.foreground"));
+			bestPrice.setTextFieldColor(levels.isPivotPointBestPrice()? Color.GREEN : UIManager.getColor("TextField.foreground"));
 		});
 
 		autoUpdate.addUpdater(() -> exchangeBox.setSelectedItem(autoUpdate.getExchange()));
@@ -183,9 +191,11 @@ public class InputPanel extends BasePanel {
 			bestPrice.setValue(autoUpdate.getBestPrice());
 			levels.setBestPrice(autoUpdate.getBestPrice());
 			spread.setValue(autoUpdate.getSpread());
+			levels.setHighDay(autoUpdate.getHigh());
+			levels.setLowDay(autoUpdate.getLow());
 			calculator.setSpread(autoUpdate.getSpread());
-			levels.calculatePowerReserve(calculator.getPositionType());
 			levels.calculatePivotPoint(calculator.getPositionType());
+			levels.calculatePowerReserve(calculator.getPositionType());
 			calculator.estimate();
 		});
 

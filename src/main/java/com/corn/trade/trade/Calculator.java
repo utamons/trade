@@ -3,6 +3,7 @@ package com.corn.trade.trade;
 import com.corn.trade.common.Notifier;
 
 import java.awt.*;
+import java.util.Objects;
 
 import static com.corn.trade.util.Util.log;
 import static com.corn.trade.util.Util.showErrorDlg;
@@ -178,7 +179,7 @@ public class Calculator extends Notifier {
 		quantityError = false;
 		String error = levels.validate();
 		if (error != null) {
-			showErrorDlg(frame, error, !autoUpdate);
+			showErrorDlg(frame, error , !autoUpdate);
 			announce();
 			return false;
 		}
@@ -193,12 +194,11 @@ public class Calculator extends Notifier {
 			quantityError = true;
 			error = "Quantity must be greater than 0\n ";
 		}
-		if (levels.getPowerReserve() == null) {
-			levels.calculatePowerReserve(positionType);
-			error = levels.validatePowerReserve();
-		}
 		if (levels.getPivotPoint() == null) {
 			levels.calculatePivotPoint(positionType);
+		}
+		if (levels.getPowerReserve() == null) {
+			levels.calculatePowerReserve(positionType);
 		}
 		if (error != null) {
 			showErrorDlg(frame, error, !autoUpdate);
@@ -209,11 +209,17 @@ public class Calculator extends Notifier {
 	}
 
 	public void estimate() {
-		if (!isValidEstimation() || levels.getPivotPoint() == null)
+		if (!isValidEstimation())
 			return;
+
+		levels.calculatePivotPoint(positionType);
+		if (autoUpdate || levels.getPowerReserve() == null)
+			levels.calculatePowerReserve(positionType);
 
 		fillQuantity();
 		fillOrder();
+
+		Double oldStopLoss = stopLoss;
 
 		do {
 			breakEven = getBreakEven(orderLimit);
@@ -234,7 +240,7 @@ public class Calculator extends Notifier {
 
 			if (riskPercent > MAX_RISK_PERCENT)
 				quantity--;
-		} while (riskPercent > MAX_RISK_PERCENT || stopLossTooLow());
+		} while (riskPercent > MAX_RISK_PERCENT || stopLossTooLow() && !Objects.equals(oldStopLoss,stopLoss));
 
 		announce();
 	}
