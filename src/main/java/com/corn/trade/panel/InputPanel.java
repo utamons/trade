@@ -90,19 +90,16 @@ public class InputPanel extends BasePanel {
 		                                                   null,
 		                                                   spacing,
 		                                                   fieldHeight,
-		                                                   autoUpdate.isAutoUpdate(),
+		                                                   false,
 		                                                   calculator::setSpread);
-		autoUpdate.addActivateListener(spread::setAutoSwitchVisible);
 
 		LabeledDoubleField powerReserve = new LabeledDoubleField("Power reserve:",
 		                                                         10,
 		                                                         null,
 		                                                         spacing,
 		                                                         fieldHeight,
-		                                                         autoUpdate.isAutoUpdate(),
+		                                                         false,
 		                                                         levels::setPowerReserve);
-
-		autoUpdate.addActivateListener(powerReserve::setAutoSwitchVisible);
 
 		LabeledDoubleField tempLevel = new LabeledDoubleField("Temp. Level:",
 		                                                  10,
@@ -117,10 +114,8 @@ public class InputPanel extends BasePanel {
 		                                                  null,
 		                                                  spacing,
 		                                                  fieldHeight,
-		                                                  autoUpdate.isAutoUpdate(),
+		                                                  false,
 		                                                  levels::setBestPrice);
-
-		autoUpdate.addActivateListener(bestPrice::setAutoSwitchVisible);
 
 		LabeledDoubleField support = new LabeledDoubleField("Support:",
 		                                                    10,
@@ -175,10 +170,10 @@ public class InputPanel extends BasePanel {
 			bestPrice.setError(levels.isBestPriceError());
 			bestPrice.setValue(levels.getBestPrice());
 
-			resistance.setTextFieldColor(levels.isPivotPointResistance()? Color.GREEN : UIManager.getColor("TextField.foreground"));
-			support.setTextFieldColor(levels.isPivotPointSupport()? Color.GREEN : UIManager.getColor("TextField.foreground"));
-			tempLevel.setTextFieldColor(levels.isPivotPointTempLevel()? Color.GREEN : UIManager.getColor("TextField.foreground"));
-			bestPrice.setTextFieldColor(levels.isPivotPointBestPrice()? Color.GREEN : UIManager.getColor("TextField.foreground"));
+			resistance.light(levels.isPivotPointResistance(), Color.GREEN);
+			support.light(levels.isPivotPointSupport(), Color.GREEN);
+			tempLevel.light(levels.isPivotPointTempLevel(), Color.GREEN);
+			bestPrice.light(levels.isPivotPointBestPrice(), Color.GREEN);
 		});
 
 		autoUpdate.addUpdater(() -> exchangeBox.setSelectedItem(autoUpdate.getExchange()));

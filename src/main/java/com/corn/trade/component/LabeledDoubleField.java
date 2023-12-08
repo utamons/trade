@@ -12,12 +12,12 @@ import static com.corn.trade.util.Util.log;
 @SuppressWarnings("unused")
 public class LabeledDoubleField extends JPanel {
 
-	private final JTextField       textField;
-	private final JCheckBox        autoSwitch;
-	private       Color            textFieldColor;
-	private       boolean autoUpdate;
-	private final Border  errorBorder;
-
+	private final JTextField        textField;
+	private final JCheckBox         autoSwitch;
+	private final Border            errorBorder;
+	private       Color             textFieldColor;
+	private       boolean           autoUpdate;
+	private final JLabel            lightIndicator;
 	// Constructor
 	public LabeledDoubleField(String labelText,
 	                          int columns,
@@ -62,6 +62,8 @@ public class LabeledDoubleField extends JPanel {
 			}
 		});
 
+		lightIndicator = new JLabel();
+
 		autoSwitch = new JCheckBox();
 
 		autoUpdate = !hasAutoSwitch;
@@ -78,8 +80,14 @@ public class LabeledDoubleField extends JPanel {
 
 		JPanel panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+
+		autoSwitch.setBorder(BorderFactory.createEmptyBorder(2, 0, 0, 0));
+		lightIndicator.setBorder(BorderFactory.createEmptyBorder(1, 0, 0, 2));
+
+		panel.add(lightIndicator);
 		panel.add(autoSwitch);
 		panel.add(textField);
+
 		add(panel, BorderLayout.EAST);
 	}
 
@@ -168,5 +176,10 @@ public class LabeledDoubleField extends JPanel {
 	public void setAutoUpdate(boolean autoUpdate) {
 		this.autoUpdate = autoUpdate;
 		textField.setEditable(!autoUpdate);
+	}
+
+	public void light(boolean on, Color color) {
+		lightIndicator.setIcon(new ColoredCircleIcon(on, color, 10));
+		lightIndicator.repaint();
 	}
 }
