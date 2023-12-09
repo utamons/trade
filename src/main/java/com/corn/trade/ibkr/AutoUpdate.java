@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import static com.corn.trade.util.Util.log;
 import static com.corn.trade.util.Util.showErrorDlg;
 
 public class AutoUpdate extends Notifier {
@@ -47,6 +48,13 @@ public class AutoUpdate extends Notifier {
 	private final List<Exchange> exchanges;
 	private final List<Ticker>   tickers;
 	private final JpaRepo<Ticker, Long> tickerRepo;
+
+	private Timer simulationTimer;
+	private double highValue;
+	private double lowValue;
+	private double step;
+	private boolean directionUp = true;
+
 	public AutoUpdate(JFrame frame, Ibkr ibkr) {
 		this.ibkr = ibkr;
 		this.frame = frame;
@@ -154,7 +162,72 @@ public class AutoUpdate extends Notifier {
 		return autoUpdate;
 	}
 
+	public void startSimulation(double initialAskPrice, double initialBidPrice, double highValue, double lowValue, double step) {
+		if (atr == null) {
+			showErrorDlg(frame, "ATR not set", true);
+			autoUpdate = false;
+			announce();
+			return;
+		}
+		this.highValue = highValue;
+		this.lowValue = lowValue;
+		this.step = step;
+
+		if (this.askPrice == 0 && this.bidPrice == 0) {
+			this.askPrice = initialAskPrice;
+			this.bidPrice = initialBidPrice;
+		}
+
+		if (simulationTimer != null && simulationTimer.isRunning()) {
+			simulationTimer.stop(); // Stop any existing simulation
+		}
+
+		simulationTimer = new Timer(1000, e -> {
+			// Update the prices
+			if (directionUp) {
+				askPrice = Math.min(askPrice + step, highValue);
+				bidPrice = Math.min(bidPrice + step, highValue);
+				if (askPrice == highValue || bidPrice == highValue) {
+					directionUp = false;
+				}
+			} else {
+				askPrice = Math.max(askPrice - step, lowValue);
+				bidPrice = Math.max(bidPrice - step, lowValue);
+				if (askPrice == lowValue || bidPrice == lowValue) {
+					directionUp = true;
+				}
+			}
+
+			if (isLong)
+				bestPrice = askPrice;
+			else
+				bestPrice = bidPrice;
+
+			// Notify any listeners about the price update
+			announce();
+		});
+
+		simulationTimer.start();
+	}
+
+	public void stopSimulation() {
+		if (simulationTimer != null && simulationTimer.isRunning()) {
+			simulationTimer.stop();
+		}
+	}
+
 	public void setAutoUpdate(boolean autoUpdate) {
+		if (contractDetails == null) {
+			this.high = 34.01;
+			this.low = 32.99;
+			this.autoUpdate = autoUpdate;
+			activateListeners.forEach(listener -> listener.accept(autoUpdate));
+			if (autoUpdate)
+				startSimulation(33.0, 33.03, 34.0, 33.0, 0.01);
+			else
+				stopSimulation();
+			return;
+		}
 		if (!validate(autoUpdate)) {
 			return;
 		}

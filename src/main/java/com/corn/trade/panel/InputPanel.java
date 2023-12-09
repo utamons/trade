@@ -159,9 +159,9 @@ public class InputPanel extends BasePanel {
 		});
 
 		levels.addUpdater(() -> {
-			support.setValue(levels.getSupport());
-			resistance.setValue(levels.getResistance());
-			tempLevel.setValue(levels.getTempLevel());
+			//support.setValue(levels.getSupport());
+			//resistance.setValue(levels.getResistance());
+			//tempLevel.setValue(levels.getTempLevel());
 			support.setError(levels.isSupportError());
 			resistance.setError(levels.isResistanceError());
 			tempLevel.setError(levels.isTempLevelError());
