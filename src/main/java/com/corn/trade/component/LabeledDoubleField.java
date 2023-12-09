@@ -12,12 +12,13 @@ import static com.corn.trade.util.Util.log;
 @SuppressWarnings("unused")
 public class LabeledDoubleField extends JPanel {
 
-	private final JTextField        textField;
-	private final JCheckBox         autoSwitch;
-	private final Border            errorBorder;
-	private       Color             textFieldColor;
-	private       boolean           autoUpdate;
-	private final JLabel            lightIndicator;
+	private final JTextField textField;
+	private final JCheckBox  autoSwitch;
+	private final Border     errorBorder;
+	private final JLabel     lightIndicator;
+	private       Color      textFieldColor;
+	private       boolean    autoUpdate;
+
 	// Constructor
 	public LabeledDoubleField(String labelText,
 	                          int columns,
@@ -147,15 +148,12 @@ public class LabeledDoubleField extends JPanel {
 	}
 
 	public void setError(boolean error) {
+		if (!textField.isEditable())
+			return;
 		if (error) {
 			textField.setBorder(errorBorder);
-		} else if (textField.isEditable()) {
-			restoreDefaultBorder();
-			textField.setForeground(UIManager.getColor("TextField.foreground"));
-			textField.setBackground(UIManager.getColor("TextField.background"));
 		} else {
 			restoreDefaultBorder();
-			textField.setForeground(UIManager.getColor("TextField.foreground"));
 		}
 	}
 
