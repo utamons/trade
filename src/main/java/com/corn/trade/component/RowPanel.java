@@ -5,22 +5,20 @@ import java.awt.*;
 
 public class RowPanel extends JPanel {
 
-	private final JPanel buttonPanel;
+	private final JPanel jPanel;
 
 	public RowPanel() {
 		setLayout(new BorderLayout());
 
-		buttonPanel = new JPanel();
-		buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+		jPanel = new JPanel();
+		jPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 
-		add(buttonPanel, BorderLayout.CENTER);
+		add(jPanel, BorderLayout.CENTER);
 	}
 
 	@Override
 	public Component add(Component comp) {
-		if (comp instanceof JButton || comp instanceof JCheckBox) {
-			buttonPanel.add(comp);
-		}
+		jPanel.add(comp);
 		return comp;
 	}
 }

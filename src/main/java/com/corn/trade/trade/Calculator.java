@@ -25,9 +25,7 @@ public class Calculator extends Notifier {
 	private       Double         spread;
 	private       boolean        spreadError           = false;
 	private       Double         stopLoss;
-	private       boolean        stopLossError         = false;
 	private       Double         takeProfit;
-	private       boolean        takeProfitError       = false;
 	private       Double         breakEven;
 	private       Double         risk;
 	private       Double         riskPercent;
@@ -36,6 +34,12 @@ public class Calculator extends Notifier {
 	private       Double         orderStop;
 	private       Integer        quantity;
 	private       boolean        quantityError         = false;
+
+	private boolean tradeError = false;
+
+	public boolean isTradeError() {
+		return tradeError;
+	}
 
 	public Calculator(Component frame, Levels levels) {
 		this.frame = frame;
@@ -50,16 +54,8 @@ public class Calculator extends Notifier {
 		return spreadError;
 	}
 
-	public boolean isStopLossError() {
-		return stopLossError;
-	}
-
 	public boolean isQuantityError() {
 		return quantityError;
-	}
-
-	public boolean isTakeProfitError() {
-		return takeProfitError;
 	}
 
 	public Double getOutputExpected() {
@@ -173,13 +169,10 @@ public class Calculator extends Notifier {
 	}
 
 	private boolean isValidEstimation() {
-		takeProfitError = false;
-		stopLossError = false;
-		spreadError = false;
 		quantityError = false;
 		String error = levels.validate();
 		if (error != null) {
-			showErrorDlg(frame, error , !autoUpdate);
+			showErrorDlg(frame, error, !autoUpdate);
 			announce();
 			return false;
 		}
@@ -221,10 +214,15 @@ public class Calculator extends Notifier {
 
 		Double oldStopLoss = stopLoss;
 
+		tradeError = false;
+
 		do {
 			breakEven = getBreakEven(orderLimit);
-			if (areRiskLimitsFailed())
+			if (areRiskLimitsFailed()) {
+				tradeError = true;
+				announce();
 				return;
+			}
 			double reward = getReward();
 			risk = getRisk(reward);
 			stopLoss = calculateStopLoss();
@@ -240,7 +238,11 @@ public class Calculator extends Notifier {
 
 			if (riskPercent > MAX_RISK_PERCENT)
 				quantity--;
-		} while (riskPercent > MAX_RISK_PERCENT || stopLossTooLow() && !Objects.equals(oldStopLoss,stopLoss));
+		} while (riskPercent > MAX_RISK_PERCENT || stopLossTooLow() && !Objects.equals(oldStopLoss, stopLoss));
+
+		if (stopLossTooLow()) {
+			tradeError = true;
+		}
 
 		announce();
 	}
@@ -280,7 +282,7 @@ public class Calculator extends Notifier {
 		    estimationType == EstimationType.MAX_GAIN_MIN_STOP_LOSS) {
 			double minStopLoss =
 					isLong() ? levels.getPivotPoint() - Math.max(ORDER_LUFT, spread) : levels.getPivotPoint() +
-					                                                       Math.max(ORDER_LUFT, spread);
+					                                                                   Math.max(ORDER_LUFT, spread);
 			return isLong() ? Math.max(stopLoss, minStopLoss) : Math.min(stopLoss, minStopLoss);
 		}
 
@@ -291,8 +293,6 @@ public class Calculator extends Notifier {
 		if ((isLong() && takeProfit < breakEven) || (isShort() && takeProfit > breakEven)) {
 			log("Take profit is less than break even");
 			showErrorDlg(frame, "Cannot fit to risk limits!", !autoUpdate);
-			takeProfitError = true;
-			stopLossError = stopLossTooLow();
 			gain = 0.0;
 			outputExpected = 0.0;
 			risk = 0.0;
@@ -324,7 +324,8 @@ public class Calculator extends Notifier {
 	private void fillOrder() {
 		orderStop = levels.getPivotPoint();
 		orderLimit = orderStop + (isLong() ? spread : -spread);
-		takeProfit = isLong() ? levels.getPivotPoint() + levels.getPowerReserve() : levels.getPivotPoint() - levels.getPowerReserve();
+		takeProfit = isLong() ? levels.getPivotPoint() + levels.getPowerReserve() : levels.getPivotPoint() -
+		                                                                            levels.getPowerReserve();
 	}
 
 	private boolean stopLossTooLow() {
@@ -354,8 +355,6 @@ public class Calculator extends Notifier {
 		orderStop = null;
 		quantity = null;
 		spread = null;
-		takeProfitError = false;
-		stopLossError = false;
 		quantityError = false;
 		spreadError = false;
 		announce();

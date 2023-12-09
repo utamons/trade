@@ -2,6 +2,7 @@ package com.corn.trade.panel;
 
 import com.corn.trade.component.RowPanel;
 import com.corn.trade.component.LabeledDoubleField;
+import com.corn.trade.component.TrafficLight;
 import com.corn.trade.ibkr.AutoUpdate;
 import com.corn.trade.trade.Calculator;
 import com.corn.trade.trade.Levels;
@@ -50,21 +51,29 @@ public class OrderPanel extends BasePanel {
 		panel.add(limit);
 		panel.add(stop);
 
-		RowPanel rowPanel = new RowPanel();
+		RowPanel buttonPanel = new RowPanel();
+		RowPanel trafficPanel = new RowPanel();
+		TrafficLight trafficLight = new TrafficLight();
+		trafficPanel.add(trafficLight);
 
 		stopLimitBtn = new JButton("Stop-limit");
 		marketBtn = new JButton("Market");
 
-		rowPanel.add(stopLimitBtn);
-		rowPanel.add(marketBtn);
+		buttonPanel.add(stopLimitBtn);
+		buttonPanel.add(marketBtn);
 
 		this.add(panel, BorderLayout.NORTH);
-		this.add(rowPanel, BorderLayout.SOUTH);
+		this.add(trafficPanel, BorderLayout.CENTER);
+		this.add(buttonPanel, BorderLayout.SOUTH);
 
 		calculator.addUpdater(() -> {
 			quantity.setValue(calculator.getQuantity() == null ? null : (double) calculator.getQuantity());
 			limit.setValue(calculator.getOrderLimit());
 			stop.setValue(calculator.getOrderStop());
+			if (calculator.isTradeError())
+				trafficLight.setRed();
+			else
+				trafficLight.setGreen();
 		});
 
 		autoUpdate.addActivateListener(
