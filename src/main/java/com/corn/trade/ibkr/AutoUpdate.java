@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import static com.corn.trade.util.Util.log;
 import static com.corn.trade.util.Util.showErrorDlg;
 
 public class AutoUpdate extends Notifier {
@@ -50,9 +49,6 @@ public class AutoUpdate extends Notifier {
 	private final JpaRepo<Ticker, Long> tickerRepo;
 
 	private Timer simulationTimer;
-	private double highValue;
-	private double lowValue;
-	private double step;
 	private boolean directionUp = true;
 
 	public AutoUpdate(JFrame frame, Ibkr ibkr) {
@@ -163,15 +159,6 @@ public class AutoUpdate extends Notifier {
 	}
 
 	public void startSimulation(double initialAskPrice, double initialBidPrice, double highValue, double lowValue, double step) {
-		if (atr == null) {
-			showErrorDlg(frame, "ATR not set", true);
-			autoUpdate = false;
-			announce();
-			return;
-		}
-		this.highValue = highValue;
-		this.lowValue = lowValue;
-		this.step = step;
 
 		if (this.askPrice == 0 && this.bidPrice == 0) {
 			this.askPrice = initialAskPrice;
@@ -218,6 +205,11 @@ public class AutoUpdate extends Notifier {
 
 	public void setAutoUpdate(boolean autoUpdate) {
 		if (contractDetails == null) {
+			if (atr == null) {
+				showErrorDlg(frame, "ATR not set", true);
+				announce();
+				return;
+			}
 			this.high = 34.01;
 			this.low = 32.99;
 			this.autoUpdate = autoUpdate;

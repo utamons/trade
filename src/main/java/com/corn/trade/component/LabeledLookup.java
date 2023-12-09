@@ -148,5 +148,9 @@ public class LabeledLookup extends JPanel {
 
 		searchField.requestFocusInWindow();
 	}
+
+	public void setEnabled(boolean enabled) {
+		searchField.setEnabled(enabled);
+	}
 }
 

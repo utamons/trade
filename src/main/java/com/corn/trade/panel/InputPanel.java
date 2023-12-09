@@ -146,7 +146,11 @@ public class InputPanel extends BasePanel {
 			calculator.setAutoUpdate(autoUpdateCheckBox.isSelected());
 			estimate.setEnabled(!autoUpdateCheckBox.isSelected());
 			reset.setEnabled(!autoUpdateCheckBox.isSelected());
-			powerReserve.setAutoUpdate(true);
+			powerReserve.setAutoUpdate(autoUpdateCheckBox.isSelected());
+			spread.setEditable(!autoUpdateCheckBox.isSelected());
+			bestPrice.setEditable(!autoUpdateCheckBox.isSelected());
+			exchangeBox.setEnabled(!autoUpdateCheckBox.isSelected());
+			tickerLookup.setEnabled(!autoUpdateCheckBox.isSelected());
 		});
 
 		rowPanel.add(autoUpdateCheckBox);
@@ -159,9 +163,6 @@ public class InputPanel extends BasePanel {
 		});
 
 		levels.addUpdater(() -> {
-			//support.setValue(levels.getSupport());
-			//resistance.setValue(levels.getResistance());
-			//tempLevel.setValue(levels.getTempLevel());
 			support.setError(levels.isSupportError());
 			resistance.setError(levels.isResistanceError());
 			tempLevel.setError(levels.isTempLevelError());
@@ -213,9 +214,5 @@ public class InputPanel extends BasePanel {
 
 		this.add(panel, BorderLayout.NORTH);
 		this.add(rowPanel, BorderLayout.SOUTH);
-	}
-
-	public void enableAutoUpdateCheckBox(boolean enabled) {
-		autoUpdateCheckBox.setEnabled(enabled);
 	}
 }

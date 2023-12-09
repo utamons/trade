@@ -69,6 +69,7 @@ public class PowerPanel extends BasePanel {
 					button.setEnabled(!isAutoUpdate);
 					high.setAutoUpdate(isAutoUpdate);
 					low.setAutoUpdate(isAutoUpdate);
+					atr.setEditable(!isAutoUpdate);
 				});
 
 		autoUpdate.addUpdater(() -> {

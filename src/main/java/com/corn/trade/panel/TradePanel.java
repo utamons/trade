@@ -53,6 +53,12 @@ public class TradePanel extends BasePanel {
 															  false,
 		                                                      null);
 
+		stopLoss.setEditable(false);
+		take.setEditable(false);
+		breakEven.setEditable(false);
+		outputEx.setEditable(false);
+		gain.setEditable(false);
+
 		this.add(stopLoss);
 		this.add(take);
 		this.add(outputEx);

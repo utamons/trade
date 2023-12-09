@@ -39,5 +39,8 @@ public class LabeledComboBox extends JPanel {
 	public void setSelectedItem(String item) {
 		comboBox.setSelectedItem(item);
 	}
+	public void setEnabled(boolean enabled) {
+		comboBox.setEnabled(enabled);
+	}
 }
 

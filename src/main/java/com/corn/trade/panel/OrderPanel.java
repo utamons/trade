@@ -66,6 +66,17 @@ public class OrderPanel extends BasePanel {
 			limit.setValue(calculator.getOrderLimit());
 			stop.setValue(calculator.getOrderStop());
 		});
+
+		autoUpdate.addActivateListener(
+				(isAutoUpdate) -> {
+					if (isAutoUpdate) {
+						limit.setEditable(false);
+						stop.setEditable(false);
+					} else {
+						limit.setEditable(true);
+						stop.setEditable(true);
+					}
+				});
 	}
 
 	public void enableOrderButtons(boolean enabled) {
