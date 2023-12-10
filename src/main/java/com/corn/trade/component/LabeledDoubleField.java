@@ -1,5 +1,8 @@
 package com.corn.trade.component;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
@@ -7,12 +10,10 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.util.function.Consumer;
 
-import static com.corn.trade.util.Util.log;
-
 @SuppressWarnings("unused")
 public class LabeledDoubleField extends JPanel {
-
-	private final JTextField textField;
+	private static final Logger     log = LoggerFactory.getLogger(LabeledDoubleField.class);
+	private final        JTextField textField;
 	private final JCheckBox  autoSwitch;
 	private final Border     errorBorder;
 	private final JLabel     lightIndicator;
@@ -54,7 +55,6 @@ public class LabeledDoubleField extends JPanel {
 		});
 
 		textField.addActionListener(e -> {
-			log("Action performed");
 			if (!textField.getText().isEmpty() && !isValidDouble())
 				setError(true);
 			else {

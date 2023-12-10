@@ -1,8 +1,8 @@
 package com.corn.trade;
 
+import com.corn.trade.ibkr.AutoUpdate;
 import com.corn.trade.ibkr.Ibkr;
 import com.corn.trade.panel.*;
-import com.corn.trade.ibkr.AutoUpdate;
 import com.corn.trade.trade.Calculator;
 import com.corn.trade.trade.Levels;
 import com.github.weisj.darklaf.LafManager;
@@ -10,15 +10,16 @@ import com.github.weisj.darklaf.theme.*;
 import com.github.weisj.darklaf.theme.event.ThemePreferenceChangeEvent;
 import com.github.weisj.darklaf.theme.event.ThemePreferenceListener;
 import com.github.weisj.darklaf.theme.info.DefaultThemeProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
 
-import static com.corn.trade.util.Util.log;
 import static com.corn.trade.util.Util.showWarningDlg;
 
 public class App {
-
+	private static final Logger log = LoggerFactory.getLogger(App.class);
 	public static final  Theme DARK_THEME   = new OneDarkTheme();
 	public static final  Theme LIGHT_THEME  = new IntelliJTheme();
 	private static final int   FIELD_HEIGHT = 40;
@@ -27,7 +28,7 @@ public class App {
 
 	public static void main(String[] args) {
 		SwingUtilities.invokeLater(() -> {
-			log("Calculator version 1.0.0");
+			log.info("Calculator version 1.0.0");
 			setDefaultFont();
 
 			JFrame frame = new JFrame("Trade Calculator v. 1.0");
@@ -112,7 +113,7 @@ public class App {
 			frame.pack();
 
 			frame.setVisible(true);
-			log("Application started");
+			log.info("Application started");
 
 			if (!ibkr.isConnected()) {
 				showWarningDlg(frame, "Not connected to IBKR. Auto update and orders will be simulated!");
@@ -122,9 +123,6 @@ public class App {
 
 	private static void setDefaultFont() {
 		for (Object key : UIManager.getDefaults().keySet()) {
-			if (key.toString().toLowerCase().contains("border")) {
-				log("{} {}",key, UIManager.get(key).getClass());
-			}
 			if (UIManager.get(key) instanceof Font) {
 				UIManager.put(key, new Font("Arial", Font.PLAIN, 14));
 			}

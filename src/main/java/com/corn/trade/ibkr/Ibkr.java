@@ -1,6 +1,5 @@
 package com.corn.trade.ibkr;
 
-import com.corn.trade.util.Util;
 import com.ib.client.Contract;
 import com.ib.client.ContractDetails;
 import com.ib.client.ContractLookuper;
@@ -8,11 +7,14 @@ import com.ib.controller.ApiConnection;
 import com.ib.controller.ApiController;
 import com.ib.controller.ApiController.IConnectionHandler;
 import com.ib.controller.Formats;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Ibkr implements IConnectionHandler {
+
+	public static org.slf4j.Logger log = LoggerFactory.getLogger(Ibkr.class);
 
 	private final IConnectionConfiguration m_connectionConfiguration =
 			new IConnectionConfiguration.DefaultConnectionConfiguration();
@@ -77,7 +79,7 @@ public class Ibkr implements IConnectionHandler {
 
 	@Override
 	public void show(String str) {
-		Util.log(str);
+		log.debug(str);
 	}
 
 	public ApiController controller() {
@@ -90,7 +92,7 @@ public class Ibkr implements IConnectionHandler {
 	private static class Logger implements ApiConnection.ILogger {
 		@Override
 		public void log(final String str) {
-			// Util.log(str);
+			log.debug(str);
 		}
 	}
 }

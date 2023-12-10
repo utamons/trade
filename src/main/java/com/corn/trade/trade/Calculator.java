@@ -1,16 +1,20 @@
 package com.corn.trade.trade;
 
 import com.corn.trade.common.Notifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.util.Objects;
 
-import static com.corn.trade.util.Util.log;
+import static com.corn.trade.util.Util.fmt;
 import static com.corn.trade.util.Util.showErrorDlg;
 import static java.lang.Math.abs;
 
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
 public class Calculator extends Notifier {
+	public static final Logger log = LoggerFactory.getLogger(Calculator.class);
+
 	private final Double         MAX_VOLUME            = 5000.0;
 	private final double         MAX_RISK_PERCENT      = 0.5;
 	private final double         MAX_RISK_REWARD_RATIO = 3.0;
@@ -211,19 +215,19 @@ public class Calculator extends Notifier {
 		if (riskPercent == null || takeProfit == null || breakEven == null)
 			return;
 		if (MAX_RISK_PERCENT - riskPercent < 0.1) {
-			log("YL: Risk percent {} is too close to max risk percent {}", riskPercent, MAX_RISK_PERCENT);
+			log.debug("YL: Risk percent {} is too close to max risk percent {}", riskPercent, MAX_RISK_PERCENT);
 			yellowLight = true;
 		}
 		if (Math.abs(takeProfit - breakEven) < 0.05) {
-			log("YL: Take profit {} is too close to break even {}", takeProfit, breakEven);
+			log.debug("YL: Take profit {} is too close to break even {}", takeProfit, breakEven);
 			yellowLight = true;
 		}
 		if (gain > 0 && gain < 0.5) {
-			log("YL: Gain {} is less than 0.5%", gain);
+			log.debug("YL: Gain {} is less than 0.5%", gain);
 			yellowLight = true;
 		}
 		if (!levels.isStopLossUnderLevels(stopLoss, positionType)) {
-			log("YL: Stop loss {} is under levels", stopLoss);
+			log.debug("YL: Stop loss {} is under levels", stopLoss);
 			yellowLight = true;
 		}
 	}
@@ -262,13 +266,13 @@ public class Calculator extends Notifier {
 
 			if (riskPercent > MAX_RISK_PERCENT)
 				quantity--;
-			log("Iteration {} - quantity: {}, take profit: {}, stop loss {}, risk percent: {}, risk reward ratio: {}",
-			    counter,
-			    quantity,
-			    takeProfit,
-			    stopLoss,
-			    riskPercent,
-			    riskRewardRatioPercent
+			log.debug("Iteration {} - quantity: {}, take profit: {}, stop loss {}, risk percent: {}, risk reward ratio: {}",
+			          counter,
+			          quantity,
+			          fmt(takeProfit),
+			          fmt(stopLoss),
+			          fmt(riskPercent),
+			          fmt(riskRewardRatioPercent)
 			);
 		} while (
 				(riskPercent > MAX_RISK_PERCENT || stopLossTooLow()) &&
@@ -330,17 +334,17 @@ public class Calculator extends Notifier {
 
 	private boolean areRiskLimitsFailed() {
 		if ((isLong() && takeProfit <= breakEven) || (isShort() && takeProfit >= breakEven)) {
-			log("Take profit {} is less than break even {}", takeProfit, breakEven);
+			log.debug("Take profit {} is less than break even {}", takeProfit, breakEven);
 			showErrorDlg(frame, "Cannot fit to risk limits!", !autoUpdate);
 			return true;
 		}
 		if (quantity <= 0) {
-			log("Quantity {} is less than 0", quantity);
+			log.debug("Quantity {} is less than 0", quantity);
 			showErrorDlg(frame, "Cannot fit to risk limits!", !autoUpdate);
 			return true;
 		}
 		if (stopLossTooLow()) {
-			log("Stop loss {} is too low", stopLoss);
+			log.debug("Stop loss {} is too low", stopLoss);
 			showErrorDlg(frame, "Cannot fit to risk limits!", !autoUpdate);
 			return true;
 		}
