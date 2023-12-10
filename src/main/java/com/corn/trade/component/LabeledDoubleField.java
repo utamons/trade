@@ -125,8 +125,6 @@ public class LabeledDoubleField extends JPanel {
 	}
 
 	public void setValue(Double value) {
-		if (!autoUpdate)
-			return;
 		if (value == null) {
 			textField.setText("");
 		} else if (value <= 0) {

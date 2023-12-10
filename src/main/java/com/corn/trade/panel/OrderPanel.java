@@ -70,10 +70,13 @@ public class OrderPanel extends BasePanel {
 			quantity.setValue(calculator.getQuantity() == null ? null : (double) calculator.getQuantity());
 			limit.setValue(calculator.getOrderLimit());
 			stop.setValue(calculator.getOrderStop());
-			if (calculator.isTradeError())
+			if (calculator.isTradeError()) {
 				trafficLight.setRed();
-			else
+				enableOrderButtons(false);
+			} else {
 				trafficLight.setGreen();
+				enableOrderButtons(true);
+			}
 		});
 
 		autoUpdate.addActivateListener(
