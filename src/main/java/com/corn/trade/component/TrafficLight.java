@@ -5,14 +5,15 @@ import java.awt.*;
 import java.awt.geom.Ellipse2D;
 
 public class TrafficLight extends JPanel {
+	private static final int BORDER_WIDTH = 1;
 	private static final int   DIAMETER       = 20;
 	private static final int   PADDING      = 5;
 	private final Color activeRed    = Color.RED;
 	private final Color activeYellow = Color.YELLOW;
 	private final Color activeGreen    = Color.GREEN;
-	private final Color inactiveRed    = Color.LIGHT_GRAY;
-	private final Color inactiveYellow = Color.LIGHT_GRAY;
-	private final Color inactiveGreen  = Color.LIGHT_GRAY;
+	private final Color inactiveRed    = Color.RED.darker().darker();
+	private final Color inactiveYellow = Color.YELLOW.darker().darker();
+	private final Color inactiveGreen  = Color.GREEN.darker().darker();
 
 	private String activeLight = null;
 
@@ -27,19 +28,22 @@ public class TrafficLight extends JPanel {
 		Graphics2D g2d = (Graphics2D) g.create();
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-		// Draw the red light
-		g2d.setColor("red".equals(activeLight) ? activeRed : inactiveRed);
-		g2d.fill(new Ellipse2D.Double(PADDING, PADDING, DIAMETER, DIAMETER));
-
-		// Draw the yellow light
-		g2d.setColor("yellow".equals(activeLight) ? activeYellow : inactiveYellow);
-		g2d.fill(new Ellipse2D.Double(DIAMETER + 2 * PADDING, PADDING, DIAMETER, DIAMETER));
-
-		// Draw the green light
-		g2d.setColor("green".equals(activeLight) ? activeGreen : inactiveGreen);
-		g2d.fill(new Ellipse2D.Double(2 * DIAMETER + 3 * PADDING, PADDING, DIAMETER, DIAMETER));
+		drawLight(g2d, PADDING, "red".equals(activeLight) ? activeRed : inactiveRed);
+		drawLight(g2d, DIAMETER + 2 * PADDING, "yellow".equals(activeLight) ? activeYellow : inactiveYellow);
+		drawLight(g2d, 2 * DIAMETER + 3 * PADDING, "green".equals(activeLight) ? activeGreen : inactiveGreen);
 
 		g2d.dispose();
+	}
+
+	private void drawLight(Graphics2D g2d, int x, Color color) {
+		// Draw the colored light
+		g2d.setColor(color);
+		g2d.fill(new Ellipse2D.Double(x, PADDING, DIAMETER, DIAMETER));
+
+		// Draw the border
+		g2d.setColor(Color.BLACK);
+		g2d.setStroke(new BasicStroke(BORDER_WIDTH));
+		g2d.draw(new Ellipse2D.Double(x, PADDING, DIAMETER, DIAMETER));
 	}
 
 	private void setLight(String light) {
