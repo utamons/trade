@@ -37,13 +37,19 @@ public class Calculator extends Notifier {
 
 	private boolean tradeError = false;
 
-	public boolean isTradeError() {
-		return tradeError;
-	}
+	private boolean yellowLight = false;
 
 	public Calculator(Component frame, Levels levels) {
 		this.frame = frame;
 		this.levels = levels;
+	}
+
+	public boolean isYellowLight() {
+		return yellowLight;
+	}
+
+	public boolean isTradeError() {
+		return tradeError;
 	}
 
 	public void setAutoUpdate(boolean autoUpdate) {
@@ -201,6 +207,27 @@ public class Calculator extends Notifier {
 		return error == null;
 	}
 
+	public void checkYellowLight() {
+		if (riskPercent == null || takeProfit == null || breakEven == null)
+			return;
+		if (MAX_RISK_PERCENT - riskPercent < 0.1) {
+			log("YL: Risk percent {} is too close to max risk percent {}", riskPercent, MAX_RISK_PERCENT);
+			yellowLight = true;
+		}
+		if (Math.abs(takeProfit - breakEven) < 0.05) {
+			log("YL: Take profit {} is too close to break even {}", takeProfit, breakEven);
+			yellowLight = true;
+		}
+		if (gain > 0 && gain < 0.5) {
+			log("YL: Gain {} is less than 0.5%", gain);
+			yellowLight = true;
+		}
+		if (!levels.isStopLossUnderLevels(stopLoss, positionType)) {
+			log("YL: Stop loss {} is under levels", stopLoss);
+			yellowLight = true;
+		}
+	}
+
 	public void estimate() {
 		if (!isValidEstimation())
 			return;
@@ -216,13 +243,10 @@ public class Calculator extends Notifier {
 
 		tradeError = false;
 
+		int counter = 0;
 		do {
+			counter++;
 			breakEven = getBreakEven(orderLimit);
-			if (areRiskLimitsFailed()) {
-				tradeError = true;
-				announce();
-				return;
-			}
 			double reward = getReward();
 			risk = getRisk(reward);
 			stopLoss = calculateStopLoss();
@@ -238,11 +262,26 @@ public class Calculator extends Notifier {
 
 			if (riskPercent > MAX_RISK_PERCENT)
 				quantity--;
-		} while (riskPercent > MAX_RISK_PERCENT || stopLossTooLow() && !Objects.equals(oldStopLoss, stopLoss));
+			log("Iteration {} - quantity: {}, take profit: {}, stop loss {}, risk percent: {}, risk reward ratio: {}",
+			    counter,
+			    quantity,
+			    takeProfit,
+			    stopLoss,
+			    riskPercent,
+			    riskRewardRatioPercent
+			);
+		} while (
+				(riskPercent > MAX_RISK_PERCENT || stopLossTooLow()) &&
+				!Objects.equals(oldStopLoss, stopLoss) &&
+				quantity > 0 &&
+				(isLong() && takeProfit > breakEven) || (isShort() && takeProfit < breakEven)
+		);
 
-		if (stopLossTooLow()) {
+		if (areRiskLimitsFailed()) {
 			tradeError = true;
+			announce();
 		}
+		checkYellowLight();
 
 		announce();
 	}
@@ -290,21 +329,19 @@ public class Calculator extends Notifier {
 	}
 
 	private boolean areRiskLimitsFailed() {
-		if ((isLong() && takeProfit < breakEven) || (isShort() && takeProfit > breakEven)) {
-			log("Take profit is less than break even");
+		if ((isLong() && takeProfit <= breakEven) || (isShort() && takeProfit >= breakEven)) {
+			log("Take profit {} is less than break even {}", takeProfit, breakEven);
 			showErrorDlg(frame, "Cannot fit to risk limits!", !autoUpdate);
-			gain = 0.0;
-			outputExpected = 0.0;
-			risk = 0.0;
-			riskPercent = 0.0;
-			riskRewardRatioPercent = 0.0;
-			announce();
 			return true;
 		}
 		if (quantity <= 0) {
-			log("Cannot fit to risk limits");
+			log("Quantity {} is less than 0", quantity);
 			showErrorDlg(frame, "Cannot fit to risk limits!", !autoUpdate);
-			announce();
+			return true;
+		}
+		if (stopLossTooLow()) {
+			log("Stop loss {} is too low", stopLoss);
+			showErrorDlg(frame, "Cannot fit to risk limits!", !autoUpdate);
 			return true;
 		}
 		return false;

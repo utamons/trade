@@ -54,4 +54,8 @@ public class TrafficLight extends JPanel {
 	public void setGreen() {
 		setLight("green");
 	}
+
+	public void setYellow() {
+		setLight("yellow");
+	}
 }

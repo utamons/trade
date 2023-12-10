@@ -145,24 +145,12 @@ public class Levels extends Notifier {
 		return supportError;
 	}
 
-	public Double getTempLevel() {
-		return tempLevel;
-	}
-
 	public void setTempLevel(Double tempLevel) {
 		this.tempLevel = tempLevel;
 	}
 
-	public Double getResistance() {
-		return resistance;
-	}
-
 	public void setResistance(Double resistance) {
 		this.resistance = resistance;
-	}
-
-	public Double getSupport() {
-		return support;
 	}
 
 	public void setSupport(Double support) {
@@ -262,6 +250,39 @@ public class Levels extends Notifier {
 		announce();
 		return error;
 	}
+
+	public boolean isStopLossUnderLevels(double stopLoss, PositionType positionType) {
+		// Find the closest level to pivotPoint based on positionType
+		Double closestLevel = null;
+
+		if (positionType == PositionType.LONG) {
+			// For LONG, find the lowest level that is higher than or equal to pivotPoint
+			closestLevel = Stream.of(tempLevel, resistance, support)
+			                     .filter(Objects::nonNull)
+			                     .filter(level -> level <= pivotPoint)
+			                     .min(Comparator.naturalOrder())
+			                     .orElse(pivotPoint); // Use pivotPoint if no other level is higher
+		} else if (positionType == PositionType.SHORT) {
+			// For SHORT, find the highest level that is lower than or equal to pivotPoint
+			closestLevel = Stream.of(tempLevel, resistance, support)
+			                     .filter(Objects::nonNull)
+			                     .filter(level -> level >= pivotPoint)
+			                     .max(Comparator.naturalOrder())
+			                     .orElse(pivotPoint); // Use pivotPoint if no other level is lower
+		}
+
+		// Check if stopLoss is under the identified level
+		if (closestLevel != null) {
+			if (positionType == PositionType.LONG) {
+				return stopLoss < closestLevel;
+			} else { // PositionType.SHORT
+				return stopLoss > closestLevel;
+			}
+		}
+
+		return false; // Return false if no valid level was found
+	}
+
 
 	@SuppressWarnings("DuplicatedCode")
 	public void reset() {

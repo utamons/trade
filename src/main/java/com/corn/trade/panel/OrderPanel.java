@@ -73,6 +73,9 @@ public class OrderPanel extends BasePanel {
 			if (calculator.isTradeError()) {
 				trafficLight.setRed();
 				enableOrderButtons(false);
+			} else if (calculator.isYellowLight()) {
+				trafficLight.setYellow();
+				enableOrderButtons(true);
 			} else {
 				trafficLight.setGreen();
 				enableOrderButtons(true);

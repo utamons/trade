@@ -2,6 +2,8 @@ package com.corn.trade.util;
 
 import javax.swing.*;
 import java.awt.*;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 public class Util {
 
@@ -17,11 +19,22 @@ public class Util {
 	public static void log(String message, Object... args) {
 		int argIndex = 0;
 		StringBuilder builder = new StringBuilder();
+		LocalTime now = LocalTime.now();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH.mm.ss.SSS");
+		String formattedTime = now.format(formatter);
+
+		builder.append(formattedTime).append(" - ");
 
 		for (int i = 0; i < message.length(); i++) {
 			if (i < message.length() - 1 && message.charAt(i) == '{' && message.charAt(i + 1) == '}') {
 				if (argIndex < args.length) {
-					builder.append(args[argIndex++]);
+					Object arg = args[argIndex++];
+					if (arg instanceof Double doubleArg) {
+						String formattedDouble = String.format("%.2f", doubleArg);
+						builder.append(formattedDouble);
+					} else {
+						builder.append(arg);
+					}
 				} else {
 					builder.append("{}");
 				}
@@ -33,4 +46,5 @@ public class Util {
 
 		System.out.println(builder);
 	}
+
 }
