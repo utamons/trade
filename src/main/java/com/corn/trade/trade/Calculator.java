@@ -227,7 +227,7 @@ public class Calculator extends Notifier {
 			yellowLight = true;
 		}
 		if (!levels.isStopLossUnderLevels(stopLoss, positionType)) {
-			log.debug("YL: Stop loss {} is under levels", fmt(stopLoss));
+			log.debug("YL: Stop loss {} is not under levels", fmt(stopLoss));
 			yellowLight = true;
 		}
 	}

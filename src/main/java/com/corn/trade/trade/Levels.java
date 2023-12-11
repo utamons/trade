@@ -256,27 +256,27 @@ public class Levels extends Notifier {
 		Double closestLevel = null;
 
 		if (positionType == PositionType.LONG) {
-			// For LONG, find the lowest level that is higher than or equal to pivotPoint
 			closestLevel = Stream.of(tempLevel, resistance, support)
 			                     .filter(Objects::nonNull)
-			                     .filter(level -> level <= pivotPoint)
+			                     .filter(level -> level > stopLoss)
 			                     .min(Comparator.naturalOrder())
-			                     .orElse(pivotPoint); // Use pivotPoint if no other level is higher
+			                     .orElse(null);
 		} else if (positionType == PositionType.SHORT) {
-			// For SHORT, find the highest level that is lower than or equal to pivotPoint
 			closestLevel = Stream.of(tempLevel, resistance, support)
 			                     .filter(Objects::nonNull)
-			                     .filter(level -> level >= pivotPoint)
+			                     .filter(level -> level < stopLoss)
 			                     .max(Comparator.naturalOrder())
-			                     .orElse(pivotPoint); // Use pivotPoint if no other level is lower
+			                     .orElse(null);
 		}
 
-		// Check if stopLoss is under the identified level
+		if (closestLevel != null && closestLevel.equals(pivotPoint) ) {
+			return true;
+		}
 		if (closestLevel != null) {
 			if (positionType == PositionType.LONG) {
-				return stopLoss < closestLevel;
-			} else { // PositionType.SHORT
-				return stopLoss > closestLevel;
+				return pivotPoint > closestLevel;
+			} else {
+				return pivotPoint < closestLevel;
 			}
 		}
 
