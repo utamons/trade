@@ -13,7 +13,9 @@ import java.awt.*;
 public class OrderPanel extends BasePanel {
 
 	private final JButton stopLimitBtn;
-	private final JButton marketBtn;
+
+	private final JButton limitBtn;
+	private final JButton dropAllBtn;
 	public OrderPanel(Calculator calculator, AutoUpdate autoUpdate, Levels levels, Dimension maxSize, Dimension minSize, int spacing, int fieldHeight) {
 		super("Order", calculator, autoUpdate, levels, maxSize, minSize);
 
@@ -56,11 +58,13 @@ public class OrderPanel extends BasePanel {
 		TrafficLight trafficLight = new TrafficLight();
 		trafficPanel.add(trafficLight);
 
-		stopLimitBtn = new JButton("Stop-limit");
-		marketBtn = new JButton("Market");
+		stopLimitBtn = new JButton("Stop-Limit");
+		dropAllBtn = new JButton("Drop All");
+		limitBtn = new JButton("Limit");
 
+		buttonPanel.add(limitBtn);
 		buttonPanel.add(stopLimitBtn);
-		buttonPanel.add(marketBtn);
+		buttonPanel.add(dropAllBtn);
 
 		this.add(panel, BorderLayout.NORTH);
 		this.add(trafficPanel, BorderLayout.CENTER);
@@ -96,6 +100,10 @@ public class OrderPanel extends BasePanel {
 
 	public void enableOrderButtons(boolean enabled) {
 		stopLimitBtn.setEnabled(enabled);
-		marketBtn.setEnabled(enabled);
+		limitBtn.setEnabled(enabled);
+	}
+
+	public void enableDropAllButton(boolean enabled) {
+		dropAllBtn.setEnabled(enabled);
 	}
 }
