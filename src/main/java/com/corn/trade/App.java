@@ -2,6 +2,8 @@ package com.corn.trade;
 
 import com.corn.trade.ibkr.AutoUpdate;
 import com.corn.trade.ibkr.Ibkr;
+import com.corn.trade.ibkr.OrderHelper;
+import com.corn.trade.ibkr.PositionHelper;
 import com.corn.trade.panel.*;
 import com.corn.trade.trade.Calculator;
 import com.corn.trade.trade.Levels;
@@ -43,6 +45,9 @@ public class App {
 			AutoUpdate autoUpdate = new AutoUpdate(frame, ibkr);
 			autoUpdate.addActivateListener(calculator::setAutoUpdate);
 
+			OrderHelper orderHelper = new OrderHelper(ibkr);
+			PositionHelper positionHelper = new PositionHelper(ibkr);
+
 			InputPanel inputPanel = new InputPanel(
 					calculator,
 					autoUpdate,
@@ -74,6 +79,8 @@ public class App {
 			OrderPanel orderPanel = new OrderPanel(
 					calculator,
 					autoUpdate,
+					orderHelper,
+					positionHelper,
 					levels,
 					new Dimension(PREF_WIDTH, PREF_HEIGHT),
 					new Dimension(PREF_WIDTH, PREF_HEIGHT),

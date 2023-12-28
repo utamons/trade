@@ -1,9 +1,11 @@
 package com.corn.trade.panel;
 
-import com.corn.trade.component.RowPanel;
 import com.corn.trade.component.LabeledDoubleField;
+import com.corn.trade.component.RowPanel;
 import com.corn.trade.component.TrafficLight;
 import com.corn.trade.ibkr.AutoUpdate;
+import com.corn.trade.ibkr.OrderHelper;
+import com.corn.trade.ibkr.PositionHelper;
 import com.corn.trade.trade.Calculator;
 import com.corn.trade.trade.Levels;
 
@@ -16,7 +18,16 @@ public class OrderPanel extends BasePanel {
 
 	private final JButton limitBtn;
 	private final JButton dropAllBtn;
-	public OrderPanel(Calculator calculator, AutoUpdate autoUpdate, Levels levels, Dimension maxSize, Dimension minSize, int spacing, int fieldHeight) {
+
+	public OrderPanel(Calculator calculator,
+	                  AutoUpdate autoUpdate,
+	                  OrderHelper orderHelper,
+	                  PositionHelper positionHelper,
+	                  Levels levels,
+	                  Dimension maxSize,
+	                  Dimension minSize,
+	                  int spacing,
+	                  int fieldHeight) {
 		super("Order", calculator, autoUpdate, levels, maxSize, minSize);
 
 		this.setLayout(new BorderLayout());
@@ -25,19 +36,19 @@ public class OrderPanel extends BasePanel {
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
 		LabeledDoubleField limit = new LabeledDoubleField("Limit:",
-		                                                 10,
-		                                                 null,
-		                                                 spacing,
-		                                                 fieldHeight,
-														 false,
-		                                                 null);
+		                                                  10,
+		                                                  null,
+		                                                  spacing,
+		                                                  fieldHeight,
+		                                                  false,
+		                                                  null);
 
 		LabeledDoubleField stop = new LabeledDoubleField("Stop:",
 		                                                 10,
 		                                                 null,
 		                                                 spacing,
 		                                                 fieldHeight,
-														 false,
+		                                                 false,
 		                                                 null);
 
 		LabeledDoubleField quantity = new LabeledDoubleField("Quantity:",
@@ -53,8 +64,8 @@ public class OrderPanel extends BasePanel {
 		panel.add(limit);
 		panel.add(stop);
 
-		RowPanel buttonPanel = new RowPanel();
-		RowPanel trafficPanel = new RowPanel();
+		RowPanel     buttonPanel  = new RowPanel();
+		RowPanel     trafficPanel = new RowPanel();
 		TrafficLight trafficLight = new TrafficLight();
 		trafficPanel.add(trafficLight);
 
@@ -65,6 +76,27 @@ public class OrderPanel extends BasePanel {
 		buttonPanel.add(limitBtn);
 		buttonPanel.add(stopLimitBtn);
 		buttonPanel.add(dropAllBtn);
+
+		limitBtn.addActionListener(e -> orderHelper.placeOrder(autoUpdate.getContractDetails(),
+	                                                       calculator.getQuantity(),
+	                                                       null,
+	                                                       limit.getValue(),
+	                                                       calculator.getStopLoss(),
+	                                                       calculator.getTakeProfit(),
+	                                                       calculator.getPositionType()));
+
+		stopLimitBtn.addActionListener(e -> orderHelper.placeOrder(autoUpdate.getContractDetails(),
+	                                                           calculator.getQuantity(),
+	                                                           stop.getValue(),
+	                                                           limit.getValue(),
+	                                                           calculator.getStopLoss(),
+	                                                           calculator.getTakeProfit(),
+	                                                           calculator.getPositionType()));
+
+		dropAllBtn.addActionListener(e -> {
+			orderHelper.dropAll();
+			positionHelper.dropAll();
+		});
 
 		this.add(panel, BorderLayout.NORTH);
 		this.add(trafficPanel, BorderLayout.CENTER);

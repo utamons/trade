@@ -2,6 +2,8 @@ package com.corn.trade.util;
 
 import javax.swing.*;
 import java.awt.*;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 public class Util {
 
@@ -20,5 +22,12 @@ public class Util {
 			return "null";
 		}
 		return String.format("%.2f", value);
+	}
+
+	public static Double round(Double value) {
+		if (value == null) {
+			return null;
+		}
+		return BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_UP).doubleValue();
 	}
 }

@@ -1,8 +1,6 @@
 package com.corn.trade.ibkr;
 
-import com.ib.client.Contract;
-import com.ib.client.ContractDetails;
-import com.ib.client.ContractLookuper;
+import com.ib.client.*;
 import com.ib.controller.ApiConnection;
 import com.ib.controller.ApiController;
 import com.ib.controller.ApiController.IConnectionHandler;
@@ -89,10 +87,49 @@ public class Ibkr implements IConnectionHandler {
 		return m_controller;
 	}
 
+	public void placeOrder(Contract contract, Order order) {
+		controller().placeOrModifyOrder(contract, order, new ApiController.IOrderHandler() {
+			@Override
+			public void orderState(OrderState orderState) {
+				log.debug("order {} state: {}", contract.symbol(), orderState);
+			}
+
+			@Override
+			public void orderStatus(OrderStatus status,
+			                        Decimal filled,
+			                        Decimal remaining,
+			                        double avgFillPrice,
+			                        int permId,
+			                        int parentId,
+			                        double lastFillPrice,
+			                        int clientId,
+			                        String whyHeld,
+			                        double mktCapPrice) {
+				log.debug("order {} status: {}, filled: {}, remaining: {}, avgFillPrice: {}, permId: {}, parentId: {}, lastFillPrice: {}, clientId: {}, whyHeld: {}, mktCapPrice: {}",
+				          contract.symbol(),
+				          status,
+				          filled,
+				          remaining,
+				          avgFillPrice,
+				          permId,
+				          parentId,
+				          lastFillPrice,
+				          clientId,
+				          whyHeld,
+				          mktCapPrice);
+			}
+
+			@Override
+			public void handle(int errorCode, String errorMsg) {
+				log.error("order {} errorCode: {}, errorMsg: {}", contract.symbol(), errorCode, errorMsg);
+			}
+		});
+	}
+
 	private static class Logger implements ApiConnection.ILogger {
 		@Override
 		public void log(final String str) {
-			log.debug(str);
+			//log.debug(str);
 		}
 	}
 }

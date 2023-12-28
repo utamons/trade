@@ -26,8 +26,8 @@ public class AutoUpdate extends Notifier {
 	private       boolean                autoUpdate;
 	private       String                 ticker;
 	private       String                 exchange;
-	private       ContractDetails        contractDetails;
-	private       ITopMktDataHandler     mktDataHandler;
+	private ContractDetails    contractDetails;
+	private ITopMktDataHandler mktDataHandler;
 
 	private IHistoricalDataHandler historicalDataHandler;
 	private Double                 bestPrice;
@@ -317,4 +317,7 @@ public class AutoUpdate extends Notifier {
 		};
 	}
 
+	public ContractDetails getContractDetails() {
+		return contractDetails;
+	}
 }

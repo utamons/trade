@@ -215,19 +215,19 @@ public class Calculator extends Notifier {
 		if (riskPercent == null || takeProfit == null || breakEven == null)
 			return;
 		if (MAX_RISK_PERCENT - riskPercent < 0.1) {
-			log.debug("YL: Risk percent {} is too close to max risk percent {}", fmt(riskPercent), MAX_RISK_PERCENT);
+			//log.debug("YL: Risk percent {} is too close to max risk percent {}", fmt(riskPercent), MAX_RISK_PERCENT);
 			yellowLight = true;
 		}
 		if (Math.abs(takeProfit - breakEven) < 0.05) {
-			log.debug("YL: Take profit {} is too close to break even {}", fmt(takeProfit), fmt(breakEven));
+			//log.debug("YL: Take profit {} is too close to break even {}", fmt(takeProfit), fmt(breakEven));
 			yellowLight = true;
 		}
 		if (gain > 0 && gain < 0.5) {
-			log.debug("YL: Gain {} is less than 0.5%", fmt(gain));
+			//log.debug("YL: Gain {} is less than 0.5%", fmt(gain));
 			yellowLight = true;
 		}
 		if (!levels.isStopLossUnderLevels(stopLoss, positionType)) {
-			log.debug("YL: Stop loss {} is not under levels", fmt(stopLoss));
+			//log.debug("YL: Stop loss {} is not under levels", fmt(stopLoss));
 			yellowLight = true;
 		}
 	}
@@ -263,14 +263,14 @@ public class Calculator extends Notifier {
 
 			if (riskPercent > MAX_RISK_PERCENT)
 				quantity--;
-			log.debug("Iteration {} - quantity: {}, take profit: {}, stop loss {}, risk percent: {}, risk reward ratio: {}",
+			/*log.debug("Iteration {} - quantity: {}, take profit: {}, stop loss {}, risk percent: {}, risk reward ratio: {}",
 			          counter,
 			          quantity,
 			          fmt(takeProfit),
 			          fmt(stopLoss),
 			          fmt(riskPercent),
 			          fmt(riskRewardRatioPercent)
-			);
+			);*/
 		} while (
 				riskPercent > MAX_RISK_PERCENT &&
 				quantity > 0 &&
