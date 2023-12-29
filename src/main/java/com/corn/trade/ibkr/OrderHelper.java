@@ -22,6 +22,7 @@ public class OrderHelper {
 	                       Double stopLossPrice,
 	                       Double takeProfitPrice,
 	                       PositionType positionType) {
+
 		Order parent = new Order();
 		parent.action(positionType == PositionType.LONG ? "BUY" : "SELL");
 		if (stop == null) {
@@ -52,7 +53,7 @@ public class OrderHelper {
 		stopLoss.totalQuantity(quantityDecimal);
 		//In this case, the low side order will be the last child being sent. Therefore, it needs to set this attribute to true
 		//to activate all its predecessors
-		stopLoss.transmit(false);
+		stopLoss.transmit(true);
 
 		ibkr.placeOrder(contractDetails.contract(), parent);
 
@@ -65,19 +66,19 @@ public class OrderHelper {
 		takeProfit.parentId(parent.orderId());
 		stopLoss.parentId(parent.orderId());
 
-		ibkr.placeOrder(contractDetails.contract(), stopLoss);
-
-		log.debug("Placed order id {} for {}, stop loss price: {}",
-		          stopLoss.orderId(),
-		          contractDetails.contract().symbol(),
-		          stopLossPrice);
-
 		ibkr.placeOrder(contractDetails.contract(), takeProfit);
 
 		log.debug("Placed order id {} for {}, take profit price: {}",
 		          takeProfit.orderId(),
 		          contractDetails.contract().symbol(),
 		          takeProfitPrice);
+
+		ibkr.placeOrder(contractDetails.contract(), stopLoss);
+
+		log.debug("Placed order id {} for {}, stop loss price: {}",
+		          stopLoss.orderId(),
+		          contractDetails.contract().symbol(),
+		          stopLossPrice);
 	}
 
 	public void dropAll() {
