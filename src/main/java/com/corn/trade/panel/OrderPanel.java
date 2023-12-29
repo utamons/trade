@@ -11,13 +11,13 @@ import com.corn.trade.trade.Levels;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionListener;
 
 public class OrderPanel extends BasePanel {
 
 	private final JButton stopLimitBtn;
 
 	private final JButton limitBtn;
-	private final JButton dropAllBtn;
 
 	public OrderPanel(Calculator calculator,
 	                  AutoUpdate autoUpdate,
@@ -70,7 +70,7 @@ public class OrderPanel extends BasePanel {
 		trafficPanel.add(trafficLight);
 
 		stopLimitBtn = new JButton("Stop-Limit");
-		dropAllBtn = new JButton("Drop All");
+		JButton dropAllBtn = new JButton("Drop All");
 		limitBtn = new JButton("Limit");
 
 		buttonPanel.add(limitBtn);
@@ -94,8 +94,12 @@ public class OrderPanel extends BasePanel {
 	                                                           calculator.getPositionType()));
 
 		dropAllBtn.addActionListener(e -> {
-			orderHelper.dropAll();
-			positionHelper.dropAll();
+			orderHelper.dropAll(); // First drop all orders
+			int delay = 1500;
+			ActionListener taskPerformer = evt -> {
+				positionHelper.dropAll(); // Execute after delay
+			};
+			new Timer(delay, taskPerformer).start();
 		});
 
 		this.add(panel, BorderLayout.NORTH);
@@ -133,9 +137,5 @@ public class OrderPanel extends BasePanel {
 	public void enableOrderButtons(boolean enabled) {
 		stopLimitBtn.setEnabled(enabled);
 		limitBtn.setEnabled(enabled);
-	}
-
-	public void enableDropAllButton(boolean enabled) {
-		dropAllBtn.setEnabled(enabled);
 	}
 }

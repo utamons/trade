@@ -124,6 +124,7 @@ public class App {
 
 			if (!ibkr.isConnected()) {
 				showWarningDlg(frame, "Not connected to IBKR. Auto update and orders will be simulated!");
+				log.warn("Not connected to IBKR. Auto update and orders will be simulated!");
 			}
 		});
 	}

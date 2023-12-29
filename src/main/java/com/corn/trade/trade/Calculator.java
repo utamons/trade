@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 
-import static com.corn.trade.util.Util.fmt;
 import static com.corn.trade.util.Util.showErrorDlg;
 import static java.lang.Math.abs;
 
@@ -329,17 +328,17 @@ public class Calculator extends Notifier {
 
 	private boolean areRiskLimitsFailed() {
 		if ((isLong() && takeProfit <= breakEven) || (isShort() && takeProfit >= breakEven)) {
-			log.debug("RL: Take profit {} is less than break even {}", fmt(takeProfit), fmt(breakEven));
+			//log.debug("RL: Take profit {} is less than break even {}", fmt(takeProfit), fmt(breakEven));
 			showErrorDlg(frame, "Cannot fit to risk limits!", !autoUpdate);
 			return true;
 		}
 		if (quantity <= 0) {
-			log.debug("RL: Quantity {} is less than 0", quantity);
+			//log.debug("RL: Quantity {} is less than 0", quantity);
 			showErrorDlg(frame, "Cannot fit to risk limits!", !autoUpdate);
 			return true;
 		}
 		if (stopLossTooLow()) {
-			log.debug("RL: Stop loss {} is too low", fmt(stopLoss));
+			//log.debug("RL: Stop loss {} is too low", fmt(stopLoss));
 			showErrorDlg(frame, "Cannot fit to risk limits!", !autoUpdate);
 			return true;
 		}

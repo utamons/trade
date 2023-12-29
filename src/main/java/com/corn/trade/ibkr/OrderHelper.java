@@ -57,7 +57,7 @@ public class OrderHelper {
 
 		ibkr.placeOrder(contractDetails.contract(), parent);
 
-		log.debug("Placed order id {} for {}, stop price: {}, limit price: {}",
+		log.info("Placed a main order id {} for {}, stop price: {}, limit price: {}",
 		          parent.orderId(),
 		          contractDetails.contract().symbol(),
 		          stop,
@@ -68,19 +68,20 @@ public class OrderHelper {
 
 		ibkr.placeOrder(contractDetails.contract(), takeProfit);
 
-		log.debug("Placed order id {} for {}, take profit price: {}",
+		log.info("Placed a take profit order id {} for {}, take profit price: {}",
 		          takeProfit.orderId(),
 		          contractDetails.contract().symbol(),
 		          takeProfitPrice);
 
 		ibkr.placeOrder(contractDetails.contract(), stopLoss);
 
-		log.debug("Placed order id {} for {}, stop loss price: {}",
+		log.info("Placed a stop loss order id {} for {}, stop loss price: {}",
 		          stopLoss.orderId(),
 		          contractDetails.contract().symbol(),
 		          stopLossPrice);
 	}
 
 	public void dropAll() {
+		ibkr.controller().cancelAllOrders();
 	}
 }

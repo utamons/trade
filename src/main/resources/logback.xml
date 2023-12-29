@@ -1,10 +1,29 @@
 <configuration>
+    <!-- Console Appender -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
+    <!-- File Appender -->
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>d://trade.log</file> <!-- Specify your log file name and path here -->
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} %-5level: %msg%n</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+    </appender>
+
+    <!-- Logger for com.corn.trade package -->
+    <logger name="com.corn.trade" level="debug" additivity="false">
+        <appender-ref ref="FILE"/>
+        <appender-ref ref="STDOUT"/>
+    </logger>
+
+    <!-- Root Logger -->
     <root level="debug">
         <appender-ref ref="STDOUT" />
     </root>
