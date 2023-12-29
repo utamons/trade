@@ -22,6 +22,10 @@ public class OrderHelper {
 	                       Double stopLossPrice,
 	                       Double takeProfitPrice,
 	                       PositionType positionType) {
+		if (!ibkr.isConnected()) {
+			log.error("Not connected");
+			return;
+		}
 
 		Order parent = new Order();
 		parent.action(positionType == PositionType.LONG ? "BUY" : "SELL");
@@ -82,6 +86,10 @@ public class OrderHelper {
 	}
 
 	public void dropAll() {
+		if (!ibkr.isConnected()) {
+			log.error("Not connected");
+			return;
+		}
 		ibkr.controller().cancelAllOrders();
 	}
 }

@@ -52,15 +52,15 @@ public class App {
 					calculator,
 					autoUpdate,
 					levels,
-					new Dimension(PREF_WIDTH, PREF_HEIGHT),
+					new Dimension(PREF_WIDTH, PREF_HEIGHT * 2),
 					new Dimension(PREF_WIDTH, PREF_HEIGHT),
 					5, FIELD_HEIGHT);
 			PowerPanel powerPanel = new PowerPanel(
 					calculator,
 					autoUpdate,
 					levels,
-					new Dimension(PREF_WIDTH, PREF_HEIGHT),
-					new Dimension(PREF_WIDTH, PREF_HEIGHT),
+					new Dimension(PREF_WIDTH, PREF_HEIGHT - 30),
+					new Dimension(PREF_WIDTH, PREF_HEIGHT - 30),
 					5, FIELD_HEIGHT);
 			TradePanel tradePanel = new TradePanel(
 					calculator,
@@ -73,8 +73,8 @@ public class App {
 					calculator,
 					autoUpdate,
 					levels,
-					new Dimension(PREF_WIDTH, PREF_HEIGHT),
-					new Dimension(PREF_WIDTH, PREF_HEIGHT),
+					new Dimension(PREF_WIDTH, PREF_HEIGHT - 80),
+					new Dimension(PREF_WIDTH, PREF_HEIGHT - 80),
 					5, FIELD_HEIGHT);
 			OrderPanel orderPanel = new OrderPanel(
 					calculator,
@@ -86,25 +86,19 @@ public class App {
 					new Dimension(PREF_WIDTH, PREF_HEIGHT),
 					5, FIELD_HEIGHT);
 
-			frame.getContentPane().setLayout(new GridLayout(1, 3));
+			JPanel mainContainer = new JPanel();
+			mainContainer.setLayout(new BoxLayout(mainContainer, BoxLayout.Y_AXIS));
 
-			JPanel leftPanel = new JPanel();
-			leftPanel.setLayout(new GridLayout(1, 1));
-			leftPanel.add(inputPanel);
+			mainContainer.add(inputPanel);
+			mainContainer.add(orderPanel);
+			mainContainer.add(tradePanel);
+			mainContainer.add(riskPanel);
+			mainContainer.add(powerPanel);
 
-			JPanel rightPanel1 = new JPanel();
-			rightPanel1.setLayout(new GridLayout(2, 1));
-			rightPanel1.add(tradePanel);
-			rightPanel1.add(powerPanel);
-
-			JPanel rightPanel2 = new JPanel();
-			rightPanel2.setLayout(new GridLayout(2, 1));
-			rightPanel2.add(riskPanel);
-			rightPanel2.add(orderPanel);
-
-			frame.getContentPane().add(leftPanel);
-			frame.getContentPane().add(rightPanel1);
-			frame.getContentPane().add(rightPanel2);
+			JScrollPane scrollPane = new JScrollPane(mainContainer,
+			                                         JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+			                                         JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+			frame.getContentPane().add(scrollPane);
 
 			frame.setLocationRelativeTo(null);
 

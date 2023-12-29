@@ -88,6 +88,10 @@ public class Ibkr implements IConnectionHandler {
 	}
 
 	public void placeOrder(Contract contract, Order order) {
+		if (!isConnected()) {
+			log.error("Not connected");
+			return;
+		}
 		controller().placeOrModifyOrder(contract, order, new ApiController.IOrderHandler() {
 			@Override
 			public void orderState(OrderState orderState) {

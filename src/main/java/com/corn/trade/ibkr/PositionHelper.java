@@ -17,6 +17,10 @@ public class PositionHelper {
 
 	public void dropAll() {
 		log.info("Dropping all positions");
+		if (!ibkr.isConnected()) {
+			log.error("Not connected");
+			return;
+		}
 		ibkr.controller().reqPositions(new ApiController.IPositionHandler() {
 			@Override
 			public void position(String account, Contract contract, Decimal pos, double avgCost) {

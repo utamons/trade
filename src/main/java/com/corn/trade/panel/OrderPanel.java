@@ -99,7 +99,9 @@ public class OrderPanel extends BasePanel {
 			ActionListener taskPerformer = evt -> {
 				positionHelper.dropAll(); // Execute after delay
 			};
-			new Timer(delay, taskPerformer).start();
+			Timer timer = new Timer(delay, taskPerformer);
+			timer.setRepeats(false);
+			timer.start();
 		});
 
 		this.add(panel, BorderLayout.NORTH);
