@@ -13,8 +13,8 @@ import static java.lang.Math.abs;
 public class Calculator extends Notifier {
 	public static final Logger log = LoggerFactory.getLogger(Calculator.class);
 
-	private final Double         MAX_VOLUME            = 5000.0;
-	private final double         MAX_RISK_PERCENT      = 0.5;
+	private final Double         MAX_VOLUME            = 2000.0;
+	private final double         MAX_RISK_PERCENT      = 0.3;
 	private final double         MAX_RISK_REWARD_RATIO = 3.0;
 	private final Double         ORDER_LUFT            = 0.02;
 	private final Component      frame;
