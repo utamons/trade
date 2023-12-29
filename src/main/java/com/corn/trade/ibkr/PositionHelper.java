@@ -24,6 +24,9 @@ public class PositionHelper {
 		ibkr.controller().reqPositions(new ApiController.IPositionHandler() {
 			@Override
 			public void position(String account, Contract contract, Decimal pos, double avgCost) {
+				if (pos.isZero()) {
+					return;
+				}
 				// Determine the type of position (Long or Short)
 				PositionType positionType = pos.compareTo(Decimal.ZERO) > 0 ? PositionType.LONG : PositionType.SHORT;
 
@@ -39,7 +42,7 @@ public class PositionHelper {
 				closeOrder.totalQuantity(positionType.equals(PositionType.LONG) ? pos : pos.negate()); // Absolute quantity
 
 				ibkr.controller().placeOrModifyOrder(contract, closeOrder, null);
-				log.info("Dropping order is placed for position of {} {}", contract.symbol(), positionType);
+				log.info("Dropping order is placed for position of {} {} quantity {}", contract.symbol(), positionType, pos);
 			}
 
 			@Override
