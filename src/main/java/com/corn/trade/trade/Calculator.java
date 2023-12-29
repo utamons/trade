@@ -181,6 +181,7 @@ public class Calculator extends Notifier {
 		String error = levels.validate();
 		if (error != null) {
 			showErrorDlg(frame, error, !autoUpdate);
+			log.error("Error: {}", error);
 			announce();
 			return false;
 		}

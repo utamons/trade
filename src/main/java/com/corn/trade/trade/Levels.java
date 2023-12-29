@@ -1,6 +1,8 @@
 package com.corn.trade.trade;
 
 import com.corn.trade.common.Notifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.util.Collections;
@@ -12,6 +14,9 @@ import java.util.stream.Stream;
 import static com.corn.trade.util.Util.showErrorDlg;
 
 public class Levels extends Notifier {
+
+	private static final Logger log = LoggerFactory.getLogger(Levels.class);
+
 	@SuppressWarnings("FieldCanBeLocal")
 	private final Double  REALISTIC_POWER_RESERVE = 0.8;
 	private final JFrame  frame;
@@ -223,7 +228,7 @@ public class Levels extends Notifier {
 				resistanceError = true;
 				error = "Resistance must be greater than 0\n ";
 			}
-			if (lowDay != null && highDay != null && (resistance <= lowDay || resistance >= highDay)) {
+			if (lowDay != null && highDay != null && (resistance < lowDay || resistance > highDay)) {
 				resistanceError = true;
 				error = "Resistance must be between lowDay and highDay\n ";
 			}
@@ -309,6 +314,7 @@ public class Levels extends Notifier {
 		String error = validate();
 		if (error != null) {
 			showErrorDlg(frame, error, !autoUpdate);
+			log.error("Error: {}", error);
 			announce();
 			return;
 		}
@@ -338,6 +344,7 @@ public class Levels extends Notifier {
 		String error = validate();
 		if (error != null) {
 			showErrorDlg(frame, error, !autoUpdate);
+			log.error("Error: {}", error);
 			announce();
 			return;
 		}
