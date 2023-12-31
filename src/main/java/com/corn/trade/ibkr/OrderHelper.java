@@ -62,25 +62,29 @@ public class OrderHelper {
 
 		ibkr.placeOrder(contractDetails.contract(), parent, new OrderHandler(contractDetails.contract(), parent, OrderAction.MAIN, quantityDecimal, positionType));
 
-		log.info("Placed a main order id {} for {}, stop price: {}, limit price: {}",
-		          parent.orderId(),
+		log.info("Placed main id {} {} {}, stop price: {}, limit price: {}, quantity: {}, stop loss: {}, take profit: {}",
+				  parent.orderId(),
+				  positionType,
 		          contractDetails.contract().symbol(),
 		          stop,
-		          limit);
+		          limit,
+		          quantityDecimal,
+		          stopLossPrice,
+		          takeProfitPrice);
 
 		takeProfit.parentId(parent.orderId());
 		stopLoss.parentId(parent.orderId());
 
 		ibkr.placeOrder(contractDetails.contract(), takeProfit, new OrderHandler(contractDetails.contract(), takeProfit, OrderAction.TAKE_PROFIT, quantityDecimal, positionType));
 
-		log.info("Placed a take profit order id {} for {}, take profit price: {}",
+		log.info("Placed TP id {} {} {}",
 		          takeProfit.orderId(),
 		          contractDetails.contract().symbol(),
 		          takeProfitPrice);
 
 		ibkr.placeOrder(contractDetails.contract(), stopLoss, new OrderHandler(contractDetails.contract(), stopLoss, OrderAction.STOP_LOSS, quantityDecimal, positionType));
 
-		log.info("Placed a stop loss order id {} for {}, stop loss price: {}",
+		log.info("Placed SL id {} {} {}",
 		          stopLoss.orderId(),
 		          contractDetails.contract().symbol(),
 		          stopLossPrice);

@@ -47,7 +47,7 @@ public class OrderHandler implements ApiController.IOrderHandler {
 			log.info("{} submitted in {} ms", orderInfo(), endTime - startTime);
 		}
 		if (status == OrderStatus.Filled) {
-			log.info("Order {} filled in {} ms, remaining: {}, avgFillPrice: {}", orderInfo(), endTime - startTime, remaining, avgFillPrice);
+			log.info("Order {} filled in {} ms, remaining: {}, avgFillPrice: {}, slippage {}", orderInfo(), endTime - startTime, remaining, avgFillPrice, avgFillPrice - order.lmtPrice());
 		}
 	}
 
