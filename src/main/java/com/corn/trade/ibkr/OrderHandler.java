@@ -24,8 +24,8 @@ public class OrderHandler implements ApiController.IOrderHandler {
 	}
 
 	private String orderInfo() {
-		String parentOrderId = order.parentId() == 0 ? "" : "parent order id: " + order.parentId();
-		return "order id" + order.orderId() + " " + parentOrderId + " " + contract.symbol() + " " + positionType + " " + orderType + " " + order.orderType() + " qtt: " + quantity + " price: " + order.lmtPrice() + " auxPrice: " + order.auxPrice();
+		String parentOrderId = order.parentId() == 0 ? "" : " parent order id: " + order.parentId();
+		return "order id" + order.orderId() + parentOrderId + " " + contract.symbol() + " " + positionType + " " + orderType + " " + order.orderType() + " qtt: " + quantity + " price: " + order.lmtPrice() + " auxPrice: " + order.auxPrice();
 	}
 
 	@Override

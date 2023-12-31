@@ -3,7 +3,11 @@ package com.corn.trade.ibkr;
 import com.corn.trade.trade.OrderAction;
 import com.corn.trade.trade.PositionType;
 import com.ib.client.*;
+import com.ib.controller.ApiController;
 import org.slf4j.Logger;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.corn.trade.util.Util.round;
 
@@ -56,45 +60,103 @@ public class OrderHelper {
 		//Stop trigger price
 		stopLoss.auxPrice(round(stopLossPrice));
 		stopLoss.totalQuantity(quantityDecimal);
-		//In this case, the low side order will be the last child being sent. Therefore, it needs to set this attribute to true
+		//In this case, the low side order will be the last child being sent. Therefore, it needs to set this attribute to
+		// true
 		//to activate all its predecessors
 		stopLoss.transmit(true);
 
-		ibkr.placeOrder(contractDetails.contract(), parent, new OrderHandler(contractDetails.contract(), parent, OrderAction.MAIN, quantityDecimal, positionType));
+		ibkr.placeOrder(contractDetails.contract(),
+		                parent,
+		                new OrderHandler(contractDetails.contract(),
+		                                 parent,
+		                                 OrderAction.MAIN,
+		                                 quantityDecimal,
+		                                 positionType));
 
 		log.info("Placed main id {} {} {}, stop price: {}, limit price: {}, quantity: {}, stop loss: {}, take profit: {}",
-				  parent.orderId(),
-				  positionType,
-		          contractDetails.contract().symbol(),
-		          stop,
-		          limit,
-		          quantityDecimal,
-		          stopLossPrice,
-		          takeProfitPrice);
+		         parent.orderId(),
+		         positionType,
+		         contractDetails.contract().symbol(),
+		         stop,
+		         limit,
+		         quantityDecimal,
+		         stopLossPrice,
+		         takeProfitPrice);
 
 		takeProfit.parentId(parent.orderId());
 		stopLoss.parentId(parent.orderId());
 
-		ibkr.placeOrder(contractDetails.contract(), takeProfit, new OrderHandler(contractDetails.contract(), takeProfit, OrderAction.TAKE_PROFIT, quantityDecimal, positionType));
+		ibkr.placeOrder(contractDetails.contract(),
+		                takeProfit,
+		                new OrderHandler(contractDetails.contract(),
+		                                 takeProfit,
+		                                 OrderAction.TAKE_PROFIT,
+		                                 quantityDecimal,
+		                                 positionType));
 
 		log.info("Placed TP id {} {} {}",
-		          takeProfit.orderId(),
-		          contractDetails.contract().symbol(),
-		          takeProfitPrice);
+		         takeProfit.orderId(),
+		         contractDetails.contract().symbol(),
+		         takeProfitPrice);
 
-		ibkr.placeOrder(contractDetails.contract(), stopLoss, new OrderHandler(contractDetails.contract(), stopLoss, OrderAction.STOP_LOSS, quantityDecimal, positionType));
+		ibkr.placeOrder(contractDetails.contract(),
+		                stopLoss,
+		                new OrderHandler(contractDetails.contract(),
+		                                 stopLoss,
+		                                 OrderAction.STOP_LOSS,
+		                                 quantityDecimal,
+		                                 positionType));
 
 		log.info("Placed SL id {} {} {}",
-		          stopLoss.orderId(),
-		          contractDetails.contract().symbol(),
-		          stopLossPrice);
+		         stopLoss.orderId(),
+		         contractDetails.contract().symbol(),
+		         stopLossPrice);
 	}
 
-	public void dropAll() {
+	public void dropAll(PositionHelper positionHelper) {
 		if (!ibkr.isConnected()) {
 			log.error("Not connected");
 			return;
 		}
-		ibkr.controller().cancelAllOrders();
+
+		log.info("Dropping all orders");
+
+		ApiController.ILiveOrderHandler handler = new ApiController.ILiveOrderHandler() {
+			final List<Order> orders = new ArrayList<>();
+			@Override
+			public void openOrder(Contract contract, Order order, OrderState orderState) {
+				orders.add(order);
+			}
+
+			@Override
+			public void openOrderEnd() {
+				ibkr.controller().removeLiveOrderHandler(this);
+				orders.forEach(order -> {
+					ibkr.controller().cancelOrder(order.orderId(), "", null);
+					log.info("Dropping order {}", order.orderId());
+				});
+				positionHelper.dropAll();
+			}
+
+			@Override
+			public void orderStatus(int orderId,
+			                        OrderStatus status,
+			                        Decimal filled,
+			                        Decimal remaining,
+			                        double avgFillPrice,
+			                        int permId,
+			                        int parentId,
+			                        double lastFillPrice,
+			                        int clientId,
+			                        String whyHeld,
+			                        double mktCapPrice) {}
+
+			@Override
+			public void handle(int orderId, int errorCode, String errorMsg) {
+				log.error("Error dropping order {}: {} {}", orderId, errorCode, errorMsg);
+			}
+		};
+
+		ibkr.controller().reqLiveOrders(handler);
 	}
 }

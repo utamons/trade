@@ -11,7 +11,6 @@ import com.corn.trade.trade.Levels;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionListener;
 
 public class OrderPanel extends BasePanel {
 
@@ -94,14 +93,7 @@ public class OrderPanel extends BasePanel {
 	                                                           calculator.getPositionType()));
 
 		dropAllBtn.addActionListener(e -> {
-			orderHelper.dropAll(); // First drop all orders
-			int delay = 1500;
-			ActionListener taskPerformer = evt -> {
-				positionHelper.dropAll(); // Execute after delay
-			};
-			Timer timer = new Timer(delay, taskPerformer);
-			timer.setRepeats(false);
-			timer.start();
+			orderHelper.dropAll(positionHelper); // First drop all orders
 		});
 
 		this.add(panel, BorderLayout.NORTH);
