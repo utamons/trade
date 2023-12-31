@@ -1,5 +1,6 @@
 package com.corn.trade.ibkr;
 
+import com.corn.trade.trade.OrderAction;
 import com.corn.trade.trade.PositionType;
 import com.ib.client.*;
 import org.slf4j.Logger;
@@ -59,7 +60,7 @@ public class OrderHelper {
 		//to activate all its predecessors
 		stopLoss.transmit(true);
 
-		ibkr.placeOrder(contractDetails.contract(), parent);
+		ibkr.placeOrder(contractDetails.contract(), parent, new OrderHandler(contractDetails.contract(), parent, OrderAction.MAIN, quantityDecimal, positionType));
 
 		log.info("Placed a main order id {} for {}, stop price: {}, limit price: {}",
 		          parent.orderId(),
@@ -70,14 +71,14 @@ public class OrderHelper {
 		takeProfit.parentId(parent.orderId());
 		stopLoss.parentId(parent.orderId());
 
-		ibkr.placeOrder(contractDetails.contract(), takeProfit);
+		ibkr.placeOrder(contractDetails.contract(), takeProfit, new OrderHandler(contractDetails.contract(), takeProfit, OrderAction.TAKE_PROFIT, quantityDecimal, positionType));
 
 		log.info("Placed a take profit order id {} for {}, take profit price: {}",
 		          takeProfit.orderId(),
 		          contractDetails.contract().symbol(),
 		          takeProfitPrice);
 
-		ibkr.placeOrder(contractDetails.contract(), stopLoss);
+		ibkr.placeOrder(contractDetails.contract(), stopLoss, new OrderHandler(contractDetails.contract(), stopLoss, OrderAction.STOP_LOSS, quantityDecimal, positionType));
 
 		log.info("Placed a stop loss order id {} for {}, stop loss price: {}",
 		          stopLoss.orderId(),

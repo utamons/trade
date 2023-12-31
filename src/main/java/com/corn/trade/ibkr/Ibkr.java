@@ -87,47 +87,12 @@ public class Ibkr implements IConnectionHandler {
 		return m_controller;
 	}
 
-	public void placeOrder(Contract contract, Order order) {
+	public void placeOrder(Contract contract, Order order, ApiController.IOrderHandler handler) {
 		if (!isConnected()) {
 			log.error("Not connected");
 			return;
 		}
-		controller().placeOrModifyOrder(contract, order, new ApiController.IOrderHandler() {
-			@Override
-			public void orderState(OrderState orderState) {
-				log.info("order {} state: {}", contract.symbol(), orderState.status());
-			}
-
-			@Override
-			public void orderStatus(OrderStatus status,
-			                        Decimal filled,
-			                        Decimal remaining,
-			                        double avgFillPrice,
-			                        int permId,
-			                        int parentId,
-			                        double lastFillPrice,
-			                        int clientId,
-			                        String whyHeld,
-			                        double mktCapPrice) {
-				log.info("order {} status: {}, filled: {}, remaining: {}, avgFillPrice: {}, permId: {}, parentId: {}, lastFillPrice: {}, clientId: {}, whyHeld: {}, mktCapPrice: {}",
-				          order.orderId(),
-				          status,
-				          filled,
-				          remaining,
-				          avgFillPrice,
-				          permId,
-				          parentId,
-				          lastFillPrice,
-				          clientId,
-				          whyHeld,
-				          mktCapPrice);
-			}
-
-			@Override
-			public void handle(int errorCode, String errorMsg) {
-				log.error("order {} errorCode: {}, errorMsg: {}", contract.symbol(), errorCode, errorMsg);
-			}
-		});
+		controller().placeOrModifyOrder(contract, order, handler);
 	}
 
 	private static class Logger implements ApiConnection.ILogger {
