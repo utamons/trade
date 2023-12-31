@@ -95,7 +95,7 @@ public class Ibkr implements IConnectionHandler {
 		controller().placeOrModifyOrder(contract, order, new ApiController.IOrderHandler() {
 			@Override
 			public void orderState(OrderState orderState) {
-				log.info("order {} state: {}", contract.symbol(), orderState);
+				log.info("order {} state: {}", contract.symbol(), orderState.status());
 			}
 
 			@Override
@@ -110,7 +110,7 @@ public class Ibkr implements IConnectionHandler {
 			                        String whyHeld,
 			                        double mktCapPrice) {
 				log.info("order {} status: {}, filled: {}, remaining: {}, avgFillPrice: {}, permId: {}, parentId: {}, lastFillPrice: {}, clientId: {}, whyHeld: {}, mktCapPrice: {}",
-				          contract.symbol(),
+				          order.orderId(),
 				          status,
 				          filled,
 				          remaining,

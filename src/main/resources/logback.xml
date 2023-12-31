@@ -6,20 +6,22 @@
         </encoder>
     </appender>
 
-    <!-- File Appender -->
-    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-        <file>d://trade.log</file> <!-- Specify your log file name and path here -->
+    <!-- Rolling File Appender -->
+    <appender name="ROLLING" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>d://trade.log</file>
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} %-5level: %msg%n</pattern>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level: %msg%n</pattern>
         </encoder>
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>INFO</level>
-        </filter>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>d://trade.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
     </appender>
 
     <!-- Logger for com.corn.trade package -->
     <logger name="com.corn.trade" level="debug" additivity="false">
-        <appender-ref ref="FILE"/>
+        <appender-ref ref="ROLLING"/>
         <appender-ref ref="STDOUT"/>
     </logger>
 

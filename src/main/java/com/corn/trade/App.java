@@ -30,10 +30,10 @@ public class App {
 
 	public static void main(String[] args) {
 		SwingUtilities.invokeLater(() -> {
-			log.info("Calculator version 1.0.0");
+			log.info("Calculator version 1.0.1");
 			setDefaultFont();
 
-			JFrame frame = new JFrame("Trade Calculator v. 1.0");
+			JFrame frame = new JFrame("Trade Calculator v. 1.0.1");
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setSize(700, 630);
 
