@@ -1,22 +1,19 @@
 package com.corn.trade.trade;
 
 import com.corn.trade.common.Notifier;
-import org.slf4j.Logger;
+import com.corn.trade.util.Debug;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 
+import static com.corn.trade.App.*;
+import static com.corn.trade.util.Util.fmt;
 import static com.corn.trade.util.Util.showErrorDlg;
 import static java.lang.Math.abs;
 
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
 public class Calculator extends Notifier {
-	public static final Logger log = LoggerFactory.getLogger(Calculator.class);
-
-	private final Double         MAX_VOLUME            = 2000.0;
-	private final double         MAX_RISK_PERCENT      = 0.3;
-	private final double         MAX_RISK_REWARD_RATIO = 3.0;
-	private final Double         ORDER_LUFT            = 0.02;
+	public final  Debug          log                   = new Debug(LoggerFactory.getLogger(Calculator.class));
 	private final Component      frame;
 	private final Levels         levels;
 	private       boolean        autoUpdate            = false;
@@ -161,13 +158,20 @@ public class Calculator extends Notifier {
 		double profit          = abs(priceClose - price) * quantity;
 		double taxes           = getTaxes(profit);
 		double increment       = isLong() ? 0.01 : -0.01;
+		int    counter         = 0;
 
 		while (profit < openCommission + closeCommission + taxes) {
 			priceClose = priceClose + increment;
 			closeCommission = estimatedCommissionUSD(priceClose);
 			profit = abs(priceClose - price) * quantity;
 			taxes = getTaxes(profit);
+			counter++;
 		}
+
+		double range = abs(priceClose - price);
+		double percent = range / price * 100;
+
+		log.debug(2, "BE without spread: {}, range {}, {}%", fmt(priceClose), fmt(range), fmt(percent));
 
 		return priceClose + (isLong() ? spread : -spread);
 	}
@@ -215,19 +219,19 @@ public class Calculator extends Notifier {
 		if (riskPercent == null || takeProfit == null || breakEven == null)
 			return;
 		if (MAX_RISK_PERCENT - riskPercent < 0.1) {
-			//log.debug("YL: Risk percent {} is too close to max risk percent {}", fmt(riskPercent), MAX_RISK_PERCENT);
+			log.debug(2,"YL: Risk percent {} is too close to max risk percent {}", fmt(riskPercent), MAX_RISK_PERCENT);
 			yellowLight = true;
 		}
 		if (Math.abs(takeProfit - breakEven) < 0.05) {
-			//log.debug("YL: Take profit {} is too close to break even {}", fmt(takeProfit), fmt(breakEven));
+			log.debug(2, "YL: Take profit {} is too close to break even {}", fmt(takeProfit), fmt(breakEven));
 			yellowLight = true;
 		}
 		if (gain > 0 && gain < 0.5) {
-			//log.debug("YL: Gain {} is less than 0.5%", fmt(gain));
+			log.debug(2,"YL: Gain {} is less than 0.5%", fmt(gain));
 			yellowLight = true;
 		}
 		if (!levels.isStopLossUnderLevels(stopLoss, positionType)) {
-			//log.debug("YL: Stop loss {} is not under levels", fmt(stopLoss));
+			log.debug(2,"YL: Stop loss {} is not under levels", fmt(stopLoss));
 			yellowLight = true;
 		}
 	}
@@ -263,14 +267,14 @@ public class Calculator extends Notifier {
 
 			if (riskPercent > MAX_RISK_PERCENT)
 				quantity--;
-			/*log.debug("Iteration {} - quantity: {}, take profit: {}, stop loss {}, risk percent: {}, risk reward ratio: {}",
+			log.debug(2,"Iteration {} - quantity: {}, take profit: {}, stop loss {}, risk percent: {}, risk reward ratio: {}",
 			          counter,
 			          quantity,
 			          fmt(takeProfit),
 			          fmt(stopLoss),
 			          fmt(riskPercent),
 			          fmt(riskRewardRatioPercent)
-			);*/
+			);
 		} while (
 				riskPercent > MAX_RISK_PERCENT &&
 				quantity > 0 &&
@@ -298,7 +302,7 @@ public class Calculator extends Notifier {
 	}
 
 	private double recalculatedRisk() {
-		return isLong() ? breakEven - stopLoss + spread : stopLoss - breakEven + spread;
+		return isLong() ? breakEven - stopLoss : stopLoss - breakEven;
 	}
 
 	private double getReward() {
