@@ -212,10 +212,6 @@ public class Levels extends Notifier {
 				supportError = true;
 				error = "Support must be greater than 0\n ";
 			}
-			if (lowDay != null && highDay != null && (support <= lowDay || support >= highDay)) {
-				supportError = true;
-				error = "Support must be between lowDay and highDay\n ";
-			}
 			if (resistance != null && support >= resistance) {
 				supportError = true;
 				error = "Support must be less than resistance";
@@ -228,10 +224,6 @@ public class Levels extends Notifier {
 				resistanceError = true;
 				error = "Resistance must be greater than 0\n ";
 			}
-			if (lowDay != null && highDay != null && (resistance < lowDay || resistance > highDay)) {
-				resistanceError = true;
-				error = "Resistance must be between lowDay and highDay\n ";
-			}
 		}
 
 		// tempLevel validation
@@ -239,10 +231,6 @@ public class Levels extends Notifier {
 			if (tempLevel <= 0) {
 				tempLevelError = true;
 				error = "Temp. level must be greater than 0\n ";
-			}
-			if (tempLevel <= lowDay || tempLevel >= highDay) {
-				tempLevelError = true;
-				error = "Temp. level must be between lowDay and highDay\n ";
 			}
 			if (resistance != null && tempLevel >= resistance) {
 				tempLevelError = true;
