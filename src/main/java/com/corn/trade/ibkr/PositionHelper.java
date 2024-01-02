@@ -2,18 +2,22 @@ package com.corn.trade.ibkr;
 
 import com.corn.trade.trade.OrderAction;
 import com.corn.trade.trade.PositionType;
-import com.ib.client.*;
+import com.ib.client.Contract;
+import com.ib.client.Decimal;
+import com.ib.client.Order;
 import com.ib.controller.ApiController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class PositionHelper {
 
-	public static final Logger log = LoggerFactory.getLogger(PositionHelper.class);
-	private final       Ibkr   ibkr;
+	public static final Logger     log = LoggerFactory.getLogger(PositionHelper.class);
+	private final       Ibkr       ibkr;
+	private final       AutoUpdate autoUpdate;
 
-	public PositionHelper(Ibkr ibkr) {
+	public PositionHelper(Ibkr ibkr, AutoUpdate autoUpdate) {
 		this.ibkr = ibkr;
+		this.autoUpdate = autoUpdate;
 	}
 
 	public void dropAll() {
@@ -43,7 +47,11 @@ public class PositionHelper {
 				closeOrder.transmit(true); // Transmit the order to IBKR
 				closeOrder.totalQuantity(positionType.equals(PositionType.LONG) ? pos : pos.negate()); // Absolute quantity
 
-				ibkr.placeOrder(contract, closeOrder, new OrderHandler(contract, closeOrder, OrderAction.DROP_ALL, pos, positionType));
+				Contract lookedUpContract = autoUpdate.getContractDetails().contract();
+
+				ibkr.placeOrder(lookedUpContract,
+				                closeOrder,
+				                new OrderHandler(lookedUpContract, closeOrder, OrderAction.DROP_ALL, pos, positionType));
 				log.info("Placed DROP ALL id {} {}, qtt: {}", closeOrder.orderId(), contract.symbol(), pos);
 			}
 

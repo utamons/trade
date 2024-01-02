@@ -77,7 +77,7 @@ public class App {
 			autoUpdate.addActivateListener(calculator::setAutoUpdate);
 
 			OrderHelper    orderHelper    = new OrderHelper(ibkr);
-			PositionHelper positionHelper = new PositionHelper(ibkr);
+			PositionHelper positionHelper = new PositionHelper(ibkr, autoUpdate);
 
 			InputPanel inputPanel = new InputPanel(
 					calculator,
