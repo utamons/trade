@@ -53,6 +53,15 @@ public class App {
 		SwingUtilities.invokeLater(() -> {
 			log.info("Calculator version 1.0.1");
 
+			Properties configProps = loadProperties("D:\\bin\\trade.properties");
+
+			MAX_VOLUME = Integer.parseInt(configProps.getProperty("max_volume", "2000"));
+			MAX_RISK_REWARD_RATIO =
+					Double.parseDouble(configProps.getProperty("max_risk_reward_ratio", "3"));
+			MAX_RISK_PERCENT = Double.parseDouble(configProps.getProperty("max_risk_percent", "0.5"));
+			ORDER_LUFT = Double.parseDouble(configProps.getProperty("order_luft", "0.02"));
+			DEBUG_LEVEL = Integer.parseInt(configProps.getProperty("debug_level", "2"));
+
 			setDefaultFont();
 
 			JFrame frame = new JFrame("Trade Calculator v. 1.0.1");
@@ -137,18 +146,11 @@ public class App {
 
 			frame.setVisible(true);
 
-			Properties configProps = loadProperties("D:\\bin\\trade.properties");
-
-			MAX_VOLUME = Integer.parseInt(configProps.getProperty("max_volume", "2000")); // Default value is 1000
-			MAX_RISK_REWARD_RATIO =
-					Double.parseDouble(configProps.getProperty("max_risk_reward_ratio", "3")); // Default value is 1.5
-			MAX_RISK_PERCENT = Double.parseDouble(configProps.getProperty("max_risk_percent", "0.5")); // Default value is 2
-			ORDER_LUFT = Double.parseDouble(configProps.getProperty("order_luft", "0.02")); // Default value is 10
-			DEBUG_LEVEL = Integer.parseInt(configProps.getProperty("debug_level", "2")); // Default value is 1
 			log.info("max volume: {}", MAX_VOLUME);
 			log.info("max risk/reward ratio: {}", MAX_RISK_REWARD_RATIO);
 			log.info("max risk: {}%", MAX_RISK_PERCENT);
 			log.info("order luft: {}", ORDER_LUFT);
+			log.info("debug level: {}", DEBUG_LEVEL);
 
 			log.info("Application started");
 
