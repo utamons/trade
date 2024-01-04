@@ -51,7 +51,7 @@ public class App {
 	public static void main(String[] args) {
 
 		SwingUtilities.invokeLater(() -> {
-			log.info("Calculator version 1.0.1");
+			log.info("Calculator version 1.0.2");
 
 			Properties configProps = loadProperties("D:\\bin\\trade.properties");
 
@@ -64,7 +64,7 @@ public class App {
 
 			setDefaultFont();
 
-			JFrame frame = new JFrame("Trade Calculator v. 1.0.1");
+			JFrame frame = new JFrame("Trade Calculator v. 1.0.2");
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setSize(700, 630);
 

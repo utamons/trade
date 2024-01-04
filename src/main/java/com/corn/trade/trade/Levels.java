@@ -276,6 +276,11 @@ public class Levels extends Notifier {
 		return false; // Return false if no valid level was found
 	}
 
+	public boolean isPivotPointALevel() {
+		return Stream.of(tempLevel, resistance, support)
+		             .filter(Objects::nonNull)
+		             .anyMatch(level -> level.equals(pivotPoint));
+	}
 
 	@SuppressWarnings("DuplicatedCode")
 	public void reset() {

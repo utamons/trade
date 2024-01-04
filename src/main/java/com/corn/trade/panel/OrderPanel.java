@@ -106,14 +106,15 @@ public class OrderPanel extends BasePanel {
 			stop.setValue(calculator.getOrderStop());
 			if (calculator.isTradeError()) {
 				trafficLight.setRed();
-				enableOrderButtons(false);
+				stopLimitBtn.setEnabled(false);
 			} else if (calculator.isYellowLight()) {
 				trafficLight.setYellow();
-				enableOrderButtons(true);
+				stopLimitBtn.setEnabled(true);
 			} else {
 				trafficLight.setGreen();
-				enableOrderButtons(true);
+				stopLimitBtn.setEnabled(true);
 			}
+			limitBtn.setEnabled(!levels.isPivotPointALevel() && !calculator.isTradeError());
 		});
 
 		autoUpdate.addActivateListener(
@@ -126,10 +127,5 @@ public class OrderPanel extends BasePanel {
 						stop.setEditable(true);
 					}
 				});
-	}
-
-	public void enableOrderButtons(boolean enabled) {
-		stopLimitBtn.setEnabled(enabled);
-		limitBtn.setEnabled(enabled);
 	}
 }
