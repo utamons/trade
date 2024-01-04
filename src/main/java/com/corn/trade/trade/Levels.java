@@ -1,5 +1,6 @@
 package com.corn.trade.trade;
 
+import com.corn.trade.App;
 import com.corn.trade.common.Notifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -331,6 +332,10 @@ public class Levels extends Notifier {
 		announce();
 	}
 
+	private double minPowerReserve() {
+		return bestPrice * App.MIN_POWER_RESERVE_TO_PRICE_RATIO;
+	}
+
 	public void calculatePivotPoint(PositionType positionType) {
 		pivotPoint = null;
 		Double pivot = null;
@@ -353,9 +358,9 @@ public class Levels extends Notifier {
 			                                   .orElseThrow(() -> new IllegalArgumentException("No closest level found"));
 
 			if (positionType == PositionType.LONG) {
-				pivot = bestPrice >= closestLevel ? bestPrice : closestLevel;
+				pivot = bestPrice >= closestLevel || Math.abs(bestPrice - closestLevel) > minPowerReserve() ? bestPrice : closestLevel;
 			} else {
-				pivot = bestPrice <= closestLevel ? bestPrice : closestLevel;
+				pivot = bestPrice <= closestLevel || Math.abs(bestPrice - closestLevel) > minPowerReserve() ? bestPrice : closestLevel;
 			}
 		} else {
 			switch (definedLevels.size()) {

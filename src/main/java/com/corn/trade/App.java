@@ -37,6 +37,7 @@ public class App {
 	public static double MAX_RISK_PERCENT      = 0.3;
 	public static double MAX_RISK_REWARD_RATIO = 3.0;
 	public static double ORDER_LUFT            = 0.02;
+	public static double MIN_POWER_RESERVE_TO_PRICE_RATIO = 0.005;
 
 	public static Properties loadProperties(String fileName) {
 		Properties props = new Properties();
@@ -61,6 +62,7 @@ public class App {
 			MAX_RISK_PERCENT = Double.parseDouble(configProps.getProperty("max_risk_percent", "0.5"));
 			ORDER_LUFT = Double.parseDouble(configProps.getProperty("order_luft", "0.02"));
 			DEBUG_LEVEL = Integer.parseInt(configProps.getProperty("debug_level", "2"));
+			MIN_POWER_RESERVE_TO_PRICE_RATIO = Double.parseDouble(configProps.getProperty("min_power_reserve_to_price_ratio", "0.005"));
 
 			setDefaultFont();
 
