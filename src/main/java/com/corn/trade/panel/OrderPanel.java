@@ -77,20 +77,22 @@ public class OrderPanel extends BasePanel {
 		buttonPanel.add(dropAllBtn);
 
 		limitBtn.addActionListener(e -> orderHelper.placeOrder(autoUpdate.getContractDetails(),
-	                                                       calculator.getQuantity(),
-	                                                       null,
-	                                                       limit.getValue(),
-	                                                       calculator.getStopLoss(),
-	                                                       calculator.getTakeProfit(),
-	                                                       calculator.getPositionType()));
+		                                                       calculator.getQuantity(),
+		                                                       null,
+		                                                       limit.getValue(),
+		                                                       calculator.getStopLoss(),
+		                                                       calculator.getTakeProfit(),
+		                                                       calculator.getBreakEven(),
+		                                                       calculator.getPositionType()));
 
 		stopLimitBtn.addActionListener(e -> orderHelper.placeOrder(autoUpdate.getContractDetails(),
-	                                                           calculator.getQuantity(),
-	                                                           stop.getValue(),
-	                                                           limit.getValue(),
-	                                                           calculator.getStopLoss(),
-	                                                           calculator.getTakeProfit(),
-	                                                           calculator.getPositionType()));
+		                                                           calculator.getQuantity(),
+		                                                           stop.getValue(),
+		                                                           limit.getValue(),
+		                                                           calculator.getStopLoss(),
+		                                                           calculator.getTakeProfit(),
+		                                                           calculator.getBreakEven(),
+		                                                           calculator.getPositionType()));
 
 		dropAllBtn.addActionListener(e -> {
 			orderHelper.dropAll(positionHelper); // First drop all orders

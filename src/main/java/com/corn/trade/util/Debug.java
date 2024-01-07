@@ -4,7 +4,6 @@ import com.corn.trade.App;
 import org.slf4j.Logger;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
@@ -15,6 +14,7 @@ public class Debug {
 		this.log = log;
 	}
 
+	@SuppressWarnings("unused")
 	public void info(String msg, Object... args) {
 		log.info(msg, args);
 	}

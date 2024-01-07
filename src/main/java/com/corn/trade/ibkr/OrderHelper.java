@@ -26,6 +26,7 @@ public class OrderHelper {
 	                       Double limit,
 	                       Double stopLossPrice,
 	                       Double takeProfitPrice,
+						   Double breakEvenPrice,
 	                       PositionType positionType) {
 		if (!ibkr.isConnected()) {
 			log.error("Not connected");
@@ -73,15 +74,16 @@ public class OrderHelper {
 		                                 quantityDecimal,
 		                                 positionType));
 
-		log.info("Placed main id {} {} {}, stop price: {}, limit price: {}, quantity: {}, stop loss: {}, take profit: {}",
+		log.info("Placed main id {} {} {}, stop price: {}, limit price: {}, quantity: {}, stop loss: {}, take profit: {}, break even: {}",
 		         parent.orderId(),
 		         positionType,
 		         contractDetails.contract().symbol(),
-		         stop,
-		         limit,
+		         round(stop),
+		         round(limit),
 		         quantityDecimal,
-		         stopLossPrice,
-		         takeProfitPrice);
+		         round(stopLossPrice),
+		         round(takeProfitPrice),
+		         round(breakEvenPrice));
 
 		takeProfit.parentId(parent.orderId());
 		stopLoss.parentId(parent.orderId());
