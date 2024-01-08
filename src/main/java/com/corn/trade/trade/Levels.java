@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import static com.corn.trade.App.REALISTIC_POWER_RESERVE;
 import static com.corn.trade.util.Util.showErrorDlg;
 
 public class Levels extends Notifier {
@@ -19,7 +20,6 @@ public class Levels extends Notifier {
 	private static final Logger log = LoggerFactory.getLogger(Levels.class);
 
 	@SuppressWarnings("FieldCanBeLocal")
-	private final Double  REALISTIC_POWER_RESERVE = 0.8;
 	private final JFrame  frame;
 	private       Double  atr;
 	private       Double  tempLevel;
