@@ -18,7 +18,7 @@
         <sonar.language>java</sonar.language>
         <sonar.exclusions>src/test/java/**/*.*</sonar.exclusions>
         <sonar.coverage.exclusions>
-            src/main/java/com/corn/trade/TradeApplication.java,src/main/java/com/corn/trade/dto/**/*.*,src/main/java/com/corn/trade/entity/**/*.*,src/main/java/com/corn/trade/exception/**/*.*,src/main/java/com/corn/trade/repository/**/*.*,src/main/java/com/corn/trade/configuration/**/*.*,src/main/java/com/corn/trade/controller/**/*.*,src/main/java/com/corn/trade/api/**/*.*
+            src/main/java/com/corn/trade/entity/**/*.*
         </sonar.coverage.exclusions>
         <maven.compiler.source>20</maven.compiler.source>
         <maven.compiler.target>20</maven.compiler.target>

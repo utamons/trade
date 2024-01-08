@@ -74,16 +74,28 @@ public class OrderHelper {
 		                                 quantityDecimal,
 		                                 positionType));
 
-		log.info("Placed main id {} {} {}, stop price: {}, limit price: {}, quantity: {}, stop loss: {}, take profit: {}, break even: {}",
-		         parent.orderId(),
-		         positionType,
-		         contractDetails.contract().symbol(),
-		         round(stop),
-		         round(limit),
-		         quantityDecimal,
-		         round(stopLossPrice),
-		         round(takeProfitPrice),
-		         round(breakEvenPrice));
+		if (stop != null) {
+			log.info("Placed main {} {} {}, STP: {}, LMT: {}, QTT: {}, SL: {}, TP: {}, BE: {}",
+			         parent.orderId(),
+			         positionType,
+			         contractDetails.contract().symbol(),
+			         round(stop),
+			         round(limit),
+			         quantityDecimal,
+			         round(stopLossPrice),
+			         round(takeProfitPrice),
+			         round(breakEvenPrice));
+		} else {
+			log.info("Placed main {} {} {}, LMT: {}, QTT: {}, SL: {}, TP: {}, BE: {}",
+			         parent.orderId(),
+			         positionType,
+			         contractDetails.contract().symbol(),
+			         round(limit),
+			         quantityDecimal,
+			         round(stopLossPrice),
+			         round(takeProfitPrice),
+			         round(breakEvenPrice));
+		}
 
 		takeProfit.parentId(parent.orderId());
 		stopLoss.parentId(parent.orderId());
