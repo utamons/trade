@@ -111,12 +111,12 @@ public class OrderPanel extends BasePanel {
 				stopLimitBtn.setEnabled(false);
 			} else if (calculator.isYellowLight()) {
 				trafficLight.setYellow();
-				stopLimitBtn.setEnabled(true);
+				stopLimitBtn.setEnabled(false);
 			} else {
 				trafficLight.setGreen();
 				stopLimitBtn.setEnabled(true);
 			}
-			limitBtn.setEnabled(!levels.isPivotPointALevel() && !calculator.isTradeError());
+			limitBtn.setEnabled(!levels.isPivotPointALevel() && !calculator.isTradeError() && !calculator.isYellowLight());
 		});
 
 		autoUpdate.addActivateListener(

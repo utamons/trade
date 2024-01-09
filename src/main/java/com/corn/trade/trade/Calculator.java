@@ -218,16 +218,8 @@ public class Calculator extends Notifier {
 		yellowLight = false;
 		if (riskPercent == null || takeProfit == null || breakEven == null)
 			return;
-		if (MAX_RISK_PERCENT - riskPercent < 0.1) {
-			log.debug(2,"YL: Risk percent {} is too close to max risk percent {}", fmt(riskPercent), MAX_RISK_PERCENT);
-			yellowLight = true;
-		}
 		if (Math.abs(takeProfit - breakEven) < 0.05) {
 			log.debug(2, "YL: Take profit {} is too close to break even {}", fmt(takeProfit), fmt(breakEven));
-			yellowLight = true;
-		}
-		if (gain > 0 && gain < 0.5) {
-			log.debug(2,"YL: Gain {} is less than 0.5%", fmt(gain));
 			yellowLight = true;
 		}
 		if (!levels.isStopLossUnderLevels(stopLoss, positionType)) {
