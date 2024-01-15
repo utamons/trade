@@ -117,8 +117,8 @@ public class App {
 					orderHelper,
 					positionHelper,
 					levels,
-					new Dimension(PREF_WIDTH, PREF_HEIGHT),
-					new Dimension(PREF_WIDTH, PREF_HEIGHT),
+					new Dimension(PREF_WIDTH, PREF_HEIGHT + 15),
+					new Dimension(PREF_WIDTH, PREF_HEIGHT + 15),
 					5, FIELD_HEIGHT);
 
 			JPanel mainContainer = new JPanel();

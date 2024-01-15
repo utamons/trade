@@ -15,6 +15,7 @@ import java.awt.*;
 public class OrderPanel extends BasePanel {
 
 	private final JButton stopLimitBtn;
+	private final JCheckBox allowYellowCheckBox;
 
 	private final JButton limitBtn;
 
@@ -59,6 +60,29 @@ public class OrderPanel extends BasePanel {
 		                                                     calculator::setQuantity);
 		autoUpdate.addActivateListener(quantity::setAutoSwitchVisible);
 
+		JPanel checkBoxPanel = new JPanel();
+		allowYellowCheckBox = new JCheckBox("Allow Yellow");
+		// Switch it off after 10 minutes
+		Timer timer = new Timer(600_000, evt -> {
+			allowYellowCheckBox.setSelected(false);
+			allowYellowCheckBox.setForeground((Color) UIManager.get("TextField.foreground"));
+		});
+
+		allowYellowCheckBox.addActionListener(e -> {
+			if (allowYellowCheckBox.isSelected()) {
+				allowYellowCheckBox.setForeground(Color.RED);
+				timer.setRepeats(false); // Make sure the timer only runs once
+				timer.start();
+			} else {
+				allowYellowCheckBox.setForeground((Color) UIManager.get("TextField.foreground"));
+				timer.stop();
+			}
+		});
+
+		checkBoxPanel.setLayout(new BorderLayout());
+		checkBoxPanel.add(allowYellowCheckBox, BorderLayout.WEST);
+
+		panel.add(checkBoxPanel);
 		panel.add(quantity);
 		panel.add(limit);
 		panel.add(stop);
@@ -111,7 +135,7 @@ public class OrderPanel extends BasePanel {
 				stopLimitBtn.setEnabled(false);
 			} else if (calculator.isYellowLight()) {
 				trafficLight.setYellow();
-				stopLimitBtn.setEnabled(false);
+				stopLimitBtn.setEnabled(allowYellowCheckBox.isSelected());
 			} else {
 				trafficLight.setGreen();
 				stopLimitBtn.setEnabled(true);
