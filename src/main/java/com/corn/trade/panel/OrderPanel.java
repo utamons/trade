@@ -140,7 +140,7 @@ public class OrderPanel extends BasePanel {
 				trafficLight.setGreen();
 				stopLimitBtn.setEnabled(true);
 			}
-			limitBtn.setEnabled(!levels.isPivotPointALevel() && !calculator.isTradeError() && !calculator.isYellowLight());
+			limitBtn.setEnabled(!levels.isPivotPointALevel() && !calculator.isTradeError() && (!calculator.isYellowLight() || allowYellowCheckBox.isSelected()));
 		});
 
 		autoUpdate.addActivateListener(
