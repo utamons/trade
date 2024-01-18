@@ -189,6 +189,10 @@ public class InputPanel extends BasePanel {
 			spread.setValue(autoUpdate.getSpread());
 			levels.setHighDay(autoUpdate.getHigh());
 			levels.setLowDay(autoUpdate.getLow());
+			if (resistance.getValue() == null)
+				resistance.setValue(autoUpdate.getHigh());
+			if (support.getValue() == null)
+				support.setValue(autoUpdate.getLow());
 			calculator.setSpread(autoUpdate.getSpread());
 			levels.calculatePivotPoint(calculator.getPositionType());
 			levels.calculatePowerReserve(calculator.getPositionType());
