@@ -20,6 +20,7 @@ import java.util.List;
 public class InputPanel extends BasePanel {
 
 	private final JCheckBox autoUpdateCheckBox;
+	private final JCheckBox autoLevelsCheckBox;
 
 	public InputPanel(Calculator calculator,
 	                  AutoUpdate autoUpdate,
@@ -134,8 +135,14 @@ public class InputPanel extends BasePanel {
 		                                                       levels::setResistance);
 
 		RowPanel rowPanel = new RowPanel();
+		JPanel autoLevelsPanel = new JPanel();
+		autoLevelsPanel.setLayout(new BorderLayout());
+
 
 		autoUpdateCheckBox = new JCheckBox("Auto-update");
+		autoLevelsCheckBox = new JCheckBox("Auto-levels");
+
+		autoLevelsPanel.add(autoLevelsCheckBox, BorderLayout.WEST);
 
 		JButton estimate = new JButton("Estimate");
 		JButton reset    = new JButton("Reset");
@@ -189,10 +196,10 @@ public class InputPanel extends BasePanel {
 			spread.setValue(autoUpdate.getSpread());
 			levels.setHighDay(autoUpdate.getHigh());
 			levels.setLowDay(autoUpdate.getLow());
-			if (resistance.getValue() == null)
+			if (autoLevelsCheckBox.isSelected()) {
 				resistance.setValue(autoUpdate.getHigh());
-			if (support.getValue() == null)
 				support.setValue(autoUpdate.getLow());
+			}
 			calculator.setSpread(autoUpdate.getSpread());
 			levels.calculatePivotPoint(calculator.getPositionType());
 			levels.calculatePowerReserve(calculator.getPositionType());
@@ -215,8 +222,10 @@ public class InputPanel extends BasePanel {
 		panel.add(resistance);
 		panel.add(tempLevel);
 		panel.add(support);
+		panel.add(autoLevelsPanel);
 
 		this.add(panel, BorderLayout.NORTH);
+
 		this.add(rowPanel, BorderLayout.SOUTH);
 	}
 }
