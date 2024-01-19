@@ -18,6 +18,7 @@ import static com.corn.trade.util.Util.showErrorDlg;
 public class Levels extends Notifier {
 
 	private static final Logger log = LoggerFactory.getLogger(Levels.class);
+	public static final double MIN_STOP_LOSS_DISTANCE = 0.02;
 
 	@SuppressWarnings("FieldCanBeLocal")
 	private final JFrame  frame;
@@ -252,13 +253,13 @@ public class Levels extends Notifier {
 		if (positionType == PositionType.LONG) {
 			closestLevel = Stream.of(tempLevel, resistance, support)
 			                     .filter(Objects::nonNull)
-			                     .filter(level -> level > stopLoss)
+			                     .filter(level -> level >= (stopLoss + MIN_STOP_LOSS_DISTANCE))
 			                     .min(Comparator.naturalOrder())
 			                     .orElse(null);
 		} else if (positionType == PositionType.SHORT) {
 			closestLevel = Stream.of(tempLevel, resistance, support)
 			                     .filter(Objects::nonNull)
-			                     .filter(level -> level < stopLoss)
+			                     .filter(level -> level < (stopLoss - MIN_STOP_LOSS_DISTANCE))
 			                     .max(Comparator.naturalOrder())
 			                     .orElse(null);
 		}
