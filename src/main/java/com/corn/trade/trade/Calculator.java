@@ -99,6 +99,10 @@ public class Calculator extends Notifier {
 		return stopLoss;
 	}
 
+	public Double getCorrectedStopLoss() {
+		return isLong() ? stopLoss + spread : stopLoss - spread;
+	}
+
 	public void setStopLoss(Double stopLoss) {
 		this.stopLoss = stopLoss;
 	}
@@ -171,9 +175,9 @@ public class Calculator extends Notifier {
 		double range = abs(priceClose - price);
 		double percent = range / levels.getPowerReserve() * 100;
 
-		log.debug(2, "BE: {}, range {}, {}%", fmt(priceClose + (isLong() ? spread : -spread)), fmt(range), fmt(percent));
+		log.debug(2, "BE: {}, range {}, {}%", fmt(priceClose), fmt(range), fmt(percent));
 
-		return priceClose + (isLong() ? spread : -spread);
+		return priceClose;
 	}
 
 	private double getTaxes(double sum) {
@@ -222,8 +226,8 @@ public class Calculator extends Notifier {
 			log.debug(2, "YL: Take profit {} is too close to break even {}", fmt(takeProfit), fmt(breakEven));
 			yellowLight = true;
 		}
-		if (!levels.isStopLossUnderLevels(stopLoss, positionType)) {
-			log.debug(2,"YL: Stop loss {} is not under levels", fmt(stopLoss));
+		if (!levels.isStopLossUnderLevels(getCorrectedStopLoss(), positionType)) {
+			log.debug(2,"YL: Stop loss {} is not under levels", fmt(getCorrectedStopLoss()));
 			yellowLight = true;
 		}
 	}
@@ -263,7 +267,7 @@ public class Calculator extends Notifier {
 			          counter,
 			          quantity,
 			          fmt(takeProfit),
-			          fmt(stopLoss),
+			          fmt(getCorrectedStopLoss()),
 			          fmt(riskPercent),
 			          fmt(riskRewardRatioPercent)
 			);
@@ -306,11 +310,7 @@ public class Calculator extends Notifier {
 	}
 
 	private double calculateStopLoss() {
-		/*
-		 * The stop loss is corrected by the spread because the stop loss order might be executed by the worst price
-		 * and this value should be a base for further calculations.
-		 */
-		double stopLoss = isLong() ? breakEven - risk + spread : breakEven + risk - spread;
+		double stopLoss = isLong() ? breakEven - risk : breakEven + risk;
 
 		if (estimationType == EstimationType.MIN_STOP_LOSS ||
 		    estimationType == EstimationType.MAX_GAIN_MIN_STOP_LOSS) {
@@ -335,7 +335,7 @@ public class Calculator extends Notifier {
 			return true;
 		}
 		if (stopLossTooLow()) {
-			log.debug(2,"RL: Stop loss {} is too low", fmt(stopLoss));
+			log.debug(2,"RL: Stop loss {} is too low", fmt(getCorrectedStopLoss()));
 			showErrorDlg(frame, "Cannot fit to risk limits!", !autoUpdate);
 			return true;
 		}
@@ -356,13 +356,12 @@ public class Calculator extends Notifier {
 	private void fillOrder() {
 		orderStop = levels.getPivotPoint();
 		orderLimit = orderStop + (isLong() ? spread : -spread);
-		takeProfit = isLong() ? levels.getPivotPoint() + levels.getPowerReserve() : levels.getPivotPoint() -
-		                                                                            levels.getPowerReserve();
+		takeProfit = isLong() ? levels.getPivotPoint() + levels.getPowerReserve() : levels.getPivotPoint() - levels.getPowerReserve();
 	}
 
 	private boolean stopLossTooLow() {
-		return (isLong() && stopLoss > levels.getPivotPoint() - Math.max(ORDER_LUFT, spread)) ||
-		       (isShort() && stopLoss < levels.getPivotPoint() + Math.max(ORDER_LUFT, spread));
+		return (isLong() && getCorrectedStopLoss() > levels.getPivotPoint() - Math.max(ORDER_LUFT, spread)) ||
+		       (isShort() && getCorrectedStopLoss() < levels.getPivotPoint() + Math.max(ORDER_LUFT, spread));
 	}
 
 	private boolean isLong() {

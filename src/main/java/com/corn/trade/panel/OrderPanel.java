@@ -104,7 +104,7 @@ public class OrderPanel extends BasePanel {
 		                                                       calculator.getQuantity(),
 		                                                       null,
 		                                                       limit.getValue(),
-		                                                       calculator.getStopLoss(),
+		                                                       calculator.getCorrectedStopLoss(),
 		                                                       calculator.getTakeProfit(),
 		                                                       calculator.getBreakEven(),
 		                                                       calculator.getPositionType()));
@@ -113,7 +113,7 @@ public class OrderPanel extends BasePanel {
 		                                                           calculator.getQuantity(),
 		                                                           stop.getValue(),
 		                                                           limit.getValue(),
-		                                                           calculator.getStopLoss(),
+		                                                           calculator.getCorrectedStopLoss(),
 		                                                           calculator.getTakeProfit(),
 		                                                           calculator.getBreakEven(),
 		                                                           calculator.getPositionType()));

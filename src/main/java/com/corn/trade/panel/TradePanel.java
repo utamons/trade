@@ -68,7 +68,7 @@ public class TradePanel extends BasePanel {
 		calculator.addUpdater(
 				() -> {
 					breakEven.setValue(calculator.getBreakEven());
-					stopLoss.setValue(calculator.getStopLoss());
+					stopLoss.setValue(calculator.getCorrectedStopLoss());
 					take.setValue(calculator.getTakeProfit());
 					outputEx.setValue(calculator.getOutputExpected());
 					gain.setValue(calculator.getGain());
