@@ -39,6 +39,7 @@ public class App {
 	public static double ORDER_LUFT            = 0.02;
 	public static double MIN_POWER_RESERVE_TO_PRICE_RATIO = 0.005;
 	public static double REALISTIC_POWER_RESERVE = 0.8;
+	public static boolean SIMULATION_MODE = false;
 
 	public static Properties loadProperties(String fileName) {
 		Properties props = new Properties();
@@ -65,6 +66,7 @@ public class App {
 			DEBUG_LEVEL = Integer.parseInt(configProps.getProperty("debug_level", "2"));
 			MIN_POWER_RESERVE_TO_PRICE_RATIO = Double.parseDouble(configProps.getProperty("min_power_reserve_to_price_ratio", "0.005"));
 			REALISTIC_POWER_RESERVE = Double.parseDouble(configProps.getProperty("realistic_power_reserve", "1"));
+			SIMULATION_MODE = Boolean.parseBoolean(configProps.getProperty("simulation_mode", "false"));
 
 			setDefaultFont();
 

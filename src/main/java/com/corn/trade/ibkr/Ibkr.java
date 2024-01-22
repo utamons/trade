@@ -1,5 +1,6 @@
 package com.corn.trade.ibkr;
 
+import com.corn.trade.App;
 import com.ib.client.*;
 import com.ib.controller.ApiConnection;
 import com.ib.controller.ApiController;
@@ -88,6 +89,10 @@ public class Ibkr implements IConnectionHandler {
 	}
 
 	public void placeOrder(Contract contract, Order order, ApiController.IOrderHandler handler) {
+		if (App.SIMULATION_MODE) {
+			log.info("Simulation mode");
+			return;
+		}
 		if (!isConnected()) {
 			log.error("Not connected");
 			return;
