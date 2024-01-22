@@ -1,5 +1,6 @@
 package com.corn.trade.ibkr;
 
+import com.corn.trade.App;
 import com.corn.trade.trade.OrderAction;
 import com.corn.trade.trade.PositionType;
 import com.ib.client.Contract;
@@ -22,6 +23,10 @@ public class PositionHelper {
 
 	public void dropAll() {
 		log.info("Dropping all positions");
+		if (App.SIMULATION_MODE) {
+			log.info("Simulation mode");
+			return;
+		}
 		if (!ibkr.isConnected()) {
 			log.error("Not connected");
 			return;
