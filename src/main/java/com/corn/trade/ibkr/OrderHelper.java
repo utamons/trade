@@ -1,5 +1,6 @@
 package com.corn.trade.ibkr;
 
+import com.corn.trade.App;
 import com.corn.trade.trade.OrderAction;
 import com.corn.trade.trade.PositionType;
 import com.ib.client.*;
@@ -26,7 +27,7 @@ public class OrderHelper {
 	                       Double limit,
 	                       Double stopLossPrice,
 	                       Double takeProfitPrice,
-						   Double breakEvenPrice,
+	                       Double breakEvenPrice,
 	                       PositionType positionType) {
 		if (!ibkr.isConnected()) {
 			log.error("Not connected");
@@ -137,6 +138,7 @@ public class OrderHelper {
 
 		ApiController.ILiveOrderHandler handler = new ApiController.ILiveOrderHandler() {
 			final List<Order> orders = new ArrayList<>();
+
 			@Override
 			public void openOrder(Contract contract, Order order, OrderState orderState) {
 				orders.add(order);
@@ -145,10 +147,14 @@ public class OrderHelper {
 			@Override
 			public void openOrderEnd() {
 				ibkr.controller().removeLiveOrderHandler(this);
-				orders.forEach(order -> {
-					ibkr.controller().cancelOrder(order.orderId(), "", null);
-					log.info("Dropping order {}", order.orderId());
-				});
+				if (App.SIMULATION_MODE) {
+					log.info("Simulation mode");
+				} else {
+					orders.forEach(order -> {
+						ibkr.controller().cancelOrder(order.orderId(), "", null);
+						log.info("Dropping order {}", order.orderId());
+					});
+				}
 				positionHelper.dropAll();
 			}
 
@@ -163,7 +169,8 @@ public class OrderHelper {
 			                        double lastFillPrice,
 			                        int clientId,
 			                        String whyHeld,
-			                        double mktCapPrice) {}
+			                        double mktCapPrice) {
+			}
 
 			@Override
 			public void handle(int orderId, int errorCode, String errorMsg) {
