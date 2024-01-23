@@ -100,6 +100,8 @@ public class Calculator extends Notifier {
 	}
 
 	public Double getCorrectedStopLoss() {
+		if (stopLoss == null)
+			return 0.0;
 		return isLong() ? stopLoss + spread : stopLoss - spread;
 	}
 
