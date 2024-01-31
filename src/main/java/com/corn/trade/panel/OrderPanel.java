@@ -14,6 +14,7 @@ import java.awt.*;
 
 public class OrderPanel extends BasePanel {
 
+	public static final int BUTTON_DELAY = 5000;
 	private final JButton stopLimitBtn;
 	private final JCheckBox allowYellowCheckBox;
 
@@ -63,19 +64,20 @@ public class OrderPanel extends BasePanel {
 		JPanel checkBoxPanel = new JPanel();
 		allowYellowCheckBox = new JCheckBox("Allow Yellow");
 		// Switch it off after 10 minutes
-		Timer timer = new Timer(600_000, evt -> {
+		Timer allowYellowTimer = new Timer(600_000, evt -> {
 			allowYellowCheckBox.setSelected(false);
 			allowYellowCheckBox.setForeground((Color) UIManager.get("TextField.foreground"));
 		});
+		allowYellowTimer.setRepeats(false); // Make sure the timer only runs once
 
 		allowYellowCheckBox.addActionListener(e -> {
 			if (allowYellowCheckBox.isSelected()) {
 				allowYellowCheckBox.setForeground(Color.RED);
-				timer.setRepeats(false); // Make sure the timer only runs once
-				timer.start();
+
+				allowYellowTimer.start();
 			} else {
 				allowYellowCheckBox.setForeground((Color) UIManager.get("TextField.foreground"));
-				timer.stop();
+				allowYellowTimer.stop();
 			}
 		});
 
@@ -100,23 +102,47 @@ public class OrderPanel extends BasePanel {
 		buttonPanel.add(stopLimitBtn);
 		buttonPanel.add(dropAllBtn);
 
-		limitBtn.addActionListener(e -> orderHelper.placeOrder(autoUpdate.getContractDetails(),
-		                                                       calculator.getQuantity(),
-		                                                       null,
-		                                                       limit.getValue(),
-		                                                       calculator.getCorrectedStopLoss(),
-		                                                       calculator.getTakeProfit(),
-		                                                       calculator.getBreakEven(),
-		                                                       calculator.getPositionType()));
+		Timer buttonDelayTimer = new Timer(BUTTON_DELAY, evt -> {
+			limitBtn.setEnabled(true);
+			stopLimitBtn.setEnabled(true);
+		});
+		buttonDelayTimer.setRepeats(false);
 
-		stopLimitBtn.addActionListener(e -> orderHelper.placeOrder(autoUpdate.getContractDetails(),
-		                                                           calculator.getQuantity(),
-		                                                           stop.getValue(),
-		                                                           limit.getValue(),
-		                                                           calculator.getCorrectedStopLoss(),
-		                                                           calculator.getTakeProfit(),
-		                                                           calculator.getBreakEven(),
-		                                                           calculator.getPositionType()));
+		limitBtn.addActionListener(e -> {
+			limitBtn.setEnabled(false);
+			stopLimitBtn.setEnabled(false);
+
+			if (limit.getValue() != null) {
+				orderHelper.placeOrder(autoUpdate.getContractDetails(),
+				                       calculator.getQuantity(),
+				                       null,
+				                       limit.getValue(),
+				                       calculator.getCorrectedStopLoss(),
+				                       calculator.getTakeProfit(),
+				                       calculator.getBreakEven(),
+				                       calculator.getPositionType());
+			}
+
+			buttonDelayTimer.start();
+		});
+
+		stopLimitBtn.addActionListener(e -> {
+			limitBtn.setEnabled(false);
+			stopLimitBtn.setEnabled(false);
+
+			if (stop.getValue() != null && limit.getValue() != null) {
+				orderHelper.placeOrder(autoUpdate.getContractDetails(),
+				                       calculator.getQuantity(),
+				                       stop.getValue(),
+				                       limit.getValue(),
+				                       calculator.getCorrectedStopLoss(),
+				                       calculator.getTakeProfit(),
+				                       calculator.getBreakEven(),
+				                       calculator.getPositionType());
+			}
+
+			buttonDelayTimer.start();
+		});
 
 		dropAllBtn.addActionListener(e -> {
 			orderHelper.dropAll(positionHelper); // First drop all orders
