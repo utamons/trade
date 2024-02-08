@@ -7,6 +7,7 @@ import com.corn.trade.ibkr.PositionHelper;
 import com.corn.trade.panel.*;
 import com.corn.trade.trade.Calculator;
 import com.corn.trade.trade.Levels;
+import com.corn.trade.util.LiquibaseRunner;
 import com.github.weisj.darklaf.LafManager;
 import com.github.weisj.darklaf.theme.*;
 import com.github.weisj.darklaf.theme.event.ThemePreferenceChangeEvent;
@@ -41,6 +42,10 @@ public class App {
 	public static double REALISTIC_POWER_RESERVE = 0.8;
 	public static boolean SIMULATION_MODE = false;
 
+	public static String DB_URL;
+	public static String DB_USER;
+	public static String DB_PASSWORD;
+
 	public static Properties loadProperties(String fileName) {
 		Properties props = new Properties();
 		try (InputStream input = new FileInputStream(fileName)) {
@@ -52,9 +57,12 @@ public class App {
 	}
 
 	public static void main(String[] args) {
+		final String stage = args.length>0 && args[0].equals("-dev")? "dev" : "prod";
+
+		final String dbKey = stage.equals("dev")? "db_url_dev" : "db_url_prod";
 
 		SwingUtilities.invokeLater(() -> {
-			log.info("Calculator version 1.0.2");
+			log.info("Calculator version 1.0.2 ({})", stage);
 
 			Properties configProps = loadProperties("D:\\bin\\trade.properties");
 
@@ -67,6 +75,11 @@ public class App {
 			MIN_POWER_RESERVE_TO_PRICE_RATIO = Double.parseDouble(configProps.getProperty("min_power_reserve_to_price_ratio", "0.005"));
 			REALISTIC_POWER_RESERVE = Double.parseDouble(configProps.getProperty("realistic_power_reserve", "1"));
 			SIMULATION_MODE = Boolean.parseBoolean(configProps.getProperty("simulation_mode", "false"));
+			DB_URL = configProps.getProperty(dbKey, null);
+			DB_USER = configProps.getProperty("db_user", null);
+			DB_PASSWORD = configProps.getProperty("db_password", null);
+
+			LiquibaseRunner.runLiquibase();
 
 			setDefaultFont();
 

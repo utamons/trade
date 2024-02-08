@@ -1,12 +1,10 @@
 package com.corn.trade.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 @SuppressWarnings("unused")
 @Entity()
+@Table(name = "currency")
 public class Currency {
 
 	@Id

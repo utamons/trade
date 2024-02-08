@@ -1,12 +1,15 @@
 package com.corn.trade.jpa;
 
+import com.corn.trade.App;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 import jakarta.persistence.TypedQuery;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @SuppressWarnings("unused")
@@ -18,7 +21,17 @@ public class JpaRepo<T, ID extends Serializable> {
 
 	public JpaRepo(Class<T> type) {
 		this.type = type;
-		this.entityManagerFactory = Persistence.createEntityManagerFactory("TradePersistenceUnit");
+
+		String url           = App.DB_URL;
+		String username      = App.DB_USER;
+		String password      = App.DB_PASSWORD;
+
+		Map<String, String> properties = new HashMap<>();
+		properties.put("javax.persistence.jdbc.user", username);
+		properties.put("javax.persistence.jdbc.password", password);
+		properties.put("javax.persistence.jdbc.url", url);
+
+		this.entityManagerFactory = Persistence.createEntityManagerFactory("TradePersistenceUnit", properties);
 		this.entityManager = entityManagerFactory.createEntityManager();
 	}
 

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="1" author="cornknight">
+        <createTable tableName="currency">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="symbol" type="CHAR(5)"/>
+            <column name="code" type="VARCHAR(10)"/>
+        </createTable>
+        <createTable tableName="exchange">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(50)"/>
+            <column name="currency_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="ticker">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(50)"/>
+            <column name="exchange_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint constraintName="exchange_currency_fk"
+                                 baseTableName="exchange" baseColumnNames="currency_id"
+                                 referencedTableName="currency" referencedColumnNames="id"/>
+
+        <addForeignKeyConstraint constraintName="ticker_exchange_fk"
+                                    baseTableName="ticker" baseColumnNames="exchange_id"
+                                    referencedTableName="exchange" referencedColumnNames="id"/>
+
+        <loadData
+                tableName="currency"
+                file="data/currency.csv">
+            <column name="id" type="NUMERIC"/>
+            <column name="name" type="STRING"/>
+            <column name="symbol" type="STRING"/>
+            <column name="code" type="STRING"/>
+        </loadData>
+        <loadData
+                tableName="exchange"
+                file="data/exchange.csv">
+            <column name="id" type="NUMERIC"/>
+            <column name="name" type="STRING"/>
+            <column name="currency_id" type="NUMERIC"/>
+        </loadData>
+        <loadData
+                tableName="ticker"
+                file="data/ticker.csv">
+            <column name="id" type="NUMERIC"/>
+            <column name="name" type="STRING"/>
+            <column name="exchange_id" type="NUMERIC"/>
+        </loadData>
+    </changeSet>
+
+</databaseChangeLog>

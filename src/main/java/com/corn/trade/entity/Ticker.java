@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 @SuppressWarnings("unused")
 @Entity()
+@Table(name = "ticker")
 public class Ticker implements Comparable<Ticker> {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

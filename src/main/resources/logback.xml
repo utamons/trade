@@ -21,6 +21,14 @@
         </rollingPolicy>
     </appender>
 
+    <logger name="org.hibernate" level="INFO" additivity="false">
+        <appender-ref ref="ROLLING"/>
+    </logger>
+
+    <logger name="org.mariadb" level="INFO" additivity="false">
+        <appender-ref ref="ROLLING"/>
+    </logger>
+
     <!-- Logger for com.corn.trade package -->
     <logger name="com.corn.trade" level="debug" additivity="false">
         <appender-ref ref="ROLLING"/>

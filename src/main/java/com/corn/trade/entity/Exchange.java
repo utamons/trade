@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 @SuppressWarnings("unused")
 @Entity()
+@Table(name = "exchange")
 public class Exchange implements Comparable<Exchange>  {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

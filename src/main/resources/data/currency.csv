@@ -1,0 +1,51 @@
+id,name,symbol,code
+1,US Dollar,$,USD
+2,Euro,€,EUR
+3,British Pound,£,GBP
+4,Japanese Yen,¥,JPY
+5,Swiss Franc,CHF,CHF
+6,Canadian Dollar,$,CAD
+7,Australian Dollar,$,AUD
+8,New Zealand Dollar,$,NZD
+9,South African Rand,R,ZAR
+10,Chinese Yuan,¥,CNY
+11,Hong Kong Dollar,$,HKD
+12,Singapore Dollar,$,SGD
+13,Indian Rupee,₹,INR
+14,Brazilian Real,R$,BRL
+15,Mexican Peso,$,MXN
+16,Russian Ruble,₽,RUB
+17,Turkish Lira,₺,TRY
+18,Swedish Krona,kr,SEK
+19,Norwegian Krone,kr,NOK
+20,Polish Zloty,zł,PLN
+21,Czech Koruna,Kč,CZK
+22,Hungarian Forint,Ft,HUF
+23,Israeli Shekel,₪,ILS
+24,Saudi Riyal,﷼,SAR
+25,Emirati Dirham,د.إ,AED
+26,Qatari Riyal,﷼,QAR
+27,Kuwaiti Dinar,د.ك,KWD
+28,Bahraini Dinar,د.ب,BHD
+29,Omani Rial,﷼,OMR
+30,Philippine Peso,₱,PHP
+31,Indonesian Rupiah,Rp,IDR
+32,Malaysian Ringgit,RM,MYR
+33,Thai Baht,฿,THB
+34,Vietnamese Dong,₫,VND
+35,South Korean Won,₩,KRW
+36,Taiwan Dollar,$,TWD
+37,Argentine Peso,$,ARS
+38,Chilean Peso,$,CLP
+39,Colombian Peso,$,COP
+40,Peruvian Sol,S/,PEN
+41,Egyptian Pound,£,EGP
+42,Nigerian Naira,₦,NGN
+43,Kenyan Shilling,Sh,KES
+44,Ghanaian Cedi,₵,GHS
+45,Ugandan Shilling,Sh,UGX
+46,Tanzanian Shilling,TSh,TZS
+47,Zambian Kwacha,ZK,ZMW
+48,Moroccan Dirham,د.م.,MAD
+49,Tunisian Dinar,د.ت,TND
+50,Algerian Dinar,د.ج,DZD
