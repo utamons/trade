@@ -26,6 +26,7 @@ import java.util.Properties;
 import static com.corn.trade.util.Util.showWarningDlg;
 
 public class App {
+	public final static String version = "1.0.3";
 	public static final  Theme  DARK_THEME   = new OneDarkTheme();
 	public static final  Theme  LIGHT_THEME  = new IntelliJTheme();
 	public static final  int    PREF_HEIGHT  = 250;
@@ -57,12 +58,12 @@ public class App {
 	}
 
 	public static void main(String[] args) {
+
 		final String stage = args.length>0 && args[0].equals("-dev")? "dev" : "prod";
 
 		final String dbKey = stage.equals("dev")? "db_url_dev" : "db_url_prod";
 
 		SwingUtilities.invokeLater(() -> {
-			log.info("Calculator version 1.0.2 ({})", stage);
 
 			Properties configProps = loadProperties("D:\\bin\\trade.properties");
 
@@ -83,7 +84,7 @@ public class App {
 
 			setDefaultFont();
 
-			JFrame frame = new JFrame("Trade Calculator v. 1.0.2");
+			JFrame frame = new JFrame("Trade v. " + version + " (" + stage + ")");
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setSize(700, 630);
 
@@ -171,7 +172,7 @@ public class App {
 			log.info("order luft: {}", ORDER_LUFT);
 			log.info("debug level: {}", DEBUG_LEVEL);
 
-			log.info("Application started");
+			log.info("Trade version {} ({}) is started", version, stage);
 
 			if (!ibkr.isConnected()) {
 				showWarningDlg(frame, "Not connected to IBKR. Auto update and orders will be simulated!");
