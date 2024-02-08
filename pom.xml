@@ -4,9 +4,9 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.corn</groupId>
     <artifactId>trade</artifactId>
-    <version>1.0.2-SNAPSHOT</version>
+    <version>1.0.3-SNAPSHOT</version>
     <name>Trade</name>
-    <description>Trade backend</description>
+    <description>Trade app</description>
     <properties>
         <java.version>19</java.version>
         <properties-maven-plugin.version>1.1.0</properties-maven-plugin.version>
@@ -33,11 +33,6 @@
             <groupId>com.github.weisj</groupId>
             <artifactId>darklaf-core</artifactId>
             <version>3.0.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hsqldb</groupId>
-            <artifactId>hsqldb</artifactId>
-            <version>2.7.2</version>
         </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
