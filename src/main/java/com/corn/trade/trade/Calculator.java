@@ -2,9 +2,12 @@ package com.corn.trade.trade;
 
 import com.corn.trade.common.Notifier;
 import com.corn.trade.util.Debug;
+import com.corn.trade.util.Util;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.corn.trade.App.*;
 import static com.corn.trade.util.Util.fmt;
@@ -13,16 +16,19 @@ import static java.lang.Math.abs;
 
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
 public class Calculator extends Notifier {
-	public final  Debug          log                   = new Debug(LoggerFactory.getLogger(Calculator.class));
-	private final Component      frame;
-	private final Levels         levels;
-	private       boolean        autoUpdate            = false;
+	public static final double SPREAD_COEFF = 2;
+
+	public final  Debug     log = new Debug(LoggerFactory.getLogger(Calculator.class));
+	private final Component frame;
+	private final Levels    levels;
+	private final List<Double>     spreads       = new ArrayList<>();
+	private       boolean        autoUpdate    = false;
 	private       PositionType   positionType;
 	private       EstimationType estimationType;
 	private       Double         outputExpected;
 	private       Double         gain;
 	private       Double         spread;
-	private       boolean        spreadError           = false;
+	private       boolean        spreadError   = false;
 	private       Double         stopLoss;
 	private       Double         takeProfit;
 	private       Double         breakEven;
@@ -32,7 +38,7 @@ public class Calculator extends Notifier {
 	private       Double         orderLimit;
 	private       Double         orderStop;
 	private       Integer        quantity;
-	private       boolean        quantityError         = false;
+	private       boolean        quantityError = false;
 
 	private boolean tradeError = false;
 
@@ -91,22 +97,41 @@ public class Calculator extends Notifier {
 		return spread;
 	}
 
-	public void setSpread(Double spread) {
-		this.spread = spread;
+	public void setSpread(Double newSpread) {
+		if (!autoUpdate) {
+			spread = newSpread;
+			return;
+		}
+		// Add the new spread to the list
+		spreads.add(newSpread);
+
+		// Ensure the list only keeps the last 10 spreads
+		if (spreads.size() > 10) {
+			spreads.remove(0); // Remove the oldest spread to maintain the size limit
+		}
+
+		// Calculate the average of the spreads in the list
+
+		// Set the spread field to the calculated average
+		this.spread = spreads.stream()
+		                     .mapToDouble(Double::doubleValue)
+		                     .average()
+		                     .orElse(0.0);
 	}
+
 
 	public Double getStopLoss() {
 		return stopLoss;
 	}
 
+	public void setStopLoss(Double stopLoss) {
+		this.stopLoss = stopLoss;
+	}
+
 	public Double getCorrectedStopLoss() {
 		if (stopLoss == null)
 			return 0.0;
-		return isLong() ? stopLoss + spread : stopLoss - spread;
-	}
-
-	public void setStopLoss(Double stopLoss) {
-		this.stopLoss = stopLoss;
+		return isLong() ? Util.round( stopLoss + spread) : Util.round(stopLoss - spread);
 	}
 
 	public Double getTakeProfit() {
@@ -174,7 +199,7 @@ public class Calculator extends Notifier {
 			counter++;
 		}
 
-		double range = abs(priceClose - price);
+		double range   = abs(priceClose - price);
 		double percent = range / levels.getPowerReserve() * 100;
 
 		log.debug(2, "BE: {}, range {}, {}%", fmt(priceClose), fmt(range), fmt(percent));
@@ -229,7 +254,7 @@ public class Calculator extends Notifier {
 			yellowLight = true;
 		}
 		if (!levels.isStopLossUnderLevels(getCorrectedStopLoss(), positionType)) {
-			log.debug(2,"YL: Stop loss {} is not under levels", fmt(getCorrectedStopLoss()));
+			log.debug(2, "YL: Stop loss {} is not under levels", fmt(getCorrectedStopLoss()));
 			yellowLight = true;
 		}
 	}
@@ -265,7 +290,8 @@ public class Calculator extends Notifier {
 
 			if (riskPercent > MAX_RISK_PERCENT)
 				quantity--;
-			log.debug(2,"Iteration {} - quantity: {}, take profit: {}, stop loss {}, risk percent: {}, risk reward ratio: {}",
+			log.debug(2,
+			          "Iteration {} - quantity: {}, take profit: {}, stop loss {}, risk percent: {}, risk reward ratio: {}",
 			          counter,
 			          quantity,
 			          fmt(takeProfit),
@@ -317,8 +343,8 @@ public class Calculator extends Notifier {
 		if (estimationType == EstimationType.MIN_STOP_LOSS ||
 		    estimationType == EstimationType.MAX_GAIN_MIN_STOP_LOSS) {
 			double minStopLoss =
-					isLong() ? levels.getPivotPoint() - Math.max(ORDER_LUFT, spread) : levels.getPivotPoint() +
-					                                                                   Math.max(ORDER_LUFT, spread);
+					isLong() ? levels.getPivotPoint() - Math.max(ORDER_LUFT, spread * 2) : levels.getPivotPoint() +
+					                                                                   Math.max(ORDER_LUFT, spread * 2);
 			return isLong() ? Math.max(stopLoss, minStopLoss) : Math.min(stopLoss, minStopLoss);
 		}
 
@@ -327,17 +353,17 @@ public class Calculator extends Notifier {
 
 	private boolean areRiskLimitsFailed() {
 		if ((isLong() && takeProfit <= breakEven) || (isShort() && takeProfit >= breakEven)) {
-			log.debug(2,"RL: Take profit {} is less than break even {}", fmt(takeProfit), fmt(breakEven));
+			log.debug(2, "RL: Take profit {} is less than break even {}", fmt(takeProfit), fmt(breakEven));
 			showErrorDlg(frame, "Cannot fit to risk limits!", !autoUpdate);
 			return true;
 		}
 		if (quantity <= 0) {
-			log.debug(2,"RL: Quantity {} is less than 0", quantity);
+			log.debug(2, "RL: Quantity {} is less than 0", quantity);
 			showErrorDlg(frame, "Cannot fit to risk limits!", !autoUpdate);
 			return true;
 		}
 		if (stopLossTooLow()) {
-			log.debug(2,"RL: Stop loss {} is too low", fmt(getCorrectedStopLoss()));
+			log.debug(2, "RL: Stop loss {} is too low", fmt(getCorrectedStopLoss()));
 			showErrorDlg(frame, "Cannot fit to risk limits!", !autoUpdate);
 			return true;
 		}
@@ -357,8 +383,9 @@ public class Calculator extends Notifier {
 
 	private void fillOrder() {
 		orderStop = levels.getPivotPoint();
-		orderLimit = orderStop + (isLong() ? spread : -spread);
-		takeProfit = isLong() ? levels.getPivotPoint() + levels.getPowerReserve() : levels.getPivotPoint() - levels.getPowerReserve();
+		orderLimit = orderStop + (isLong() ? spread * SPREAD_COEFF : -spread * SPREAD_COEFF);
+		takeProfit = isLong() ? levels.getPivotPoint() + levels.getPowerReserve() : levels.getPivotPoint() -
+		                                                                            levels.getPowerReserve();
 	}
 
 	private boolean stopLossTooLow() {
