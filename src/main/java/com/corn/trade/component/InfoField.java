@@ -8,9 +8,9 @@ public class InfoField extends JPanel {
 	private final JLabel infoField;
 	private Timer blinkTimer;
 	private boolean isBlinking = false;
-	private Color originalColor = UIManager.getColor("Label.foreground");
+	//private Color originalColor = UIManager.getColor("Label.foreground");
 
-	private final Color originalBackground = UIManager.getColor("Panel.background");
+	//private final Color originalBackground = UIManager.getColor("Panel.background");
 
 	public InfoField(String labelText, int padding, int horizontalSpacing, int height) {
 		JLabel label = new JLabel(labelText);
@@ -28,11 +28,18 @@ public class InfoField extends JPanel {
 		setLayout(new BorderLayout());
 		add(contentPanel, BorderLayout.WEST);
 
-		infoField.setForeground(originalColor);
+		infoField.setForeground(getOriginalColor());
+	}
+
+	private Color getOriginalColor() {
+		return UIManager.getColor("Label.foreground");
+	}
+
+	private Color getOriginalBackground() {
+		return UIManager.getColor("Panel.background");
 	}
 
 	public void setInfoFieldColor(Color color) {
-		originalColor = color;
 		if (!isBlinking) {
 			infoField.setForeground(color);
 		}
@@ -50,24 +57,23 @@ public class InfoField extends JPanel {
 	public void startBlinking(Color blinkColor, int blinkRate) {
 		if (blinkTimer != null) {
 			blinkTimer.stop();
-			infoField.setForeground(originalColor);
 		}
 		blinkTimer = new Timer(blinkRate, e -> {
-			if (infoField.getForeground().equals(originalBackground)) {
+			if (infoField.getForeground().equals(getOriginalBackground())) {
 				infoField.setForeground(blinkColor);
 			} else {
-				infoField.setForeground(originalBackground);
+				infoField.setForeground(getOriginalBackground());
 			}
 		});
 		isBlinking = true;
-		infoField.setForeground(originalBackground);
+		infoField.setForeground(getOriginalBackground());
 		blinkTimer.start();
 	}
 
 	public void stopBlinking() {
 		if (blinkTimer != null) {
 			blinkTimer.stop();
-			infoField.setForeground(originalColor);
+			infoField.setForeground(getOriginalColor());
 			isBlinking = false;
 		}
 	}

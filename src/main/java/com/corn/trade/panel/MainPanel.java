@@ -134,6 +134,7 @@ public class MainPanel extends BasePanel {
 		InfoField adr = new InfoField("ADR:", spacing, 5, fieldHeight);
 		adr.setInfoText("1.55");
 		adr.setBold(true);
+		adr.startBlinking(Color.RED, 500);
 
 		RowPanel rowPanel = new RowPanel();
 		JPanel autoLevelsPanel = new JPanel();
