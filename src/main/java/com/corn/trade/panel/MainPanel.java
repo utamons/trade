@@ -17,19 +17,19 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
-public class InputPanel extends BasePanel {
+public class MainPanel extends BasePanel {
 
 	private final JCheckBox autoUpdateCheckBox;
 	private final JCheckBox autoLevelsCheckBox;
 
-	public InputPanel(Calculator calculator,
-	                  AutoUpdate autoUpdate,
-					  Levels levels,
-	                  Dimension maxSize,
-	                  Dimension minSize,
-	                  int spacing,
-	                  int fieldHeight) {
-		super("Input", calculator, autoUpdate, levels, maxSize, minSize);
+	public MainPanel(Calculator calculator,
+	                 AutoUpdate autoUpdate,
+	                 Levels levels,
+	                 Dimension maxSize,
+	                 Dimension minSize,
+	                 int spacing,
+	                 int fieldHeight) {
+		super(calculator, autoUpdate, levels, maxSize, minSize);
 
 		JpaRepo<Exchange, Long> exchangeRepo = new JpaRepo<>(Exchange.class);
 		JpaRepo<Ticker, Long>   tickerRepo   = new JpaRepo<>(Ticker.class);

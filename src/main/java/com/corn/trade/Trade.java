@@ -4,7 +4,7 @@ import com.corn.trade.ibkr.AutoUpdate;
 import com.corn.trade.ibkr.Ibkr;
 import com.corn.trade.ibkr.OrderHelper;
 import com.corn.trade.ibkr.PositionHelper;
-import com.corn.trade.panel.*;
+import com.corn.trade.panel.MainPanel;
 import com.corn.trade.trade.Calculator;
 import com.corn.trade.trade.Levels;
 import com.corn.trade.util.LiquibaseRunner;
@@ -25,13 +25,13 @@ import java.util.Properties;
 
 import static com.corn.trade.util.Util.showWarningDlg;
 
-public class App {
-	public final static String version = "1.0.3";
+public class Trade {
+	public final static String version = "2.0";
 	public static final  Theme  DARK_THEME   = new OneDarkTheme();
 	public static final  Theme  LIGHT_THEME  = new IntelliJTheme();
 	public static final  int    PREF_HEIGHT  = 250;
 	public static final  int    PREF_WIDTH   = 330;
-	private static final Logger log          = LoggerFactory.getLogger(App.class);
+	private static final Logger log          = LoggerFactory.getLogger(Trade.class);
 	private static final int    FIELD_HEIGHT = 40;
 	public static        int    DEBUG_LEVEL  = 1;
 
@@ -99,61 +99,19 @@ public class App {
 			OrderHelper    orderHelper    = new OrderHelper(ibkr);
 			PositionHelper positionHelper = new PositionHelper(ibkr, autoUpdate);
 
-			InputPanel inputPanel = new InputPanel(
-					calculator,
-					autoUpdate,
-					levels,
-					new Dimension(PREF_WIDTH, PREF_HEIGHT * 2),
-					new Dimension(PREF_WIDTH, PREF_HEIGHT),
-					5, FIELD_HEIGHT);
-			PowerPanel powerPanel = new PowerPanel(
-					calculator,
-					autoUpdate,
-					levels,
-					new Dimension(PREF_WIDTH, PREF_HEIGHT - 30),
-					new Dimension(PREF_WIDTH, PREF_HEIGHT - 30),
-					5, FIELD_HEIGHT);
-			TradePanel tradePanel = new TradePanel(
-					calculator,
-					autoUpdate,
-					levels,
-					new Dimension(PREF_WIDTH, PREF_HEIGHT),
-					new Dimension(PREF_WIDTH, PREF_HEIGHT),
-					5, FIELD_HEIGHT);
-			RiskPanel riskPanel = new RiskPanel(
-					calculator,
-					autoUpdate,
-					levels,
-					new Dimension(PREF_WIDTH, PREF_HEIGHT - 80),
-					new Dimension(PREF_WIDTH, PREF_HEIGHT - 80),
-					5, FIELD_HEIGHT);
-			OrderPanel orderPanel = new OrderPanel(
-					calculator,
-					autoUpdate,
-					orderHelper,
-					positionHelper,
-					levels,
-					new Dimension(PREF_WIDTH, PREF_HEIGHT + 15),
-					new Dimension(PREF_WIDTH, PREF_HEIGHT + 15),
-					5, FIELD_HEIGHT);
+			MainPanel mainPanel = new MainPanel(calculator, autoUpdate, levels, new Dimension(PREF_WIDTH, PREF_HEIGHT*2), new Dimension(0, 0), 5, FIELD_HEIGHT);
 
 			JPanel mainContainer = new JPanel();
 			mainContainer.setLayout(new BoxLayout(mainContainer, BoxLayout.Y_AXIS));
 
-			mainContainer.add(inputPanel);
-			mainContainer.add(orderPanel);
-			mainContainer.add(tradePanel);
-			mainContainer.add(riskPanel);
-			mainContainer.add(powerPanel);
+			mainContainer.add(mainPanel);
 
-			JScrollPane scrollPane = new JScrollPane(mainContainer,
-			                                         JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-			                                         JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-			frame.getContentPane().add(scrollPane);
+			frame.getContentPane().add(mainContainer);
 
 			frame.setLocationRelativeTo(null);
 
 			LafManager.enabledPreferenceChangeReporting(true);
+			LafManager.setDecorationsEnabled(false);
 			LafManager.addThemePreferenceChangeListener(new CustomThemeListener());
 			LafManager.setThemeProvider(new DefaultThemeProvider(
 					LIGHT_THEME,

@@ -15,17 +15,27 @@ public abstract class BasePanel extends JPanel {
 	protected AutoUpdate autoUpdate;
 	protected Levels     levels;
 
+	@Deprecated
 	public BasePanel(String title, Calculator calculator, AutoUpdate autoUpdate, Levels levels, Dimension preferredSize, Dimension minSize) {
 		super();
 		LayoutManager layout = new BoxLayout(this, BoxLayout.Y_AXIS);
 		Border       emptyBorder  = BorderFactory.createEmptyBorder(5, 5, 5, 5);
-		Border       lineBorder   = BorderFactory.createLineBorder(Color.LIGHT_GRAY); // Padding
-		TitledBorder titledBorder = BorderFactory.createTitledBorder(lineBorder, title);
-		titledBorder.setTitleFont(new Font("Arial", Font.PLAIN, 12));
-		titledBorder.setTitleColor(Color.GRAY);
-		Border compoundBorder = BorderFactory.createCompoundBorder(emptyBorder, titledBorder);
 
-		this.setBorder(BorderFactory.createCompoundBorder(compoundBorder, emptyBorder));
+		this.setBorder(emptyBorder);
+		this.setPreferredSize(preferredSize);
+		this.setMinimumSize(minSize);
+		this.setLayout(layout);
+		this.calculator = calculator;
+		this.autoUpdate = autoUpdate;
+		this.levels = levels;
+	}
+
+	public BasePanel(Calculator calculator, AutoUpdate autoUpdate, Levels levels, Dimension preferredSize, Dimension minSize) {
+		super();
+		LayoutManager layout = new BoxLayout(this, BoxLayout.Y_AXIS);
+		Border       emptyBorder  = BorderFactory.createEmptyBorder(5, 5, 5, 5);
+
+		this.setBorder(emptyBorder);
 		this.setPreferredSize(preferredSize);
 		this.setMinimumSize(minSize);
 		this.setLayout(layout);

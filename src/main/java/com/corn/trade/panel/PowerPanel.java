@@ -9,6 +9,7 @@ import com.corn.trade.trade.Levels;
 import javax.swing.*;
 import java.awt.*;
 
+@Deprecated
 public class PowerPanel extends BasePanel {
 
 	public PowerPanel(Calculator calculator,

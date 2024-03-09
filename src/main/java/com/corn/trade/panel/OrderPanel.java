@@ -12,6 +12,7 @@ import com.corn.trade.trade.Levels;
 import javax.swing.*;
 import java.awt.*;
 
+@Deprecated
 public class OrderPanel extends BasePanel {
 
 	public static final int BUTTON_DELAY = 5000;

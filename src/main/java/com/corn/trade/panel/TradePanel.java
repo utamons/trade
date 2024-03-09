@@ -8,6 +8,7 @@ import com.corn.trade.trade.Levels;
 import javax.swing.*;
 import java.awt.*;
 
+@Deprecated
 public class TradePanel extends BasePanel {
 
 	public TradePanel(Calculator calculator, AutoUpdate autoUpdate, Levels levels, Dimension maxSize, Dimension minSize, int spacing, int fieldHeight) {

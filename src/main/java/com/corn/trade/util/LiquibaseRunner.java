@@ -1,6 +1,6 @@
 package com.corn.trade.util;
 
-import com.corn.trade.App;
+import com.corn.trade.Trade;
 import liquibase.command.CommandScope;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
@@ -17,9 +17,9 @@ public class LiquibaseRunner {
 
 	public static void runLiquibase() {
 		// Database connection details
-		String url           = App.DB_URL;
-		String username      = App.DB_USER;
-		String password      = App.DB_PASSWORD;
+		String url           = Trade.DB_URL;
+		String username      = Trade.DB_USER;
+		String password      = Trade.DB_PASSWORD;
 		String changeLogFile = "db/changelog/master.xml";
 
 		try {

@@ -7,6 +7,7 @@ import com.corn.trade.trade.Levels;
 
 import java.awt.*;
 
+@Deprecated
 public class RiskPanel extends BasePanel {
 
 	public RiskPanel(Calculator calculator, AutoUpdate autoUpdate, Levels levels, Dimension maxSize, Dimension minSize, int spacing, int fieldHeight) {

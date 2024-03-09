@@ -9,7 +9,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.corn.trade.App.*;
+import static com.corn.trade.Trade.*;
 import static com.corn.trade.util.Util.fmt;
 import static com.corn.trade.util.Util.showErrorDlg;
 import static java.lang.Math.abs;
