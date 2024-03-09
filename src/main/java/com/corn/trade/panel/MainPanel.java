@@ -1,9 +1,6 @@
 package com.corn.trade.panel;
 
-import com.corn.trade.component.LabeledComboBox;
-import com.corn.trade.component.LabeledDoubleField;
-import com.corn.trade.component.LabeledLookup;
-import com.corn.trade.component.RowPanel;
+import com.corn.trade.component.*;
 import com.corn.trade.entity.Exchange;
 import com.corn.trade.entity.Ticker;
 import com.corn.trade.ibkr.AutoUpdate;
@@ -134,6 +131,10 @@ public class MainPanel extends BasePanel {
 		                                                       false,
 		                                                       levels::setResistance);
 
+		InfoField adr = new InfoField("ADR:", spacing, 5, fieldHeight);
+		adr.setInfoText("1.55");
+		adr.setBold(true);
+
 		RowPanel rowPanel = new RowPanel();
 		JPanel autoLevelsPanel = new JPanel();
 		autoLevelsPanel.setLayout(new BorderLayout());
@@ -222,6 +223,7 @@ public class MainPanel extends BasePanel {
 		panel.add(resistance);
 		panel.add(tempLevel);
 		panel.add(support);
+		panel.add(adr);
 		panel.add(autoLevelsPanel);
 
 		this.add(panel, BorderLayout.NORTH);
