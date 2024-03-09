@@ -45,6 +45,7 @@ public class LabeledDoubleField extends JPanel {
 		textField.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
+				replaceCommasWithDots();
 				if (!textField.getText().isEmpty() && !isValidDouble())
 					setError(true);
 				else {
@@ -55,6 +56,7 @@ public class LabeledDoubleField extends JPanel {
 		});
 
 		textField.addActionListener(e -> {
+			replaceCommasWithDots();
 			if (!textField.getText().isEmpty() && !isValidDouble())
 				setError(true);
 			else {
@@ -90,6 +92,14 @@ public class LabeledDoubleField extends JPanel {
 		panel.add(textField);
 
 		add(panel, BorderLayout.EAST);
+	}
+
+	public void replaceCommasWithDots() {
+		String text = textField.getText();
+		if (text.isEmpty())
+			return;
+		String modifiedText = text.replace(',', '.');
+		textField.setText(modifiedText);
 	}
 
 	private void feedConsumer(Consumer<Double> consumer) {
