@@ -91,7 +91,7 @@ public class MainPanel extends BasePanel {
 		                                                   null,
 		                                                   spacing,
 		                                                   fieldHeight,
-		                                                   false,
+		                                                   true,
 		                                                   calculator::setSpread);
 
 		LabeledDoubleField powerReserve = new LabeledDoubleField("Power reserve:",

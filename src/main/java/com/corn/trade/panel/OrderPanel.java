@@ -60,7 +60,7 @@ public class OrderPanel extends BasePanel {
 		                                                     fieldHeight,
 		                                                     autoUpdate.isAutoUpdate(),
 		                                                     calculator::setQuantity);
-		autoUpdate.addActivateListener(quantity::setAutoSwitchVisible);
+		autoUpdate.addActivateListener(quantity::setControlCheckBoxState);
 
 		JPanel checkBoxPanel = new JPanel();
 		allowYellowCheckBox = new JCheckBox("Allow Yellow");

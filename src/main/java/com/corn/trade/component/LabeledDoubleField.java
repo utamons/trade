@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 public class LabeledDoubleField extends JPanel {
 	private static final Logger     log = LoggerFactory.getLogger(LabeledDoubleField.class);
 	private final        JTextField textField;
-	private final JCheckBox  autoSwitch;
+	private final JCheckBox  controlCheckBox;
 	private final Border     errorBorder;
 	private final JLabel     lightIndicator;
 	private       Color      textFieldColor;
@@ -26,7 +26,7 @@ public class LabeledDoubleField extends JPanel {
 	                          Color textColor,
 	                          int padding,
 	                          int height,
-	                          boolean hasAutoSwitch,
+	                          boolean hasControlCheckBox,
 	                          Consumer<Double> consumer) {
 		// Initialize label and text field
 		JLabel label = new JLabel(labelText);
@@ -67,14 +67,18 @@ public class LabeledDoubleField extends JPanel {
 
 		lightIndicator = new JLabel();
 
-		autoSwitch = new JCheckBox();
+		controlCheckBox = new JCheckBox();
 
-		autoUpdate = !hasAutoSwitch;
+		autoUpdate = !hasControlCheckBox;
 
-		autoSwitch.setVisible(hasAutoSwitch);
-		autoSwitch.addActionListener(e -> {
-			autoUpdate = !autoSwitch.isSelected();
-			textField.setEditable(!autoUpdate);
+		controlCheckBox.setVisible(hasControlCheckBox);
+
+		controlCheckBox.addActionListener(e -> {
+			boolean isSelected = controlCheckBox.isSelected();
+			textField.setEnabled(isSelected);
+			if (!isSelected) {
+				textField.setText("");
+			}
 		});
 
 		// Set layout
@@ -84,14 +88,19 @@ public class LabeledDoubleField extends JPanel {
 		JPanel panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
 
-		autoSwitch.setBorder(BorderFactory.createEmptyBorder(2, 0, 0, 0));
+		controlCheckBox.setBorder(BorderFactory.createEmptyBorder(2, 0, 0, 0));
 		lightIndicator.setBorder(BorderFactory.createEmptyBorder(1, 0, 0, 2));
 
 		panel.add(lightIndicator);
-		panel.add(autoSwitch);
+		panel.add(controlCheckBox);
 		panel.add(textField);
 
 		add(panel, BorderLayout.EAST);
+
+		if (hasControlCheckBox) {
+			textField.setEnabled(false);
+			textField.setText("");
+		}
 	}
 
 	public void replaceCommasWithDots() {
@@ -173,12 +182,6 @@ public class LabeledDoubleField extends JPanel {
 		textField.setEditable(editable);
 	}
 
-	public void setAutoSwitchVisible(boolean visible) {
-		autoSwitch.setVisible(visible);
-		autoUpdate = visible;
-		textField.setEditable(!autoUpdate);
-	}
-
 	public void setAutoUpdate(boolean autoUpdate) {
 		this.autoUpdate = autoUpdate;
 		textField.setEditable(!autoUpdate);
@@ -187,5 +190,13 @@ public class LabeledDoubleField extends JPanel {
 	public void light(boolean on, Color color) {
 		lightIndicator.setIcon(new ColoredCircleIcon(on, color, 10));
 		lightIndicator.repaint();
+	}
+
+	public void setControlCheckBoxState(boolean state) {
+		controlCheckBox.setSelected(state);
+		textField.setEnabled(state);
+		if (!state) {
+			textField.setText("");
+		}
 	}
 }
