@@ -136,10 +136,14 @@ public class MainPanel extends BasePanel {
 		adr.setBold(true);
 		adr.startBlinking(Color.RED, 500);
 
+		TrafficLight trafficLight = new TrafficLight();
+
 		RowPanel rowPanel = new RowPanel();
 		JPanel autoLevelsPanel = new JPanel();
 		autoLevelsPanel.setLayout(new BorderLayout());
 
+		RowPanel trafficPanel = new RowPanel();
+		trafficPanel.add(trafficLight);
 
 		autoUpdateCheckBox = new JCheckBox("Auto-update");
 		autoLevelsCheckBox = new JCheckBox("Auto-levels");
@@ -225,6 +229,7 @@ public class MainPanel extends BasePanel {
 		panel.add(tempLevel);
 		panel.add(support);
 		panel.add(adr);
+		panel.add(trafficPanel);
 		panel.add(autoLevelsPanel);
 
 		this.add(panel, BorderLayout.NORTH);

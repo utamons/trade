@@ -9,17 +9,14 @@ public class TrafficLight extends JPanel {
 	private static final int   DIAMETER       = 20;
 	private static final int   PADDING      = 5;
 	private final Color activeRed    = Color.RED;
-	private final Color activeYellow = Color.YELLOW;
 	private final Color activeGreen    = Color.GREEN;
 	private final Color inactiveRed    = Color.RED.darker().darker();
-	private final Color inactiveYellow = Color.YELLOW.darker().darker();
 	private final Color inactiveGreen  = Color.GREEN.darker().darker();
 
 	private String activeLight = null;
 
 	public TrafficLight() {
-		setPreferredSize(new Dimension(3 * DIAMETER + 4 * PADDING, DIAMETER + 2 * PADDING));
-		//setBackground(Color.WHITE);
+		setPreferredSize(new Dimension(2 * DIAMETER + 3 * PADDING, DIAMETER + 2 * PADDING));
 	}
 
 	@Override
@@ -29,8 +26,7 @@ public class TrafficLight extends JPanel {
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
 		drawLight(g2d, PADDING, "red".equals(activeLight) ? activeRed : inactiveRed);
-		drawLight(g2d, DIAMETER + 2 * PADDING, "yellow".equals(activeLight) ? activeYellow : inactiveYellow);
-		drawLight(g2d, 2 * DIAMETER + 3 * PADDING, "green".equals(activeLight) ? activeGreen : inactiveGreen);
+		drawLight(g2d, DIAMETER + 2 * PADDING, "green".equals(activeLight) ? activeGreen : inactiveGreen);
 
 		g2d.dispose();
 	}
@@ -57,9 +53,5 @@ public class TrafficLight extends JPanel {
 
 	public void setGreen() {
 		setLight("green");
-	}
-
-	public void setYellow() {
-		setLight("yellow");
 	}
 }

@@ -161,7 +161,7 @@ public class OrderPanel extends BasePanel {
 				trafficLight.setRed();
 				stopLimitBtn.setEnabled(false);
 			} else if (calculator.isYellowLight()) {
-				trafficLight.setYellow();
+
 				stopLimitBtn.setEnabled(allowYellowCheckBox.isSelected());
 			} else {
 				trafficLight.setGreen();
