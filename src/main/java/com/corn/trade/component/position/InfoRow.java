@@ -4,8 +4,9 @@ import javax.swing.*;
 import java.awt.*;
 import com.corn.trade.component.InfoField;
 
-class InfoRow extends JPanel {
+public class InfoRow extends JPanel {
 	private final InfoField qttField, slField, beField, psField, plField;
+	private final JLabel label;
 
 	public InfoRow(String labelText, int fontSize, int padding, int hgap, int hSpacing) {
 		// Set the component layout
@@ -13,10 +14,10 @@ class InfoRow extends JPanel {
 		setBorder(BorderFactory.createEmptyBorder(padding, padding, padding, padding));
 		//setBackground(Color.LIGHT_GRAY);
 
-		JLabel componentLabel = new JLabel(labelText);
-		componentLabel.setFont(new Font(componentLabel.getFont().getName(), Font.BOLD, fontSize));
+		label = new JLabel(labelText);
+		label.setFont(new Font(label.getFont().getName(), Font.BOLD, fontSize));
 		JPanel labelPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, hSpacing, 0));
-		labelPanel.add(componentLabel);
+		labelPanel.add(label);
 
 		qttField = new InfoField("Qtt:", fontSize, 0, hSpacing, 30);
 		slField = new InfoField("Sl:", fontSize, 0, hSpacing, 30);
@@ -30,6 +31,10 @@ class InfoRow extends JPanel {
 		add(beField);
 		add(psField);
 		add(plField);
+	}
+
+	public JLabel getLabel() {
+		return label;
 	}
 
 	public InfoField getQttField() {

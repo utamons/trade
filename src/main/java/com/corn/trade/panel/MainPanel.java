@@ -2,6 +2,7 @@ package com.corn.trade.panel;
 
 import com.corn.trade.component.*;
 import com.corn.trade.component.position.Position;
+import com.corn.trade.component.position.PositionPanel;
 import com.corn.trade.entity.Exchange;
 import com.corn.trade.entity.Ticker;
 import com.corn.trade.ibkr.AutoUpdate;
@@ -219,7 +220,7 @@ public class MainPanel extends BasePanel {
 			levels.reset();
 		});
 
-		Position position = new Position();
+		PositionPanel position = new PositionPanel();
 
 		panel.add(exchangeBox);
 		panel.add(tickerLookup);
@@ -235,6 +236,9 @@ public class MainPanel extends BasePanel {
 		panel.add(trafficPanel);
 		panel.add(autoLevelsPanel);
 		panel.add(position);
+
+		position.addPosition("AAPL");
+		position.addPosition("MSFT");
 
 		this.add(panel, BorderLayout.NORTH);
 
