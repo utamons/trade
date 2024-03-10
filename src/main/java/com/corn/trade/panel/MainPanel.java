@@ -1,6 +1,7 @@
 package com.corn.trade.panel;
 
 import com.corn.trade.component.*;
+import com.corn.trade.component.position.Position;
 import com.corn.trade.entity.Exchange;
 import com.corn.trade.entity.Ticker;
 import com.corn.trade.ibkr.AutoUpdate;
@@ -131,7 +132,7 @@ public class MainPanel extends BasePanel {
 		                                                       false,
 		                                                       levels::setResistance);
 
-		InfoField adr = new InfoField("ADR:", spacing, 5, fieldHeight);
+		InfoField adr = new InfoField("ADR:", 15, spacing, 5, fieldHeight);
 		adr.setInfoText("1.55");
 		adr.setBold(true);
 		adr.startBlinking(Color.RED, 500);
@@ -218,6 +219,8 @@ public class MainPanel extends BasePanel {
 			levels.reset();
 		});
 
+		Position position = new Position();
+
 		panel.add(exchangeBox);
 		panel.add(tickerLookup);
 		panel.add(positionBox);
@@ -231,6 +234,7 @@ public class MainPanel extends BasePanel {
 		panel.add(adr);
 		panel.add(trafficPanel);
 		panel.add(autoLevelsPanel);
+		panel.add(position);
 
 		this.add(panel, BorderLayout.NORTH);
 

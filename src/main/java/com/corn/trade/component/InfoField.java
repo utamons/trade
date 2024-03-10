@@ -8,20 +8,18 @@ public class InfoField extends JPanel {
 	private final JLabel infoField;
 	private Timer blinkTimer;
 	private boolean isBlinking = false;
-	//private Color originalColor = UIManager.getColor("Label.foreground");
 
-	//private final Color originalBackground = UIManager.getColor("Panel.background");
-
-	public InfoField(String labelText, int padding, int horizontalSpacing, int height) {
+	public InfoField(String labelText, int fontSize, int padding, int horizontalSpacing, int height) {
 		JLabel label = new JLabel(labelText);
 		infoField = new JLabel();
 
 		setMaximumSize(new Dimension(100, height));
-		setMinimumSize(new Dimension(50, height));
 		Border emptyBorder = BorderFactory.createEmptyBorder(padding, padding, padding, padding);
-		setBorder(emptyBorder);
+		if (padding > 0)
+			setBorder(emptyBorder);
 
 		JPanel contentPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, horizontalSpacing, 0));
+		label.setFont(new Font(label.getFont().getName(), Font.PLAIN, fontSize));
 		contentPanel.add(label);
 		contentPanel.add(infoField);
 
@@ -29,6 +27,8 @@ public class InfoField extends JPanel {
 		add(contentPanel, BorderLayout.WEST);
 
 		infoField.setForeground(getOriginalColor());
+		infoField.setFont(new Font(infoField.getFont().getName(), Font.PLAIN, fontSize));
+		infoField.setText("n/a");
 	}
 
 	private Color getOriginalColor() {
