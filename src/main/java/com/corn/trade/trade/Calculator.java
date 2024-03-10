@@ -1,6 +1,8 @@
 package com.corn.trade.trade;
 
 import com.corn.trade.common.Notifier;
+import com.corn.trade.component.CustomTitleBar;
+import com.corn.trade.component.ResizeListener;
 import com.corn.trade.panel.calculator.ColorfulTextWindow;
 import com.corn.trade.panel.calculator.ParamPanel;
 import com.corn.trade.util.Debug;
@@ -13,6 +15,7 @@ import com.github.weisj.darklaf.theme.info.DefaultThemeProvider;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -456,7 +459,10 @@ public class Calculator extends Notifier {
 
 			setDefaultFont();
 
-			JFrame frame = new JFrame("Trade Calculator v. " + version + " (" + stage + ")");
+			JFrame frame = new JFrame();
+
+			CustomTitleBar titleBar = new CustomTitleBar("Trade Calculator v. " + version + " (" + stage + ")", frame);
+
 			frame.setLayout(new BorderLayout());
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setSize(700, 630);
@@ -504,7 +510,18 @@ public class Calculator extends Notifier {
 					new HighContrastDarkTheme()
 			));
 
+			frame.add(titleBar, BorderLayout.NORTH);
+			Border emptyBorder = BorderFactory.createEmptyBorder(RESIZE_EDGE, RESIZE_EDGE, RESIZE_EDGE, RESIZE_EDGE);
+
+			frame.getRootPane().setBorder(emptyBorder);
+
+			frame.setUndecorated(true);
+
 			frame.pack();
+
+			ResizeListener resizeListener = new ResizeListener(frame,RESIZE_EDGE);
+			frame.addMouseListener(resizeListener);
+			frame.addMouseMotionListener(resizeListener);
 
 			frame.setVisible(true);
 		});

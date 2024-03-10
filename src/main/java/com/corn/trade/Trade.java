@@ -1,5 +1,7 @@
 package com.corn.trade;
 
+import com.corn.trade.component.CustomTitleBar;
+import com.corn.trade.component.ResizeListener;
 import com.corn.trade.ibkr.AutoUpdate;
 import com.corn.trade.ibkr.Ibkr;
 import com.corn.trade.ibkr.OrderHelper;
@@ -17,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -27,6 +30,7 @@ import static com.corn.trade.util.Util.showWarningDlg;
 
 public class Trade {
 	public final static String version = "2.0";
+	public static final int RESIZE_EDGE = 4;
 	public static final  Theme  DARK_THEME   = new OneDarkTheme();
 	public static final  Theme  LIGHT_THEME  = new IntelliJTheme();
 	public static final  int    PREF_HEIGHT  = 250;
@@ -84,9 +88,12 @@ public class Trade {
 
 			setDefaultFont();
 
-			JFrame frame = new JFrame("Trade v. " + version + " (" + stage + ")");
+			JFrame frame = new JFrame();
+			frame.setLayout(new BorderLayout());
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setSize(700, 630);
+
+			CustomTitleBar titleBar = new CustomTitleBar("Trade v. " + version + " (" + stage + ")", frame);
 
 			Ibkr ibkr = new Ibkr();
 			ibkr.run();
@@ -120,7 +127,18 @@ public class Trade {
 					new HighContrastDarkTheme()
 			));
 
+			frame.add(titleBar, BorderLayout.NORTH);
+			Border emptyBorder = BorderFactory.createEmptyBorder(RESIZE_EDGE, RESIZE_EDGE, RESIZE_EDGE, RESIZE_EDGE);
+
+			frame.getRootPane().setBorder(emptyBorder);
+
+			frame.setUndecorated(true);
+
 			frame.pack();
+
+			ResizeListener resizeListener = new ResizeListener(frame, RESIZE_EDGE);
+			frame.addMouseListener(resizeListener);
+			frame.addMouseMotionListener(resizeListener);
 
 			frame.setVisible(true);
 
