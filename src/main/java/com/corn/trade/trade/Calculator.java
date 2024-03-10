@@ -1,6 +1,7 @@
 package com.corn.trade.trade;
 
 import com.corn.trade.common.Notifier;
+import com.corn.trade.panel.calculator.ColorfulTextWindow;
 import com.corn.trade.panel.calculator.ParamPanel;
 import com.corn.trade.util.Debug;
 import com.corn.trade.util.LiquibaseRunner;
@@ -456,24 +457,42 @@ public class Calculator extends Notifier {
 			setDefaultFont();
 
 			JFrame frame = new JFrame("Trade Calculator v. " + version + " (" + stage + ")");
+			frame.setLayout(new BorderLayout());
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setSize(700, 630);
 
 			JPanel mainContainer = new JPanel();
-			mainContainer.setLayout(new BoxLayout(mainContainer, BoxLayout.Y_AXIS));
+			mainContainer.setLayout(new GridBagLayout());
+			GridBagConstraints gbc = new GridBagConstraints();
 
 			Levels     levels     = new Levels(frame);
 			Calculator calculator = new Calculator(frame, levels);
 
-			ParamPanel paramPanel = new ParamPanel(calculator, levels, new Dimension(650, 500), new Dimension(300,300),5, FIELD_HEIGHT);
+			ParamPanel paramPanel = new ParamPanel(calculator, levels, new Dimension(650, 180), new Dimension(650,180),5, FIELD_HEIGHT);
 
-			mainContainer.add(paramPanel);
+			ColorfulTextWindow textWindow = new ColorfulTextWindow(new Dimension(650, 180));
 
-			frame.getContentPane().add(mainContainer);
+			gbc.gridx = 0;
+			gbc.gridy = 0;
+			gbc.weightx = 1;
+			gbc.weighty = 0; // No extra vertical space allocation
+			gbc.fill = GridBagConstraints.HORIZONTAL;
+			mainContainer.add(paramPanel, gbc);
+
+			gbc.gridy = 1;
+			gbc.weighty = 1; // Allocate extra space vertically to this component
+			gbc.fill = GridBagConstraints.BOTH; // Allow stretching both horizontally and vertically
+			mainContainer.add(textWindow, gbc);
+
+			textWindow.appendText("Trade Calculator v. " + version + " (" + stage + ")");
+			textWindow.appendText("Enter the parameters and press 'Estimate' to calculate the trade");
+			textWindow.appendText("A green line", Color.GREEN.darker(), true);
+			textWindow.appendText("Indicates a good trade, a red line", Color.RED.darker(), true);
+			textWindow.appendText("Indicates a bad trade");
+
+			frame.getContentPane().add(mainContainer, BorderLayout.CENTER);
 
 			frame.setLocationRelativeTo(null);
-
-
 
 			LafManager.enabledPreferenceChangeReporting(true);
 			LafManager.setDecorationsEnabled(false);
