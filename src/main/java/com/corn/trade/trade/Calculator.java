@@ -1,13 +1,21 @@
 package com.corn.trade.trade;
 
 import com.corn.trade.common.Notifier;
+import com.corn.trade.panel.calculator.ParamPanel;
 import com.corn.trade.util.Debug;
+import com.corn.trade.util.LiquibaseRunner;
 import com.corn.trade.util.Util;
+import com.github.weisj.darklaf.LafManager;
+import com.github.weisj.darklaf.theme.HighContrastDarkTheme;
+import com.github.weisj.darklaf.theme.HighContrastLightTheme;
+import com.github.weisj.darklaf.theme.info.DefaultThemeProvider;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import static com.corn.trade.Trade.*;
 import static com.corn.trade.util.Util.fmt;
@@ -418,5 +426,68 @@ public class Calculator extends Notifier {
 		quantityError = false;
 		spreadError = false;
 		announce();
+	}
+
+	public static void main(String[] args) {
+		final String stage = args.length>0 && args[0].equals("-dev")? "dev" : "prod";
+
+		final String dbKey = stage.equals("dev")? "db_url_dev" : "db_url_prod";
+
+		SwingUtilities.invokeLater(() -> {
+
+			Properties configProps = loadProperties("D:\\bin\\trade.properties");
+
+			MAX_VOLUME = Integer.parseInt(configProps.getProperty("max_volume", "2000"));
+			MAX_RISK_REWARD_RATIO =
+					Double.parseDouble(configProps.getProperty("max_risk_reward_ratio", "3"));
+			MAX_RISK_PERCENT = Double.parseDouble(configProps.getProperty("max_risk_percent", "0.5"));
+			ORDER_LUFT = Double.parseDouble(configProps.getProperty("order_luft", "0.02"));
+			DEBUG_LEVEL = Integer.parseInt(configProps.getProperty("debug_level", "2"));
+			MIN_POWER_RESERVE_TO_PRICE_RATIO =
+					Double.parseDouble(configProps.getProperty("min_power_reserve_to_price_ratio", "0.005"));
+			REALISTIC_POWER_RESERVE = Double.parseDouble(configProps.getProperty("realistic_power_reserve", "1"));
+			SIMULATION_MODE = Boolean.parseBoolean(configProps.getProperty("simulation_mode", "false"));
+			DB_URL = configProps.getProperty(dbKey, null);
+			DB_USER = configProps.getProperty("db_user", null);
+			DB_PASSWORD = configProps.getProperty("db_password", null);
+
+			LiquibaseRunner.runLiquibase();
+
+			setDefaultFont();
+
+			JFrame frame = new JFrame("Trade Calculator v. " + version + " (" + stage + ")");
+			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			frame.setSize(700, 630);
+
+			JPanel mainContainer = new JPanel();
+			mainContainer.setLayout(new BoxLayout(mainContainer, BoxLayout.Y_AXIS));
+
+			Levels     levels     = new Levels(frame);
+			Calculator calculator = new Calculator(frame, levels);
+
+			ParamPanel paramPanel = new ParamPanel(calculator, levels, new Dimension(650, 500), new Dimension(300,300),5, FIELD_HEIGHT);
+
+			mainContainer.add(paramPanel);
+
+			frame.getContentPane().add(mainContainer);
+
+			frame.setLocationRelativeTo(null);
+
+
+
+			LafManager.enabledPreferenceChangeReporting(true);
+			LafManager.setDecorationsEnabled(false);
+			LafManager.addThemePreferenceChangeListener(new CustomThemeListener());
+			LafManager.setThemeProvider(new DefaultThemeProvider(
+					LIGHT_THEME,
+					DARK_THEME,
+					new HighContrastLightTheme(),
+					new HighContrastDarkTheme()
+			));
+
+			frame.pack();
+
+			frame.setVisible(true);
+		});
 	}
 }

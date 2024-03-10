@@ -32,7 +32,7 @@ public class Trade {
 	public static final  int    PREF_HEIGHT  = 250;
 	public static final  int    PREF_WIDTH   = 330;
 	private static final Logger log          = LoggerFactory.getLogger(Trade.class);
-	private static final int    FIELD_HEIGHT = 40;
+	public static final  int    FIELD_HEIGHT = 40;
 	public static        int    DEBUG_LEVEL  = 1;
 
 	public static double MAX_VOLUME            = 2000.0;
@@ -139,7 +139,7 @@ public class Trade {
 		});
 	}
 
-	private static void setDefaultFont() {
+	public static void setDefaultFont() {
 		for (Object key : UIManager.getDefaults().keySet()) {
 			if (UIManager.get(key) instanceof Font) {
 				UIManager.put(key, new Font("Arial", Font.PLAIN, 14));
@@ -147,7 +147,7 @@ public class Trade {
 		}
 	}
 
-	static class CustomThemeListener implements ThemePreferenceListener {
+	public static class CustomThemeListener implements ThemePreferenceListener {
 
 		public void themePreferenceChanged(final ThemePreferenceChangeEvent e) {
 			LafManager.installTheme(e.getPreferredThemeStyle());
