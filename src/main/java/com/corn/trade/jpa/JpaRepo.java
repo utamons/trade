@@ -1,6 +1,6 @@
 package com.corn.trade.jpa;
 
-import com.corn.trade.Trade;
+import com.corn.trade.TradeWindow;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
@@ -22,9 +22,9 @@ public class JpaRepo<T, ID extends Serializable> {
 	public JpaRepo(Class<T> type) {
 		this.type = type;
 
-		String url           = Trade.DB_URL;
-		String username      = Trade.DB_USER;
-		String password      = Trade.DB_PASSWORD;
+		String url           = TradeWindow.DB_URL;
+		String username      = TradeWindow.DB_USER;
+		String password      = TradeWindow.DB_PASSWORD;
 
 		Map<String, String> properties = new HashMap<>();
 		properties.put("javax.persistence.jdbc.user", username);

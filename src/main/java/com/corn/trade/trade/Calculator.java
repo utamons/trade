@@ -1,27 +1,15 @@
 package com.corn.trade.trade;
 
 import com.corn.trade.common.Notifier;
-import com.corn.trade.component.CustomTitleBar;
-import com.corn.trade.component.ResizeListener;
-import com.corn.trade.panel.calculator.ColorfulTextWindow;
-import com.corn.trade.panel.calculator.ParamPanel;
 import com.corn.trade.util.Debug;
-import com.corn.trade.util.LiquibaseRunner;
 import com.corn.trade.util.Util;
-import com.github.weisj.darklaf.LafManager;
-import com.github.weisj.darklaf.theme.HighContrastDarkTheme;
-import com.github.weisj.darklaf.theme.HighContrastLightTheme;
-import com.github.weisj.darklaf.theme.info.DefaultThemeProvider;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
-import javax.swing.border.Border;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
-import static com.corn.trade.Trade.*;
+import static com.corn.trade.TradeWindow.*;
 import static com.corn.trade.util.Util.fmt;
 import static com.corn.trade.util.Util.showErrorDlg;
 import static java.lang.Math.abs;

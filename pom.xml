@@ -104,7 +104,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>com.corn.trade.Trade</mainClass>
+                            <mainClass>com.corn.trade.TradeWindow</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

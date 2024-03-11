@@ -1,6 +1,6 @@
 package com.corn.trade.util;
 
-import com.corn.trade.Trade;
+import com.corn.trade.TradeWindow;
 import org.slf4j.Logger;
 
 import java.io.BufferedReader;
@@ -9,7 +9,7 @@ import java.io.IOException;
 
 public class Debug {
 	private final Logger log;
-	private final int level = Trade.DEBUG_LEVEL;
+	private final int level = TradeWindow.DEBUG_LEVEL;
 	public Debug(Logger log) {
 		this.log = log;
 	}

@@ -1,6 +1,6 @@
 package com.corn.trade.ibkr;
 
-import com.corn.trade.Trade;
+import com.corn.trade.TradeWindow;
 import com.corn.trade.trade.OrderAction;
 import com.corn.trade.trade.PositionType;
 import com.ib.client.*;
@@ -147,7 +147,7 @@ public class OrderHelper {
 			@Override
 			public void openOrderEnd() {
 				ibkr.controller().removeLiveOrderHandler(this);
-				if (Trade.SIMULATION_MODE) {
+				if (TradeWindow.SIMULATION_MODE) {
 					log.info("Simulation mode");
 				} else {
 					orders.forEach(order -> {

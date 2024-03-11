@@ -1,6 +1,6 @@
 package com.corn.trade.trade;
 
-import com.corn.trade.Trade;
+import com.corn.trade.TradeWindow;
 import com.corn.trade.common.Notifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,10 +12,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import static com.corn.trade.Trade.REALISTIC_POWER_RESERVE;
+import static com.corn.trade.TradeWindow.REALISTIC_POWER_RESERVE;
 import static com.corn.trade.util.Util.showErrorDlg;
 
-public class Levels extends Notifier {
+@Deprecated
+public class    Levels extends Notifier {
 
 	private static final Logger log = LoggerFactory.getLogger(Levels.class);
 	public static final double MIN_STOP_LOSS_DISTANCE = 0.02;
@@ -334,7 +335,7 @@ public class Levels extends Notifier {
 	}
 
 	private double minPowerReserve() {
-		return bestPrice * Trade.MIN_POWER_RESERVE_TO_PRICE_RATIO;
+		return bestPrice * TradeWindow.MIN_POWER_RESERVE_TO_PRICE_RATIO;
 	}
 
 	public void calculatePivotPoint(PositionType positionType) {

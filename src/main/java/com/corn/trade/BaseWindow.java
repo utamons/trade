@@ -66,7 +66,7 @@ public abstract class BaseWindow {
 		frame.add(titleBar, BorderLayout.NORTH);
 
 		// Set resize listener
-		ResizeListener resizeListener = new ResizeListener(frame, Trade.RESIZE_EDGE);
+		ResizeListener resizeListener = new ResizeListener(frame, TradeWindow.RESIZE_EDGE);
 		frame.addMouseListener(resizeListener);
 		frame.addMouseMotionListener(resizeListener);
 
@@ -84,8 +84,8 @@ public abstract class BaseWindow {
 		LafManager.setDecorationsEnabled(false);
 		LafManager.addThemePreferenceChangeListener(new CustomThemeListener());
 		LafManager.setThemeProvider(new DefaultThemeProvider(
-				Trade.LIGHT_THEME,
-				Trade.DARK_THEME,
+				TradeWindow.LIGHT_THEME,
+				TradeWindow.DARK_THEME,
 				new HighContrastLightTheme(),
 				new HighContrastDarkTheme()
 		));
@@ -95,7 +95,7 @@ public abstract class BaseWindow {
 
 	private void setupBorder() {
 		Border border = BorderFactory.createLineBorder(Color.LIGHT_GRAY);
-		Border emptyBorder = BorderFactory.createEmptyBorder(Trade.RESIZE_EDGE, Trade.RESIZE_EDGE, Trade.RESIZE_EDGE, Trade.RESIZE_EDGE);
+		Border emptyBorder = BorderFactory.createEmptyBorder(TradeWindow.RESIZE_EDGE, TradeWindow.RESIZE_EDGE, TradeWindow.RESIZE_EDGE, TradeWindow.RESIZE_EDGE);
 		frame.getRootPane().setBorder(BorderFactory.createCompoundBorder(border, emptyBorder));
 	}
 

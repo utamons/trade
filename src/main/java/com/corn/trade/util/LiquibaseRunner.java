@@ -1,6 +1,5 @@
 package com.corn.trade.util;
 
-import com.corn.trade.Trade;
 import liquibase.command.CommandScope;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;

@@ -13,19 +13,19 @@ import java.awt.*;
 
 import static com.corn.trade.util.Util.showWarningDlg;
 
-public class Trade extends BaseWindow {
+public class TradeWindow extends BaseWindow {
 	private static final  int    PREF_HEIGHT  = 400;
 	private static final  int    PREF_WIDTH   = 330;
-	private static final Logger log          = LoggerFactory.getLogger(Trade.class);
+	private static final Logger log          = LoggerFactory.getLogger(TradeWindow.class);
 
-	public Trade(String[] args) {
+	public TradeWindow(String[] args) {
 		super(args, "Trade", new Dimension(350, 800));
 		initializeComponents();
 	}
 
 	public static void main(String[] args) {
 		SwingUtilities.invokeLater(() -> {
-			Trade tradeWindow = new Trade(args);
+			TradeWindow tradeWindow = new TradeWindow(args);
 			tradeWindow.display();
 		});
 	}

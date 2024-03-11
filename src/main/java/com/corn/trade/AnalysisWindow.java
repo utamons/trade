@@ -1,22 +1,24 @@
 package com.corn.trade;
 
-import com.corn.trade.panel.calculator.ColorfulTextWindow;
-import com.corn.trade.panel.calculator.ParamPanel;
+import com.corn.trade.panel.analysis.ColorfulTextWindow;
+import com.corn.trade.panel.analysis.ParamPanel;
 import com.corn.trade.trade.Calculator;
 import com.corn.trade.trade.Levels;
+import com.corn.trade.trade.analysis.TradeCalc;
+import com.corn.trade.trade.analysis.TradeContext;
 
 import javax.swing.*;
 import java.awt.*;
 
-public class Analysis extends BaseWindow {
-	public Analysis() {
+public class AnalysisWindow extends BaseWindow {
+	public AnalysisWindow() {
 		super(new String[0], "Trade Analysis", new Dimension(700, 700));
 		initializeComponents();
 	}
 	public static void main(String[] args) {
 
 		SwingUtilities.invokeLater(() -> {
-			Analysis analysisWindow = new Analysis();
+			AnalysisWindow analysisWindow = new AnalysisWindow();
 			analysisWindow.display();
 		});
 	}
@@ -27,10 +29,10 @@ public class Analysis extends BaseWindow {
 		mainContainer.setLayout(new GridBagLayout());
 		GridBagConstraints gbc = new GridBagConstraints();
 
-		Levels     levels     = new Levels(frame);
-		Calculator calculator = new Calculator(frame, levels);
+		TradeContext tradeContext = new TradeContext();
+		TradeCalc tradeCalc = new TradeCalc(tradeContext);
 
-		ParamPanel paramPanel = new ParamPanel(calculator, levels, new Dimension(650, 180), new Dimension(650, 180), 5, FIELD_HEIGHT);
+		ParamPanel paramPanel = new ParamPanel(tradeCalc, tradeContext, new Dimension(650, 220), new Dimension(650, 180), 5, FIELD_HEIGHT);
 
 		ColorfulTextWindow textWindow = new ColorfulTextWindow(new Dimension(650, 180));
 
