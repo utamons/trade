@@ -27,6 +27,7 @@ import static com.corn.trade.util.Util.showErrorDlg;
 import static java.lang.Math.abs;
 
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
+@Deprecated
 public class Calculator extends Notifier {
 	public static final double SPREAD_COEFF = 2;
 
@@ -352,8 +353,8 @@ public class Calculator extends Notifier {
 	private double calculateStopLoss() {
 		double stopLoss = isLong() ? breakEven - risk : breakEven + risk;
 
-		if (estimationType == EstimationType.MIN_STOP_LOSS ||
-		    estimationType == EstimationType.MAX_GAIN_MIN_STOP_LOSS) {
+		if (estimationType == EstimationType.MIN_FIBO_GOAL ||
+		    estimationType == EstimationType.MIN_STOP_LOSS) {
 			double minStopLoss =
 					isLong() ? levels.getPivotPoint() - Math.max(ORDER_LUFT, spread * 2) : levels.getPivotPoint() +
 					                                                                   Math.max(ORDER_LUFT, spread * 2);
@@ -388,8 +389,8 @@ public class Calculator extends Notifier {
 
 	private void fillQuantity() {
 		if (quantity == null ||
-		    estimationType == EstimationType.MAX_GAIN_MAX_STOP_LOSS ||
-		    estimationType == EstimationType.MAX_GAIN_MIN_STOP_LOSS)
+		    estimationType == EstimationType.MAX_STOP_LOSS ||
+		    estimationType == EstimationType.MIN_STOP_LOSS)
 			quantity = maxQuantity();
 	}
 
@@ -430,100 +431,5 @@ public class Calculator extends Notifier {
 		quantityError = false;
 		spreadError = false;
 		announce();
-	}
-
-	public static void main(String[] args) {
-		final String stage = args.length>0 && args[0].equals("-dev")? "dev" : "prod";
-
-		final String dbKey = stage.equals("dev")? "db_url_dev" : "db_url_prod";
-
-		SwingUtilities.invokeLater(() -> {
-
-			Properties configProps = loadProperties("D:\\bin\\trade.properties");
-
-			MAX_VOLUME = Integer.parseInt(configProps.getProperty("max_volume", "2000"));
-			MAX_RISK_REWARD_RATIO =
-					Double.parseDouble(configProps.getProperty("max_risk_reward_ratio", "3"));
-			MAX_RISK_PERCENT = Double.parseDouble(configProps.getProperty("max_risk_percent", "0.5"));
-			ORDER_LUFT = Double.parseDouble(configProps.getProperty("order_luft", "0.02"));
-			DEBUG_LEVEL = Integer.parseInt(configProps.getProperty("debug_level", "2"));
-			MIN_POWER_RESERVE_TO_PRICE_RATIO =
-					Double.parseDouble(configProps.getProperty("min_power_reserve_to_price_ratio", "0.005"));
-			REALISTIC_POWER_RESERVE = Double.parseDouble(configProps.getProperty("realistic_power_reserve", "1"));
-			SIMULATION_MODE = Boolean.parseBoolean(configProps.getProperty("simulation_mode", "false"));
-			DB_URL = configProps.getProperty(dbKey, null);
-			DB_USER = configProps.getProperty("db_user", null);
-			DB_PASSWORD = configProps.getProperty("db_password", null);
-
-			LiquibaseRunner.runLiquibase();
-
-			setDefaultFont();
-
-			JFrame frame = new JFrame();
-
-			CustomTitleBar titleBar = new CustomTitleBar("Trade Calculator v. " + version + " (" + stage + ")", frame);
-
-			frame.setLayout(new BorderLayout());
-			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			frame.setSize(700, 630);
-
-			JPanel mainContainer = new JPanel();
-			mainContainer.setLayout(new GridBagLayout());
-			GridBagConstraints gbc = new GridBagConstraints();
-
-			Levels     levels     = new Levels(frame);
-			Calculator calculator = new Calculator(frame, levels);
-
-			ParamPanel paramPanel = new ParamPanel(calculator, levels, new Dimension(650, 180), new Dimension(650,180),5, FIELD_HEIGHT);
-
-			ColorfulTextWindow textWindow = new ColorfulTextWindow(new Dimension(650, 180));
-
-			gbc.gridx = 0;
-			gbc.gridy = 0;
-			gbc.weightx = 1;
-			gbc.weighty = 0; // No extra vertical space allocation
-			gbc.fill = GridBagConstraints.HORIZONTAL;
-			mainContainer.add(paramPanel, gbc);
-
-			gbc.gridy = 1;
-			gbc.weighty = 1; // Allocate extra space vertically to this component
-			gbc.fill = GridBagConstraints.BOTH; // Allow stretching both horizontally and vertically
-			mainContainer.add(textWindow, gbc);
-
-			textWindow.appendText("Trade Calculator v. " + version + " (" + stage + ")");
-			textWindow.appendText("Enter the parameters and press 'Estimate' to calculate the trade");
-			textWindow.appendText("A green line", Color.GREEN.darker(), true);
-			textWindow.appendText("Indicates a good trade, a red line", Color.RED.darker(), true);
-			textWindow.appendText("Indicates a bad trade");
-
-			frame.getContentPane().add(mainContainer, BorderLayout.CENTER);
-
-			frame.setLocationRelativeTo(null);
-
-			LafManager.enabledPreferenceChangeReporting(true);
-			LafManager.setDecorationsEnabled(false);
-			LafManager.addThemePreferenceChangeListener(new CustomThemeListener());
-			LafManager.setThemeProvider(new DefaultThemeProvider(
-					LIGHT_THEME,
-					DARK_THEME,
-					new HighContrastLightTheme(),
-					new HighContrastDarkTheme()
-			));
-
-			frame.add(titleBar, BorderLayout.NORTH);
-			Border emptyBorder = BorderFactory.createEmptyBorder(RESIZE_EDGE, RESIZE_EDGE, RESIZE_EDGE, RESIZE_EDGE);
-
-			frame.getRootPane().setBorder(emptyBorder);
-
-			frame.setUndecorated(true);
-
-			frame.pack();
-
-			ResizeListener resizeListener = new ResizeListener(frame,RESIZE_EDGE);
-			frame.addMouseListener(resizeListener);
-			frame.addMouseMotionListener(resizeListener);
-
-			frame.setVisible(true);
-		});
 	}
 }

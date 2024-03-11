@@ -41,8 +41,7 @@ public class ParamPanel extends BasePanel {
 
 		LabeledComboBox estimationBox = new LabeledComboBox("Estimation:",
 		                                                    new String[]{
-				                                                    EstimationType.MAX_GAIN_MAX_STOP_LOSS.toString(),
-				                                                    EstimationType.MAX_GAIN_MIN_STOP_LOSS.toString(),
+				                                                    EstimationType.MIN_GOAL.toString(),
 				                                                    EstimationType.MAX_STOP_LOSS.toString(),
 				                                                    EstimationType.MIN_STOP_LOSS.toString()
 		                                                    },

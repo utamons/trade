@@ -15,11 +15,7 @@ import java.sql.DriverManager;
 public class LiquibaseRunner {
 	public static Logger log = LoggerFactory.getLogger(LiquibaseRunner.class);
 
-	public static void runLiquibase() {
-		// Database connection details
-		String url           = Trade.DB_URL;
-		String username      = Trade.DB_USER;
-		String password      = Trade.DB_PASSWORD;
+	public static void runLiquibase(String url, String username, String password) {
 		String changeLogFile = "db/changelog/master.xml";
 
 		try {
