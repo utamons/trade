@@ -4,11 +4,11 @@ import javax.swing.*;
 import java.awt.*;
 import com.corn.trade.component.InfoField;
 
-public class InfoRow extends JPanel {
+public class PosInfoRow extends JPanel {
 	private final InfoField qttField, slField, beField, psField, plField;
 	private final JLabel label;
 
-	public InfoRow(String labelText, int fontSize, int padding, int hgap, int hSpacing) {
+	public PosInfoRow(String labelText, int fontSize, int padding, int hgap, int hSpacing) {
 		// Set the component layout
 		setLayout(new GridLayout(1, 6, hgap, 0));
 		setBorder(BorderFactory.createEmptyBorder(padding, padding, padding, padding));

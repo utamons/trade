@@ -1,7 +1,6 @@
 package com.corn.trade.panel;
 
 import com.corn.trade.component.*;
-import com.corn.trade.component.position.Position;
 import com.corn.trade.component.position.PositionPanel;
 import com.corn.trade.entity.Exchange;
 import com.corn.trade.entity.Ticker;
@@ -17,10 +16,6 @@ import java.awt.*;
 import java.util.List;
 
 public class MainPanel extends BasePanel {
-
-	private final JCheckBox autoUpdateCheckBox;
-	private final JCheckBox autoLevelsCheckBox;
-
 	public MainPanel(Calculator calculator,
 	                 AutoUpdate autoUpdate,
 	                 Levels levels,
@@ -85,15 +80,15 @@ public class MainPanel extends BasePanel {
 		calculator.setPositionType(PositionType.fromString(positionBox.getSelectedItem()));
 		calculator.setEstimationType(EstimationType.fromString(estimationBox.getSelectedItem()));
 
-		LabeledDoubleField spread = new LabeledDoubleField("Spread:",
+		LabeledDoubleField level = new LabeledDoubleField("Level:",
 		                                                   10,
 		                                                   null,
 		                                                   spacing,
 		                                                   fieldHeight,
-		                                                   true,
+		                                                   false,
 		                                                   calculator::setSpread);
 
-		LabeledDoubleField powerReserve = new LabeledDoubleField("Power reserve:",
+		LabeledDoubleField goal = new LabeledDoubleField("Goal:",
 		                                                         10,
 		                                                         null,
 		                                                         spacing,
@@ -101,147 +96,80 @@ public class MainPanel extends BasePanel {
 		                                                         false,
 		                                                         levels::setPowerReserve);
 
-		LabeledDoubleField tempLevel = new LabeledDoubleField("Temp. Level:",
+		LabeledDoubleField techSL = new LabeledDoubleField("Tech. SL:",
 		                                                  10,
 		                                                  null,
 		                                                  spacing,
 		                                                  fieldHeight,
-		                                                  false,
+		                                                  true,
 		                                                  levels::setTempLevel);
 
-		LabeledDoubleField bestPrice = new LabeledDoubleField("Best Price:",
-		                                                  10,
-		                                                  null,
-		                                                  spacing,
-		                                                  fieldHeight,
-		                                                  false,
-		                                                  levels::setBestPrice);
-
-		LabeledDoubleField support = new LabeledDoubleField("Support:",
-		                                                    10,
-		                                                    null,
-		                                                    spacing,
-		                                                    fieldHeight,
-		                                                    false,
-		                                                    levels::setSupport);
-
-		LabeledDoubleField resistance = new LabeledDoubleField("Resistance:",
-		                                                       10,
-		                                                       null,
-		                                                       spacing,
-		                                                       fieldHeight,
-		                                                       false,
-		                                                       levels::setResistance);
-
-		InfoField adr = new InfoField("ADR:", 15, spacing, 5, fieldHeight);
-		adr.setInfoText("1.55");
-		adr.setBold(true);
-		adr.startBlinking(Color.RED, 500);
 
 		TrafficLight trafficLight = new TrafficLight();
 
-		RowPanel rowPanel = new RowPanel();
-		JPanel autoLevelsPanel = new JPanel();
-		autoLevelsPanel.setLayout(new BorderLayout());
+		RowPanel orderPanel = new RowPanel(20);
 
-		RowPanel trafficPanel = new RowPanel();
-		trafficPanel.add(trafficLight);
+		JButton lock = new JButton("Lock");
+		JButton stopLimit    = new JButton("Stop-Limit");
+		JButton limit = new JButton("Limit");
 
-		autoUpdateCheckBox = new JCheckBox("Auto-update");
-		autoLevelsCheckBox = new JCheckBox("Auto-levels");
-
-		autoLevelsPanel.add(autoLevelsCheckBox, BorderLayout.WEST);
-
-		JButton estimate = new JButton("Estimate");
-		JButton reset    = new JButton("Reset");
-
-		autoUpdateCheckBox.addActionListener(e -> {
-			levels.setAutoUpdate(autoUpdateCheckBox.isSelected());
-			autoUpdate.setAutoUpdate(autoUpdateCheckBox.isSelected());
-			calculator.setAutoUpdate(autoUpdateCheckBox.isSelected());
-			estimate.setEnabled(!autoUpdateCheckBox.isSelected());
-			reset.setEnabled(!autoUpdateCheckBox.isSelected());
-			powerReserve.setAutoUpdate(autoUpdateCheckBox.isSelected());
-			spread.setEditable(!autoUpdateCheckBox.isSelected());
-			bestPrice.setEditable(!autoUpdateCheckBox.isSelected());
-			exchangeBox.setEnabled(!autoUpdateCheckBox.isSelected());
-			tickerLookup.setEnabled(!autoUpdateCheckBox.isSelected());
-		});
-
-		rowPanel.add(autoUpdateCheckBox);
-		rowPanel.add(estimate);
-		rowPanel.add(reset);
+		orderPanel.add(lock);
+		orderPanel.add(trafficLight);
+		orderPanel.add(stopLimit);
+		orderPanel.add(limit);
 
 		calculator.addUpdater(() -> {
-			spread.setValue(calculator.getSpread());
-			spread.setError(calculator.isSpreadError());
+			level.setValue(calculator.getSpread());
+			level.setError(calculator.isSpreadError());
 		});
 
 		levels.addUpdater(() -> {
-			support.setError(levels.isSupportError());
-			resistance.setError(levels.isResistanceError());
-			tempLevel.setError(levels.isTempLevelError());
-			powerReserve.setValue(levels.getPowerReserve());
-			powerReserve.setError(levels.isPowerReserveError());
-			bestPrice.setError(levels.isBestPriceError());
-			bestPrice.setValue(levels.getBestPrice());
-
-			resistance.light(levels.isPivotPointResistance(), Color.GREEN);
-			support.light(levels.isPivotPointSupport(), Color.GREEN);
-			tempLevel.light(levels.isPivotPointTempLevel(), Color.GREEN);
-			bestPrice.light(levels.isPivotPointBestPrice(), Color.GREEN);
+			techSL.setError(levels.isTempLevelError());
+			goal.setValue(levels.getPowerReserve());
+			goal.setError(levels.isPowerReserveError());
+			techSL.light(levels.isPivotPointTempLevel(), Color.GREEN);
 		});
 
 		autoUpdate.addUpdater(() -> exchangeBox.setSelectedItem(autoUpdate.getExchange()));
 
 		autoUpdate.addUpdater(() -> {
-			if (!autoUpdate.isAutoUpdate()) {
-				autoUpdateCheckBox.setSelected(false);
-				return;
-			}
-			bestPrice.setValue(autoUpdate.getBestPrice());
 			levels.setBestPrice(autoUpdate.getBestPrice());
-			spread.setValue(autoUpdate.getSpread());
+			level.setValue(autoUpdate.getSpread());
 			levels.setHighDay(autoUpdate.getHigh());
 			levels.setLowDay(autoUpdate.getLow());
-			if (autoLevelsCheckBox.isSelected()) {
-				resistance.setValue(autoUpdate.getHigh());
-				support.setValue(autoUpdate.getLow());
-			}
 			calculator.setSpread(autoUpdate.getSpread());
 			levels.calculatePivotPoint(calculator.getPositionType());
 			levels.calculatePowerReserve(calculator.getPositionType());
 			calculator.estimate();
 		});
 
-		estimate.addActionListener(e -> calculator.estimate());
-		reset.addActionListener(e -> {
+		lock.addActionListener(e -> calculator.estimate());
+		stopLimit.addActionListener(e -> {
 			calculator.reset();
 			levels.reset();
 		});
 
 		PositionPanel position = new PositionPanel();
+		InfoPanel	 info     = new InfoPanel(15, 20, 5,20, 5, 5);
+
+		MessagePanel messagePanel = new MessagePanel(20, 0);
+		messagePanel.show("Welcome to Trade!");
 
 		panel.add(exchangeBox);
 		panel.add(tickerLookup);
 		panel.add(positionBox);
 		panel.add(estimationBox);
-		panel.add(spread);
-		panel.add(powerReserve);
-		panel.add(bestPrice);
-		panel.add(resistance);
-		panel.add(tempLevel);
-		panel.add(support);
-		panel.add(adr);
-		panel.add(trafficPanel);
-		panel.add(autoLevelsPanel);
+		panel.add(level);
+		panel.add(goal);
+		panel.add(techSL);
+		panel.add(messagePanel);
+		panel.add(orderPanel);
 		panel.add(position);
+		panel.add(info);
 
 		position.addPosition("AAPL");
 		position.addPosition("MSFT");
 
 		this.add(panel, BorderLayout.NORTH);
-
-		this.add(rowPanel, BorderLayout.SOUTH);
 	}
 }

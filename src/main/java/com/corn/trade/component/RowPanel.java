@@ -7,8 +7,9 @@ public class RowPanel extends JPanel {
 
 	private final JPanel jPanel;
 
-	public RowPanel() {
+	public RowPanel(int vGap) {
 		setLayout(new BorderLayout());
+		setBorder(BorderFactory.createEmptyBorder(vGap, 0, vGap, 0));
 
 		jPanel = new JPanel();
 		jPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));

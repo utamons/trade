@@ -4,20 +4,20 @@ import javax.swing.*;
 
 public class Position extends JPanel {
 
-	private final InfoRow infoRow;
+	private final PosInfoRow posInfoRow;
 
 	public Position() {
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-		infoRow = new InfoRow("AFRM", 12,5, 1, 2);
+		posInfoRow = new PosInfoRow("AFRM", 12, 5, 1, 2);
 		ButtonRow buttonRow = new ButtonRow(12,5, 1);
 
-		add(infoRow);
+		add(posInfoRow);
 		add(buttonRow);
 	}
 
 	// Getter methods if needed
-	public InfoRow getInfoRow() {
-		return infoRow;
+	public PosInfoRow getInfoRow() {
+		return posInfoRow;
 	}
 }

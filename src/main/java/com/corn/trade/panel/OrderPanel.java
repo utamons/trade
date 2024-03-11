@@ -90,8 +90,8 @@ public class OrderPanel extends BasePanel {
 		panel.add(limit);
 		panel.add(stop);
 
-		RowPanel     buttonPanel  = new RowPanel();
-		RowPanel     trafficPanel = new RowPanel();
+		RowPanel     buttonPanel  = new RowPanel(0);
+		RowPanel     trafficPanel = new RowPanel(0);
 		TrafficLight trafficLight = new TrafficLight();
 		trafficPanel.add(trafficLight);
 

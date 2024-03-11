@@ -33,7 +33,7 @@ public class Trade {
 	public static final int RESIZE_EDGE = 4;
 	public static final  Theme  DARK_THEME   = new OneDarkTheme();
 	public static final  Theme  LIGHT_THEME  = new IntelliJTheme();
-	public static final  int    PREF_HEIGHT  = 250;
+	public static final  int    PREF_HEIGHT  = 400;
 	public static final  int    PREF_WIDTH   = 330;
 	private static final Logger log          = LoggerFactory.getLogger(Trade.class);
 	public static final  int    FIELD_HEIGHT = 40;
@@ -91,7 +91,7 @@ public class Trade {
 			JFrame frame = new JFrame();
 			frame.setLayout(new BorderLayout());
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			frame.setSize(700, 630);
+			frame.setSize(700, 1200);
 
 			CustomTitleBar titleBar = new CustomTitleBar("Trade v. " + version + " (" + stage + ")", frame);
 
@@ -128,9 +128,12 @@ public class Trade {
 			));
 
 			frame.add(titleBar, BorderLayout.NORTH);
+			Border border = BorderFactory.createLineBorder(Color.LIGHT_GRAY);
 			Border emptyBorder = BorderFactory.createEmptyBorder(RESIZE_EDGE, RESIZE_EDGE, RESIZE_EDGE, RESIZE_EDGE);
 
-			frame.getRootPane().setBorder(emptyBorder);
+			Border compoundBorder = BorderFactory.createCompoundBorder(border, emptyBorder);
+
+			frame.getRootPane().setBorder(compoundBorder);
 
 			frame.setUndecorated(true);
 

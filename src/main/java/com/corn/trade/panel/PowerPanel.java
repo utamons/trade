@@ -56,7 +56,7 @@ public class PowerPanel extends BasePanel {
 		panel.add(high);
 		panel.add(low);
 
-		RowPanel rowPanel = new RowPanel();
+		RowPanel rowPanel = new RowPanel(0);
 
 		JButton button = new JButton("Calculate P/R");
 

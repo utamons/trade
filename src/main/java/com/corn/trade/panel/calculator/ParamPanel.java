@@ -96,7 +96,7 @@ public class ParamPanel extends BasePanel {
 		                                                     levels::setPowerReserve);
 
 
-		RowPanel rowPanel = new RowPanel();
+		RowPanel rowPanel = new RowPanel(0);
 
 		JButton calculateButton = new JButton("Calculate");
 		JButton clearButton = new JButton("Clear");
