@@ -7,18 +7,23 @@ import com.corn.trade.trade.EstimationType;
 import com.corn.trade.trade.PositionType;
 import com.corn.trade.trade.analysis.TradeCalc;
 import com.corn.trade.trade.analysis.TradeContext;
-import com.corn.trade.trade.analysis.TradeContextData;
+import com.corn.trade.trade.analysis.TradeData;
 
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
+import java.util.function.Consumer;
+
+import static com.corn.trade.BaseWindow.ORDER_LUFT;
 
 public class ParamPanel extends JPanel {
 
-	public ParamPanel(TradeCalc calc, TradeContext context,
-	                  Dimension maxSize,
-	                  Dimension minSize, int spacing,
-	                  int fieldHeight) {
+	public ParamPanel(Dimension maxSize,
+	                  Dimension minSize,
+	                  int spacing,
+	                  int fieldHeight,
+	                  Consumer<TradeData> consumer
+	                  ) {
 
 		LayoutManager layout = new BoxLayout(this, BoxLayout.Y_AXIS);
 
@@ -110,19 +115,30 @@ public class ParamPanel extends JPanel {
 		JButton calculateButton = new JButton("Calculate");
 
 		calculateButton.addActionListener(e -> {
-			TradeContextData data = TradeContextData.TradeContextDataBuilder
-					.aTradeContextData()
-					.withPositionType(PositionType.valueOf(positionBox.getSelectedItem()))
-					.withEstimationType(EstimationType.valueOf(estimationBox.getSelectedItem()))
-					.withLevel(level.getValue())
-					.withGoal(goal.getValue())
-					.withSlippage(slippage.getValue())
-					.withPrice(price.getValue())
-					.withTechStopLoss(techStop.getValue())
-					.withPowerReserve(powerReserve.getValue())
-					.build();
-			context.setData(data);
-			calc.calculate();
+			PositionType positionType = PositionType.fromString(positionBox.getSelectedItem());
+			int goalCoef = positionType == PositionType.LONG ? 1 : -1;
+
+			Double slippageValue = slippage.getValue() == null ? ORDER_LUFT : slippage.getValue();
+			slippage.setValue(slippageValue);
+
+			if (estimationBox.getSelectedItem().equals(EstimationType.MIN_GOAL.toString())) {
+				goal.setValue(null);
+				powerReserve.setValue(null);
+			}
+
+			TradeData tradeData = TradeData.aTradeData()
+			                              .withEstimationType(EstimationType.fromString(estimationBox.getSelectedItem()))
+			                              .withPositionType(positionType)
+			                              .withPowerReserve(powerReserve.getValue())
+			                              .withPrice(price.getValue())
+			                              .withLevel(level.getValue())
+			                              .withTechStopLoss(techStop.getValue())
+			                              .withSlippage(slippage.getValue())
+			                              .withGoal(goal.getValue())
+			                              .withLuft(ORDER_LUFT)
+			                              .build();
+
+			consumer.accept(tradeData);
 		});
 
 		JButton clearButton = new JButton("Clear");
@@ -133,7 +149,6 @@ public class ParamPanel extends JPanel {
 			price.setValue(null);
 			techStop.setValue(null);
 			powerReserve.setValue(null);
-			context.setData(null);
 		});
 
 		rowPanel.add(calculateButton);

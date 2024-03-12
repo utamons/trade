@@ -54,4 +54,8 @@ public class ColorfulTextWindow extends JScrollPane {
 			throw new RuntimeException(e);
 		}
 	}
+
+	public void clear() {
+		textPane.setText("");
+	}
 }
