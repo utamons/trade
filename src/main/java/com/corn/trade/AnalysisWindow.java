@@ -7,9 +7,13 @@ import com.corn.trade.trade.analysis.TradeCalc;
 import javax.swing.*;
 import java.awt.*;
 
+import static com.corn.trade.util.Util.showErrorDlg;
+
 public class AnalysisWindow extends BaseWindow {
 
-	public AnalysisWindow(String args[]) {
+	private ParamPanel paramPanel;
+
+	public AnalysisWindow(String[] args) {
 		super(args, "Trade Analysis", new Dimension(700, 700));
 		initializeComponents();
 	}
@@ -31,12 +35,13 @@ public class AnalysisWindow extends BaseWindow {
 
 		ColorfulTextWindow textWindow = new ColorfulTextWindow(new Dimension(650, 180));
 
-		ParamPanel paramPanel = new ParamPanel(new Dimension(650, 220), new Dimension(650, 180), 5, FIELD_HEIGHT,
+		paramPanel = new ParamPanel(new Dimension(650, 220), new Dimension(650, 180), 5, FIELD_HEIGHT,
 		                                       (tradeData) -> {
 			                                       try {
+													   paramPanel.populate(tradeCalc.validateAndComplement(tradeData));
 				                                       tradeCalc.calculate(tradeData);
 			                                       } catch (Exception e) {
-				                                      textWindow.appendText("Error: " + e.getMessage());
+				                                       showErrorDlg(frame, e.getMessage(), true);
 			                                       }
 		                                       });
 		gbc.gridx = 0;

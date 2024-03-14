@@ -74,6 +74,19 @@ public class TradeData {
 		return luft;
 	}
 
+	public Builder toBuilder() {
+		return new Builder()
+				.withPositionType(this.positionType)
+				.withEstimationType(this.estimationType)
+				.withPowerReserve(this.powerReserve)
+				.withPrice(this.price)
+				.withLevel(this.level)
+				.withTechStopLoss(this.techStopLoss)
+				.withSlippage(this.slippage)
+				.withGoal(this.goal)
+				.withLuft(this.luft);
+	}
+
 	public static final class Builder {
 		private PositionType   positionType;
 		private EstimationType estimationType;

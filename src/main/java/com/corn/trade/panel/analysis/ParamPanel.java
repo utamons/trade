@@ -5,8 +5,6 @@ import com.corn.trade.component.LabeledDoubleField;
 import com.corn.trade.component.RowPanel;
 import com.corn.trade.trade.EstimationType;
 import com.corn.trade.trade.PositionType;
-import com.corn.trade.trade.analysis.TradeCalc;
-import com.corn.trade.trade.analysis.TradeContext;
 import com.corn.trade.trade.analysis.TradeData;
 
 import javax.swing.*;
@@ -17,6 +15,15 @@ import java.util.function.Consumer;
 import static com.corn.trade.BaseWindow.ORDER_LUFT;
 
 public class ParamPanel extends JPanel {
+
+	private final LabeledComboBox positionBox;
+	private final LabeledComboBox estimationBox;
+	private final LabeledDoubleField level;
+	private final LabeledDoubleField goal;
+	private final LabeledDoubleField slippage;
+	private final LabeledDoubleField powerReserve;
+	private final LabeledDoubleField price;
+	private final LabeledDoubleField techStop;
 
 	public ParamPanel(Dimension maxSize,
 	                  Dimension minSize,
@@ -37,7 +44,7 @@ public class ParamPanel extends JPanel {
 
 		this.setBorder(emptyBorder);
 
-		LabeledComboBox positionBox = new LabeledComboBox("Position:",
+		positionBox = new LabeledComboBox("Position:",
 		                                                  new String[]{
 				                                                  PositionType.LONG.toString(),
 				                                                  PositionType.SHORT.toString()
@@ -46,10 +53,10 @@ public class ParamPanel extends JPanel {
 		                                                  fieldHeight, null);
 
 
-		LabeledComboBox estimationBox = new LabeledComboBox("Estimation:",
+		estimationBox = new LabeledComboBox("Estimation:",
 		                                                    new String[]{
-				                                                    EstimationType.MIN_GOAL.toString(),
 				                                                    EstimationType.MAX_STOP_LOSS.toString(),
+				                                                    EstimationType.MIN_GOAL.toString(),
 				                                                    EstimationType.MIN_STOP_LOSS.toString()
 		                                                    },
 		                                                    spacing,
@@ -57,42 +64,24 @@ public class ParamPanel extends JPanel {
 		                                                    null);
 
 
-		LabeledDoubleField level = new LabeledDoubleField("Level:",
-		                                                         10,
-		                                                         null,
-		                                                         spacing,
-		                                                         fieldHeight,
-		                                                         false,
+		level = new LabeledDoubleField("Level:",
+		                                                  10,
+		                                                  null,
+		                                                  spacing,
+		                                                  fieldHeight,
+		                                                  false,
 		                                                  null);
 
-		LabeledDoubleField goal = new LabeledDoubleField("Goal:",
-		                                                      10,
-		                                                      null,
-		                                                      spacing,
-		                                                      fieldHeight,
-		                                                      false,
-		                                                      null);
+		goal = new LabeledDoubleField("Goal:",
+		                                                 10,
+		                                                 null,
+		                                                 spacing,
+		                                                 fieldHeight,
+		                                                 false,
+		                                                 null);
 
 
-		LabeledDoubleField slippage = new LabeledDoubleField("Slippage:",
-		                                                  10,
-		                                                  null,
-		                                                  spacing,
-		                                                  fieldHeight,
-		                                                  false,
-		                                                     null);
-
-
-		LabeledDoubleField powerReserve = new LabeledDoubleField("Power reserve:",
-		                                                  10,
-		                                                  null,
-		                                                  spacing,
-		                                                  fieldHeight,
-		                                                  false,
-		                                                         null);
-
-
-		LabeledDoubleField price = new LabeledDoubleField("Price:",
+		slippage = new LabeledDoubleField("Slippage:",
 		                                                     10,
 		                                                     null,
 		                                                     spacing,
@@ -101,13 +90,31 @@ public class ParamPanel extends JPanel {
 		                                                     null);
 
 
-		LabeledDoubleField techStop = new LabeledDoubleField("Tech. stop:",
+		powerReserve = new LabeledDoubleField("Power reserve:",
+		                                                         10,
+		                                                         null,
+		                                                         spacing,
+		                                                         fieldHeight,
+		                                                         false,
+		                                                         null);
+
+
+		price = new LabeledDoubleField("Price:",
 		                                                  10,
 		                                                  null,
 		                                                  spacing,
 		                                                  fieldHeight,
-		                                                  true,
+		                                                  false,
 		                                                  null);
+
+
+		techStop = new LabeledDoubleField("Tech. stop:",
+		                                                     10,
+		                                                     null,
+		                                                     spacing,
+		                                                     fieldHeight,
+		                                                     true,
+		                                                     null);
 
 
 		RowPanel rowPanel = new RowPanel(0);
@@ -116,7 +123,6 @@ public class ParamPanel extends JPanel {
 
 		calculateButton.addActionListener(e -> {
 			PositionType positionType = PositionType.fromString(positionBox.getSelectedItem());
-			int goalCoef = positionType == PositionType.LONG ? 1 : -1;
 
 			Double slippageValue = slippage.getValue() == null ? ORDER_LUFT : slippage.getValue();
 			slippage.setValue(slippageValue);
@@ -173,5 +179,16 @@ public class ParamPanel extends JPanel {
 
 		add(leftPanel);
 		add(rightPanel);
+	}
+
+	public void populate(TradeData tradeData) {
+		positionBox.setSelectedItem(tradeData.getPositionType().toString());
+		estimationBox.setSelectedItem(tradeData.getEstimationType().toString());
+		level.setValue(tradeData.getLevel());
+		goal.setValue(tradeData.getGoal());
+		slippage.setValue(tradeData.getSlippage());
+		powerReserve.setValue(tradeData.getPowerReserve());
+		price.setValue(tradeData.getPrice());
+		techStop.setValue(tradeData.getTechStopLoss());
 	}
 }
