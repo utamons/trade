@@ -3,6 +3,7 @@ package com.corn.trade;
 import com.corn.trade.panel.analysis.ColorfulTextWindow;
 import com.corn.trade.panel.analysis.ParamPanel;
 import com.corn.trade.trade.analysis.TradeCalc;
+import com.corn.trade.trade.analysis.TradeData;
 
 import javax.swing.*;
 import java.awt.*;
@@ -31,15 +32,14 @@ public class AnalysisWindow extends BaseWindow {
 		mainContainer.setLayout(new GridBagLayout());
 		GridBagConstraints gbc = new GridBagConstraints();
 
-		TradeCalc tradeCalc = new TradeCalc();
-
 		ColorfulTextWindow textWindow = new ColorfulTextWindow(new Dimension(650, 180));
 
 		paramPanel = new ParamPanel(new Dimension(650, 220), new Dimension(650, 180), 5, FIELD_HEIGHT,
 		                                       (tradeData) -> {
 			                                       try {
-													   paramPanel.populate(tradeCalc.validateAndComplement(tradeData));
-				                                       tradeCalc.calculate(tradeData);
+				                                       TradeCalc tradeCalc = new TradeCalc(tradeData);
+													   paramPanel.populate(tradeCalc.getTradeData());
+				                                       tradeCalc.calculate();
 			                                       } catch (Exception e) {
 				                                       showErrorDlg(frame, e.getMessage(), true);
 			                                       }

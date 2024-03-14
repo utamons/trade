@@ -5,14 +5,40 @@ import com.corn.trade.trade.PositionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.corn.trade.BaseWindow.MAX_VOLUME;
+import static com.corn.trade.util.Util.fmt;
+import static com.corn.trade.util.Util.showErrorDlg;
+
 public class TradeCalc {
 	private final Logger log = LoggerFactory.getLogger(TradeCalc.class);
 
-	public void calculate(TradeData tradeData) {
-		validateAndComplement(tradeData);
+	private final TradeData tradeData;
+	private       double    reference;
+	private       double    quantity;
+	private       double    orderLimit;
+	private       double    orderStop;
+	private       double    stopLoss;
+	private       double    takeProfit;
+	private       double    breakEven;
+
+	public TradeCalc(TradeData tradeData) {
+		this.tradeData = validateAndComplement(tradeData);
 	}
 
-	public TradeData validateAndComplement(TradeData tradeData) {
+	@SuppressWarnings("unused")
+	private TradeCalc() {
+		this.tradeData = null;
+	}
+
+	public TradeData getTradeData() {
+		return tradeData;
+	}
+
+	public void calculate() {
+
+	}
+
+	private TradeData validateAndComplement(TradeData tradeData) {
 		if (tradeData.getLevel() == null) {
 			throw new IllegalArgumentException("Level is required");
 		}
@@ -71,6 +97,7 @@ public class TradeCalc {
 			}
 		}
 
+		reference = getReferencePoint(tradeData);
 		// Set default slippage if undefined
 		Double slippage = (tradeData.getSlippage() == null) ? tradeData.getLuft() : tradeData.getSlippage();
 
@@ -93,40 +120,73 @@ public class TradeCalc {
 		return builder.build();
 	}
 
-	private Double calculateGoal(TradeData tradeData, Double powerReserve) {
-		double reference;
-
-		// Determine the reference point: use the highest of level or price for LONG, and lower for SHORT
+	private double getReferencePoint(TradeData tradeData) {
 		if (tradeData.getPositionType() == PositionType.LONG) {
-			reference = Math.max(tradeData.getPrice(),
-			                     tradeData.getLevel() != null ? tradeData.getLevel() : tradeData.getPrice());
+			return Math.max(tradeData.getPrice(), tradeData.getLevel());
+		} else if (tradeData.getPositionType() == PositionType.SHORT) {
+			return Math.min(tradeData.getPrice(), tradeData.getLevel());
+		}
+		return 0.0;
+	}
+
+	private Double calculateGoal(TradeData tradeData, Double powerReserve) {
+		if (tradeData.getPositionType() == PositionType.LONG) {
 			return reference + powerReserve;
 		} else if (tradeData.getPositionType() == PositionType.SHORT) {
-			reference = Math.min(tradeData.getPrice(),
-			                     tradeData.getLevel() != null ? tradeData.getLevel() : tradeData.getPrice());
 			return reference - powerReserve;
 		}
-
 		return null;
 	}
 
-	private Double calculatePowerReserve(TradeData tradeData, Double goal) {
-		double reference;
 
-		// Determine the reference point: use the highest of level or price for LONG, and lower for SHORT
+	private Double calculatePowerReserve(TradeData tradeData, Double goal) {
 		if (tradeData.getPositionType() == PositionType.LONG) {
-			reference = Math.max(tradeData.getPrice(),
-			                     tradeData.getLevel() != null ? tradeData.getLevel() : tradeData.getPrice());
-			// For LONG, power reserve is the distance from the reference to the goal
 			return goal - reference;
 		} else if (tradeData.getPositionType() == PositionType.SHORT) {
-			reference = Math.min(tradeData.getPrice(),
-			                     tradeData.getLevel() != null ? tradeData.getLevel() : tradeData.getPrice());
-			// For SHORT, power reserve is the distance from the goal to the reference
 			return reference - goal;
 		}
+		return null;
+	}
 
-		return null; // This should not happen if positionType is always either LONG or SHORT
+	private boolean areRiskLimitsFailed() {
+		if ((isLong() && takeProfit <= breakEven) || (isShort() && takeProfit >= breakEven)) {
+			log.debug("RL: Take profit {} is less than break even {}", fmt(takeProfit), fmt(breakEven));
+			return true;
+		}
+		if (quantity <= 0) {
+			log.debug("RL: Quantity {} is less than 0", quantity);
+			return true;
+		}
+		if (stopLossTooLow()) {
+			log.debug(2, "RL: Stop loss {} is too low", fmt(getCorrectedStopLoss()));
+			return true;
+		}
+		return false;
+	}
+
+	private void fillQuantity() {
+		if (quantity == 0 ||
+		    tradeData.getEstimationType() == EstimationType.MAX_STOP_LOSS ||
+		    tradeData.getEstimationType() == EstimationType.MIN_STOP_LOSS)
+			quantity = maxQuantity();
+	}
+
+	private void fillOrder() {
+		orderStop = reference;
+		orderLimit = orderStop + (isLong() ? tradeData.getSlippage() * tradeData.getLuft() : -tradeData.getSlippage() * tradeData.getLuft());
+		takeProfit = isLong() ? reference + tradeData.getPowerReserve() : reference - tradeData.getPowerReserve();
+	}
+
+	private boolean isShort() {
+		return !isLong();
+	}
+
+	private boolean isLong() {
+		return tradeData.getPositionType().equals(PositionType.LONG);
+	}
+
+	private int maxQuantity() {
+		return (int) (MAX_VOLUME / reference);
 	}
 
 }
