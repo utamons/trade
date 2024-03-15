@@ -3,8 +3,6 @@ package com.corn.trade;
 import com.corn.trade.ibkr.AutoUpdate;
 import com.corn.trade.ibkr.Ibkr;
 import com.corn.trade.panel.MainPanel;
-import com.corn.trade.trade.Calculator;
-import com.corn.trade.trade.Levels;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,12 +33,9 @@ public class TradeWindow extends BaseWindow {
 		Ibkr ibkr = new Ibkr();
 		ibkr.run();
 
-		Levels     levels     = new Levels(frame);
-		Calculator calculator = new Calculator(frame, levels);
 		AutoUpdate autoUpdate = new AutoUpdate(frame, ibkr);
-		autoUpdate.addActivateListener(calculator::setAutoUpdate);
 
-		MainPanel mainPanel = new MainPanel(calculator, autoUpdate, levels, new Dimension(PREF_WIDTH, PREF_HEIGHT*2), new Dimension(0, 0), 5, FIELD_HEIGHT);
+		MainPanel mainPanel = new MainPanel(autoUpdate, new Dimension(PREF_WIDTH, PREF_HEIGHT*2), new Dimension(0, 0), 5, FIELD_HEIGHT);
 
 		JPanel mainContainer = new JPanel();
 		mainContainer.setLayout(new BoxLayout(mainContainer, BoxLayout.Y_AXIS));

@@ -6,9 +6,7 @@ import com.corn.trade.entity.Exchange;
 import com.corn.trade.entity.Ticker;
 import com.corn.trade.ibkr.AutoUpdate;
 import com.corn.trade.jpa.JpaRepo;
-import com.corn.trade.trade.Calculator;
 import com.corn.trade.trade.EstimationType;
-import com.corn.trade.trade.Levels;
 import com.corn.trade.trade.PositionType;
 
 import javax.swing.*;
@@ -16,14 +14,12 @@ import java.awt.*;
 import java.util.List;
 
 public class MainPanel extends BasePanel {
-	public MainPanel(Calculator calculator,
-	                 AutoUpdate autoUpdate,
-	                 Levels levels,
+	public MainPanel(AutoUpdate autoUpdate,
 	                 Dimension maxSize,
 	                 Dimension minSize,
 	                 int spacing,
 	                 int fieldHeight) {
-		super(calculator, autoUpdate, levels, maxSize, minSize);
+		super(autoUpdate, maxSize, minSize);
 
 		JpaRepo<Exchange, Long> exchangeRepo = new JpaRepo<>(Exchange.class);
 		JpaRepo<Ticker, Long>   tickerRepo   = new JpaRepo<>(Ticker.class);
@@ -58,7 +54,7 @@ public class MainPanel extends BasePanel {
 		                                                  spacing,
 		                                                  fieldHeight,
 		                                                  (value) -> {
-			                                                  calculator.setPositionType(PositionType.fromString(value));
+
 			                                                  autoUpdate.setLong(PositionType.fromString(value) ==
 			                                                                     PositionType.LONG);
 		                                                  });
@@ -73,20 +69,15 @@ public class MainPanel extends BasePanel {
 		                                                    },
 		                                                    spacing,
 		                                                    fieldHeight,
-		                                                    (value) -> calculator.setEstimationType(EstimationType.fromString(
-				                                                    value)));
+		                                                    null);
 
-
-		calculator.setPositionType(PositionType.fromString(positionBox.getSelectedItem()));
-		calculator.setEstimationType(EstimationType.fromString(estimationBox.getSelectedItem()));
 
 		LabeledDoubleField level = new LabeledDoubleField("Level:",
 		                                                   10,
 		                                                   null,
 		                                                   spacing,
 		                                                   fieldHeight,
-		                                                   false,
-		                                                   calculator::setSpread);
+		                                                   false, null);
 
 		LabeledDoubleField goal = new LabeledDoubleField("Goal:",
 		                                                         10,
@@ -94,7 +85,7 @@ public class MainPanel extends BasePanel {
 		                                                         spacing,
 		                                                         fieldHeight,
 		                                                         false,
-		                                                         levels::setPowerReserve);
+		                                                         null);
 
 		LabeledDoubleField techSL = new LabeledDoubleField("Tech. SL:",
 		                                                  10,
@@ -102,7 +93,7 @@ public class MainPanel extends BasePanel {
 		                                                  spacing,
 		                                                  fieldHeight,
 		                                                  true,
-		                                                  levels::setTempLevel);
+		                                                  null);
 
 
 		TrafficLight trafficLight = new TrafficLight();
@@ -118,36 +109,7 @@ public class MainPanel extends BasePanel {
 		orderPanel.add(stopLimit);
 		orderPanel.add(limit);
 
-		calculator.addUpdater(() -> {
-			level.setValue(calculator.getSpread());
-			level.setError(calculator.isSpreadError());
-		});
-
-		levels.addUpdater(() -> {
-			techSL.setError(levels.isTempLevelError());
-			goal.setValue(levels.getPowerReserve());
-			goal.setError(levels.isPowerReserveError());
-			techSL.light(levels.isPivotPointTempLevel(), Color.GREEN);
-		});
-
 		autoUpdate.addUpdater(() -> exchangeBox.setSelectedItem(autoUpdate.getExchange()));
-
-		autoUpdate.addUpdater(() -> {
-			levels.setBestPrice(autoUpdate.getBestPrice());
-			level.setValue(autoUpdate.getSpread());
-			levels.setHighDay(autoUpdate.getHigh());
-			levels.setLowDay(autoUpdate.getLow());
-			calculator.setSpread(autoUpdate.getSpread());
-			levels.calculatePivotPoint(calculator.getPositionType());
-			levels.calculatePowerReserve(calculator.getPositionType());
-			calculator.estimate();
-		});
-
-		lock.addActionListener(e -> calculator.estimate());
-		stopLimit.addActionListener(e -> {
-			calculator.reset();
-			levels.reset();
-		});
 
 		PositionPanel position = new PositionPanel();
 		InfoPanel	 info     = new InfoPanel(15, 20, 5,20, 5, 5);
