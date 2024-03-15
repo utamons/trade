@@ -5,7 +5,8 @@ import com.corn.trade.component.LabeledDoubleField;
 import com.corn.trade.component.RowPanel;
 import com.corn.trade.trade.EstimationType;
 import com.corn.trade.trade.PositionType;
-import com.corn.trade.trade.analysis.TradeData;
+import com.corn.trade.trade.analysis.data.TradeData;
+import com.corn.trade.util.Trigger;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -24,6 +25,7 @@ public class ParamPanel extends JPanel {
 	private final LabeledDoubleField powerReserve;
 	private final LabeledDoubleField price;
 	private final LabeledDoubleField techStop;
+	private Trigger onClear;
 
 	public ParamPanel(Dimension maxSize,
 	                  Dimension minSize,
@@ -155,6 +157,9 @@ public class ParamPanel extends JPanel {
 			price.setValue(null);
 			techStop.setValue(null);
 			powerReserve.setValue(null);
+			if (onClear != null) {
+				onClear.trigger();
+			}
 		});
 
 		rowPanel.add(calculateButton);
@@ -190,5 +195,9 @@ public class ParamPanel extends JPanel {
 		powerReserve.setValue(tradeData.getPowerReserve());
 		price.setValue(tradeData.getPrice());
 		techStop.setValue(tradeData.getTechStopLoss());
+	}
+
+	public void onClear(Trigger onClear) {
+		this.onClear = onClear;
 	}
 }

@@ -2,24 +2,33 @@ package com.corn.trade.trade.analysis;
 
 import com.corn.trade.trade.EstimationType;
 import com.corn.trade.trade.PositionType;
+import com.corn.trade.trade.analysis.data.TradeData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.corn.trade.BaseWindow.MAX_VOLUME;
+import static com.corn.trade.BaseWindow.*;
 import static com.corn.trade.util.Util.fmt;
-import static com.corn.trade.util.Util.showErrorDlg;
+import static com.corn.trade.util.Util.round;
+import static java.lang.Math.abs;
 
 public class TradeCalc {
 	private final Logger log = LoggerFactory.getLogger(TradeCalc.class);
 
 	private final TradeData tradeData;
 	private       double    reference;
-	private       double    quantity;
+	private       int       quantity;
 	private       double    orderLimit;
 	private       double    orderStop;
 	private       double    stopLoss;
 	private       double    takeProfit;
 	private       double    breakEven;
+
+	private double risk;
+	private double outputExpected;
+	private double riskPercent;
+	private double gain;
+	private double riskRewardRatioPercent;
+	private String tradeError;
 
 	public TradeCalc(TradeData tradeData) {
 		this.tradeData = validateAndComplement(tradeData);
@@ -34,8 +43,34 @@ public class TradeCalc {
 		return tradeData;
 	}
 
-	public void calculate() {
+	public TradeData calculate() {
+		estimate();
+		return tradeData.toBuilder()
+		                .withQuantity(quantity)
+		                .withOrderLimit(orderLimit)
+		                .withOrderStop(orderStop)
+		                .withStopLoss(stopLoss)
+		                .withTakeProfit(takeProfit)
+		                .withBreakEven(breakEven)
+		                .withRisk(risk)
+		                .withOutputExpected(outputExpected)
+		                .withRiskPercent(riskPercent)
+		                .withGain(gain)
+		                .withTradeError(tradeError)
+		                .withRiskRewardRatioPercent(riskRewardRatioPercent)
+		                .build();
+	}
 
+	private double getMinPowerReserve(TradeData tradeData) {
+		double minPowerReserve = 0;
+		TradeData _tradeData = tradeData.toBuilder().withEstimationType(EstimationType.MAX_STOP_LOSS).build();
+		do {
+			minPowerReserve = round(minPowerReserve + 0.01);
+			_tradeData = _tradeData.toBuilder().withPowerReserve(minPowerReserve).build();
+			TradeCalc tradeCalc = new TradeCalc(_tradeData);
+			_tradeData = tradeCalc.calculate();
+		} while (_tradeData.getTradeError() != null || minPowerReserve/_tradeData.getPrice() < 0.05);
+		return minPowerReserve;
 	}
 
 	private TradeData validateAndComplement(TradeData tradeData) {
@@ -65,6 +100,16 @@ public class TradeCalc {
 		}
 		if (tradeData.getTechStopLoss() != null && tradeData.getTechStopLoss() < 0) {
 			throw new IllegalArgumentException("TechStopLoss cannot be less than zero.");
+		}
+		if (tradeData.getTechStopLoss() != null &&
+		    tradeData.getPositionType() == PositionType.LONG &&
+		    tradeData.getTechStopLoss() >= tradeData.getLevel()) {
+			throw new IllegalArgumentException("TechStopLoss must be below the level.");
+		}
+		if (tradeData.getTechStopLoss() != null &&
+		    tradeData.getPositionType() == PositionType.SHORT &&
+		    tradeData.getTechStopLoss() <= tradeData.getLevel()) {
+			throw new IllegalArgumentException("TechStopLoss must be above the level.");
 		}
 		if (tradeData.getLuft() == null || tradeData.getLuft() < 0) {
 			throw new IllegalArgumentException("Luft is required and cannot be less than zero.");
@@ -97,6 +142,8 @@ public class TradeCalc {
 			}
 		}
 
+
+
 		reference = getReferencePoint(tradeData);
 		// Set default slippage if undefined
 		Double slippage = (tradeData.getSlippage() == null) ? tradeData.getLuft() : tradeData.getSlippage();
@@ -115,6 +162,11 @@ public class TradeCalc {
 				Double calculatedPowerReserve = calculatePowerReserve(tradeData, tradeData.getGoal());
 				builder.withPowerReserve(calculatedPowerReserve);
 			}
+		} else {
+			// Set minimum powerReserve
+			builder.withPowerReserve(getMinPowerReserve(tradeData));
+			Double calculatedGoal = calculateGoal(tradeData, tradeData.getPowerReserve());
+			builder.withGoal(calculatedGoal);
 		}
 
 		return builder.build();
@@ -148,32 +200,169 @@ public class TradeCalc {
 		return null;
 	}
 
-	private boolean areRiskLimitsFailed() {
+	private double getTaxes(double sum) {
+		return sum * 0.1; // ИПН
+	}
+
+	public double estimatedCommissionUSD(double price) {
+		double max    = quantity * price / 100.0;
+		double min    = quantity * 0.005;
+		double amount = Math.min(max, min);
+		return amount < 1 ? 1 : amount;
+	}
+
+	public double getBreakEven(double price) {
+		double openCommission  = estimatedCommissionUSD(price);
+		double priceClose      = price;
+		double closeCommission = openCommission;
+		double profit          = abs(priceClose - price) * quantity;
+		double taxes           = getTaxes(profit);
+		double increment       = isLong() ? 0.01 : -0.01;
+
+		while (profit < openCommission + closeCommission + taxes) {
+			priceClose = priceClose + increment;
+			closeCommission = estimatedCommissionUSD(priceClose);
+			profit = abs(priceClose - price) * quantity;
+			taxes = getTaxes(profit);
+		}
+
+		double range   = abs(priceClose - price);
+		double percent = range / powerReserve() * 100;
+
+		log.debug("BE: {}, range {}, {}%", fmt(priceClose), fmt(range), fmt(percent));
+
+		return priceClose;
+	}
+
+	public void estimate() {
+
+		fillQuantity();
+		fillOrder();
+
+		tradeError = null;
+		int counter = 0;
+		do {
+			stopLoss = 0;
+			do {
+				counter++;
+				breakEven = getBreakEven(orderLimit);
+				double reward = getReward();
+				risk = getRisk(reward);
+				if (stopLoss == 0)
+					stopLoss = calculateStopLoss();
+				// recalculate risk because stop loss might be corrected by slippage
+				risk = recalculatedRisk();
+
+				fillTradeAndRiskFields(reward);
+
+				log.debug(
+						"Iteration {} - quantity: {}, take profit: {}, stop loss {}, risk: {}, reward: {}, risk reward " +
+						"risk {}% ratio: {}",
+						counter,
+						quantity,
+						fmt(takeProfit),
+						fmt(stopLoss),
+						fmt(risk),
+						fmt(outputExpected),
+						fmt(riskPercent),
+						fmt(riskRewardRatioPercent)
+				);
+
+				if (stopLossTooSmall()) {
+					break;
+				}
+
+				if (riskPercent > MAX_RISK_PERCENT || round(riskRewardRatioPercent) > round(1 / MAX_RISK_REWARD_RATIO * 100))
+					stopLoss = stopLoss + 0.01 * (isLong() ? 1 : -1);
+
+			} while (
+					(riskPercent > MAX_RISK_PERCENT ||
+					 round(riskRewardRatioPercent) > round(1 / MAX_RISK_REWARD_RATIO * 100)) &&
+					stopLoss > 0 &&
+					((isLong() && takeProfit > breakEven) || (isShort() && takeProfit < breakEven))
+			);
+			if (areRiskLimitsFailed() != null)
+				quantity--;
+		} while (areRiskLimitsFailed() != null && quantity > 0);
+
+		tradeError = areRiskLimitsFailed();
+	}
+
+	private boolean stopLossTooSmall() {
+		return (isLong() && stopLoss >= tradeData.getLevel()) ||
+		       (isShort() && stopLoss <= tradeData.getLevel());
+	}
+
+	public Double getCorrectedStopLoss() {
+		return isLong() ? round(stopLoss - slippage()) : round(stopLoss + slippage());
+	}
+
+	private void fillTradeAndRiskFields(double reward) {
+		outputExpected = reward * quantity;
+		gain = outputExpected / (orderLimit * quantity) * 100;
+		risk = risk * quantity;
+		riskRewardRatioPercent = risk / outputExpected * 100;
+		riskPercent = risk / MAX_VOLUME * 100;
+	}
+
+	private double getRisk(double reward) {
+		return reward / MAX_RISK_REWARD_RATIO;
+	}
+
+	private double recalculatedRisk() {
+		return isLong() ? breakEven - getCorrectedStopLoss() : getCorrectedStopLoss() - breakEven;
+	}
+
+	private double getReward() {
+		return isLong() ? takeProfit - breakEven : breakEven - takeProfit;
+	}
+
+	private double calculateStopLoss() {
+		if (tradeData.getTechStopLoss() != null) {
+			return tradeData.getTechStopLoss();
+		}
+		double stopLoss = isLong() ? breakEven - risk : breakEven + risk;
+
+		if (estimationType() == EstimationType.MIN_STOP_LOSS) {
+			double minStopLoss =
+					isLong() ? getTradeData().getLevel() - ORDER_LUFT : getTradeData().getLevel() + ORDER_LUFT;
+			return isLong() ? Math.max(stopLoss, minStopLoss) : Math.min(stopLoss, minStopLoss);
+		}
+
+		return stopLoss;
+	}
+
+	private String areRiskLimitsFailed() {
 		if ((isLong() && takeProfit <= breakEven) || (isShort() && takeProfit >= breakEven)) {
-			log.debug("RL: Take profit {} is less than break even {}", fmt(takeProfit), fmt(breakEven));
-			return true;
+			return String.format("Take profit %.2f is less than break even %.2f", takeProfit, breakEven);
 		}
 		if (quantity <= 0) {
-			log.debug("RL: Quantity {} is less than 0", quantity);
-			return true;
+			return String.format("Quantity %d is less than 0", quantity);
 		}
-		if (stopLossTooLow()) {
-			log.debug(2, "RL: Stop loss {} is too low", fmt(getCorrectedStopLoss()));
-			return true;
+		if (stopLossTooSmall()) {
+			String direction = isLong() ? "above" : "below";
+			return String.format("Stop loss %.2f is " + direction + " the level", stopLoss);
 		}
-		return false;
+		if (riskPercent > MAX_RISK_PERCENT) {
+			return String.format("Risk percent %.2f is greater than %.2f", riskPercent, MAX_RISK_PERCENT);
+		}
+		if (round(riskRewardRatioPercent) > round(1 / MAX_RISK_REWARD_RATIO * 100)) {
+			return String.format("Risk reward ratio percent %.2f is greater than %.2f", riskRewardRatioPercent,
+			                     round(1 / MAX_RISK_REWARD_RATIO * 100));
+		}
+		return null;
 	}
 
 	private void fillQuantity() {
-		if (quantity == 0 ||
-		    tradeData.getEstimationType() == EstimationType.MAX_STOP_LOSS ||
-		    tradeData.getEstimationType() == EstimationType.MIN_STOP_LOSS)
+		if (quantity == 0)
 			quantity = maxQuantity();
 	}
 
 	private void fillOrder() {
 		orderStop = reference;
-		orderLimit = orderStop + (isLong() ? tradeData.getSlippage() * tradeData.getLuft() : -tradeData.getSlippage() * tradeData.getLuft());
+		orderLimit = orderStop +
+		             (isLong() ? tradeData.getSlippage() + tradeData.getLuft() : -tradeData.getSlippage() -
+		                                                                         tradeData.getLuft());
 		takeProfit = isLong() ? reference + tradeData.getPowerReserve() : reference - tradeData.getPowerReserve();
 	}
 
@@ -187,6 +376,18 @@ public class TradeCalc {
 
 	private int maxQuantity() {
 		return (int) (MAX_VOLUME / reference);
+	}
+
+	private EstimationType estimationType() {
+		return tradeData.getEstimationType();
+	}
+
+	private double slippage() {
+		return tradeData.getSlippage();
+	}
+
+	private double powerReserve() {
+		return tradeData.getPowerReserve();
 	}
 
 }

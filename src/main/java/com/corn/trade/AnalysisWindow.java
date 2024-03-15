@@ -3,7 +3,7 @@ package com.corn.trade;
 import com.corn.trade.panel.analysis.ColorfulTextWindow;
 import com.corn.trade.panel.analysis.ParamPanel;
 import com.corn.trade.trade.analysis.TradeCalc;
-import com.corn.trade.trade.analysis.TradeData;
+import com.corn.trade.trade.analysis.data.TradeData;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,6 +13,8 @@ import static com.corn.trade.util.Util.showErrorDlg;
 public class AnalysisWindow extends BaseWindow {
 
 	private ParamPanel paramPanel;
+
+	private int count = 0;
 
 	public AnalysisWindow(String[] args) {
 		super(args, "Trade Analysis", new Dimension(700, 700));
@@ -39,11 +41,26 @@ public class AnalysisWindow extends BaseWindow {
 			                                       try {
 				                                       TradeCalc tradeCalc = new TradeCalc(tradeData);
 													   paramPanel.populate(tradeCalc.getTradeData());
-				                                       tradeCalc.calculate();
+				                                       TradeData out = tradeCalc.calculate();
+													   if (out.getTradeError() != null) {
+														   textWindow.appendText("#"+count+" - doesn't fit to risks", Color.RED.darker(), true);
+														   textWindow.appendText(out.toSourceParams(), Color.BLACK, false);
+													   } else {
+														   textWindow.appendText("#"+count+" - good to go", Color.GREEN.darker(), true);
+														   textWindow.appendText(out.toString(), Color.BLACK, false);
+													   }
+													   textWindow.appendText("------------------------------------------------------", Color.BLACK, false);
+													   count++;
 			                                       } catch (Exception e) {
 				                                       showErrorDlg(frame, e.getMessage(), true);
 			                                       }
 		                                       });
+
+		paramPanel.onClear(() -> {
+			textWindow.clear();
+			count = 0;
+		});
+
 		gbc.gridx = 0;
 		gbc.gridy = 0;
 		gbc.weightx = 1;
