@@ -69,7 +69,7 @@ public class TradeCalc {
 			temp = temp.toBuilder().withPowerReserve(minPowerReserve).build();
 			TradeCalc tradeCalc = new TradeCalc(temp);
 			temp = tradeCalc.calculate();
-		} while (temp.getTradeError() != null && minPowerReserve/temp.getPrice() < 0.05);
+		} while (temp.getTradeError() != null && minPowerReserve/temp.getPrice() < 0.5); // 50% of price is a reasonable maximum
 		return minPowerReserve;
 	}
 
