@@ -44,12 +44,12 @@ public class AnalysisWindow extends BaseWindow {
 				                                       TradeData out = tradeCalc.calculate();
 													   if (out.getTradeError() != null) {
 														   textWindow.appendText("#"+count+" - doesn't fit to risks", Color.RED.darker(), true);
-														   textWindow.appendText(out.toSourceParams(), Color.BLACK, false);
+														   textWindow.appendText(out.toSourceParams());
 													   } else {
 														   textWindow.appendText("#"+count+" - good to go", Color.GREEN.darker(), true);
-														   textWindow.appendText(out.toString(), Color.BLACK, false);
+														   textWindow.appendText(out.toString());
 													   }
-													   textWindow.appendText("------------------------------------------------------", Color.BLACK, false);
+													   textWindow.appendText("------------------------------------------------------");
 													   count++;
 			                                       } catch (Exception e) {
 				                                       showErrorDlg(frame, e.getMessage(), true);
