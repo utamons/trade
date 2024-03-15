@@ -63,13 +63,13 @@ public class TradeCalc {
 
 	private double getMinPowerReserve(TradeData tradeData) {
 		double minPowerReserve = 0;
-		TradeData _tradeData = tradeData.toBuilder().withEstimationType(EstimationType.MAX_STOP_LOSS).build();
+		TradeData temp = tradeData.toBuilder().withEstimationType(EstimationType.MAX_STOP_LOSS).build();
 		do {
 			minPowerReserve = round(minPowerReserve + 0.01);
-			_tradeData = _tradeData.toBuilder().withPowerReserve(minPowerReserve).build();
-			TradeCalc tradeCalc = new TradeCalc(_tradeData);
-			_tradeData = tradeCalc.calculate();
-		} while (_tradeData.getTradeError() != null || minPowerReserve/_tradeData.getPrice() < 0.05);
+			temp = temp.toBuilder().withPowerReserve(minPowerReserve).build();
+			TradeCalc tradeCalc = new TradeCalc(temp);
+			temp = tradeCalc.calculate();
+		} while (temp.getTradeError() != null && minPowerReserve/temp.getPrice() < 0.05);
 		return minPowerReserve;
 	}
 
@@ -164,8 +164,9 @@ public class TradeCalc {
 			}
 		} else {
 			// Set minimum powerReserve
-			builder.withPowerReserve(getMinPowerReserve(tradeData));
-			Double calculatedGoal = calculateGoal(tradeData, tradeData.getPowerReserve());
+			double minPowerReserve = getMinPowerReserve(tradeData);
+			builder.withPowerReserve(minPowerReserve);
+			Double calculatedGoal = calculateGoal(tradeData, minPowerReserve);
 			builder.withGoal(calculatedGoal);
 		}
 
@@ -249,7 +250,7 @@ public class TradeCalc {
 				double reward = getReward();
 				risk = getRisk(reward);
 				if (stopLoss == 0)
-					stopLoss = calculateStopLoss();
+					stopLoss = round(calculateStopLoss());
 				// recalculate risk because stop loss might be corrected by slippage
 				risk = recalculatedRisk();
 
@@ -272,8 +273,10 @@ public class TradeCalc {
 					break;
 				}
 
-				if (riskPercent > MAX_RISK_PERCENT || round(riskRewardRatioPercent) > round(1 / MAX_RISK_REWARD_RATIO * 100))
+				if (tradeData.getTechStopLoss() == null && (riskPercent > MAX_RISK_PERCENT || round(riskRewardRatioPercent) > round(1 / MAX_RISK_REWARD_RATIO * 100)))
 					stopLoss = stopLoss + 0.01 * (isLong() ? 1 : -1);
+				else
+					break;
 
 			} while (
 					(riskPercent > MAX_RISK_PERCENT ||
@@ -289,8 +292,8 @@ public class TradeCalc {
 	}
 
 	private boolean stopLossTooSmall() {
-		return (isLong() && stopLoss >= tradeData.getLevel()) ||
-		       (isShort() && stopLoss <= tradeData.getLevel());
+		return (isLong() && round(stopLoss) >= tradeData.getLevel()) ||
+		       (isShort() && round(stopLoss) <= tradeData.getLevel());
 	}
 
 	public Double getCorrectedStopLoss() {
