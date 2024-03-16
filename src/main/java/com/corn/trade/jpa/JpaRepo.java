@@ -14,7 +14,7 @@ import java.util.Optional;
 
 @SuppressWarnings("unused")
 public class JpaRepo<T, ID extends Serializable> {
-
+	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(JpaRepo.class);
 	private final Class<T>             type;
 	private final EntityManagerFactory entityManagerFactory;
 	private final EntityManager        entityManager;
@@ -22,9 +22,9 @@ public class JpaRepo<T, ID extends Serializable> {
 	public JpaRepo(Class<T> type) {
 		this.type = type;
 
-		String url           = TradeWindow.DB_URL;
-		String username      = TradeWindow.DB_USER;
-		String password      = TradeWindow.DB_PASSWORD;
+		String url      = TradeWindow.DB_URL;
+		String username = TradeWindow.DB_USER;
+		String password = TradeWindow.DB_PASSWORD;
 
 		Map<String, String> properties = new HashMap<>();
 		properties.put("javax.persistence.jdbc.user", username);
@@ -46,14 +46,20 @@ public class JpaRepo<T, ID extends Serializable> {
 			entityManager.merge(entity);
 			entityManager.getTransaction().commit();
 		} catch (Exception e) {
+			log.error("Error saving an entity: {} : {}", e, e.getMessage());
 			entityManager.getTransaction().rollback();
 			throw e;
 		}
 	}
 
 	public List<T> findAll() {
-		TypedQuery<T> query = entityManager.createQuery("SELECT e FROM " + type.getSimpleName() + " e", type);
-		return query.getResultList();
+		try {
+			TypedQuery<T> query = entityManager.createQuery("SELECT e FROM " + type.getSimpleName() + " e", type);
+			return query.getResultList();
+		} catch (RuntimeException e) {
+			log.error("Error finding all {} : {}", e, e.getMessage());
+			throw new RuntimeException(e);
+		}
 	}
 
 	public void close() {

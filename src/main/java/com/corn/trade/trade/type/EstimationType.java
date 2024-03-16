@@ -1,5 +1,7 @@
 package com.corn.trade.trade.type;
 
+import java.util.List;
+
 public enum EstimationType {
 	MIN_GOAL,
 	MIN_FIBO_GOAL,
@@ -30,5 +32,9 @@ public enum EstimationType {
 			case MIN_STOP_LOSS_STR -> MIN_STOP_LOSS;
 			default -> throw new IllegalArgumentException("Invalid estimation type: " + string);
 		};
+	}
+
+	public static List<String> getValues() {
+		return List.of(MIN_GOAL.toString(), MAX_STOP_LOSS.toString(), MIN_FIBO_GOAL.toString(), MIN_STOP_LOSS.toString());
 	}
 }

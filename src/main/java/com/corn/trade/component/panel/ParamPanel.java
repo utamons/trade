@@ -3,9 +3,9 @@ package com.corn.trade.component.panel;
 import com.corn.trade.component.LabeledComboBox;
 import com.corn.trade.component.LabeledDoubleField;
 import com.corn.trade.component.RowPanel;
+import com.corn.trade.trade.analysis.data.TradeData;
 import com.corn.trade.trade.type.EstimationType;
 import com.corn.trade.trade.type.PositionType;
-import com.corn.trade.trade.analysis.data.TradeData;
 import com.corn.trade.util.Trigger;
 
 import javax.swing.*;
@@ -17,22 +17,17 @@ import static com.corn.trade.BaseWindow.ORDER_LUFT;
 
 public class ParamPanel extends JPanel {
 
-	private final LabeledComboBox positionBox;
-	private final LabeledComboBox estimationBox;
+	private final LabeledComboBox    positionBox;
+	private final LabeledComboBox    estimationBox;
 	private final LabeledDoubleField level;
 	private final LabeledDoubleField goal;
 	private final LabeledDoubleField slippage;
 	private final LabeledDoubleField powerReserve;
 	private final LabeledDoubleField price;
 	private final LabeledDoubleField techStop;
-	private Trigger onClear;
+	private       Trigger            onClear;
 
-	public ParamPanel(Dimension maxSize,
-	                  Dimension minSize,
-	                  int spacing,
-	                  int fieldHeight,
-	                  Consumer<TradeData> consumer
-	                  ) {
+	public ParamPanel(Dimension maxSize, Dimension minSize, int spacing, int fieldHeight, Consumer<TradeData> consumer) {
 
 		LayoutManager layout = new BoxLayout(this, BoxLayout.Y_AXIS);
 
@@ -46,124 +41,16 @@ public class ParamPanel extends JPanel {
 
 		this.setBorder(emptyBorder);
 
-		positionBox = new LabeledComboBox("Position:",
-		                                                  new String[]{
-				                                                  PositionType.LONG.toString(),
-				                                                  PositionType.SHORT.toString()
-		                                                  },
-		                                                  spacing,
-		                                                  fieldHeight, null);
+		positionBox = new LabeledComboBox("Position:", PositionType.getValues(), spacing, fieldHeight);
+		estimationBox = new LabeledComboBox("Estimation:", EstimationType.getValues(), spacing, fieldHeight);
+		level = new LabeledDoubleField("Level:", 10, spacing, fieldHeight, false);
+		goal = new LabeledDoubleField("Goal:", 10, spacing, fieldHeight, false);
+		slippage = new LabeledDoubleField("Slippage:", 10, spacing, fieldHeight, false);
+		powerReserve = new LabeledDoubleField("Power reserve:", 10, spacing, fieldHeight, false);
+		price = new LabeledDoubleField("Price:", 10, spacing, fieldHeight, false);
+		techStop = new LabeledDoubleField("Tech. stop:", 10, spacing, fieldHeight, true);
 
-
-		estimationBox = new LabeledComboBox("Estimation:",
-		                                                    new String[]{
-				                                                    EstimationType.MIN_GOAL.toString(),
-				                                                    EstimationType.MAX_STOP_LOSS.toString(),
-				                                                    EstimationType.MIN_STOP_LOSS.toString()
-		                                                    },
-		                                                    spacing,
-		                                                    fieldHeight,
-		                                                    null);
-
-
-		level = new LabeledDoubleField("Level:",
-		                                                  10,
-		                                                  null,
-		                                                  spacing,
-		                                                  fieldHeight,
-		                                                  false,
-		                                                  null);
-
-		goal = new LabeledDoubleField("Goal:",
-		                                                 10,
-		                                                 null,
-		                                                 spacing,
-		                                                 fieldHeight,
-		                                                 false,
-		                                                 null);
-
-
-		slippage = new LabeledDoubleField("Slippage:",
-		                                                     10,
-		                                                     null,
-		                                                     spacing,
-		                                                     fieldHeight,
-		                                                     false,
-		                                                     null);
-
-
-		powerReserve = new LabeledDoubleField("Power reserve:",
-		                                                         10,
-		                                                         null,
-		                                                         spacing,
-		                                                         fieldHeight,
-		                                                         false,
-		                                                         null);
-
-
-		price = new LabeledDoubleField("Price:",
-		                                                  10,
-		                                                  null,
-		                                                  spacing,
-		                                                  fieldHeight,
-		                                                  false,
-		                                                  null);
-
-
-		techStop = new LabeledDoubleField("Tech. stop:",
-		                                                     10,
-		                                                     null,
-		                                                     spacing,
-		                                                     fieldHeight,
-		                                                     true,
-		                                                     null);
-
-
-		RowPanel rowPanel = new RowPanel(0);
-
-		JButton calculateButton = new JButton("Calculate");
-
-		calculateButton.addActionListener(e -> {
-			PositionType positionType = PositionType.fromString(positionBox.getSelectedItem());
-
-			Double slippageValue = slippage.getValue() == null ? ORDER_LUFT : slippage.getValue();
-			slippage.setValue(slippageValue);
-
-			if (estimationBox.getSelectedItem().equals(EstimationType.MIN_GOAL.toString())) {
-				goal.setValue(null);
-				powerReserve.setValue(null);
-			}
-
-			TradeData tradeData = TradeData.aTradeData()
-			                              .withEstimationType(EstimationType.fromString(estimationBox.getSelectedItem()))
-			                              .withPositionType(positionType)
-			                              .withPowerReserve(powerReserve.getValue())
-			                              .withPrice(price.getValue())
-			                              .withLevel(level.getValue())
-			                              .withTechStopLoss(techStop.getValue())
-			                              .withSlippage(slippage.getValue())
-			                              .withGoal(goal.getValue())
-			                              .withLuft(ORDER_LUFT)
-			                              .build();
-
-			consumer.accept(tradeData);
-		});
-
-		JButton clearButton = new JButton("Clear");
-		clearButton.addActionListener(e -> {
-			level.setValue(null);
-			goal.setValue(null);
-			slippage.setValue(null);
-			price.setValue(null);
-			techStop.setValue(null);
-			powerReserve.setValue(null);
-			if (onClear != null) {
-				onClear.trigger();
-			}
-		});
-
-		rowPanel.add(calculateButton);
-		rowPanel.add(clearButton);
+		RowPanel rowPanel = getRowPanel(consumer);
 
 		JPanel leftPanel = new JPanel();
 		leftPanel.setMinimumSize(new Dimension(300, 350));
@@ -184,6 +71,55 @@ public class ParamPanel extends JPanel {
 
 		add(leftPanel);
 		add(rightPanel);
+	}
+
+	private RowPanel getRowPanel(Consumer<TradeData> consumer) {
+		RowPanel rowPanel = new RowPanel(0);
+
+		JButton calculateButton = new JButton("Calculate");
+
+		calculateButton.addActionListener(e -> {
+			PositionType positionType = PositionType.fromString(positionBox.getSelectedItem());
+
+			Double slippageValue = slippage.getValue() == null ? ORDER_LUFT : slippage.getValue();
+			slippage.setValue(slippageValue);
+
+			if (estimationBox.getSelectedItem().equals(EstimationType.MIN_GOAL.toString())) {
+				goal.setValue(null);
+				powerReserve.setValue(null);
+			}
+
+			TradeData tradeData = TradeData.aTradeData()
+			                               .withEstimationType(EstimationType.fromString(estimationBox.getSelectedItem()))
+			                               .withPositionType(positionType)
+			                               .withPowerReserve(powerReserve.getValue())
+			                               .withPrice(price.getValue())
+			                               .withLevel(level.getValue())
+			                               .withTechStopLoss(techStop.getValue())
+			                               .withSlippage(slippage.getValue())
+			                               .withGoal(goal.getValue())
+			                               .withLuft(ORDER_LUFT)
+			                               .build();
+
+			consumer.accept(tradeData);
+		});
+
+		JButton clearButton = new JButton("Clear");
+		clearButton.addActionListener(e -> {
+			level.setValue(null);
+			goal.setValue(null);
+			slippage.setValue(null);
+			price.setValue(null);
+			techStop.setValue(null);
+			powerReserve.setValue(null);
+			if (onClear != null) {
+				onClear.trigger();
+			}
+		});
+
+		rowPanel.add(calculateButton);
+		rowPanel.add(clearButton);
+		return rowPanel;
 	}
 
 	public void populate(TradeData tradeData) {

@@ -33,7 +33,9 @@ public class LiquibaseRunner {
 
 			updateCommandScope.execute();
 		} catch (Exception e) {
+			Util.showErrorDlg(null,"Error running Liquibase - "+e.getMessage(), true);
 			log.error("Error running Liquibase", e);
+			System.exit(1);
 		}
 	}
 }

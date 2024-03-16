@@ -2,7 +2,8 @@ package com.corn.trade;
 
 import com.corn.trade.broker.ibkr.AutoUpdate;
 import com.corn.trade.broker.ibkr.Ibkr;
-import com.corn.trade.component.panel.MainPanel;
+import com.corn.trade.component.panel.TradePanel;
+import com.corn.trade.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,14 +34,19 @@ public class TradeWindow extends BaseWindow {
 		Ibkr ibkr = new Ibkr();
 		ibkr.run();
 
-		AutoUpdate autoUpdate = new AutoUpdate(frame, ibkr);
-
-		MainPanel mainPanel = new MainPanel(autoUpdate, new Dimension(PREF_WIDTH, PREF_HEIGHT*2), new Dimension(0, 0), 5, FIELD_HEIGHT);
+		TradePanel tradePanel;
+		try {
+			AutoUpdate autoUpdate = new AutoUpdate(frame, ibkr);
+			tradePanel = new TradePanel(autoUpdate, new Dimension(PREF_WIDTH, PREF_HEIGHT * 2), new Dimension(0, 0), 5, FIELD_HEIGHT);
+		} catch (Exception e) {
+			Util.showErrorDlg(frame, "Error initializing TradePanel - " + e.getMessage(), true);
+			throw new RuntimeException(e);
+		}
 
 		JPanel mainContainer = new JPanel();
 		mainContainer.setLayout(new BoxLayout(mainContainer, BoxLayout.Y_AXIS));
 
-		mainContainer.add(mainPanel);
+		mainContainer.add(tradePanel);
 
 		frame.getContentPane().add(mainContainer);
 

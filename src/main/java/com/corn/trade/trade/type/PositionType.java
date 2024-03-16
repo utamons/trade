@@ -1,5 +1,7 @@
 package com.corn.trade.trade.type;
 
+import java.util.List;
+
 public enum PositionType {
 	LONG,
 	SHORT;
@@ -20,5 +22,9 @@ public enum PositionType {
 			case SHORT_STR -> SHORT;
 			default -> throw new IllegalArgumentException("Invalid position type: " + string);
 		};
+	}
+
+	public static List<String> getValues() {
+		return List.of(LONG.toString(), SHORT.toString());
 	}
 }

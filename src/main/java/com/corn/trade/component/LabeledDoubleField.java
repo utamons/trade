@@ -20,6 +20,14 @@ public class LabeledDoubleField extends JPanel {
 	private       Color      textFieldColor;
 	private       boolean    autoUpdate;
 
+	public LabeledDoubleField(String labelText,
+	                          int columns,
+	                          int padding,
+	                          int height,
+	                          boolean hasControlCheckBox) {
+		this(labelText, columns, null, padding, height, hasControlCheckBox, null);
+	}
+
 	// Constructor
 	public LabeledDoubleField(String labelText,
 	                          int columns,

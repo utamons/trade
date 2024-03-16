@@ -3,6 +3,7 @@ package com.corn.trade.broker.ibkr;
 import com.corn.trade.common.Notifier;
 import com.corn.trade.entity.Exchange;
 import com.corn.trade.entity.Ticker;
+import com.corn.trade.jpa.DBException;
 import com.corn.trade.jpa.JpaRepo;
 import com.ib.client.*;
 import com.ib.controller.ApiController;
@@ -58,10 +59,21 @@ public class AutoUpdate extends Notifier {
 		JpaRepo<Exchange, Long> exchangeRepo = new JpaRepo<>(Exchange.class);
 		tickerRepo   = new JpaRepo<>(Ticker.class);
 
-		exchanges = exchangeRepo.findAll().stream().sorted().toList();
-		tickers = tickerRepo.findAll().stream().sorted().toList();
-		if (!exchanges.isEmpty())
-			exchange = exchanges.get(0).getName();
+		try {
+			tickers = tickerRepo.findAll().stream().sorted().toList();
+		} catch (RuntimeException e) {
+			com.corn.trade.util.Util.showErrorDlg(frame, e.getMessage(), true);
+			throw new RuntimeException(e);
+		}
+
+		try {
+			exchanges = exchangeRepo.findAll().stream().sorted().toList();
+			if (!exchanges.isEmpty())
+				exchange = exchanges.get(0).getName();
+		} catch (RuntimeException e) {
+			com.corn.trade.util.Util.showErrorDlg(frame, e.getMessage(), true);
+			throw new RuntimeException(e);
+		}
 	}
 
 	public void setLong(boolean aLong) {

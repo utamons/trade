@@ -7,7 +7,14 @@ public class InfoPanel extends JPanel {
 
 	private final InfoField price, zone, time, adrPassed, pl, adrLeft, sl, be, tp, out, rr, risk;
 
-	public InfoPanel(int fontSize, int vPadding, int hPadding, int vgap, int hgap, int hSpacing) {
+	private final int fontSize = 16;
+	private final int vPadding = 10;
+	private final int hPadding = 10;
+	private final int vgap     = 10;
+	private final int hgap     = 10;
+	private final int hSpacing = 30;
+
+	private InfoPanel(int fontSize, int vPadding, int hPadding, int vgap, int hgap, int hSpacing) {
 		// Set the component layout
 		setLayout(new GridLayout(4, 3, hgap, vgap));
 		setBorder(BorderFactory.createEmptyBorder(vPadding, hPadding, vPadding, hPadding));
@@ -41,5 +48,56 @@ public class InfoPanel extends JPanel {
 		add(out);
 		add(rr);
 		add(risk);
+	}
+
+
+	public static final class InfoPanelBuilder {
+		private int fontSize;
+		private int vPadding;
+		private int hPadding;
+		private int vgap;
+		private int hgap;
+		private int hSpacing;
+
+		private InfoPanelBuilder() {
+		}
+
+		public static InfoPanelBuilder anInfoPanel() {
+			return new InfoPanelBuilder();
+		}
+
+		public InfoPanelBuilder withFontSize(int fontSize) {
+			this.fontSize = fontSize;
+			return this;
+		}
+
+		public InfoPanelBuilder withVPadding(int vPadding) {
+			this.vPadding = vPadding;
+			return this;
+		}
+
+		public InfoPanelBuilder withHPadding(int hPadding) {
+			this.hPadding = hPadding;
+			return this;
+		}
+
+		public InfoPanelBuilder withVgap(int vgap) {
+			this.vgap = vgap;
+			return this;
+		}
+
+		public InfoPanelBuilder withHgap(int hgap) {
+			this.hgap = hgap;
+			return this;
+		}
+
+		public InfoPanelBuilder withHSpacing(int hSpacing) {
+			this.hSpacing = hSpacing;
+			return this;
+		}
+
+		public InfoPanel build() {
+			return new InfoPanel(fontSize, vPadding, hPadding, vgap, hgap, hSpacing);
+		}
 	}
 }
