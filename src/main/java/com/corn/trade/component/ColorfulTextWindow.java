@@ -1,4 +1,4 @@
-package com.corn.trade.panel.analysis;
+package com.corn.trade.component;
 
 import javax.swing.*;
 import javax.swing.border.Border;

@@ -1,8 +1,8 @@
 package com.corn.trade;
 
-import com.corn.trade.ibkr.AutoUpdate;
-import com.corn.trade.ibkr.Ibkr;
-import com.corn.trade.panel.MainPanel;
+import com.corn.trade.broker.ibkr.AutoUpdate;
+import com.corn.trade.broker.ibkr.Ibkr;
+import com.corn.trade.component.panel.MainPanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

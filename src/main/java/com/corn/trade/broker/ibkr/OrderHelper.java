@@ -1,8 +1,8 @@
-package com.corn.trade.ibkr;
+package com.corn.trade.broker.ibkr;
 
 import com.corn.trade.TradeWindow;
-import com.corn.trade.trade.OrderAction;
-import com.corn.trade.trade.PositionType;
+import com.corn.trade.trade.type.OrderAction;
+import com.corn.trade.trade.type.PositionType;
 import com.ib.client.*;
 import com.ib.controller.ApiController;
 import org.slf4j.Logger;

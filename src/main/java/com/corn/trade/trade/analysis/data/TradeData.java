@@ -1,7 +1,7 @@
 package com.corn.trade.trade.analysis.data;
 
-import com.corn.trade.trade.EstimationType;
-import com.corn.trade.trade.PositionType;
+import com.corn.trade.trade.type.EstimationType;
+import com.corn.trade.trade.type.PositionType;
 
 public class TradeData {
 	private final PositionType   positionType;

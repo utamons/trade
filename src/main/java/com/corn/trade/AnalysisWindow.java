@@ -1,7 +1,7 @@
 package com.corn.trade;
 
-import com.corn.trade.panel.analysis.ColorfulTextWindow;
-import com.corn.trade.panel.analysis.ParamPanel;
+import com.corn.trade.component.ColorfulTextWindow;
+import com.corn.trade.component.panel.ParamPanel;
 import com.corn.trade.trade.analysis.TradeCalc;
 import com.corn.trade.trade.analysis.data.TradeData;
 

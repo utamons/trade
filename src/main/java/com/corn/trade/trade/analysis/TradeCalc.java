@@ -1,7 +1,7 @@
 package com.corn.trade.trade.analysis;
 
-import com.corn.trade.trade.EstimationType;
-import com.corn.trade.trade.PositionType;
+import com.corn.trade.trade.type.EstimationType;
+import com.corn.trade.trade.type.PositionType;
 import com.corn.trade.trade.analysis.data.TradeData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,10 +1,10 @@
-package com.corn.trade.panel.analysis;
+package com.corn.trade.component.panel;
 
 import com.corn.trade.component.LabeledComboBox;
 import com.corn.trade.component.LabeledDoubleField;
 import com.corn.trade.component.RowPanel;
-import com.corn.trade.trade.EstimationType;
-import com.corn.trade.trade.PositionType;
+import com.corn.trade.trade.type.EstimationType;
+import com.corn.trade.trade.type.PositionType;
 import com.corn.trade.trade.analysis.data.TradeData;
 import com.corn.trade.util.Trigger;
 

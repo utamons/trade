@@ -1,6 +1,6 @@
-package com.corn.trade.panel;
+package com.corn.trade.component.panel;
 
-import com.corn.trade.ibkr.AutoUpdate;
+import com.corn.trade.broker.ibkr.AutoUpdate;
 
 import javax.swing.*;
 import javax.swing.border.Border;

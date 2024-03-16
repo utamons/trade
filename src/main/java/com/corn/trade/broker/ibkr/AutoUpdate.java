@@ -1,4 +1,4 @@
-package com.corn.trade.ibkr;
+package com.corn.trade.broker.ibkr;
 
 import com.corn.trade.common.Notifier;
 import com.corn.trade.entity.Exchange;

@@ -1,7 +1,7 @@
-package com.corn.trade.ibkr;
+package com.corn.trade.broker.ibkr;
 
-import com.corn.trade.trade.OrderAction;
-import com.corn.trade.trade.PositionType;
+import com.corn.trade.trade.type.OrderAction;
+import com.corn.trade.trade.type.PositionType;
 import com.ib.client.Contract;
 import com.ib.client.Decimal;
 import com.ib.client.Order;

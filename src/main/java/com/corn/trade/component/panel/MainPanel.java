@@ -1,13 +1,13 @@
-package com.corn.trade.panel;
+package com.corn.trade.component.panel;
 
 import com.corn.trade.component.*;
 import com.corn.trade.component.position.PositionPanel;
 import com.corn.trade.entity.Exchange;
 import com.corn.trade.entity.Ticker;
-import com.corn.trade.ibkr.AutoUpdate;
+import com.corn.trade.broker.ibkr.AutoUpdate;
 import com.corn.trade.jpa.JpaRepo;
-import com.corn.trade.trade.EstimationType;
-import com.corn.trade.trade.PositionType;
+import com.corn.trade.trade.type.EstimationType;
+import com.corn.trade.trade.type.PositionType;
 
 import javax.swing.*;
 import java.awt.*;

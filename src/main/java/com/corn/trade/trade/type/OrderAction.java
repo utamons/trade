@@ -1,4 +1,4 @@
-package com.corn.trade.trade;
+package com.corn.trade.trade.type;
 
 public enum OrderAction {
 	STOP_LOSS,
