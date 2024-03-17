@@ -1,7 +1,5 @@
 package com.corn.trade;
 
-import com.corn.trade.broker.ibkr.AutoUpdate;
-import com.corn.trade.broker.ibkr.Ibkr;
 import com.corn.trade.component.panel.TradePanel;
 import com.corn.trade.util.Util;
 import org.slf4j.Logger;
@@ -9,8 +7,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
-
-import static com.corn.trade.util.Util.showWarningDlg;
 
 public class TradeWindow extends BaseWindow {
 	private static final  int    PREF_HEIGHT  = 400;
@@ -31,13 +27,9 @@ public class TradeWindow extends BaseWindow {
 
 	@Override
 	protected void initializeComponents() {
-		Ibkr ibkr = new Ibkr();
-		ibkr.run();
-
 		TradePanel tradePanel;
 		try {
-			AutoUpdate autoUpdate = new AutoUpdate(frame, ibkr);
-			tradePanel = new TradePanel(autoUpdate, new Dimension(PREF_WIDTH, PREF_HEIGHT * 2), new Dimension(0, 0), 5, FIELD_HEIGHT);
+			tradePanel = new TradePanel(new Dimension(PREF_WIDTH, PREF_HEIGHT * 2), new Dimension(0, 0), 5, FIELD_HEIGHT);
 		} catch (Exception e) {
 			Util.showErrorDlg(frame, "Error initializing TradePanel - " + e.getMessage(), true);
 			throw new RuntimeException(e);
@@ -57,10 +49,5 @@ public class TradeWindow extends BaseWindow {
 		log.info("debug level: {}", DEBUG_LEVEL);
 
 		log.info("Trade version {} ({}) is started", version, stage);
-
-		if (!ibkr.isConnected()) {
-			showWarningDlg(frame, "Not connected to IBKR. Auto update and orders will be simulated!");
-			log.warn("Not connected to IBKR. Auto update and orders will be simulated!");
-		}
 	}
 }

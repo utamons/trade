@@ -4,8 +4,8 @@ import jakarta.persistence.*;
 
 @SuppressWarnings("unused")
 @Entity()
-@Table(name = "ticker")
-public class Ticker implements Comparable<Ticker> {
+@Table(name = "asset")
+public class Asset implements Comparable<Asset> {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -41,7 +41,7 @@ public class Ticker implements Comparable<Ticker> {
 
 	@Override
 	@Transient
-	public int compareTo(Ticker o) {
+	public int compareTo(Asset o) {
 		return this.getName().compareTo(o.getName());
 	}
 }

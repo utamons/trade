@@ -17,7 +17,7 @@ public class JpaRepo<T, ID extends Serializable> {
 	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(JpaRepo.class);
 	private final Class<T>             type;
 	private final EntityManagerFactory entityManagerFactory;
-	private final EntityManager        entityManager;
+	protected final EntityManager        entityManager;
 
 	public JpaRepo(Class<T> type) {
 		this.type = type;

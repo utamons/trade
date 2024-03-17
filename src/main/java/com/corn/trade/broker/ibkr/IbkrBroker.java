@@ -1,10 +1,8 @@
 package com.corn.trade.broker.ibkr;
 
-import com.corn.trade.common.Notifier;
+import com.corn.trade.broker.Broker;
+import com.corn.trade.broker.BrokerException;
 import com.corn.trade.entity.Exchange;
-import com.corn.trade.entity.Ticker;
-import com.corn.trade.jpa.DBException;
-import com.corn.trade.jpa.JpaRepo;
 import com.ib.client.*;
 import com.ib.controller.ApiController;
 import com.ib.controller.ApiController.IHistoricalDataHandler;
@@ -19,11 +17,9 @@ import java.util.function.Consumer;
 
 import static com.corn.trade.util.Util.showErrorDlg;
 
-public class AutoUpdate extends Notifier {
-	private final Ibkr                   ibkr;
-	private final JFrame                 frame;
+public class IbkrBroker implements Broker {
+	private final IbkrAdapter ibkrAdapter;
 	private final Set<Consumer<Boolean>> activateListeners = new HashSet<>();
-	private       Consumer<Boolean>      tickerUpdateSuccessListener;
 	private       boolean                autoUpdate;
 	private       String                 ticker;
 	private       String                 exchange;
@@ -44,84 +40,19 @@ public class AutoUpdate extends Notifier {
 	private double low = 0;
 
 	private boolean isLong = true;
-
-	private final List<Exchange> exchanges;
-	private final List<Ticker>   tickers;
-	private final JpaRepo<Ticker, Long> tickerRepo;
-
 	private Timer simulationTimer;
 	private boolean directionUp = true;
 
-	public AutoUpdate(JFrame frame, Ibkr ibkr) {
-		this.ibkr = ibkr;
-		this.frame = frame;
+	public IbkrBroker(String ticker, String exchange) throws BrokerException {
+		this.ibkrAdapter = new IbkrAdapter();
+		ibkrAdapter.run();
+
+		if (!ibkrAdapter.isConnected()) {
+			throw new BrokerException("Not connected to IBKR.");
+		}
+
 		initHandlers();
-		JpaRepo<Exchange, Long> exchangeRepo = new JpaRepo<>(Exchange.class);
-		tickerRepo   = new JpaRepo<>(Ticker.class);
 
-		try {
-			tickers = tickerRepo.findAll().stream().sorted().toList();
-		} catch (RuntimeException e) {
-			com.corn.trade.util.Util.showErrorDlg(frame, e.getMessage(), true);
-			throw new RuntimeException(e);
-		}
-
-		try {
-			exchanges = exchangeRepo.findAll().stream().sorted().toList();
-			if (!exchanges.isEmpty())
-				exchange = exchanges.get(0).getName();
-		} catch (RuntimeException e) {
-			com.corn.trade.util.Util.showErrorDlg(frame, e.getMessage(), true);
-			throw new RuntimeException(e);
-		}
-	}
-
-	public void setLong(boolean aLong) {
-		isLong = aLong;
-		bestPrice = aLong ? askPrice : bidPrice;
-		announce();
-	}
-
-	public void setAtr(Double atr) {
-		this.atr = atr;
-	}
-
-	public boolean isReady() {
-		return ibkr.isConnected();
-	}
-
-	public void setTickerUpdateSuccessListener(Consumer<Boolean> tickerUpdateSuccessListener) {
-		this.tickerUpdateSuccessListener = tickerUpdateSuccessListener;
-	}
-
-	public String getExchange() {
-		return exchange;
-	}
-
-	public void setExchange(String exchange) {
-		this.exchange = exchange;
-	}
-
-	public void setTicker(String ticker) {
-		if (ticker == null || ticker.equals(this.ticker) || !isReady()) {
-			return;
-		}
-		contractDetails = null;
-		if (lookup(ticker)) {
-			this.ticker = ticker;
-			notifyTickerUpdate(true);
-		} else {
-			this.ticker = null;
-			notifyTickerUpdate(false);
-		}
-	}
-
-	public void notifyTickerUpdate(boolean success) {
-		if (tickerUpdateSuccessListener != null)
-			tickerUpdateSuccessListener.accept(success);
-	}
-
-	private boolean lookup(String ticker) {
 		Contract contract = new Contract();
 		contract.symbol(ticker);
 		contract.secType("STK");
@@ -133,37 +64,28 @@ public class AutoUpdate extends Notifier {
 		} else
 			contract.exchange(exchange);
 
-		List<ContractDetails> contractDetailsList = ibkr.lookupContract(contract);
+		List<ContractDetails> contractDetailsList = ibkrAdapter.lookupContract(contract);
 		if (contractDetailsList.isEmpty()) {
-			showErrorDlg(frame, "No contract details found for " + ticker, true);
-			return false;
+			throw new BrokerException("No contract details found for " + ticker);
 		} else if (contractDetailsList.size() > 1) {
-			showErrorDlg(frame, "Multiple contract details found for " + ticker, true);
-			return false;
-		} else if (!contractDetailsList.get(0).contract().primaryExch().equals(exchange)) {
-			Exchange exchangeFound =
-					exchanges.stream()
-					         .filter(e -> e.getName().equals(contractDetailsList.get(0).contract().primaryExch()))
-					         .findFirst()
-					         .orElse(null);
-			if (exchangeFound == null) {
-				showErrorDlg(frame, "Probably wrong exchange for " + ticker, true);
-				return false;
-			} else {
-				exchange = exchangeFound.getName();
-				announce();
-			}
+			throw new BrokerException("Multiple contract details found for " + ticker);
 		}
+
+		this.exchange = contractDetailsList.get(0).contract().primaryExch();
 		contractDetails = contractDetailsList.get(0);
+	}
 
-		if (tickers.stream().noneMatch(t -> t.getName().equals(ticker))) {
-			Ticker tickerEntity = new Ticker();
-			tickerEntity.setName(ticker);
-			tickerEntity.setExchange(exchanges.stream().filter(e -> e.getName().equals(exchange)).findFirst().orElse(null));
-			tickerRepo.save(tickerEntity);
-		}
+	public void setLong(boolean aLong) {
+		isLong = aLong;
+		bestPrice = aLong ? askPrice : bidPrice;
+	}
 
-		return true;
+	public void setAtr(Double atr) {
+		this.atr = atr;
+	}
+
+	public boolean isReady() {
+		return ibkrAdapter.isConnected();
 	}
 
 	public boolean isAutoUpdate() {
@@ -201,9 +123,6 @@ public class AutoUpdate extends Notifier {
 				bestPrice = askPrice;
 			else
 				bestPrice = bidPrice;
-
-			// Notify any listeners about the price update
-			announce();
 		});
 
 		simulationTimer.start();
@@ -218,8 +137,7 @@ public class AutoUpdate extends Notifier {
 	public void setAutoUpdate(boolean autoUpdate) {
 		if (contractDetails == null) {
 			if (atr == null) {
-				showErrorDlg(frame, "ATR not set", true);
-				announce();
+				showErrorDlg(null, "ATR not set", true);
 				return;
 			}
 			this.high = 34.01;
@@ -239,24 +157,24 @@ public class AutoUpdate extends Notifier {
 		activateListeners.forEach(listener -> listener.accept(autoUpdate));
 
 		if (autoUpdate) {
-			ibkr.controller().reqTopMktData(contractDetails.contract(),
-			                                "",
-			                                false,
-			                                false,
-			                                mktDataHandler
+			ibkrAdapter.controller().reqTopMktData(contractDetails.contract(),
+			                                       "",
+			                                       false,
+			                                       false,
+			                                       mktDataHandler
 			);
-			ibkr.controller().reqHistoricalData(contractDetails.contract(),
-			                                    "",
-			                                    1,
-			                                    Types.DurationUnit.DAY,
-			                                    Types.BarSize._1_day,
-			                                    Types.WhatToShow.TRADES,
-			                                    true,
-			                                    true,
-			                                    historicalDataHandler);
+			ibkrAdapter.controller().reqHistoricalData(contractDetails.contract(),
+			                                           "",
+			                                           1,
+			                                           Types.DurationUnit.DAY,
+			                                           Types.BarSize._1_day,
+			                                           Types.WhatToShow.TRADES,
+			                                           true,
+			                                           true,
+			                                           historicalDataHandler);
 		} else {
-			ibkr.controller().cancelTopMktData(mktDataHandler);
-			ibkr.controller().cancelHistoricalData(historicalDataHandler);
+			ibkrAdapter.controller().cancelTopMktData(mktDataHandler);
+			ibkrAdapter.controller().cancelHistoricalData(historicalDataHandler);
 		}
 	}
 
@@ -265,13 +183,11 @@ public class AutoUpdate extends Notifier {
 			return true;
 		}
 		if (contractDetails == null) {
-			showErrorDlg(frame, "Ticker not set", true);
-			announce();
+			showErrorDlg(null, "Ticker not set", true);
 			return false;
 		}
 		if (atr == null) {
-			showErrorDlg(frame, "ATR not set", true);
-			announce();
+			showErrorDlg(null, "ATR not set", true);
 			return false;
 		}
 		return true;
@@ -305,13 +221,11 @@ public class AutoUpdate extends Notifier {
 					if (isLong)
 						bestPrice = price;
 					askPrice = price;
-					announce();
 				}
 				if (tickType == TickType.BID) {
 					if (!isLong)
 						bestPrice = price;
 					bidPrice = price;
-					announce();
 				}
 			}
 		};
@@ -320,7 +234,6 @@ public class AutoUpdate extends Notifier {
 			public void historicalData(Bar bar) {
 				high = bar.high();
 				low = bar.low();
-				announce();
 			}
 
 			@Override
@@ -331,5 +244,10 @@ public class AutoUpdate extends Notifier {
 
 	public ContractDetails getContractDetails() {
 		return contractDetails;
+	}
+
+	@Override
+	public String getExchangeName() {
+		return exchange;
 	}
 }

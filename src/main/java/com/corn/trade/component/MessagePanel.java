@@ -23,5 +23,11 @@ public class MessagePanel extends JPanel {
 
 	public void show(String message) {
 		msg.setText(message);
+		msg.setForeground(UIManager.getColor("Label.foreground"));
+	}
+
+	public void show(String message, Color color) {
+		msg.setText(message);
+		msg.setForeground(color);
 	}
 }

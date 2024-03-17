@@ -11,9 +11,9 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Ibkr implements IConnectionHandler {
+class IbkrAdapter implements IConnectionHandler {
 
-	public static org.slf4j.Logger log = LoggerFactory.getLogger(Ibkr.class);
+	public static org.slf4j.Logger log = LoggerFactory.getLogger(IbkrAdapter.class);
 
 	private final IConnectionConfiguration m_connectionConfiguration =
 			new IConnectionConfiguration.DefaultConnectionConfiguration();

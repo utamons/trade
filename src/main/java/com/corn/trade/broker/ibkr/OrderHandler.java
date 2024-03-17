@@ -7,7 +7,7 @@ import com.ib.controller.ApiController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OrderHandler implements ApiController.IOrderHandler {
+class OrderHandler implements ApiController.IOrderHandler {
 	public static Logger log = LoggerFactory.getLogger(OrderHandler.class);
 	private final Contract contract;
 	private final Order       order;

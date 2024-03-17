@@ -11,8 +11,8 @@ import static com.corn.trade.util.Util.fmt;
 import static com.corn.trade.util.Util.round;
 import static java.lang.Math.abs;
 
-public class Calc {
-	private final Logger log = LoggerFactory.getLogger(Calc.class);
+public class TradeCalc {
+	private final Logger log = LoggerFactory.getLogger(TradeCalc.class);
 
 	private final TradeData tradeData;
 	private       double    reference;
@@ -30,12 +30,12 @@ public class Calc {
 	private double riskRewardRatioPercent;
 	private String tradeError;
 
-	public Calc(TradeData tradeData) {
+	public TradeCalc(TradeData tradeData) {
 		this.tradeData = validateAndComplement(tradeData);
 	}
 
 	@SuppressWarnings("unused")
-	private Calc() {
+	private TradeCalc() {
 		this.tradeData = null;
 	}
 
@@ -67,7 +67,7 @@ public class Calc {
 		do {
 			minPowerReserve = round(minPowerReserve + 0.01);
 			temp = temp.toBuilder().withPowerReserve(minPowerReserve).build();
-			Calc tradeCalc = new Calc(temp);
+			TradeCalc tradeCalc = new TradeCalc(temp);
 			temp = tradeCalc.calculate();
 		} while (temp.getTradeError() != null && minPowerReserve/temp.getPrice() < 0.5); // 50% of price is a reasonable maximum
 		return minPowerReserve;

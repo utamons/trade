@@ -1,11 +1,14 @@
 package com.corn.trade.component.panel;
 
-import com.corn.trade.broker.ibkr.AutoUpdate;
+import com.corn.trade.broker.BrokerException;
 import com.corn.trade.component.*;
 import com.corn.trade.component.position.PositionPanel;
-import com.corn.trade.service.TickerService;
+import com.corn.trade.entity.Asset;
+import com.corn.trade.jpa.DBException;
+import com.corn.trade.service.AssetService;
 import com.corn.trade.trade.type.EstimationType;
 import com.corn.trade.trade.type.PositionType;
+import com.corn.trade.util.Util;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,36 +16,31 @@ import java.util.List;
 
 public class TradePanel extends BasePanel {
 
-	public static final int TEXT_FIELD_SIZE = 10;
+	public static final int             TEXT_FIELD_SIZE = 10;
+	private final       AssetService    assetService;
+	private final       LabeledLookup   assetLookup;
+	private final       LabeledComboBox exchangeBox;
+	private final MessagePanel messagePanel;
+	private             Asset           asset;
 
-	public TradePanel(AutoUpdate autoUpdate, Dimension maxSize, Dimension minSize, int spacing, int fieldHeight) {
-		super(autoUpdate, maxSize, minSize);
+	public TradePanel(Dimension maxSize, Dimension minSize, int spacing, int fieldHeight) {
+		super(maxSize, minSize);
 
-		TickerService tickerService = new TickerService();
+		assetService = new AssetService();
 
 		this.setLayout(new BorderLayout());
 
 		JPanel panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-		final List<String> tickers = tickerService.getTickerNames();
-		final List<String> exchanges = tickerService.getExchangeNames();
+		final List<String> tickers   = assetService.getTickerNames();
+		final List<String> exchanges = assetService.getExchangeNames();
 
-		LabeledLookup tickerLookup = new LabeledLookup("Ticker:", tickers, spacing, fieldHeight, autoUpdate::setTicker);
-		autoUpdate.setTickerUpdateSuccessListener(tickerLookup::setSuccessStatus);
+		assetLookup = new LabeledLookup("Ticker:", tickers, spacing, fieldHeight, this::setTicker);
 
+		exchangeBox = new LabeledComboBox("Exchange:", exchanges, spacing, fieldHeight);
 
-		LabeledComboBox exchangeBox =
-				new LabeledComboBox("Exchange:", exchanges, spacing, fieldHeight, autoUpdate::setExchange);
-
-		exchangeBox.setSelectedItem(autoUpdate.getExchange());
-
-		LabeledComboBox positionBox = new LabeledComboBox("Position:",
-		                                                  PositionType.getValues(),
-		                                                  spacing,
-		                                                  fieldHeight,
-		                                                  (value) -> autoUpdate.setLong(PositionType.fromString(value) ==
-		                                                                                PositionType.LONG));
+		LabeledComboBox positionBox = new LabeledComboBox("Position:", PositionType.getValues(), spacing, fieldHeight);
 
 		LabeledComboBox estimationBox = new LabeledComboBox("Estimation:", EstimationType.getValues(), spacing,
 		                                                    fieldHeight);
@@ -68,8 +66,6 @@ public class TradePanel extends BasePanel {
 		orderPanel.add(stopLimit);
 		orderPanel.add(limit);
 
-		autoUpdate.addUpdater(() -> exchangeBox.setSelectedItem(autoUpdate.getExchange()));
-
 		PositionPanel position = new PositionPanel();
 		InfoPanel info = InfoPanel.InfoPanelBuilder.anInfoPanel()
 		                                           .withFontSize(15)
@@ -80,11 +76,11 @@ public class TradePanel extends BasePanel {
 		                                           .withHSpacing(5)
 		                                           .build();
 
-		MessagePanel messagePanel = new MessagePanel(20, 0);
+		messagePanel = new MessagePanel(20, 0);
 		messagePanel.show("Welcome to Trade!");
 
 		panel.add(exchangeBox);
-		panel.add(tickerLookup);
+		panel.add(assetLookup);
 		panel.add(positionBox);
 		panel.add(estimationBox);
 		panel.add(level);
@@ -99,5 +95,15 @@ public class TradePanel extends BasePanel {
 		position.addPosition("MSFT");
 
 		this.add(panel, BorderLayout.NORTH);
+	}
+
+	private void setTicker(String assetName) {
+		try {
+			asset = assetService.getAsset(assetName, exchangeBox.getSelectedItem());
+			exchangeBox.setSelectedItem(asset.getExchange().getName());
+		} catch (DBException | BrokerException e) {
+			Util.showWarningDlg(this, e.getMessage());
+			messagePanel.show(e.getMessage(), Color.RED);
+		}
 	}
 }

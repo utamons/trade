@@ -2,7 +2,7 @@ package com.corn.trade;
 
 import com.corn.trade.component.ColorfulTextWindow;
 import com.corn.trade.component.panel.ParamPanel;
-import com.corn.trade.trade.analysis.Calc;
+import com.corn.trade.trade.analysis.TradeCalc;
 import com.corn.trade.trade.analysis.data.TradeData;
 
 import javax.swing.*;
@@ -39,9 +39,9 @@ public class AnalysisWindow extends BaseWindow {
 		paramPanel = new ParamPanel(new Dimension(650, 220), new Dimension(650, 180), 5, FIELD_HEIGHT,
 		                                       (tradeData) -> {
 			                                       try {
-				                                       Calc calc = new Calc(tradeData);
-													   paramPanel.populate(calc.getTradeData());
-				                                       TradeData out = calc.calculate();
+				                                       TradeCalc tradeCalc = new TradeCalc(tradeData);
+													   paramPanel.populate(tradeCalc.getTradeData());
+				                                       TradeData out = tradeCalc.calculate();
 													   if (out.getTradeError() != null) {
 														   textWindow.appendText("#"+count+" - doesn't fit to risks", Color.RED.darker(), true);
 														   textWindow.appendText(out.toSourceParams());

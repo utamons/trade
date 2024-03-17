@@ -9,8 +9,8 @@ public class Exchange implements Comparable<Exchange>  {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-
 	private String name;
+	private String broker;
 
 	@ManyToOne
 	private Currency currency;
@@ -37,6 +37,14 @@ public class Exchange implements Comparable<Exchange>  {
 
 	public void setCurrency(Currency currency) {
 		this.currency = currency;
+	}
+
+	public String getBroker() {
+		return broker;
+	}
+
+	public void setBroker(String broker) {
+		this.broker = broker;
 	}
 
 	@Override

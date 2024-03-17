@@ -9,21 +9,21 @@ import com.ib.controller.ApiController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PositionHelper {
+class PositionHelper {
 
-	public static final Logger     log = LoggerFactory.getLogger(PositionHelper.class);
-	private final       Ibkr       ibkr;
-	private final       AutoUpdate autoUpdate;
+	public static final Logger      log = LoggerFactory.getLogger(PositionHelper.class);
+	private final IbkrAdapter ibkrAdapter;
+	private final IbkrBroker  ibkrBroker;
 
-	public PositionHelper(Ibkr ibkr, AutoUpdate autoUpdate) {
-		this.ibkr = ibkr;
-		this.autoUpdate = autoUpdate;
+	public PositionHelper(IbkrAdapter ibkrAdapter, IbkrBroker ibkrBroker) {
+		this.ibkrAdapter = ibkrAdapter;
+		this.ibkrBroker = ibkrBroker;
 	}
 
 	public void dropAll() {
 		log.info("Dropping all positions");
 
-		if (!ibkr.isConnected()) {
+		if (!ibkrAdapter.isConnected()) {
 			log.error("Not connected");
 			return;
 		}
@@ -48,21 +48,21 @@ public class PositionHelper {
 				closeOrder.transmit(true); // Transmit the order to IBKR
 				closeOrder.totalQuantity(positionType.equals(PositionType.LONG) ? pos : pos.negate()); // Absolute quantity
 
-				Contract lookedUpContract = autoUpdate.getContractDetails().contract();
+				Contract lookedUpContract = ibkrBroker.getContractDetails().contract();
 
-				ibkr.placeOrder(lookedUpContract,
-				                closeOrder,
-				                new OrderHandler(lookedUpContract, closeOrder, OrderAction.DROP_ALL, pos, positionType));
+				ibkrAdapter.placeOrder(lookedUpContract,
+				                       closeOrder,
+				                       new OrderHandler(lookedUpContract, closeOrder, OrderAction.DROP_ALL, pos, positionType));
 				log.info("Placed DROP ALL id {} {}, qtt: {}", closeOrder.orderId(), contract.symbol(), pos);
 			}
 
 			@Override
 			public void positionEnd() {
 				log.info("Dropping all positions call is finished");
-				ibkr.controller().cancelPositions(this);
+				ibkrAdapter.controller().cancelPositions(this);
 			}
 		};
 
-		ibkr.controller().reqPositions(handler);
+		ibkrAdapter.controller().reqPositions(handler);
 	}
 }

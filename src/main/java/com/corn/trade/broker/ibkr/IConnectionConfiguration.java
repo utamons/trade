@@ -1,6 +1,6 @@
 package com.corn.trade.broker.ibkr;
 
-public interface IConnectionConfiguration {
+interface IConnectionConfiguration {
 	String getDefaultHost();
 	int getDefaultPort();
 	String getDefaultConnectOptions();
