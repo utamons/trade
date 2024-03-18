@@ -18,8 +18,8 @@ import java.awt.*;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.List;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 public class TradePanel extends BasePanel {
 
@@ -27,8 +27,8 @@ public class TradePanel extends BasePanel {
 	private final       AssetService    assetService;
 	private final       LabeledComboBox exchangeBox;
 	private final       MessagePanel    messagePanel;
-	private final LabeledLookup assetLookup;
-	private final InfoPanel info;
+	private final       LabeledLookup   assetLookup;
+	private final       InfoPanel       info;
 	private             List<String>    tickers;
 	private             Broker          broker;
 	private             Exchange        exchange;
@@ -82,13 +82,13 @@ public class TradePanel extends BasePanel {
 
 		PositionPanel position = new PositionPanel();
 		info = InfoPanel.InfoPanelBuilder.anInfoPanel()
-		                                           .withFontSize(15)
-		                                           .withVPadding(20)
-		                                           .withHPadding(5)
-		                                           .withVgap(20)
-		                                           .withHgap(5)
-		                                           .withHSpacing(5)
-		                                           .build();
+		                                 .withFontSize(15)
+		                                 .withVPadding(20)
+		                                 .withHPadding(5)
+		                                 .withVgap(20)
+		                                 .withHgap(5)
+		                                 .withHSpacing(5)
+		                                 .build();
 
 		messagePanel = new MessagePanel(20, 0);
 		messagePanel.show("Welcome to Trade!");
@@ -114,10 +114,9 @@ public class TradePanel extends BasePanel {
 	private void setExchange(String exchangeName) {
 		try {
 			exchange = assetService.getExchange(exchangeName);
-			if (assetLookup != null)
-				assetLookup.clear();
+			if (assetLookup != null) assetLookup.clear();
 			String tradingHours = exchange.getTradingHours();
-			String timeZone = exchange.getTimeZone();
+			String timeZone     = exchange.getTimeZone();
 
 			// Stop any previous time updater to prevent multiple timers running
 			if (timeUpdater != null) {
@@ -141,7 +140,7 @@ public class TradePanel extends BasePanel {
 
 			// Get current time in exchange's timezone
 			ZonedDateTime nowInExchangeTimeZone = ZonedDateTime.now(ZoneId.of(timeZone));
-			LocalTime currentTime = nowInExchangeTimeZone.toLocalTime();
+			LocalTime     currentTime           = nowInExchangeTimeZone.toLocalTime();
 
 			// Determine if current time is within trading hours
 			boolean withinTradingHours = !currentTime.isBefore(startTrading) && !currentTime.isAfter(endTrading);
@@ -164,9 +163,9 @@ public class TradePanel extends BasePanel {
 			Asset  asset        = assetService.getAsset(assetName, exchangeBox.getSelectedItem());
 			String brokerName   = asset.getExchange().getBroker();
 			String exchangeName = asset.getExchange().getName();
+			tickers = assetService.getTickerNames();
 			if (!exchangeBox.getSelectedItem().equals(exchangeName)) {
 				exchangeBox.setSelectedItem(exchangeName);
-				tickers = assetService.getTickerNames();
 				assetLookup.setText(assetName);
 			}
 			broker = BrokerFactory.getBroker(brokerName, assetName, exchangeName);
