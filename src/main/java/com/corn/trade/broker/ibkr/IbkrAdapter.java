@@ -1,13 +1,16 @@
 package com.corn.trade.broker.ibkr;
 
 import com.corn.trade.TradeWindow;
-import com.ib.client.*;
+import com.ib.client.Contract;
+import com.ib.client.ContractDetails;
+import com.ib.client.ContractLookuper;
+import com.ib.client.Order;
 import com.ib.controller.ApiConnection;
 import com.ib.controller.ApiController;
 import com.ib.controller.ApiController.IConnectionHandler;
-import com.ib.controller.Formats;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,36 +22,32 @@ class IbkrAdapter implements IConnectionHandler {
 			new IConnectionConfiguration.DefaultConnectionConfiguration();
 	@SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
 	private final List<String>             m_acctList                = new ArrayList<>();
-	private       ApiController    m_controller;
+	private       IbkrApiController            m_controller;
 	private final ContractLookuper m_lookuper = contract -> com.ib.client.Util.lookupContract(controller(), contract);
+	private       Timer                    initTimer;
+	private       Long             m_time;
 
 	public void run() {
-		controller().connect(
-				m_connectionConfiguration.getDefaultHost(),
-				m_connectionConfiguration.getDefaultPort(),
-				0,
-				m_connectionConfiguration.getDefaultConnectOptions());
+		controller().connect(m_connectionConfiguration.getDefaultHost(),
+		                     m_connectionConfiguration.getDefaultPort(),
+		                     0,
+		                     m_connectionConfiguration.getDefaultConnectOptions());
 	}
 
 	public boolean isConnected() {
-		return controller().client().isConnected();
+		return m_controller.isConnected();
 	}
 
 	public List<ContractDetails> lookupContract(Contract contract) {
-		return m_lookuper.lookupContract(contract);
+		log.debug("lookupContract start");
+		List<ContractDetails> contractDetails = m_lookuper.lookupContract(contract);
+		log.debug("lookupContract finish");
+		return contractDetails;
 	}
 
 	@Override
 	public void connected() {
 		show("connected");
-
-		controller().reqCurrentTime(time -> show("Server date/time is " + Formats.fmtDate(time * 1000)));
-
-		controller().reqBulletins(true, (msgId, newsType, message, exchange) -> {
-			String str = String.format("Received bulletin:  type=%s  exchange=%s", newsType, exchange);
-			show(str);
-			show(message);
-		});
 	}
 
 	@Override
@@ -72,9 +71,9 @@ class IbkrAdapter implements IConnectionHandler {
 	public void message(int id, int errorCode, String errorMsg, String advancedOrderRejectJson) {
 		String error = id + " " + errorCode + " " + errorMsg;
 		if (advancedOrderRejectJson != null) {
-			error += (" " + advancedOrderRejectJson);
+			error += (":" + advancedOrderRejectJson);
 		}
-		show(error);
+		show("Error: " + error);
 	}
 
 	@Override
@@ -84,7 +83,7 @@ class IbkrAdapter implements IConnectionHandler {
 
 	public ApiController controller() {
 		if (m_controller == null) {
-			m_controller = new ApiController(this, new Logger(), new Logger());
+			m_controller = new IbkrApiController(this, new Logger(), new Logger());
 		}
 		return m_controller;
 	}

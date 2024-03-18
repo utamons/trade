@@ -149,5 +149,13 @@ public class LabeledLookup extends JPanel {
 	public void setEnabled(boolean enabled) {
 		searchField.setEnabled(enabled);
 	}
+
+	public void clear() {
+		searchField.setText("");
+	}
+
+	public void setText(String assetName) {
+		searchField.setText(assetName);
+	}
 }
 

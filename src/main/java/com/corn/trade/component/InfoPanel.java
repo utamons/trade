@@ -50,6 +50,14 @@ public class InfoPanel extends JPanel {
 		add(risk);
 	}
 
+	public void setTime(String time, Color color) {
+		this.time.setInfoText(time);
+		this.time.setInfoFieldColor(color);
+	}
+
+	public void setTime(String time) {
+		this.time.setInfoText(time);
+	}
 
 	public static final class InfoPanelBuilder {
 		private int fontSize;

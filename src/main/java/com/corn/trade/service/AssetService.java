@@ -35,10 +35,14 @@ public class AssetService {
 		return getExchanges().stream().map(Exchange::getName).toList();
 	}
 
+	public Exchange getExchange(String exchangeName) throws DBException {
+		return exchangeRepo.findExchange(exchangeName)
+		                   .orElseThrow(() -> new DBException("Exchange " + exchangeName + " not found."));
+	}
+
 	public Asset getAsset(String assetName, String exchangeName) throws DBException, BrokerException {
 		log.debug("start");
-		Exchange exchange = exchangeRepo.findExchange(exchangeName)
-		                                .orElseThrow(() -> new DBException("Exchange " + exchangeName + " not found."));
+		Exchange exchange = getExchange(exchangeName);
 
 		Optional<Asset> asset = assetRepo.findAsset(assetName, exchange);
 

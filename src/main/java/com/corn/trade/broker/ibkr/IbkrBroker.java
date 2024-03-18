@@ -13,6 +13,8 @@ import javax.swing.*;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
 import static com.corn.trade.util.Util.showErrorDlg;
@@ -46,13 +48,12 @@ public class IbkrBroker implements Broker {
 
 	public IbkrBroker(String ticker, String exchange) throws BrokerException {
 		log.debug("init start");
-		this.ibkrAdapter = new IbkrAdapter();
-		ibkrAdapter.run();
-		log.debug("testing connection");
-		if (!ibkrAdapter.isConnected()) {
-			throw new BrokerException("Not connected to IBKR.");
+
+		try {
+			this.ibkrAdapter = IbkrAdapterFactory.getAdapter();
+		} catch (IbkrException e) {
+			throw new BrokerException(e);
 		}
-		log.debug("connected");
 
 		initHandlers();
 

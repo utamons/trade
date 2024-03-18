@@ -1,0 +1,24 @@
+package com.corn.trade.broker.ibkr;
+
+import java.util.concurrent.ExecutionException;
+
+public class IbkrAdapterFactory {
+	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(IbkrAdapterFactory.class);
+	private static IbkrAdapter adapter;
+	static IbkrAdapter getAdapter() {
+		if (adapter == null) {
+			adapter = new IbkrAdapter();
+			adapter.run();
+			log.debug("testing connection");
+			try {
+				if (!new IbkrConnectionChecker().checkConnection(3,adapter).get()) {
+					throw new IbkrException("Not connected to IBKR.");
+				}
+			} catch (InterruptedException | ExecutionException e) {
+				throw new IbkrException(e);
+			}
+			log.info("Connected to IBKR.");
+		}
+		return adapter;
+	}
+}

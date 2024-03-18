@@ -11,7 +11,10 @@ public class Exchange implements Comparable<Exchange>  {
 	private Long id;
 	private String name;
 	private String broker;
-
+	@Column(name = "time_zone")
+	private String timeZone;
+	@Column(name = "trading_hours")
+	private String tradingHours;
 	@ManyToOne
 	private Currency currency;
 
@@ -45,6 +48,22 @@ public class Exchange implements Comparable<Exchange>  {
 
 	public void setBroker(String broker) {
 		this.broker = broker;
+	}
+
+	public String getTimeZone() {
+		return timeZone;
+	}
+
+	public void setTimeZone(String timeZone) {
+		this.timeZone = timeZone;
+	}
+
+	public String getTradingHours() {
+		return tradingHours;
+	}
+
+	public void setTradingHours(String tradingHours) {
+		this.tradingHours = tradingHours;
 	}
 
 	@Override
