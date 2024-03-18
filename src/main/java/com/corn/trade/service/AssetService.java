@@ -8,14 +8,16 @@ import com.corn.trade.entity.Exchange;
 import com.corn.trade.jpa.AssetRepo;
 import com.corn.trade.jpa.DBException;
 import com.corn.trade.jpa.ExchangeRepo;
-import com.corn.trade.jpa.JpaRepo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
 
 public class AssetService {
-	private final ExchangeRepo exchangeRepo = new ExchangeRepo();
-	private final AssetRepo    assetRepo    = new AssetRepo();
+	private static final Logger       log       = LoggerFactory.getLogger(AssetService.class);
+	private final        ExchangeRepo exchangeRepo = new ExchangeRepo();
+	private final        AssetRepo    assetRepo    = new AssetRepo();
 
 	public List<Exchange> getExchanges() {
 		return exchangeRepo.findAll().stream().sorted().toList();
@@ -34,26 +36,46 @@ public class AssetService {
 	}
 
 	public Asset getAsset(String assetName, String exchangeName) throws DBException, BrokerException {
-		Exchange exchange = exchangeRepo.findExchange(exchangeName).orElseThrow(() -> new DBException("Exchange " + exchangeName + " not found."));
+		log.debug("start");
+		Exchange exchange = exchangeRepo.findExchange(exchangeName)
+		                                .orElseThrow(() -> new DBException("Exchange " + exchangeName + " not found."));
 
 		Optional<Asset> asset = assetRepo.findAsset(assetName, exchange);
 
 		if (asset.isEmpty()) {
-			Broker broker = BrokerFactory.getBroker("IBKR", assetName, exchangeName);
-			String confirmedExchangeName = broker.getExchangeName();
-			Optional<Exchange> confirmedExchange = exchangeRepo.findExchange(confirmedExchangeName);
+			log.debug("Asset " + assetName + "/" + exchangeName +" not found. Trying to get it from broker.");
+			Broker             broker                = BrokerFactory.getBroker("IBKR", assetName, exchangeName);
+			String             confirmedExchangeName = broker.getExchangeName();
+			Optional<Exchange> confirmedExchangeOpt     = exchangeRepo.findExchange(confirmedExchangeName);
 
-			if (confirmedExchange.isEmpty()) {
-				throw new BrokerException("Asset " + assetName + " belongs to " + exchangeName + " which is not supported.");
+			if (confirmedExchangeOpt.isEmpty()) {
+				throw new BrokerException("Asset " + assetName + " belongs to " + exchangeName + " which is not supported" +
+				                          ".");
 			}
+
+			Exchange confirmedExchange = confirmedExchangeOpt.get();
+
+			log.debug("Asset " + assetName + "/" + confirmedExchangeName + " found in broker.");
+
+			asset = assetRepo.findAsset(assetName, confirmedExchange);
+
+			if (asset.isPresent()) {
+				log.debug("Asset " + assetName + "/" + confirmedExchangeName + " found in database.");
+				log.debug("finish");
+				return asset.get();
+			}
+
+			log.debug("Saving asset " + assetName + "/" + confirmedExchangeName + " to database.");
 
 			Asset newAsset = new Asset();
 			newAsset.setName(assetName);
-			newAsset.setExchange(confirmedExchange.get());
+			newAsset.setExchange(confirmedExchange);
 			assetRepo.save(newAsset);
 
+			log.debug("finish");
 			return newAsset;
 		} else {
+			log.debug("finish");
 			return asset.get();
 		}
 	}

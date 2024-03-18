@@ -64,7 +64,8 @@ class IbkrAdapter implements IConnectionHandler {
 
 	@Override
 	public void error(Exception e) {
-		show(e.toString());
+		show("error " + e.toString());
+		throw new IbkrException(e.getMessage());
 	}
 
 	@Override
@@ -103,7 +104,9 @@ class IbkrAdapter implements IConnectionHandler {
 	private static class Logger implements ApiConnection.ILogger {
 		@Override
 		public void log(final String str) {
-			//log.debug(str);
+			/*if (!str.trim().isEmpty()) {
+				log.debug("debug: " + str);
+			}*/
 		}
 	}
 }

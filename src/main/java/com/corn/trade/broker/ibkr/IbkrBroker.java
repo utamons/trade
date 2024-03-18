@@ -18,6 +18,7 @@ import java.util.function.Consumer;
 import static com.corn.trade.util.Util.showErrorDlg;
 
 public class IbkrBroker implements Broker {
+	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(IbkrBroker.class);
 	private final IbkrAdapter ibkrAdapter;
 	private final Set<Consumer<Boolean>> activateListeners = new HashSet<>();
 	private       boolean                autoUpdate;
@@ -44,12 +45,14 @@ public class IbkrBroker implements Broker {
 	private boolean directionUp = true;
 
 	public IbkrBroker(String ticker, String exchange) throws BrokerException {
+		log.debug("init start");
 		this.ibkrAdapter = new IbkrAdapter();
 		ibkrAdapter.run();
-
+		log.debug("testing connection");
 		if (!ibkrAdapter.isConnected()) {
 			throw new BrokerException("Not connected to IBKR.");
 		}
+		log.debug("connected");
 
 		initHandlers();
 
@@ -64,15 +67,18 @@ public class IbkrBroker implements Broker {
 		} else
 			contract.exchange(exchange);
 
+		log.debug("looking up contract");
 		List<ContractDetails> contractDetailsList = ibkrAdapter.lookupContract(contract);
 		if (contractDetailsList.isEmpty()) {
 			throw new BrokerException("No contract details found for " + ticker);
 		} else if (contractDetailsList.size() > 1) {
 			throw new BrokerException("Multiple contract details found for " + ticker);
 		}
+		log.debug("contract details found");
 
 		this.exchange = contractDetailsList.get(0).contract().primaryExch();
 		contractDetails = contractDetailsList.get(0);
+		log.debug("init finish");
 	}
 
 	public void setLong(boolean aLong) {
