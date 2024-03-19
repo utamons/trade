@@ -3,6 +3,7 @@ package com.corn.trade.broker.ibkr;
 import com.corn.trade.broker.Broker;
 import com.corn.trade.broker.BrokerException;
 import com.corn.trade.entity.Exchange;
+import com.corn.trade.util.Trigger;
 import com.ib.client.*;
 import com.ib.controller.ApiController;
 import com.ib.controller.ApiController.IHistoricalDataHandler;
@@ -46,11 +47,12 @@ public class IbkrBroker implements Broker {
 	private Timer simulationTimer;
 	private boolean directionUp = true;
 
-	public IbkrBroker(String ticker, String exchange) throws BrokerException {
+	public IbkrBroker(String ticker, String exchange, Trigger disconnectionTrigger) throws BrokerException {
 		log.debug("init start");
 
 		try {
 			this.ibkrAdapter = IbkrAdapterFactory.getAdapter();
+			this.ibkrAdapter.setDisconnectionTrigger(disconnectionTrigger);
 		} catch (IbkrException e) {
 			throw new BrokerException(e.getMessage());
 		}

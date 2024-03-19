@@ -8,18 +8,19 @@ public class IbkrAdapterFactory {
 	static IbkrAdapter getAdapter() {
 		if (adapter == null) {
 			adapter = new IbkrAdapter();
+			adapter.setDisconnectionTrigger(() -> adapter = null);
 			adapter.run();
-			log.debug("testing connection");
-			try {
-				if (!new IbkrConnectionChecker().checkConnection(3,adapter).get()) {
-					adapter = null;
-					throw new IbkrException("Not connected to IBKR.");
-				}
-			} catch (InterruptedException | ExecutionException e) {
-				throw new IbkrException(e);
-			}
-			log.info("Connected to IBKR.");
 		}
+		log.debug("testing connection");
+		try {
+			if (!new IbkrConnectionChecker().checkConnection(3,adapter).get()) {
+				adapter = null;
+				throw new IbkrException("Not connected to IBKR.");
+			}
+		} catch (InterruptedException | ExecutionException e) {
+			throw new IbkrException(e);
+		}
+		log.info("Connected to IBKR.");
 		return adapter;
 	}
 }

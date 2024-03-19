@@ -160,7 +160,11 @@ public class TradePanel extends BasePanel {
 
 	private void setTicker(String assetName) {
 		try {
-			Asset  asset        = assetService.getAsset(assetName, exchangeBox.getSelectedItem());
+			broker = BrokerFactory.getBroker(exchange.getBroker(), assetName, exchange.getName(), () -> {
+				messagePanel.show(exchange.getBroker() + " disconnected.", Color.RED);
+				assetLookup.clear();
+			});
+			Asset  asset        = assetService.getAsset(assetName, exchangeBox.getSelectedItem(), broker);
 			String brokerName   = asset.getExchange().getBroker();
 			String exchangeName = asset.getExchange().getName();
 			tickers = assetService.getTickerNames();
@@ -168,7 +172,7 @@ public class TradePanel extends BasePanel {
 				exchangeBox.setSelectedItem(exchangeName);
 				assetLookup.setText(assetName);
 			}
-			broker = BrokerFactory.getBroker(brokerName, assetName, exchangeName);
+
 			messagePanel.show(brokerName + " is connected.");
 		} catch (DBException | BrokerException e) {
 			Util.showWarningDlg(this, e.getMessage());

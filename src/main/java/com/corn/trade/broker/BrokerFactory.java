@@ -2,6 +2,7 @@ package com.corn.trade.broker;
 
 import com.corn.trade.broker.ibkr.IbkrBroker;
 import com.corn.trade.broker.ibkr.IbkrException;
+import com.corn.trade.util.Trigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,8 +14,9 @@ public class BrokerFactory {
 
 	public static Broker getBroker(String brokerName,
 	                               String assetName,
-	                               String exchangeName) throws BrokerException {
-		String key = getKey(brokerName, assetName, exchangeName);
+	                               String exchangeName,
+	                               Trigger disconnectionTrigger) throws BrokerException {
+		final String key = getKey(brokerName, assetName, exchangeName);
 		if (brokerName.equals("IBKR")) {
 			if (brokers.containsKey(key)) {
 				log.debug("Broker " + key + " found in cache.");
@@ -23,20 +25,25 @@ public class BrokerFactory {
 				log.debug("Broker " + key + " not found in cache. Trying to create new one.");
 				IbkrBroker broker;
 				try {
-					broker = new IbkrBroker(assetName, exchangeName);
+					broker = new IbkrBroker(assetName, exchangeName,
+					                        () -> {
+						                        brokers.remove(key);
+						                        disconnectionTrigger.trigger();
+					                        }
+					);
 				} catch (IbkrException e) {
 					throw new BrokerException(e.getMessage());
 				}
 				if (!exchangeName.equals(broker.getExchangeName())) {
 					log.debug(assetName + " is found in " + broker.getExchangeName() + " instead of " + exchangeName + ".");
 				}
-				key = getKey(brokerName, assetName, broker.getExchangeName());
-				if (brokers.containsKey(key)) {
+				final String confirmedKey = getKey(brokerName, assetName, broker.getExchangeName());
+				if (brokers.containsKey(confirmedKey)) {
 					log.debug("Broker " + key + " found in cache.");
-					return brokers.get(key);
+					return brokers.get(confirmedKey);
 				} else {
-					log.debug("Broker " + key + " created.");
-					brokers.put(key, broker);
+					log.debug("Broker " + confirmedKey + " created.");
+					brokers.put(confirmedKey, broker);
 					return broker;
 				}
 			}

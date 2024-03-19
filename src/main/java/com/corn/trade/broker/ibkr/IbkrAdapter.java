@@ -1,6 +1,7 @@
 package com.corn.trade.broker.ibkr;
 
 import com.corn.trade.TradeWindow;
+import com.corn.trade.util.Trigger;
 import com.ib.client.Contract;
 import com.ib.client.ContractDetails;
 import com.ib.client.ContractLookuper;
@@ -27,11 +28,17 @@ class IbkrAdapter implements IConnectionHandler {
 	private       Timer                    initTimer;
 	private       Long             m_time;
 
+	private List<Trigger> disconnectionTriggers = new ArrayList<>();
+
 	public void run() {
 		controller().connect(m_connectionConfiguration.getDefaultHost(),
 		                     m_connectionConfiguration.getDefaultPort(),
 		                     0,
 		                     m_connectionConfiguration.getDefaultConnectOptions());
+	}
+
+	public void setDisconnectionTrigger(Trigger disconnectionTrigger) {
+		this.disconnectionTriggers.add(disconnectionTrigger);
 	}
 
 	public boolean isConnected() {
@@ -53,6 +60,7 @@ class IbkrAdapter implements IConnectionHandler {
 	@Override
 	public void disconnected() {
 		show("disconnected");
+		disconnectionTriggers.forEach(Trigger::trigger);
 	}
 
 	@Override

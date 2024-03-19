@@ -40,7 +40,7 @@ public class AssetService {
 		                   .orElseThrow(() -> new DBException("Exchange " + exchangeName + " not found."));
 	}
 
-	public Asset getAsset(String assetName, String exchangeName) throws DBException, BrokerException {
+	public Asset getAsset(String assetName, String exchangeName, Broker broker) throws DBException, BrokerException {
 		log.debug("start");
 		Exchange exchange = getExchange(exchangeName);
 
@@ -48,7 +48,6 @@ public class AssetService {
 
 		if (asset.isEmpty()) {
 			log.debug("Asset " + assetName + "/" + exchangeName +" not found. Trying to get it from broker.");
-			Broker             broker                = BrokerFactory.getBroker("IBKR", assetName, exchangeName);
 			String             confirmedExchangeName = broker.getExchangeName();
 			Optional<Exchange> confirmedExchangeOpt     = exchangeRepo.findExchange(confirmedExchangeName);
 
