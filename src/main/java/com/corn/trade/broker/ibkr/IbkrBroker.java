@@ -2,7 +2,7 @@ package com.corn.trade.broker.ibkr;
 
 import com.corn.trade.broker.Broker;
 import com.corn.trade.broker.BrokerException;
-import com.corn.trade.entity.Exchange;
+import com.corn.trade.trade.analysis.data.TradeContext;
 import com.corn.trade.util.Trigger;
 import com.ib.client.*;
 import com.ib.controller.ApiController;
@@ -11,24 +11,18 @@ import com.ib.controller.ApiController.ITopMktDataHandler;
 import com.ib.controller.Bar;
 
 import javax.swing.*;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static com.corn.trade.util.Util.showErrorDlg;
 
 public class IbkrBroker implements Broker {
 	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(IbkrBroker.class);
 	private final IbkrAdapter ibkrAdapter;
-	private final Set<Consumer<Boolean>> activateListeners = new HashSet<>();
-	private       boolean                autoUpdate;
-	private       String                 ticker;
-	private       String                 exchange;
-	private ContractDetails    contractDetails;
-	private ITopMktDataHandler mktDataHandler;
+	private Supplier<TradeContext> contextSupplier;
+	private final String             exchange;
+	private final ContractDetails    contractDetails;
+	private       ITopMktDataHandler mktDataHandler;
 
 	private IHistoricalDataHandler historicalDataHandler;
 	private Double                 bestPrice;
@@ -37,7 +31,7 @@ public class IbkrBroker implements Broker {
 
 	private double bidPrice = 0;
 
-	private Double atr = null;
+	private Double adr = null;
 
 	private double high = 0;
 
@@ -89,18 +83,6 @@ public class IbkrBroker implements Broker {
 		bestPrice = aLong ? askPrice : bidPrice;
 	}
 
-	public void setAtr(Double atr) {
-		this.atr = atr;
-	}
-
-	public boolean isReady() {
-		return ibkrAdapter.isConnected();
-	}
-
-	public boolean isAutoUpdate() {
-		return autoUpdate;
-	}
-
 	public void startSimulation(double initialAskPrice, double initialBidPrice, double highValue, double lowValue, double step) {
 
 		if (this.askPrice == 0 && this.bidPrice == 0) {
@@ -145,25 +127,18 @@ public class IbkrBroker implements Broker {
 
 	public void setAutoUpdate(boolean autoUpdate) {
 		if (contractDetails == null) {
-			if (atr == null) {
+			if (adr == null) {
 				showErrorDlg(null, "ATR not set", true);
 				return;
 			}
 			this.high = 34.01;
 			this.low = 32.99;
-			this.autoUpdate = autoUpdate;
-			activateListeners.forEach(listener -> listener.accept(autoUpdate));
 			if (autoUpdate)
 				startSimulation(33.0, 33.03, 34.0, 33.0, 0.01);
 			else
 				stopSimulation();
 			return;
 		}
-		if (!validate(autoUpdate)) {
-			return;
-		}
-		this.autoUpdate = autoUpdate;
-		activateListeners.forEach(listener -> listener.accept(autoUpdate));
 
 		if (autoUpdate) {
 			ibkrAdapter.controller().reqTopMktData(contractDetails.contract(),
@@ -185,25 +160,6 @@ public class IbkrBroker implements Broker {
 			ibkrAdapter.controller().cancelTopMktData(mktDataHandler);
 			ibkrAdapter.controller().cancelHistoricalData(historicalDataHandler);
 		}
-	}
-
-	private boolean validate(boolean autoUpdate) {
-		if (!autoUpdate) {
-			return true;
-		}
-		if (contractDetails == null) {
-			showErrorDlg(null, "Ticker not set", true);
-			return false;
-		}
-		if (atr == null) {
-			showErrorDlg(null, "ATR not set", true);
-			return false;
-		}
-		return true;
-	}
-
-	public void addActivateListener(Consumer<Boolean> listener) {
-		activateListeners.add(listener);
 	}
 
 	public Double getBestPrice() {
@@ -258,5 +214,15 @@ public class IbkrBroker implements Broker {
 	@Override
 	public String getExchangeName() {
 		return exchange;
+	}
+
+	@Override
+	public void requestTradeContext(Supplier<TradeContext> tradeContextSupplier) {
+		this.contextSupplier = tradeContextSupplier;
+	}
+
+	@Override
+	public void cancelTradeContext() {
+		this.contextSupplier = null;
 	}
 }
