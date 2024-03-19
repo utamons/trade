@@ -12,6 +12,7 @@ public class IbkrAdapterFactory {
 			log.debug("testing connection");
 			try {
 				if (!new IbkrConnectionChecker().checkConnection(3,adapter).get()) {
+					adapter = null;
 					throw new IbkrException("Not connected to IBKR.");
 				}
 			} catch (InterruptedException | ExecutionException e) {

@@ -52,7 +52,7 @@ public class IbkrBroker implements Broker {
 		try {
 			this.ibkrAdapter = IbkrAdapterFactory.getAdapter();
 		} catch (IbkrException e) {
-			throw new BrokerException(e);
+			throw new BrokerException(e.getMessage());
 		}
 
 		initHandlers();

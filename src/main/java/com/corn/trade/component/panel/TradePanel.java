@@ -173,6 +173,7 @@ public class TradePanel extends BasePanel {
 		} catch (DBException | BrokerException e) {
 			Util.showWarningDlg(this, e.getMessage());
 			messagePanel.show(e.getMessage(), Color.RED);
+			assetLookup.clear();
 		}
 	}
 }
