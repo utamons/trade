@@ -19,7 +19,7 @@ public class Util {
 
 	public static String fmt(Double value) {
 		if (value == null) {
-			return "null";
+			return "n/a";
 		}
 		return String.format("%.2f", value);
 	}

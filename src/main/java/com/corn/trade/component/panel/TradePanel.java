@@ -9,8 +9,10 @@ import com.corn.trade.entity.Asset;
 import com.corn.trade.entity.Exchange;
 import com.corn.trade.jpa.DBException;
 import com.corn.trade.service.AssetService;
+import com.corn.trade.trade.analysis.data.TradeContext;
 import com.corn.trade.trade.type.EstimationType;
 import com.corn.trade.trade.type.PositionType;
+import com.corn.trade.trade.type.TradeZone;
 import com.corn.trade.util.Util;
 
 import javax.swing.*;
@@ -21,6 +23,8 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import static com.corn.trade.util.Util.fmt;
+
 public class TradePanel extends BasePanel {
 
 	public static final int             TEXT_FIELD_SIZE = 10;
@@ -29,9 +33,11 @@ public class TradePanel extends BasePanel {
 	private final       MessagePanel    messagePanel;
 	private final       LabeledLookup   assetLookup;
 	private final       InfoPanel       info;
+	private final       LabeledComboBox positionBox;
 	private             List<String>    tickers;
 	private             Broker          broker;
 	private             Exchange        exchange;
+	private             int             tradeContextId  = 0;
 
 	private Timer timeUpdater = null;
 
@@ -54,7 +60,7 @@ public class TradePanel extends BasePanel {
 
 		exchangeBox = new LabeledComboBox("Exchange:", exchanges, spacing, fieldHeight, this::setExchange);
 
-		LabeledComboBox positionBox = new LabeledComboBox("Position:", PositionType.getValues(), spacing, fieldHeight);
+		positionBox = new LabeledComboBox("Position:", PositionType.getValues(), spacing, fieldHeight);
 
 		LabeledComboBox estimationBox = new LabeledComboBox("Estimation:", EstimationType.getValues(), spacing,
 		                                                    fieldHeight);
@@ -158,8 +164,20 @@ public class TradePanel extends BasePanel {
 		timeUpdater.start(); // Start the timer
 	}
 
+	private PositionType positionType() {
+		return PositionType.fromString(positionBox.getSelectedItem());
+	}
+
 	private void setTicker(String assetName) {
+		if (assetName == null || assetName.isBlank()) {
+			return;
+		}
 		try {
+			if (broker != null) {
+				broker.cancelTradeContext(tradeContextId);
+				info.clear();
+			}
+
 			broker = BrokerFactory.getBroker(exchange.getBroker(), assetName, exchange.getName(), () -> {
 				messagePanel.show(exchange.getBroker() + " disconnected.", Color.RED);
 				assetLookup.clear();
@@ -174,10 +192,72 @@ public class TradePanel extends BasePanel {
 			}
 
 			messagePanel.show(brokerName + " is connected.");
+
+			tradeContextId = broker.requestTradeContext(this::populateTradeContext);
+
 		} catch (DBException | BrokerException e) {
 			Util.showWarningDlg(this, e.getMessage());
 			messagePanel.show(e.getMessage(), Color.RED);
 			assetLookup.clear();
 		}
 	}
+
+	/*
+	Double passed = positionType() == PositionType.LONG ? fromLow : fromHigh;
+	double adrPassed = (passed / adr) * 100;
+		double adrLeft   = 100 - adrPassed;
+
+		info.setAdrPassed(fmt(adrPassed));
+		info.setAdrLeft(fmt(adrLeft < 0 ? 0 : adrLeft));
+	 */
+
+	private void populateTradeContext(TradeContext tradeContext) {
+		Double bestPrice = positionType() == PositionType.LONG ? tradeContext.getAsk() : tradeContext.getBid();
+		Double high      = tradeContext.getDayHigh();
+		Double low       = tradeContext.getDayLow();
+		Double adr       = tradeContext.getAdr();
+
+		if (bestPrice == null || high == null || low == null || adr == null) {
+			return;
+		}
+
+		double range = high - low;
+
+		// Calculate distances from high and low as a percentage of ADR
+		double fromHighPercentage = (high - bestPrice) / range * 100;
+		double fromLowPercentage  = (bestPrice - low) / range * 100;
+
+		double adrUsed = range / adr * 100;
+		if (adrUsed > 100) {
+			adr = range;
+		}
+
+		double fromHigh        = high - bestPrice;
+		double fromLow         = bestPrice - low;
+		double passed          = positionType() == PositionType.LONG ? fromLow : fromHigh;
+		double adrPassedForPos = (passed / adr) * 100;
+		double adrLeftForPos   = 100 - adrPassedForPos;
+
+		info.setPrice(fmt(bestPrice));
+		info.setAdrPassed(fmt(adrPassedForPos));
+		info.setAdrLeft(fmt(adrLeftForPos < 0 ? 0 : adrLeftForPos));
+
+		// Determine the zone based on distances and ADR left
+		TradeZone zone             = TradeZone.NEUTRAL; // Default to NEUTRAL
+		boolean   isCloseToHighEnd = fromHighPercentage <= 30;
+		boolean   isCloseToLowEnd  = fromLowPercentage <= 30;
+
+		if (adrUsed >= 70) { // If more than 70% of ADR is used
+			if (isCloseToLowEnd && !isCloseToHighEnd) {
+				zone = TradeZone.LONG;
+			} else if (isCloseToHighEnd && !isCloseToLowEnd) {
+				zone = TradeZone.SHORT;
+			}
+		}
+
+		info.setZone(zone.toString());
+		info.setZoneRed((zone == TradeZone.SHORT && positionType() == PositionType.LONG) ||
+		                (zone == TradeZone.LONG && positionType() == PositionType.SHORT));
+	}
+
 }

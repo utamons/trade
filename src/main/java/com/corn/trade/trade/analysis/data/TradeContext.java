@@ -6,75 +6,47 @@ import com.corn.trade.trade.type.TradeZone;
 import java.util.List;
 
 public class TradeContext {
-	private final double price;
-	private final double spread;
-	private final double high;
-	private final double low;
-	private final double atr;
-	private final TradeZone zone;
-	private final TimeFrame timeFrame;
-	private final List<Bar> bars;
-	private final List<Double> fiboLevels;
+	private final Double ask;
+	private final Double bid;
+	private final Double dayHigh;
+	private final Double dayLow;
+	private final Double adr;
 
-	private TradeContext(double price, double spread, double high, double low, double atr, TradeZone zone, TimeFrame timeFrame, List<Bar> bars, List<Double> fiboLevels) {
-		this.price = price;
-		this.spread = spread;
-		this.high = high;
-		this.low = low;
-		this.atr = atr;
-		this.zone = zone;
-		this.timeFrame = timeFrame;
-		this.bars = bars;
-		this.fiboLevels = fiboLevels;
+	private TradeContext(Double ask, Double bid, Double dayHigh, Double dayLow, Double adr) {
+		this.ask = ask;
+		this.bid = bid;
+		this.dayHigh = dayHigh;
+		this.dayLow = dayLow;
+		this.adr = adr;
 	}
 
-	public double getPrice() {
-		return price;
+	public Double getAsk() {
+		return ask;
 	}
 
-	public double getSpread() {
-		return spread;
+	public Double getBid() {
+		return bid;
 	}
 
-	public double getHigh() {
-		return high;
+	public Double getDayHigh() {
+		return dayHigh;
 	}
 
-	public double getLow() {
-		return low;
+	public Double getDayLow() {
+		return dayLow;
 	}
 
-	public double getAtr() {
-		return atr;
-	}
-
-	public TradeZone getZone() {
-		return zone;
-	}
-
-	public TimeFrame getTimeFrame() {
-		return timeFrame;
-	}
-
-	public List<Bar> getBars() {
-		return bars;
-	}
-
-	public List<Double> getFiboLevels() {
-		return fiboLevels;
+	public Double getAdr() {
+		return adr;
 	}
 
 
 	public static final class TradeContextBuilder {
-		private double       price;
-		private double       spread;
-		private double       high;
-		private double       low;
-		private double       atr;
-		private TradeZone    zone;
-		private TimeFrame    timeFrame;
-		private List<Bar>    bars;
-		private List<Double> fiboLevels;
+		private Double ask;
+		private Double bid;
+		private Double dayHigh;
+		private Double dayLow;
+		private Double adr;
 
 		private TradeContextBuilder() {
 		}
@@ -83,53 +55,33 @@ public class TradeContext {
 			return new TradeContextBuilder();
 		}
 
-		public TradeContextBuilder withPrice(double price) {
-			this.price = price;
+		public TradeContextBuilder withAsk(Double ask) {
+			this.ask = ask;
 			return this;
 		}
 
-		public TradeContextBuilder withSpread(double spread) {
-			this.spread = spread;
+		public TradeContextBuilder withBid(Double bid) {
+			this.bid = bid;
 			return this;
 		}
 
-		public TradeContextBuilder withHigh(double high) {
-			this.high = high;
+		public TradeContextBuilder withDayHigh(Double dayHigh) {
+			this.dayHigh = dayHigh;
 			return this;
 		}
 
-		public TradeContextBuilder withLow(double low) {
-			this.low = low;
+		public TradeContextBuilder withDayLow(Double dayLow) {
+			this.dayLow = dayLow;
 			return this;
 		}
 
-		public TradeContextBuilder withAtr(double atr) {
-			this.atr = atr;
-			return this;
-		}
-
-		public TradeContextBuilder withZone(TradeZone zone) {
-			this.zone = zone;
-			return this;
-		}
-
-		public TradeContextBuilder withTimeFrame(TimeFrame timeFrame) {
-			this.timeFrame = timeFrame;
-			return this;
-		}
-
-		public TradeContextBuilder withBars(List<Bar> bars) {
-			this.bars = bars;
-			return this;
-		}
-
-		public TradeContextBuilder withFiboLevels(List<Double> fiboLevels) {
-			this.fiboLevels = fiboLevels;
+		public TradeContextBuilder withAdr(Double adr) {
+			this.adr = adr;
 			return this;
 		}
 
 		public TradeContext build() {
-			return new TradeContext(price, spread, high, low, atr, zone, timeFrame, bars, fiboLevels);
+			return new TradeContext(ask, bid, dayHigh, dayLow, adr);
 		}
 	}
 }

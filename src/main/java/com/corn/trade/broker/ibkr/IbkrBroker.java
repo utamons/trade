@@ -2,7 +2,9 @@ package com.corn.trade.broker.ibkr;
 
 import com.corn.trade.broker.Broker;
 import com.corn.trade.broker.BrokerException;
-import com.corn.trade.trade.analysis.data.TradeContext;
+import com.corn.trade.entity.Exchange;
+import com.corn.trade.jpa.DBException;
+import com.corn.trade.service.AssetService;
 import com.corn.trade.util.Trigger;
 import com.ib.client.*;
 import com.ib.controller.ApiController;
@@ -10,36 +12,21 @@ import com.ib.controller.ApiController.IHistoricalDataHandler;
 import com.ib.controller.ApiController.ITopMktDataHandler;
 import com.ib.controller.Bar;
 
-import javax.swing.*;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.function.Supplier;
 
-import static com.corn.trade.util.Util.showErrorDlg;
-
-public class IbkrBroker implements Broker {
+public class IbkrBroker extends Broker {
 	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(IbkrBroker.class);
-	private final IbkrAdapter ibkrAdapter;
-	private Supplier<TradeContext> contextSupplier;
-	private final String             exchange;
-	private final ContractDetails    contractDetails;
-	private       ITopMktDataHandler mktDataHandler;
 
-	private IHistoricalDataHandler historicalDataHandler;
-	private Double                 bestPrice;
-
-	private double askPrice = 0;
-
-	private double bidPrice = 0;
-
-	private Double adr = null;
-
-	private double high = 0;
-
-	private double low = 0;
-
-	private boolean isLong = true;
-	private Timer simulationTimer;
-	private boolean directionUp = true;
+	private final IbkrAdapter            ibkrAdapter;
+	private final ContractDetails        contractDetails;
+	private       ITopMktDataHandler     mktDataHandler;
+	private       IHistoricalDataHandler dayHighLowDataHandler;
+	private       IHistoricalDataHandler adrDataHandler;
+	private       List<Double>           adrList;
 
 	public IbkrBroker(String ticker, String exchange, Trigger disconnectionTrigger) throws BrokerException {
 		log.debug("init start");
@@ -61,8 +48,7 @@ public class IbkrBroker implements Broker {
 		if (exchange.equals("NYSE") || exchange.equals("NASDAQ")) {
 			contract.exchange("SMART");
 			contract.currency("USD");
-		} else
-			contract.exchange(exchange);
+		} else contract.exchange(exchange);
 
 		log.debug("looking up contract");
 		List<ContractDetails> contractDetailsList = ibkrAdapter.lookupContract(contract);
@@ -73,109 +59,9 @@ public class IbkrBroker implements Broker {
 		}
 		log.debug("contract details found");
 
-		this.exchange = contractDetailsList.get(0).contract().primaryExch();
+		this.exchangeName = contractDetailsList.get(0).contract().primaryExch();
 		contractDetails = contractDetailsList.get(0);
 		log.debug("init finish");
-	}
-
-	public void setLong(boolean aLong) {
-		isLong = aLong;
-		bestPrice = aLong ? askPrice : bidPrice;
-	}
-
-	public void startSimulation(double initialAskPrice, double initialBidPrice, double highValue, double lowValue, double step) {
-
-		if (this.askPrice == 0 && this.bidPrice == 0) {
-			this.askPrice = initialAskPrice;
-			this.bidPrice = initialBidPrice;
-		}
-
-		if (simulationTimer != null && simulationTimer.isRunning()) {
-			simulationTimer.stop(); // Stop any existing simulation
-		}
-
-		simulationTimer = new Timer(1000, e -> {
-			// Update the prices
-			if (directionUp) {
-				askPrice = Math.min(askPrice + step, highValue);
-				bidPrice = Math.min(bidPrice + step, highValue);
-				if (askPrice == highValue || bidPrice == highValue) {
-					directionUp = false;
-				}
-			} else {
-				askPrice = Math.max(askPrice - step, lowValue);
-				bidPrice = Math.max(bidPrice - step, lowValue);
-				if (askPrice == lowValue || bidPrice == lowValue) {
-					directionUp = true;
-				}
-			}
-
-			if (isLong)
-				bestPrice = askPrice;
-			else
-				bestPrice = bidPrice;
-		});
-
-		simulationTimer.start();
-	}
-
-	public void stopSimulation() {
-		if (simulationTimer != null && simulationTimer.isRunning()) {
-			simulationTimer.stop();
-		}
-	}
-
-	public void setAutoUpdate(boolean autoUpdate) {
-		if (contractDetails == null) {
-			if (adr == null) {
-				showErrorDlg(null, "ATR not set", true);
-				return;
-			}
-			this.high = 34.01;
-			this.low = 32.99;
-			if (autoUpdate)
-				startSimulation(33.0, 33.03, 34.0, 33.0, 0.01);
-			else
-				stopSimulation();
-			return;
-		}
-
-		if (autoUpdate) {
-			ibkrAdapter.controller().reqTopMktData(contractDetails.contract(),
-			                                       "",
-			                                       false,
-			                                       false,
-			                                       mktDataHandler
-			);
-			ibkrAdapter.controller().reqHistoricalData(contractDetails.contract(),
-			                                           "",
-			                                           1,
-			                                           Types.DurationUnit.DAY,
-			                                           Types.BarSize._1_day,
-			                                           Types.WhatToShow.TRADES,
-			                                           true,
-			                                           true,
-			                                           historicalDataHandler);
-		} else {
-			ibkrAdapter.controller().cancelTopMktData(mktDataHandler);
-			ibkrAdapter.controller().cancelHistoricalData(historicalDataHandler);
-		}
-	}
-
-	public Double getBestPrice() {
-		return bestPrice;
-	}
-
-	public double getSpread() {
-		return Math.abs(askPrice - bidPrice);
-	}
-
-	public double getHigh() {
-		return high;
-	}
-
-	public double getLow() {
-		return low;
 	}
 
 	private void initHandlers() {
@@ -183,46 +69,111 @@ public class IbkrBroker implements Broker {
 			@Override
 			public void tickPrice(TickType tickType, double price, TickAttrib attribs) {
 				if (tickType == TickType.ASK) {
-					if (isLong)
-						bestPrice = price;
-					askPrice = price;
+					ask = price;
 				}
 				if (tickType == TickType.BID) {
-					if (!isLong)
-						bestPrice = price;
-					bidPrice = price;
+					bid = price;
 				}
+				notifyTradeContext();
 			}
 		};
-		historicalDataHandler = new IHistoricalDataHandler() {
+		dayHighLowDataHandler = new IHistoricalDataHandler() {
 			@Override
 			public void historicalData(Bar bar) {
-				high = bar.high();
-				low = bar.low();
+				dayHigh = bar.high();
+				dayLow = bar.low();
+				notifyTradeContext();
 			}
 
 			@Override
 			public void historicalDataEnd() {
 			}
 		};
+
+		adrDataHandler = new IHistoricalDataHandler() {
+			@Override
+			public void historicalData(Bar bar) {
+				adrList.add(bar.high() - bar.low());
+			}
+
+			@Override
+			public void historicalDataEnd() {
+				adr = adrList.stream().mapToDouble(Double::doubleValue).average().orElse(0);
+				notifyTradeContext();
+			}
+		};
 	}
 
-	public ContractDetails getContractDetails() {
+	ContractDetails getContractDetails() {
 		return contractDetails;
 	}
 
+	protected void requestAdr() {
+		if (adr != null) {
+			notifyTradeContext();
+			return;
+		}
+		Exchange exchange;
+		try {
+			exchange = new AssetService().getExchange(exchangeName);
+		} catch (DBException e) {
+			throw new IbkrException(e);
+		}
+
+		String    timezone     = exchange.getTimeZone();
+		String    tradingHours = exchange.getTradingHours();
+		String[]  hoursParts   = tradingHours.split("-");
+		LocalTime endTrading   = LocalTime.parse(hoursParts[1], DateTimeFormatter.ofPattern("HH:mm"));
+
+		// Get current time in exchange's timezone
+		ZonedDateTime nowInExchangeTimeZone = ZonedDateTime.now(ZoneId.of(timezone));
+
+		// Determine if current time is after trading hours
+		boolean isAfterTradingHours = nowInExchangeTimeZone.toLocalTime().isAfter(endTrading);
+
+		// If the current time is after trading hours, use the current date as the last trading day
+		// Otherwise, use the previous day as the last trading day
+		ZonedDateTime lastTradingDayEnd = isAfterTradingHours ? nowInExchangeTimeZone : nowInExchangeTimeZone.minusDays(1);
+
+		// Format lastDayEnd in YYYYMMDD HH:MM:SS format
+		String lastDayEnd = lastTradingDayEnd.format(DateTimeFormatter.ofPattern("yyyyMMdd")) +
+		                    " " +
+		                    endTrading.format(DateTimeFormatter.ofPattern("HH:mm:ss")) +
+		                    " " +
+		                    timezone;
+
+		adrList = new java.util.ArrayList<>();
+		ibkrAdapter.controller()
+		           .reqHistoricalData(contractDetails.contract(),
+		                              lastDayEnd,
+		                              14,
+		                              Types.DurationUnit.DAY,
+		                              Types.BarSize._1_day,
+		                              Types.WhatToShow.TRADES,
+		                              true,
+		                              false,
+		                              adrDataHandler);
+	}
+
+
 	@Override
-	public String getExchangeName() {
-		return exchange;
+	protected void requestMarketData() {
+		ibkrAdapter.controller().reqTopMktData(contractDetails.contract(), "", false, false, mktDataHandler);
+		ibkrAdapter.controller()
+		           .reqHistoricalData(contractDetails.contract(),
+		                              "",
+		                              1,
+		                              Types.DurationUnit.DAY,
+		                              Types.BarSize._1_day,
+		                              Types.WhatToShow.TRADES,
+		                              true,
+		                              true,
+		                              dayHighLowDataHandler);
 	}
 
 	@Override
-	public void requestTradeContext(Supplier<TradeContext> tradeContextSupplier) {
-		this.contextSupplier = tradeContextSupplier;
-	}
-
-	@Override
-	public void cancelTradeContext() {
-		this.contextSupplier = null;
+	protected void cancelMarketData() {
+		ibkrAdapter.controller().cancelTopMktData(mktDataHandler);
+		ibkrAdapter.controller().cancelHistoricalData(dayHighLowDataHandler);
 	}
 }

@@ -55,8 +55,8 @@ public class InfoField extends JPanel {
 	}
 
 	public void startBlinking(Color blinkColor, int blinkRate) {
-		if (blinkTimer != null) {
-			blinkTimer.stop();
+		if (blinkTimer != null && blinkTimer.isRunning()) {
+			return;
 		}
 		blinkTimer = new Timer(blinkRate, e -> {
 			if (infoField.getForeground().equals(getOriginalBackground())) {
@@ -80,5 +80,9 @@ public class InfoField extends JPanel {
 
 	public void setInfoText(String text) {
 		infoField.setText(text);
+	}
+
+	public void clear() {
+		infoField.setText("n/a");
 	}
 }

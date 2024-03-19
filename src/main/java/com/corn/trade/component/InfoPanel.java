@@ -20,7 +20,7 @@ public class InfoPanel extends JPanel {
 		setBorder(BorderFactory.createEmptyBorder(vPadding, hPadding, vPadding, hPadding));
 		//setBackground(Color.LIGHT_GRAY);
 
-		price = new InfoField("Ask:", fontSize, 0, hSpacing, 30);
+		price = new InfoField("Price:", fontSize, 0, hSpacing, 30);
 		zone = new InfoField("Zone:", fontSize, 0, hSpacing, 30);
 		time = new InfoField("Time:", fontSize, 0, hSpacing, 30);
 		pl = new InfoField("P/L:", fontSize, 0, hSpacing, 30);
@@ -50,13 +50,58 @@ public class InfoPanel extends JPanel {
 		add(risk);
 	}
 
+	public void setPrice(String price) {
+		this.price.setInfoText(price);
+	}
+
 	public void setTime(String time, Color color) {
 		this.time.setInfoText(time);
 		this.time.setInfoFieldColor(color);
 	}
 
+	public void setZone(String zone) {
+		this.zone.setInfoText(zone);
+	}
+
+	public void setZoneRed(boolean red) {
+		if (red) {
+			this.zone.setBold(true);
+			this.zone.startBlinking(Color.RED, 500);
+		} else {
+			this.zone.setBold(false);
+			this.zone.stopBlinking();
+		}
+	}
+
+	public void setPl(String pl) {
+		this.pl.setInfoText(pl);
+	}
+
+	public void setAdrPassed(String adrPassed) {
+		this.adrPassed.setInfoText(adrPassed);
+	}
+
+	public void setAdrLeft(String adrLeft) {
+		this.adrLeft.setInfoText(adrLeft);
+	}
+
 	public void setTime(String time) {
 		this.time.setInfoText(time);
+	}
+
+	public void clear() {
+		price.clear();
+		zone.clear();
+		time.clear();
+		pl.clear();
+		adrPassed.clear();
+		adrLeft.clear();
+		sl.clear();
+		be.clear();
+		tp.clear();
+		out.clear();
+		rr.clear();
+		risk.clear();
 	}
 
 	public static final class InfoPanelBuilder {
