@@ -5,14 +5,7 @@ import java.awt.*;
 
 public class InfoPanel extends JPanel {
 
-	private final InfoField price, zone, time, adrPassed, pl, adrLeft, sl, be, tp, out, rr, risk;
-
-	private final int fontSize = 16;
-	private final int vPadding = 10;
-	private final int hPadding = 10;
-	private final int vgap     = 10;
-	private final int hgap     = 10;
-	private final int hSpacing = 30;
+	private final InfoField price, spread, time, adrPassed, pl, adrLeft, sl, be, tp, out, rr, risk;
 
 	private InfoPanel(int fontSize, int vPadding, int hPadding, int vgap, int hgap, int hSpacing) {
 		// Set the component layout
@@ -21,7 +14,7 @@ public class InfoPanel extends JPanel {
 		//setBackground(Color.LIGHT_GRAY);
 
 		price = new InfoField("Price:", fontSize, 0, hSpacing, 30);
-		zone = new InfoField("Zone:", fontSize, 0, hSpacing, 30);
+		spread = new InfoField("Spread:", fontSize, 0, hSpacing, 30);
 		time = new InfoField("Time:", fontSize, 0, hSpacing, 30);
 		pl = new InfoField("P/L:", fontSize, 0, hSpacing, 30);
 		adrPassed = new InfoField("ADR (p):", fontSize, 0, hSpacing, 30);
@@ -34,7 +27,7 @@ public class InfoPanel extends JPanel {
 		risk = new InfoField("Risk:", fontSize, 0, hSpacing, 30);
 
 		add(price);
-		add(zone);
+		add(spread);
 		add(time);
 
 		add(pl);
@@ -50,6 +43,30 @@ public class InfoPanel extends JPanel {
 		add(risk);
 	}
 
+	public void setRisk(String risk) {
+		this.risk.setInfoText(risk);
+	}
+
+	public void setRR(String rr) {
+		this.rr.setInfoText(rr);
+	}
+
+	public void setOut(String out) {
+		this.out.setInfoText(out);
+	}
+
+	public void setTp(String tp) {
+		this.tp.setInfoText(tp);
+	}
+
+	public void setBe(String be) {
+		this.be.setInfoText(be);
+	}
+
+	public void setSl(String sl) {
+		this.sl.setInfoText(sl);
+	}
+
 	public void setPrice(String price) {
 		this.price.setInfoText(price);
 	}
@@ -59,18 +76,8 @@ public class InfoPanel extends JPanel {
 		this.time.setInfoFieldColor(color);
 	}
 
-	public void setZone(String zone) {
-		this.zone.setInfoText(zone);
-	}
-
-	public void setZoneRed(boolean red) {
-		if (red) {
-			this.zone.setBold(true);
-			this.zone.startBlinking(Color.RED, 500);
-		} else {
-			this.zone.setBold(false);
-			this.zone.stopBlinking();
-		}
+	public void setSpread(String spread) {
+		this.spread.setInfoText(spread);
 	}
 
 	public void setPl(String pl) {
@@ -91,7 +98,7 @@ public class InfoPanel extends JPanel {
 
 	public void clear() {
 		price.clear();
-		zone.clear();
+		spread.clear();
 		time.clear();
 		pl.clear();
 		adrPassed.clear();

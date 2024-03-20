@@ -74,6 +74,9 @@ public class IbkrBroker extends Broker {
 				if (tickType == TickType.BID) {
 					bid = price;
 				}
+				if (tickType == TickType.LAST) {
+					IbkrBroker.this.price = price;
+				}
 				notifyTradeContext();
 			}
 		};

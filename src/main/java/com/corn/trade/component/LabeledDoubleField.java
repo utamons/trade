@@ -13,6 +13,10 @@ import java.util.function.Consumer;
 @SuppressWarnings("unused")
 public class LabeledDoubleField extends JPanel {
 	private static final Logger     log = LoggerFactory.getLogger(LabeledDoubleField.class);
+	private Timer blinkTimer;
+	private boolean isLightOn;
+
+	private Color currentLightColor;
 	private final        JTextField textField;
 	private final JCheckBox  controlCheckBox;
 	private final Border     errorBorder;
@@ -38,6 +42,7 @@ public class LabeledDoubleField extends JPanel {
 	                          Consumer<Double> consumer) {
 		// Initialize label and text field
 		JLabel label = new JLabel(labelText);
+		initializeBlinkTimer();
 		textField = new JTextField(columns);
 		this.setMaximumSize(new Dimension(5000, height));
 		this.setMinimumSize(new Dimension(50, height));
@@ -109,6 +114,24 @@ public class LabeledDoubleField extends JPanel {
 			textField.setEnabled(false);
 			textField.setText("");
 		}
+	}
+
+	private void initializeBlinkTimer() {
+		// Blink every 500 milliseconds
+		blinkTimer = new Timer(500, e -> toggleLightIndicator());
+		blinkTimer.setRepeats(true);
+		blinkTimer.setCoalesce(true);
+	}
+
+	private void toggleLightIndicator() {
+		if (isLightOn) {
+			lightIndicator.setIcon(null); // Turn off the light by setting no icon
+		} else {
+			// Assume you have a method getIconForColor to get the icon based on the current color
+			lightIndicator.setIcon(getIconForColor(currentLightColor)); // Turn on the light
+		}
+		isLightOn = !isLightOn; // Toggle the state
+		lightIndicator.repaint();
 	}
 
 	public void replaceCommasWithDots() {
@@ -195,9 +218,39 @@ public class LabeledDoubleField extends JPanel {
 		textField.setEditable(!autoUpdate);
 	}
 
-	public void light(boolean on, Color color) {
-		lightIndicator.setIcon(new ColoredCircleIcon(on, color, 10));
+	private ColoredCircleIcon getIconForColor(Color color) {
+		return new ColoredCircleIcon(true, color, 10);
+	}
+
+	public void light(boolean on, Color color, boolean blink) {
+		if (on) {
+			currentLightColor = color; // Assuming you have a field currentLightColor to store the current color
+			lightIndicator.setIcon(getIconForColor(color)); // Show the light with the specified color
+			if (blink) {
+				if (!blinkTimer.isRunning()) {
+					blinkTimer.start(); // Start blinking
+				}
+			} else {
+				if (blinkTimer.isRunning()) {
+					blinkTimer.stop(); // Stop blinking
+				}
+			}
+		} else {
+			if (blinkTimer.isRunning()) {
+				blinkTimer.stop(); // Ensure the timer is stopped if the light is turned off
+			}
+			lightIndicator.setIcon(null); // Hide the light
+		}
+		isLightOn = on; // Update the current state
 		lightIndicator.repaint();
+	}
+
+	public void lightOff() {
+		light(false, currentLightColor, false);
+	}
+
+	public boolean isBlinking() {
+		return blinkTimer.isRunning();
 	}
 
 	public void setControlCheckBoxState(boolean state) {
@@ -207,4 +260,6 @@ public class LabeledDoubleField extends JPanel {
 			textField.setText("");
 		}
 	}
+
+
 }

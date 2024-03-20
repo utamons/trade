@@ -1,20 +1,17 @@
 package com.corn.trade.trade.analysis.data;
 
-import com.corn.trade.trade.type.TimeFrame;
-import com.corn.trade.trade.type.TradeZone;
-
-import java.util.List;
-
 public class TradeContext {
 	private final Double ask;
 	private final Double bid;
+	private final Double price;
 	private final Double dayHigh;
 	private final Double dayLow;
 	private final Double adr;
 
-	private TradeContext(Double ask, Double bid, Double dayHigh, Double dayLow, Double adr) {
+	private TradeContext(Double ask, Double bid, Double price, Double dayHigh, Double dayLow, Double adr) {
 		this.ask = ask;
 		this.bid = bid;
+		this.price = price;
 		this.dayHigh = dayHigh;
 		this.dayLow = dayLow;
 		this.adr = adr;
@@ -26,6 +23,10 @@ public class TradeContext {
 
 	public Double getBid() {
 		return bid;
+	}
+
+	public Double getPrice() {
+		return price;
 	}
 
 	public Double getDayHigh() {
@@ -44,6 +45,7 @@ public class TradeContext {
 	public static final class TradeContextBuilder {
 		private Double ask;
 		private Double bid;
+		private Double price;
 		private Double dayHigh;
 		private Double dayLow;
 		private Double adr;
@@ -65,6 +67,11 @@ public class TradeContext {
 			return this;
 		}
 
+		public TradeContextBuilder withPrice(Double price) {
+			this.price = price;
+			return this;
+		}
+
 		public TradeContextBuilder withDayHigh(Double dayHigh) {
 			this.dayHigh = dayHigh;
 			return this;
@@ -81,7 +88,7 @@ public class TradeContext {
 		}
 
 		public TradeContext build() {
-			return new TradeContext(ask, bid, dayHigh, dayLow, adr);
+			return new TradeContext(ask, bid, price, dayHigh, dayLow, adr);
 		}
 	}
 }

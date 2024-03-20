@@ -11,6 +11,7 @@ public abstract class Broker {
 	protected Double adr;
 	protected Double ask;
 	protected Double bid;
+	protected Double price;
 	protected Double dayHigh;
 	protected Double dayLow;
 	protected int    contextListenerId = 0;
@@ -30,6 +31,7 @@ public abstract class Broker {
 		contextListeners.put(contextListenerId, tradeContextListener);
 		return contextListenerId;
 	}
+
 	protected abstract void requestAdr();
 
 	protected abstract void requestMarketData();
@@ -44,12 +46,13 @@ public abstract class Broker {
 
 	protected TradeContext createTradeContext() {
 		return TradeContext.TradeContextBuilder.aTradeContext()
-			.withAsk(ask)
-			.withBid(bid)
-			.withDayHigh(dayHigh)
-			.withDayLow(dayLow)
-			.withAdr(adr)
-			.build();
+		                                       .withAsk(ask)
+		                                       .withBid(bid)
+		                                       .withPrice(price)
+		                                       .withDayHigh(dayHigh)
+		                                       .withDayLow(dayLow)
+		                                       .withAdr(adr)
+		                                       .build();
 	}
 
 	public void cancelTradeContext(int id) {

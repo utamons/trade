@@ -121,24 +121,22 @@ public class TradeCalc {
 		// Goal validation based on PositionType
 		if (tradeData.getEstimationType() != EstimationType.MIN_GOAL &&
 		    tradeData.getGoal() != null &&
-		    tradeData.getPrice() != null &&
-		    tradeData.getPowerReserve() == null) {
+		    tradeData.getPrice() != null ) {
 			if (tradeData.getPositionType() == PositionType.LONG && tradeData.getGoal() <= tradeData.getPrice()) {
-				throw new IllegalArgumentException("Goal cannot be equal or less than price for LONG position.");
+				throw new IllegalArgumentException("Goal must be greater than price!");
 			} else if (tradeData.getPositionType() == PositionType.SHORT && tradeData.getGoal() >= tradeData.getPrice()) {
-				throw new IllegalArgumentException("Goal cannot be equal or greater than price for SHORT position.");
+				throw new IllegalArgumentException("Goal must be less than price!");
 			}
 		}
 
 		// Goal and Level relationship validation
 		if (tradeData.getEstimationType() != EstimationType.MIN_GOAL &&
 		    tradeData.getGoal() != null &&
-		    tradeData.getLevel() != null &&
-		    tradeData.getPowerReserve() == null) {
+		    tradeData.getLevel() != null ) {
 			if (tradeData.getPositionType() == PositionType.LONG && tradeData.getGoal() <= tradeData.getLevel()) {
-				throw new IllegalArgumentException("Goal cannot be equal or less than level for LONG position.");
+				throw new IllegalArgumentException("Goal must be greater than level!");
 			} else if (tradeData.getPositionType() == PositionType.SHORT && tradeData.getGoal() >= tradeData.getLevel()) {
-				throw new IllegalArgumentException("Goal cannot be equal or greater than level for SHORT position.");
+				throw new IllegalArgumentException("Goal must be less than level!");
 			}
 		}
 
@@ -336,22 +334,22 @@ public class TradeCalc {
 	}
 
 	private String areRiskLimitsFailed() {
+		String riskFailed = "Doesn't meet risk limits";
 		if ((isLong() && takeProfit <= breakEven) || (isShort() && takeProfit >= breakEven)) {
-			return String.format("Take profit %.2f is less than break even %.2f", takeProfit, breakEven);
+			return riskFailed;
 		}
 		if (quantity <= 0) {
-			return String.format("Quantity %d is less than 0", quantity);
+			return riskFailed;
 		}
 		if (stopLossTooSmall()) {
 			String direction = isLong() ? "above" : "below";
 			return String.format("Stop loss %.2f is " + direction + " the level", stopLoss);
 		}
 		if (riskPercent > MAX_RISK_PERCENT) {
-			return String.format("Risk percent %.2f is greater than %.2f", riskPercent, MAX_RISK_PERCENT);
+			return riskFailed;
 		}
 		if (round(riskRewardRatioPercent) > round(1 / MAX_RISK_REWARD_RATIO * 100)) {
-			return String.format("Risk reward ratio percent %.2f is greater than %.2f", riskRewardRatioPercent,
-			                     round(1 / MAX_RISK_REWARD_RATIO * 100));
+			return riskFailed;
 		}
 		return null;
 	}
