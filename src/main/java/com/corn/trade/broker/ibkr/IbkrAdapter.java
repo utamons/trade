@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-class IbkrAdapter implements IConnectionHandler {
+public class IbkrAdapter implements IConnectionHandler {
 
 	public static final org.slf4j.Logger log = LoggerFactory.getLogger(IbkrAdapter.class);
 
@@ -40,7 +40,7 @@ class IbkrAdapter implements IConnectionHandler {
 	 * Adds a listener, which detects disconnection
 	 * @param disconnectionListener listener
 	 */
-	public void setDisconnectionListener(Trigger disconnectionListener) {
+	void setDisconnectionListener(Trigger disconnectionListener) {
 		this.disconnectionListeners.add(disconnectionListener);
 	}
 
@@ -94,14 +94,14 @@ class IbkrAdapter implements IConnectionHandler {
 		log.debug(str);
 	}
 
-	public ApiController controller() {
+	ApiController controller() {
 		if (m_controller == null) {
 			m_controller = new IbkrApiController(this, new Logger(), new Logger());
 		}
 		return m_controller;
 	}
 
-	public void placeOrder(Contract contract, Order order, ApiController.IOrderHandler handler) {
+	void placeOrder(Contract contract, Order order, ApiController.IOrderHandler handler) {
 		if (TradeWindow.SIMULATION_MODE) {
 			log.info("Simulation mode");
 			return;

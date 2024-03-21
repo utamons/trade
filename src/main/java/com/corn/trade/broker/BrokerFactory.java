@@ -16,43 +16,63 @@ public class BrokerFactory {
 	                               String assetName,
 	                               String exchangeName,
 	                               Trigger disconnectionTrigger) throws BrokerException {
-		final String key = getKey(brokerName, assetName, exchangeName);
-		if (brokerName.equals("IBKR")) {
-			if (brokers.containsKey(key)) {
-				log.debug("Broker " + key + " found in cache.");
-				return brokers.get(key);
-			} else {
-				log.debug("Broker " + key + " not found in cache. Trying to create new one.");
-				IbkrBroker broker;
+		final String initialKey = createKey(brokerName, assetName, exchangeName);
+		Broker       broker     = brokers.get(initialKey);
+
+		if (broker != null) {
+			log.debug("Broker {} found in cache.", initialKey);
+			return broker;
+		}
+
+		broker = instantiateBroker(brokerName, assetName, exchangeName, disconnectionTrigger);
+
+		/*
+		  Some brokers may provide assets from different exchanges, but the exchange name
+		  may be different from the one provided by the user. In this case, we need to adjust
+		  the exchange name to the one provided by the broker.
+		 */
+		String actualExchangeName = broker.getExchangeName();
+		String actualKey          = createKey(brokerName, assetName, actualExchangeName);
+
+		if (!initialKey.equals(actualKey) && brokers.containsKey(actualKey)) {
+			log.debug("Broker {} already created after exchange name adjustment.", actualKey);
+			return brokers.get(actualKey);
+		}
+
+		log.debug("Caching broker {}.", actualKey);
+		brokers.put(actualKey, broker);
+		return broker;
+	}
+
+	public static Broker instantiateBroker(String brokerName,
+	                                        String assetName,
+	                                        String exchangeName,
+	                                        Trigger disconnectionTrigger) throws BrokerException {
+		String key = createKey(brokerName, assetName, exchangeName);
+		//noinspection SwitchStatementWithTooFewBranches
+		switch (brokerName) {
+			case "IBKR":
 				try {
-					broker = new IbkrBroker(assetName, exchangeName,
-					                        () -> {
-						                        brokers.remove(key);
-						                        disconnectionTrigger.trigger();
-					                        }
-					);
-				} catch (IbkrException e) {
-					throw new BrokerException(e.getMessage());
-				}
-				if (!exchangeName.equals(broker.getExchangeName())) {
-					log.debug(assetName + " is found in " + broker.getExchangeName() + " instead of " + exchangeName + ".");
-				}
-				final String confirmedKey = getKey(brokerName, assetName, broker.getExchangeName());
-				if (brokers.containsKey(confirmedKey)) {
-					log.debug("Broker " + key + " found in cache.");
-					return brokers.get(confirmedKey);
-				} else {
-					log.debug("Broker " + confirmedKey + " created.");
-					brokers.put(confirmedKey, broker);
+					IbkrBroker broker = new IbkrBroker(assetName, exchangeName, () -> {
+						brokers.remove(key);
+						disconnectionTrigger.trigger();
+					});
+					log.debug("Created new IBKR broker for {}, exchange {}", assetName, exchangeName);
 					return broker;
+				} catch (IbkrException e) {
+					throw new BrokerException("Failed to instantiate IBKR Broker: " + e.getMessage(), e);
 				}
-			}
-		} else {
-			throw new BrokerException("Broker " + brokerName + " not supported.");
+				// Future case for new brokers here
+			default:
+				throw new BrokerException("Unsupported broker: " + brokerName);
 		}
 	}
 
-	public static String getKey(String brokerName, String assetName, String exchangeName) {
-		return brokerName+"/"+assetName + "/" + exchangeName;
+	public static String createKey(String brokerName, String assetName, String exchangeName) {
+		return brokerName + "/" + assetName + "/" + exchangeName;
+	}
+
+	static void clearCache() {
+		brokers.clear();
 	}
 }

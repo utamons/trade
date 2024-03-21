@@ -5,7 +5,7 @@ import java.util.concurrent.ExecutionException;
 public class IbkrAdapterFactory {
 	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(IbkrAdapterFactory.class);
 	private static IbkrAdapter adapter;
-	static synchronized IbkrAdapter getAdapter() {
+	public static synchronized IbkrAdapter getAdapter() {
 		if (adapter == null) {
 			adapter = new IbkrAdapter();
 			adapter.setDisconnectionListener(() -> adapter = null);
