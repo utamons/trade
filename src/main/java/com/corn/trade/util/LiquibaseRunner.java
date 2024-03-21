@@ -12,7 +12,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 
 public class LiquibaseRunner {
-	public static Logger log = LoggerFactory.getLogger(LiquibaseRunner.class);
+	public static final Logger log = LoggerFactory.getLogger(LiquibaseRunner.class);
 
 	public static void runLiquibase(String url, String username, String password) {
 		String changeLogFile = "db/changelog/master.xml";

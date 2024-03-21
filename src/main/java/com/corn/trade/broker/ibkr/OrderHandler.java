@@ -8,8 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 class OrderHandler implements ApiController.IOrderHandler {
-	public static Logger log = LoggerFactory.getLogger(OrderHandler.class);
-	private final Contract contract;
+	public static final Logger   log = LoggerFactory.getLogger(OrderHandler.class);
+	private final       Contract contract;
 	private final Order       order;
 	private final OrderAction orderType;
 	private final Decimal     quantity;

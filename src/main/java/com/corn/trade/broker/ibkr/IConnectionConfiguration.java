@@ -1,5 +1,6 @@
 package com.corn.trade.broker.ibkr;
 
+@SuppressWarnings("SameReturnValue")
 interface IConnectionConfiguration {
 	String getDefaultHost();
 	int getDefaultPort();

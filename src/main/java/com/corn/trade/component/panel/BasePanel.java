@@ -1,7 +1,5 @@
 package com.corn.trade.component.panel;
 
-import com.corn.trade.broker.ibkr.IbkrBroker;
-
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;

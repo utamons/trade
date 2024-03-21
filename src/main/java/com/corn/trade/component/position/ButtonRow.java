@@ -3,6 +3,7 @@ package com.corn.trade.component.position;
 import javax.swing.*;
 import java.awt.*;
 
+@SuppressWarnings("unused")
 class ButtonRow extends JPanel {
 	private final JButton fixButton, button25, button50, button75, allButton;
 

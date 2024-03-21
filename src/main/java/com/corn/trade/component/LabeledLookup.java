@@ -104,6 +104,7 @@ public class LabeledLookup extends JPanel {
 		});
 	}
 
+	@SuppressWarnings("unused")
 	public void setSuccessStatus(boolean successStatus) {
 		searchField.setBackground(successStatus ? UIManager.getColor("TextField.background") : Color.RED);
 	}

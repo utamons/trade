@@ -3,6 +3,7 @@ package com.corn.trade.trade.analysis.data;
 import com.corn.trade.entity.Asset;
 import com.corn.trade.trade.type.TimeFrame;
 
+@SuppressWarnings("unused")
 public class Bar {
 	private final double open;
 	private final double close;

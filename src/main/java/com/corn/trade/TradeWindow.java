@@ -15,7 +15,6 @@ public class TradeWindow extends BaseWindow {
 
 	public TradeWindow(String[] args) {
 		super(args, "Trade", new Dimension(350, 800));
-		initializeComponents();
 	}
 
 	public static void main(String[] args) {

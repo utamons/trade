@@ -45,6 +45,7 @@ public class InfoField extends JPanel {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	public void setBold(boolean bold) {
 		Font font = infoField.getFont();
 		if (bold) {
@@ -54,6 +55,7 @@ public class InfoField extends JPanel {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	public void startBlinking(Color blinkColor, int blinkRate) {
 		if (blinkTimer != null && blinkTimer.isRunning()) {
 			return;
@@ -70,6 +72,7 @@ public class InfoField extends JPanel {
 		blinkTimer.start();
 	}
 
+	@SuppressWarnings("unused")
 	public void stopBlinking() {
 		if (blinkTimer != null) {
 			blinkTimer.stop();

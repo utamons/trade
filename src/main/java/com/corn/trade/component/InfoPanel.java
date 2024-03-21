@@ -80,6 +80,7 @@ public class InfoPanel extends JPanel {
 		this.spread.setInfoText(spread);
 	}
 
+	@SuppressWarnings("unused")
 	public void setPl(String pl) {
 		this.pl.setInfoText(pl);
 	}

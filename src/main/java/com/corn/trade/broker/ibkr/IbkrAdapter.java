@@ -11,13 +11,12 @@ import com.ib.controller.ApiController;
 import com.ib.controller.ApiController.IConnectionHandler;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
 
 class IbkrAdapter implements IConnectionHandler {
 
-	public static org.slf4j.Logger log = LoggerFactory.getLogger(IbkrAdapter.class);
+	public static final org.slf4j.Logger log = LoggerFactory.getLogger(IbkrAdapter.class);
 
 	private final IConnectionConfiguration m_connectionConfiguration =
 			new IConnectionConfiguration.DefaultConnectionConfiguration();
@@ -25,10 +24,8 @@ class IbkrAdapter implements IConnectionHandler {
 	private final List<String>             m_acctList                = new ArrayList<>();
 	private       IbkrApiController            m_controller;
 	private final ContractLookuper m_lookuper = contract -> com.ib.client.Util.lookupContract(controller(), contract);
-	private       Timer                    initTimer;
-	private       Long             m_time;
 
-	private List<Trigger> disconnectionTriggers = new ArrayList<>();
+	private final List<Trigger> disconnectionTriggers = new ArrayList<>();
 
 	public void run() {
 		controller().connect(m_connectionConfiguration.getDefaultHost(),

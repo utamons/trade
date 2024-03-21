@@ -16,7 +16,7 @@ public abstract class Broker {
 	protected Double dayLow;
 	protected int    contextListenerId = 0;
 
-	protected HashMap<Integer, Consumer<TradeContext>> contextListeners = new HashMap<>();
+	protected final HashMap<Integer, Consumer<TradeContext>> contextListeners = new HashMap<>();
 
 	public String getExchangeName() {
 		return exchangeName;

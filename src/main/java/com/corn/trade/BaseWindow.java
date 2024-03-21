@@ -28,8 +28,6 @@ public abstract class BaseWindow {
 	public static double MAX_RISK_PERCENT      = 0.3;
 	public static double MAX_RISK_REWARD_RATIO = 3.0;
 	public static double ORDER_LUFT            = 0.02;
-	public static double MIN_POWER_RESERVE_TO_PRICE_RATIO = 0.005;
-	public static double REALISTIC_POWER_RESERVE = 0.8;
 	public static String DB_URL;
 	public static String DB_USER;
 	public static String DB_PASSWORD;
@@ -39,7 +37,7 @@ public abstract class BaseWindow {
 	protected static final  Theme  LIGHT_THEME  = new IntelliJTheme();
 	protected static String dbKey = "db_url_dev";
 	protected static String stage = null;
-	protected              JFrame frame;
+	protected final  JFrame frame;
 
 	protected static final Logger log = LoggerFactory.getLogger(BaseWindow.class);
 
@@ -75,6 +73,8 @@ public abstract class BaseWindow {
 		setupBorder();
 
 		LiquibaseRunner.runLiquibase(DB_URL, DB_USER, DB_PASSWORD);
+
+		initializeComponents();
 	}
 
 	protected abstract void initializeComponents();
@@ -110,8 +110,6 @@ public abstract class BaseWindow {
 			MAX_RISK_PERCENT = Double.parseDouble(configProps.getProperty("max_risk_percent", "0.5"));
 			ORDER_LUFT = Double.parseDouble(configProps.getProperty("order_luft", "0.02"));
 			DEBUG_LEVEL = Integer.parseInt(configProps.getProperty("debug_level", "2"));
-			MIN_POWER_RESERVE_TO_PRICE_RATIO = Double.parseDouble(configProps.getProperty("min_power_reserve_to_price_ratio", "0.005"));
-			REALISTIC_POWER_RESERVE = Double.parseDouble(configProps.getProperty("realistic_power_reserve", "1"));
 			DB_URL = configProps.getProperty(dbKey, null);
 			DB_USER = configProps.getProperty("db_user", null);
 			DB_PASSWORD = configProps.getProperty("db_password", null);

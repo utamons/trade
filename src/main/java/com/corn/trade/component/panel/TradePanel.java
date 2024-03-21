@@ -123,7 +123,7 @@ public class TradePanel extends BasePanel {
 		this.add(panel, BorderLayout.NORTH);
 	}
 
-	private void checkPosition(String s) {
+	private void checkPosition(@SuppressWarnings("unused") String s) {
 		techSL.setControlCheckBoxState(false);
 		techSL.setValue(null);
 		goal.setValue(null);
@@ -320,7 +320,7 @@ public class TradePanel extends BasePanel {
 			info.setRR(fmt(tradeData.getRiskRewardRatioPercent()));
 			info.setSl(fmt(tradeData.getStopLoss()));
 			info.setTp(fmt(tradeData.getTakeProfit()));
-			info.setOut(fmt(tradeData.getOutputExpected()));
+			info.setOut(fmt(tradeData.getOutputExpected()) + " (" + fmt(tradeData.getGain()) + ")");
 			info.setSpread(fmt(spread));
 
 			if (estimationType() == EstimationType.MIN_GOAL) {

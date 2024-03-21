@@ -10,7 +10,7 @@ public class ResizeListener extends MouseAdapter {
 	private boolean dragging = false;
 	private ResizeDirection resizeDir = ResizeDirection.NONE;
 
-	private int edge = 3; // Distance from the edge to consider as a resize area
+	private final int edge; // Distance from the edge to consider as a resize area
 
 	private enum ResizeDirection {
 		NONE, NORTH, SOUTH, EAST, WEST, NORTH_EAST, NORTH_WEST, SOUTH_EAST, SOUTH_WEST

@@ -18,7 +18,6 @@ public class AnalysisWindow extends BaseWindow {
 
 	public AnalysisWindow(String[] args) {
 		super(args, "Trade Analysis", new Dimension(700, 700));
-		initializeComponents();
 	}
 	public static void main(String[] args) {
 
