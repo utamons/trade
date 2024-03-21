@@ -14,14 +14,11 @@ import com.corn.trade.trade.analysis.data.TradeContext;
 import com.corn.trade.trade.analysis.data.TradeData;
 import com.corn.trade.trade.type.EstimationType;
 import com.corn.trade.trade.type.PositionType;
+import com.corn.trade.util.ExchangeTime;
 import com.corn.trade.util.Util;
 
 import javax.swing.*;
 import java.awt.*;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static com.corn.trade.BaseWindow.ORDER_LUFT;
@@ -166,47 +163,31 @@ public class TradePanel extends BasePanel {
 		try {
 			exchange = assetService.getExchange(exchangeName);
 			if (assetLookup != null) assetLookup.clear();
-			String tradingHours = exchange.getTradingHours();
-			String timeZone     = exchange.getTimeZone();
 
 			// Stop any previous time updater to prevent multiple timers running
 			if (timeUpdater != null) {
 				timeUpdater.stop();
 			}
 
-			startTimeUpdater(tradingHours, timeZone);
-
+			startTimeUpdater(exchange);
 		} catch (DBException e) {
 			Util.showWarningDlg(this, e.getMessage());
 			messagePanel.show(e.getMessage(), Color.RED);
 		}
 	}
 
-	private void startTimeUpdater(String tradingHours, String timeZone) {
-		// Timer task to update time every second
+	private void startTimeUpdater(Exchange exchange) {
 		timeUpdater = new Timer(1000, e -> {
-			String[]  hoursParts   = tradingHours.split("-");
-			LocalTime startTrading = LocalTime.parse(hoursParts[0], DateTimeFormatter.ofPattern("HH:mm"));
-			LocalTime endTrading   = LocalTime.parse(hoursParts[1], DateTimeFormatter.ofPattern("HH:mm"));
+			ExchangeTime exchangeTime = new ExchangeTime(exchange);
 
-			// Get current time in exchange's timezone
-			ZonedDateTime nowInExchangeTimeZone = ZonedDateTime.now(ZoneId.of(timeZone));
-			LocalTime     currentTime           = nowInExchangeTimeZone.toLocalTime();
-
-			// Determine if current time is within trading hours
-			boolean withinTradingHours = !currentTime.isBefore(startTrading) && !currentTime.isAfter(endTrading);
-
-			if (withinTradingHours) {
-				// Set working hours in green
-				info.setTime(nowInExchangeTimeZone.format(DateTimeFormatter.ofPattern("HH:mm")), Color.GREEN);
+			if (exchangeTime.withinTradingHours()) {
+				info.setTime(exchangeTime.getNowTime("HH:mm"), Color.GREEN);
 			} else {
-				// Set not working hours without color
-				info.setTime(nowInExchangeTimeZone.format(DateTimeFormatter.ofPattern("HH:mm")));
+				info.setTime(exchangeTime.getNowTime("HH:mm"));
 			}
 		});
-
-		timeUpdater.setInitialDelay(0); // Start updating immediately
-		timeUpdater.start(); // Start the timer
+		timeUpdater.setInitialDelay(0);
+		timeUpdater.start();
 	}
 
 	private PositionType positionType() {

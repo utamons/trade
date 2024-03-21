@@ -5,13 +5,13 @@ import java.util.concurrent.ExecutionException;
 public class IbkrAdapterFactory {
 	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(IbkrAdapterFactory.class);
 	private static IbkrAdapter adapter;
-	static IbkrAdapter getAdapter() {
+	static synchronized IbkrAdapter getAdapter() {
 		if (adapter == null) {
 			adapter = new IbkrAdapter();
-			adapter.setDisconnectionTrigger(() -> adapter = null);
+			adapter.setDisconnectionListener(() -> adapter = null);
 			adapter.run();
 		}
-		log.debug("testing connection");
+		log.info("testing connection");
 		try {
 			if (!new IbkrConnectionChecker().checkConnection(3,adapter).get()) {
 				adapter = null;

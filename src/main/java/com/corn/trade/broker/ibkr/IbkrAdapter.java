@@ -20,13 +20,15 @@ class IbkrAdapter implements IConnectionHandler {
 
 	private final IConnectionConfiguration m_connectionConfiguration =
 			new IConnectionConfiguration.DefaultConnectionConfiguration();
-	@SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
-	private final List<String>             m_acctList                = new ArrayList<>();
 	private       IbkrApiController            m_controller;
 	private final ContractLookuper m_lookuper = contract -> com.ib.client.Util.lookupContract(controller(), contract);
 
-	private final List<Trigger> disconnectionTriggers = new ArrayList<>();
+	private final List<Trigger> disconnectionListeners = new ArrayList<>();
 
+	/**
+	 * Initiates connection to TWS. It's an asynchronous process, so connection might not be ready immediately.
+	 * @see IbkrConnectionChecker
+	 */
 	public void run() {
 		controller().connect(m_connectionConfiguration.getDefaultHost(),
 		                     m_connectionConfiguration.getDefaultPort(),
@@ -34,8 +36,12 @@ class IbkrAdapter implements IConnectionHandler {
 		                     m_connectionConfiguration.getDefaultConnectOptions());
 	}
 
-	public void setDisconnectionTrigger(Trigger disconnectionTrigger) {
-		this.disconnectionTriggers.add(disconnectionTrigger);
+	/**
+	 * Adds a listener, which detects disconnection
+	 * @param disconnectionListener listener
+	 */
+	public void setDisconnectionListener(Trigger disconnectionListener) {
+		this.disconnectionListeners.add(disconnectionListener);
 	}
 
 	public boolean isConnected() {
@@ -44,6 +50,8 @@ class IbkrAdapter implements IConnectionHandler {
 
 	public List<ContractDetails> lookupContract(Contract contract) {
 		log.debug("lookupContract start");
+		if (!isConnected())
+			throw new IbkrException("IBKR not connected");
 		List<ContractDetails> contractDetails = m_lookuper.lookupContract(contract);
 		log.debug("lookupContract finish");
 		return contractDetails;
@@ -57,14 +65,14 @@ class IbkrAdapter implements IConnectionHandler {
 	@Override
 	public void disconnected() {
 		show("disconnected");
-		disconnectionTriggers.forEach(Trigger::trigger);
+		disconnectionListeners.forEach(Trigger::trigger);
 	}
 
 	@Override
 	public void accountList(List<String> list) {
-		m_acctList.clear();
-		m_acctList.addAll(list);
+		show("accountList " + list);
 	}
+
 
 	@Override
 	public void error(Exception e) {

@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.function.Consumer;
 
 public abstract class Broker {
-
 	protected String exchangeName;
 	protected Double adr;
 	protected Double ask;
@@ -22,19 +21,18 @@ public abstract class Broker {
 		return exchangeName;
 	}
 
-	public synchronized int requestTradeContext(Consumer<TradeContext> tradeContextListener) {
-		contextListenerId++;
+	public synchronized int requestTradeContext(Consumer<TradeContext> tradeContextListener) throws BrokerException {
 		if (contextListeners.isEmpty()) {
 			requestAdr();
 			requestMarketData();
 		}
-		contextListeners.put(contextListenerId, tradeContextListener);
+		contextListeners.put(++contextListenerId, tradeContextListener);
 		return contextListenerId;
 	}
 
-	protected abstract void requestAdr();
+	protected abstract void requestAdr() throws BrokerException;
 
-	protected abstract void requestMarketData();
+	protected abstract void requestMarketData() throws BrokerException;
 
 	protected abstract void cancelMarketData();
 

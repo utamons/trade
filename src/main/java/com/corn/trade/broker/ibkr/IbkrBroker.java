@@ -5,6 +5,7 @@ import com.corn.trade.broker.BrokerException;
 import com.corn.trade.entity.Exchange;
 import com.corn.trade.jpa.DBException;
 import com.corn.trade.service.AssetService;
+import com.corn.trade.util.ExchangeTime;
 import com.corn.trade.util.Trigger;
 import com.ib.client.*;
 import com.ib.controller.ApiController;
@@ -12,34 +13,49 @@ import com.ib.controller.ApiController.IHistoricalDataHandler;
 import com.ib.controller.ApiController.ITopMktDataHandler;
 import com.ib.controller.Bar;
 
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 
 public class IbkrBroker extends Broker {
-	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(IbkrBroker.class);
-
+	public static final  int              ADR_BARS = 14;
+	private static final org.slf4j.Logger log      = org.slf4j.LoggerFactory.getLogger(IbkrBroker.class);
 	private final IbkrAdapter            ibkrAdapter;
-	private final ContractDetails        contractDetails;
+	private       ContractDetails        contractDetails;
 	private       ITopMktDataHandler     mktDataHandler;
 	private       IHistoricalDataHandler dayHighLowDataHandler;
 	private       IHistoricalDataHandler adrDataHandler;
-	private       List<Double>           adrList;
+	private       List<Double>           adrList             = new java.util.ArrayList<>(ADR_BARS);
+	private       boolean                requestedMarketData = false;
 
-	public IbkrBroker(String ticker, String exchange, Trigger disconnectionTrigger) throws BrokerException {
+	public IbkrBroker(String ticker, String exchange, Trigger disconnectionListener) throws BrokerException {
 		log.debug("init start");
 
 		try {
 			this.ibkrAdapter = IbkrAdapterFactory.getAdapter();
-			this.ibkrAdapter.setDisconnectionTrigger(disconnectionTrigger);
+			this.ibkrAdapter.setDisconnectionListener(disconnectionListener);
 		} catch (IbkrException e) {
-			throw new BrokerException(e.getMessage());
+			throw new BrokerException(e.getMessage(), e);
 		}
 
 		initHandlers();
 
+		initContract(ticker, exchange);
+
+		log.debug("init finish");
+	}
+
+	private static String getLastDayEnd(Exchange exchange) {
+		ExchangeTime exchangeTime = new ExchangeTime(exchange);
+
+		return exchangeTime.lastTradingDayEnd().format(DateTimeFormatter.ofPattern("yyyyMMdd")) +
+		       " " +
+		       exchangeTime.endTrading().format(DateTimeFormatter.ofPattern("HH:mm:ss")) +
+		       " " +
+		       exchange.getTimeZone();
+	}
+
+	private void initContract(String ticker, String exchange) throws BrokerException {
 		Contract contract = new Contract();
 		contract.symbol(ticker);
 		contract.secType("STK");
@@ -61,7 +77,6 @@ public class IbkrBroker extends Broker {
 
 		this.exchangeName = contractDetailsList.get(0).contract().primaryExch();
 		contractDetails = contractDetailsList.get(0);
-		log.debug("init finish");
 	}
 
 	private void initHandlers() {
@@ -85,11 +100,11 @@ public class IbkrBroker extends Broker {
 			public void historicalData(Bar bar) {
 				dayHigh = bar.high();
 				dayLow = bar.low();
-				notifyTradeContext();
 			}
 
 			@Override
 			public void historicalDataEnd() {
+				notifyTradeContext();
 			}
 		};
 
@@ -101,6 +116,7 @@ public class IbkrBroker extends Broker {
 
 			@Override
 			public void historicalDataEnd() {
+				adrList = Collections.unmodifiableList(adrList);
 				adr = adrList.stream().mapToDouble(Double::doubleValue).average().orElse(0);
 				notifyTradeContext();
 			}
@@ -111,45 +127,27 @@ public class IbkrBroker extends Broker {
 		return contractDetails;
 	}
 
-	protected void requestAdr() {
+	@Override
+	protected synchronized void requestAdr() throws BrokerException {
 		if (adr != null) {
 			notifyTradeContext();
 			return;
 		}
-		Exchange exchange;
+
+		final String lastDayEnd;
 		try {
-			exchange = new AssetService().getExchange(exchangeName);
+			Exchange exchange = new AssetService().getExchange(exchangeName);
+			lastDayEnd = getLastDayEnd(exchange);
 		} catch (DBException e) {
-			throw new IbkrException(e);
+			throw new BrokerException("DB error: ", e);
 		}
 
-		String    timezone     = exchange.getTimeZone();
-		String    tradingHours = exchange.getTradingHours();
-		String[]  hoursParts   = tradingHours.split("-");
-		LocalTime endTrading   = LocalTime.parse(hoursParts[1], DateTimeFormatter.ofPattern("HH:mm"));
+		if (!ibkrAdapter.isConnected()) throw new BrokerException("IBKR disconnected");
 
-		// Get current time in exchange's timezone
-		ZonedDateTime nowInExchangeTimeZone = ZonedDateTime.now(ZoneId.of(timezone));
-
-		// Determine if current time is after trading hours
-		boolean isAfterTradingHours = nowInExchangeTimeZone.toLocalTime().isAfter(endTrading);
-
-		// If the current time is after trading hours, use the current date as the last trading day
-		// Otherwise, use the previous day as the last trading day
-		ZonedDateTime lastTradingDayEnd = isAfterTradingHours ? nowInExchangeTimeZone : nowInExchangeTimeZone.minusDays(1);
-
-		// Format lastDayEnd in YYYYMMDD HH:MM:SS format
-		String lastDayEnd = lastTradingDayEnd.format(DateTimeFormatter.ofPattern("yyyyMMdd")) +
-		                    " " +
-		                    endTrading.format(DateTimeFormatter.ofPattern("HH:mm:ss")) +
-		                    " " +
-		                    timezone;
-
-		adrList = new java.util.ArrayList<>();
 		ibkrAdapter.controller()
 		           .reqHistoricalData(contractDetails.contract(),
 		                              lastDayEnd,
-		                              14,
+		                              ADR_BARS,
 		                              Types.DurationUnit.DAY,
 		                              Types.BarSize._1_day,
 		                              Types.WhatToShow.TRADES,
@@ -158,9 +156,10 @@ public class IbkrBroker extends Broker {
 		                              adrDataHandler);
 	}
 
-
 	@Override
-	protected void requestMarketData() {
+	protected synchronized void requestMarketData() throws BrokerException {
+		if (requestedMarketData) return;
+		if (!ibkrAdapter.isConnected()) throw new BrokerException("IBKR disconnected");
 		ibkrAdapter.controller().reqTopMktData(contractDetails.contract(), "", false, false, mktDataHandler);
 		ibkrAdapter.controller()
 		           .reqHistoricalData(contractDetails.contract(),
@@ -172,11 +171,13 @@ public class IbkrBroker extends Broker {
 		                              true,
 		                              true,
 		                              dayHighLowDataHandler);
+		requestedMarketData = true;
 	}
 
 	@Override
 	protected void cancelMarketData() {
 		ibkrAdapter.controller().cancelTopMktData(mktDataHandler);
 		ibkrAdapter.controller().cancelHistoricalData(dayHighLowDataHandler);
+		requestedMarketData = false;
 	}
 }
