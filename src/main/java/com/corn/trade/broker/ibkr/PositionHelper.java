@@ -11,19 +11,19 @@ import org.slf4j.LoggerFactory;
 
 class PositionHelper {
 
-	public static final Logger      log = LoggerFactory.getLogger(PositionHelper.class);
-	private final IbkrAdapter ibkrAdapter;
-	private final IbkrBroker  ibkrBroker;
+	public static final Logger                log = LoggerFactory.getLogger(PositionHelper.class);
+	private final       IbkrConnectionHandler ibkrConnectionHandler;
+	private final       IbkrBroker            ibkrBroker;
 
-	public PositionHelper(IbkrAdapter ibkrAdapter, IbkrBroker ibkrBroker) {
-		this.ibkrAdapter = ibkrAdapter;
+	public PositionHelper(IbkrConnectionHandler ibkrConnectionHandler, IbkrBroker ibkrBroker) {
+		this.ibkrConnectionHandler = ibkrConnectionHandler;
 		this.ibkrBroker = ibkrBroker;
 	}
 
 	public void dropAll() {
 		log.info("Dropping all positions");
 
-		if (!ibkrAdapter.isConnected()) {
+		if (!ibkrConnectionHandler.isConnected()) {
 			log.error("Not connected");
 			return;
 		}
@@ -50,19 +50,19 @@ class PositionHelper {
 
 				Contract lookedUpContract = ibkrBroker.getContractDetails().contract();
 
-				ibkrAdapter.placeOrder(lookedUpContract,
-				                       closeOrder,
-				                       new OrderHandler(lookedUpContract, closeOrder, OrderAction.DROP_ALL, pos, positionType));
+				ibkrConnectionHandler.controller().placeOrModifyOrder(lookedUpContract,
+				                                                      closeOrder,
+				                                                      new OrderHandler(lookedUpContract, closeOrder, OrderAction.DROP_ALL, pos, positionType));
 				log.info("Placed DROP ALL id {} {}, qtt: {}", closeOrder.orderId(), contract.symbol(), pos);
 			}
 
 			@Override
 			public void positionEnd() {
 				log.info("Dropping all positions call is finished");
-				ibkrAdapter.controller().cancelPositions(this);
+				ibkrConnectionHandler.controller().cancelPositions(this);
 			}
 		};
 
-		ibkrAdapter.controller().reqPositions(handler);
+		ibkrConnectionHandler.controller().reqPositions(handler);
 	}
 }

@@ -59,11 +59,11 @@ public class TradePanel extends BasePanel {
 		tickers = assetService.getTickerNames();
 
 		final List<String> exchanges = assetService.getExchangeNames();
-		this.setExchange(exchanges.get(0));
+		this.changeExchangeListener(exchanges.get(0));
 
-		assetLookup = new LabeledLookup("Ticker:", tickers, spacing, fieldHeight, this::setTicker);
+		assetLookup = new LabeledLookup("Ticker:", tickers, spacing, fieldHeight, this::changeTickerListener);
 
-		exchangeBox = new LabeledComboBox("Exchange:", exchanges, spacing, fieldHeight, this::setExchange);
+		exchangeBox = new LabeledComboBox("Exchange:", exchanges, spacing, fieldHeight, this::changeExchangeListener);
 
 		positionBox = new LabeledComboBox("Position:", PositionType.getValues(), spacing, fieldHeight, this::checkPosition);
 
@@ -159,7 +159,7 @@ public class TradePanel extends BasePanel {
 		return EstimationType.fromString(estimationBox.getSelectedItem());
 	}
 
-	private void setExchange(String exchangeName) {
+	private void changeExchangeListener(String exchangeName) {
 		try {
 			exchange = assetService.getExchange(exchangeName);
 			if (assetLookup != null) assetLookup.clear();
@@ -194,7 +194,7 @@ public class TradePanel extends BasePanel {
 		return PositionType.fromString(positionBox.getSelectedItem());
 	}
 
-	private void setTicker(String assetName) {
+	private void changeTickerListener(String assetName) {
 		if (assetName == null || assetName.isBlank()) {
 			return;
 		}
@@ -208,10 +208,13 @@ public class TradePanel extends BasePanel {
 				messagePanel.show(exchange.getBroker() + " disconnected.", Color.RED);
 				assetLookup.clear();
 			});
+
 			Asset  asset        = assetService.getAsset(assetName, exchangeBox.getSelectedItem(), broker);
 			String brokerName   = asset.getExchange().getBroker();
 			String exchangeName = asset.getExchange().getName();
 			tickers = assetService.getTickerNames();
+
+			// Change the exchange box to the actual exchange name from the broker
 			if (!exchangeBox.getSelectedItem().equals(exchangeName)) {
 				exchangeBox.setSelectedItem(exchangeName);
 				assetLookup.setText(assetName);
@@ -219,7 +222,7 @@ public class TradePanel extends BasePanel {
 
 			messagePanel.show(brokerName + " is connected.");
 
-			tradeContextId = broker.requestTradeContext(this::populateTradeContext);
+			tradeContextId = broker.requestTradeContext(this::tradeContextListener);
 
 			goal.setValue(null);
 			level.setValue(null);
@@ -242,7 +245,7 @@ public class TradePanel extends BasePanel {
 		}
 	}
 
-	private void populateTradeContext(TradeContext tradeContext) {
+	private void tradeContextListener(TradeContext tradeContext) {
 		Double ask = tradeContext.getAsk();
 		Double bid = tradeContext.getBid();
 		Double price = tradeContext.getPrice();

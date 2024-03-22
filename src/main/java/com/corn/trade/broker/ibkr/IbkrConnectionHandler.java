@@ -1,11 +1,9 @@
 package com.corn.trade.broker.ibkr;
 
-import com.corn.trade.TradeWindow;
 import com.corn.trade.util.Trigger;
 import com.ib.client.Contract;
 import com.ib.client.ContractDetails;
 import com.ib.client.ContractLookuper;
-import com.ib.client.Order;
 import com.ib.controller.ApiConnection;
 import com.ib.controller.ApiController;
 import com.ib.controller.ApiController.IConnectionHandler;
@@ -14,14 +12,14 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-public class IbkrAdapter implements IConnectionHandler {
+class IbkrConnectionHandler implements IConnectionHandler {
 
-	public static final org.slf4j.Logger log = LoggerFactory.getLogger(IbkrAdapter.class);
+	private static final org.slf4j.Logger log = LoggerFactory.getLogger(IbkrConnectionHandler.class);
 
-	private final IConnectionConfiguration m_connectionConfiguration =
+	private final IConnectionConfiguration connectionConfiguration =
 			new IConnectionConfiguration.DefaultConnectionConfiguration();
-	private       IbkrApiController            m_controller;
-	private final ContractLookuper m_lookuper = contract -> com.ib.client.Util.lookupContract(controller(), contract);
+	private       IbkrApiController        controller;
+	private final ContractLookuper  lookuper = contract -> com.ib.client.Util.lookupContract(controller(), contract);
 
 	private final List<Trigger> disconnectionListeners = new ArrayList<>();
 
@@ -29,11 +27,11 @@ public class IbkrAdapter implements IConnectionHandler {
 	 * Initiates connection to TWS. It's an asynchronous process, so connection might not be ready immediately.
 	 * @see IbkrConnectionChecker
 	 */
-	public void run() {
-		controller().connect(m_connectionConfiguration.getDefaultHost(),
-		                     m_connectionConfiguration.getDefaultPort(),
+	void run() {
+		controller().connect(connectionConfiguration.getDefaultHost(),
+		                     connectionConfiguration.getDefaultPort(),
 		                     0,
-		                     m_connectionConfiguration.getDefaultConnectOptions());
+		                     connectionConfiguration.getDefaultConnectOptions());
 	}
 
 	/**
@@ -44,15 +42,15 @@ public class IbkrAdapter implements IConnectionHandler {
 		this.disconnectionListeners.add(disconnectionListener);
 	}
 
-	public boolean isConnected() {
-		return m_controller.isConnected();
+	boolean isConnected() {
+		return ((IbkrApiController)controller()).isConnected();
 	}
 
-	public List<ContractDetails> lookupContract(Contract contract) {
+	List<ContractDetails> lookupContract(Contract contract) {
 		log.debug("lookupContract start");
 		if (!isConnected())
 			throw new IbkrException("IBKR not connected");
-		List<ContractDetails> contractDetails = m_lookuper.lookupContract(contract);
+		List<ContractDetails> contractDetails = lookuper.lookupContract(contract);
 		log.debug("lookupContract finish");
 		return contractDetails;
 	}
@@ -95,22 +93,10 @@ public class IbkrAdapter implements IConnectionHandler {
 	}
 
 	ApiController controller() {
-		if (m_controller == null) {
-			m_controller = new IbkrApiController(this, new Logger(), new Logger());
+		if (controller == null) {
+			controller = new IbkrApiController(this, new Logger(), new Logger());
 		}
-		return m_controller;
-	}
-
-	void placeOrder(Contract contract, Order order, ApiController.IOrderHandler handler) {
-		if (TradeWindow.SIMULATION_MODE) {
-			log.info("Simulation mode");
-			return;
-		}
-		if (!isConnected()) {
-			log.error("Not connected");
-			return;
-		}
-		controller().placeOrModifyOrder(contract, order, handler);
+		return controller;
 	}
 
 	private static class Logger implements ApiConnection.ILogger {

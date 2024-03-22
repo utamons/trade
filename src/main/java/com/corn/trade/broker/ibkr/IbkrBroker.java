@@ -18,22 +18,22 @@ import java.util.Collections;
 import java.util.List;
 
 public class IbkrBroker extends Broker {
-	public static final  int              ADR_BARS = 14;
-	private static final org.slf4j.Logger log      = org.slf4j.LoggerFactory.getLogger(IbkrBroker.class);
-	private final IbkrAdapter            ibkrAdapter;
-	private       ContractDetails        contractDetails;
-	private       ITopMktDataHandler     mktDataHandler;
-	private       IHistoricalDataHandler dayHighLowDataHandler;
-	private       IHistoricalDataHandler adrDataHandler;
-	private       List<Double>           adrList             = new java.util.ArrayList<>(ADR_BARS);
-	private       boolean                requestedMarketData = false;
+	public static final  int                    ADR_BARS            = 14;
+	private static final org.slf4j.Logger       log                 = org.slf4j.LoggerFactory.getLogger(IbkrBroker.class);
+	private final        IbkrConnectionHandler  ibkrConnectionHandler;
+	private              ContractDetails        contractDetails;
+	private              ITopMktDataHandler     mktDataHandler;
+	private              IHistoricalDataHandler dayHighLowDataHandler;
+	private              IHistoricalDataHandler adrDataHandler;
+	private              List<Double>           adrList             = new java.util.ArrayList<>(ADR_BARS);
+	private              boolean                requestedMarketData = false;
 
 	public IbkrBroker(String ticker, String exchange, Trigger disconnectionListener) throws BrokerException {
 		log.debug("init start");
 
 		try {
-			this.ibkrAdapter = IbkrAdapterFactory.getAdapter();
-			this.ibkrAdapter.setDisconnectionListener(disconnectionListener);
+			this.ibkrConnectionHandler = IbkrConnectionHandlerFactory.getConnectionHandler();
+			this.ibkrConnectionHandler.setDisconnectionListener(disconnectionListener);
 		} catch (IbkrException e) {
 			throw new BrokerException(e.getMessage(), e);
 		}
@@ -67,7 +67,7 @@ public class IbkrBroker extends Broker {
 		} else contract.exchange(exchange);
 
 		log.debug("looking up contract");
-		List<ContractDetails> contractDetailsList = ibkrAdapter.lookupContract(contract);
+		List<ContractDetails> contractDetailsList = ibkrConnectionHandler.lookupContract(contract);
 		if (contractDetailsList.isEmpty()) {
 			throw new BrokerException("No contract details found for " + ticker);
 		} else if (contractDetailsList.size() > 1) {
@@ -142,42 +142,42 @@ public class IbkrBroker extends Broker {
 			throw new BrokerException("DB error: ", e);
 		}
 
-		if (!ibkrAdapter.isConnected()) throw new BrokerException("IBKR disconnected");
+		if (!ibkrConnectionHandler.isConnected()) throw new BrokerException("IBKR disconnected");
 
-		ibkrAdapter.controller()
-		           .reqHistoricalData(contractDetails.contract(),
-		                              lastDayEnd,
-		                              ADR_BARS,
-		                              Types.DurationUnit.DAY,
-		                              Types.BarSize._1_day,
-		                              Types.WhatToShow.TRADES,
-		                              true,
-		                              false,
-		                              adrDataHandler);
+		ibkrConnectionHandler.controller()
+		                     .reqHistoricalData(contractDetails.contract(),
+		                                        lastDayEnd,
+		                                        ADR_BARS,
+		                                        Types.DurationUnit.DAY,
+		                                        Types.BarSize._1_day,
+		                                        Types.WhatToShow.TRADES,
+		                                        true,
+		                                        false,
+		                                        adrDataHandler);
 	}
 
 	@Override
 	protected synchronized void requestMarketData() throws BrokerException {
 		if (requestedMarketData) return;
-		if (!ibkrAdapter.isConnected()) throw new BrokerException("IBKR disconnected");
-		ibkrAdapter.controller().reqTopMktData(contractDetails.contract(), "", false, false, mktDataHandler);
-		ibkrAdapter.controller()
-		           .reqHistoricalData(contractDetails.contract(),
-		                              "",
-		                              1,
-		                              Types.DurationUnit.DAY,
-		                              Types.BarSize._1_day,
-		                              Types.WhatToShow.TRADES,
-		                              true,
-		                              true,
-		                              dayHighLowDataHandler);
+		if (!ibkrConnectionHandler.isConnected()) throw new BrokerException("IBKR disconnected");
+		ibkrConnectionHandler.controller().reqTopMktData(contractDetails.contract(), "", false, false, mktDataHandler);
+		ibkrConnectionHandler.controller()
+		                     .reqHistoricalData(contractDetails.contract(),
+		                                        "",
+		                                        1,
+		                                        Types.DurationUnit.DAY,
+		                                        Types.BarSize._1_day,
+		                                        Types.WhatToShow.TRADES,
+		                                        true,
+		                                        true,
+		                                        dayHighLowDataHandler);
 		requestedMarketData = true;
 	}
 
 	@Override
 	protected void cancelMarketData() {
-		ibkrAdapter.controller().cancelTopMktData(mktDataHandler);
-		ibkrAdapter.controller().cancelHistoricalData(dayHighLowDataHandler);
+		ibkrConnectionHandler.controller().cancelTopMktData(mktDataHandler);
+		ibkrConnectionHandler.controller().cancelHistoricalData(dayHighLowDataHandler);
 		requestedMarketData = false;
 	}
 }

@@ -7,16 +7,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import com.ib.controller.ApiController;
 
-class IbkrAdapterTest {
+class IbkrConnectionHandlerTest {
 
-	private IbkrAdapter adapter;
-	private ApiController controller;
-	private Trigger       disconnectionListener;
+	private IbkrConnectionHandler adapter;
+	private ApiController         controller;
+	private Trigger               disconnectionListener;
 
 	@BeforeEach
 	void setUp() {
 		controller = mock(ApiController.class);
-		adapter = spy(new IbkrAdapter());
+		adapter = spy(new IbkrConnectionHandler());
 		doReturn(controller).when(adapter).controller();
 		disconnectionListener = mock(Trigger.class);
 		adapter.setDisconnectionListener(disconnectionListener);
