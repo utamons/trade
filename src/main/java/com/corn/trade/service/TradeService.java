@@ -13,7 +13,7 @@ public class TradeService {
 		Double low   = tradeContext.getDayLow();
 		Double adr   = tradeContext.getAdr();
 
-		if (price == null || high == null || low == null || adr == null) {
+		if (price == null || high == null || low == null || adr == null || ask == null || bid == null) {
 			return null;
 		}
 

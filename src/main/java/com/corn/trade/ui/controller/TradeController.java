@@ -98,6 +98,7 @@ public class TradeController implements TradeViewListener {
 			currentBroker = BrokerFactory.getBroker(exchange.getBroker(), assetName, exchange.getName(), () -> {
 				view.messagePanel().show(exchange.getBroker() + " disconnected.", Color.RED);
 				view.assetLookup().clear();
+				view.info().clear();
 			});
 
 			// Get the actual asset object from the asset name (and save it in the database if it doesn't exist)
@@ -209,6 +210,7 @@ public class TradeController implements TradeViewListener {
 		view.info().setPrice(fmt(price));
 		view.info().setMaxRangePassed(fmt(maxRangePassedForPos));
 		view.info().setMaxRangeLeft(fmt(maxRangeLeftForPos < 0 ? 0 : maxRangeLeftForPos));
+		view.info().setSpread(fmt(spread));
 
 		if (level != null) {
 			TradeData tradeData = TradeData.aTradeData()
@@ -237,7 +239,6 @@ public class TradeController implements TradeViewListener {
 			view.info().setSl(fmt(tradeData.getStopLoss()));
 			view.info().setTp(fmt(tradeData.getTakeProfit()));
 			view.info().setOut(fmt(tradeData.getOutputExpected()) + " (" + fmt(tradeData.getGain()) + "%)");
-			view.info().setSpread(fmt(spread));
 
 			if (estimationType == EstimationType.MIN_GOAL) {
 				view.goal().setValue(tradeData.getGoal());
