@@ -6,7 +6,6 @@ import com.corn.trade.type.PositionType;
 import com.corn.trade.ui.component.*;
 import com.corn.trade.ui.component.position.PositionPanel;
 import com.corn.trade.ui.controller.TradeController;
-import com.corn.trade.ui.controller.TradeView;
 
 import javax.swing.*;
 import java.awt.*;

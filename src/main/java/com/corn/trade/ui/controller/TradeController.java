@@ -14,6 +14,7 @@ import com.corn.trade.service.TradeCalc;
 import com.corn.trade.service.TradeService;
 import com.corn.trade.type.EstimationType;
 import com.corn.trade.type.PositionType;
+import com.corn.trade.ui.view.TradeView;
 import com.corn.trade.util.ExchangeTime;
 import com.corn.trade.util.Util;
 
@@ -27,9 +28,9 @@ import static com.corn.trade.util.Util.round;
 
 
 public class TradeController implements TradeViewListener {
-	private final AssetService   assetService;
-	private       TradeView      view;
-	private       Double         level;
+	private final AssetService assetService;
+	private       TradeView    view;
+	private       Double       level;
 	private       Double         techStopLoss;
 	private       Double         goal;
 	private       PositionType   positionType;

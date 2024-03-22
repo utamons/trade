@@ -1,4 +1,4 @@
-package com.corn.trade.ui.controller;
+package com.corn.trade.ui.view;
 
 import com.corn.trade.ui.component.*;
 
