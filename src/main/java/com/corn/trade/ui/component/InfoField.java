@@ -82,10 +82,17 @@ public class InfoField extends JPanel {
 	}
 
 	public void setInfoText(String text) {
+		if (text == null || text.isEmpty()) {
+			text = "n/a";
+		}
 		infoField.setText(text);
 	}
 
 	public void setInfoText(String text, boolean percents) {
+		if (text == null || text.isEmpty()) {
+			infoField.setText("n/a");
+			return;
+		}
 		if (percents) {
 			infoField.setText(text + "%");
 		} else {

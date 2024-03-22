@@ -7,14 +7,13 @@ import com.corn.trade.entity.Asset;
 import com.corn.trade.entity.Exchange;
 import com.corn.trade.jpa.DBException;
 import com.corn.trade.model.ExtendedTradeContext;
-import com.corn.trade.service.AssetService;
-import com.corn.trade.service.TradeCalc;
 import com.corn.trade.model.TradeContext;
 import com.corn.trade.model.TradeData;
+import com.corn.trade.service.AssetService;
+import com.corn.trade.service.TradeCalc;
 import com.corn.trade.service.TradeService;
 import com.corn.trade.type.EstimationType;
 import com.corn.trade.type.PositionType;
-import com.corn.trade.ui.view.TradePanel;
 import com.corn.trade.util.ExchangeTime;
 import com.corn.trade.util.Util;
 
@@ -28,23 +27,24 @@ import static com.corn.trade.util.Util.round;
 
 
 public class TradeController implements TradeViewListener {
-	private         TradePanel       view;
-	private final        AssetService     assetService;
-	private              Double           level;
-	private              Double           techStopLoss;
-	private              Double           goal;
-	private              PositionType     positionType;
-	private              EstimationType   estimationType;
-	private              Exchange         exchange;
-	private              Broker           currentBroker;
-	private              Timer            timeUpdater = null;
+	private final AssetService   assetService;
+	private       TradeView      view;
+	private       Double         level;
+	private       Double         techStopLoss;
+	private       Double         goal;
+	private       PositionType   positionType;
+	private       EstimationType estimationType;
+	private       Exchange       exchange;
+	private       Broker         currentBroker;
+	private       Timer          timeUpdater = null;
 
 	private int tradeContextId = 0;
 
 	public TradeController() {
 		this.assetService = new AssetService();
 	}
-	public void setView(TradePanel view) {
+
+	public void setView(TradeView view) {
 		this.view = view;
 	}
 
@@ -53,6 +53,7 @@ public class TradeController implements TradeViewListener {
 		try {
 			exchange = assetService.getExchange(exchangeName);
 			view.assetLookup().clear();
+			onAssetChange(null);
 
 			// Stop any previous time updater to prevent multiple timers running
 			if (timeUpdater != null) {
@@ -61,16 +62,13 @@ public class TradeController implements TradeViewListener {
 
 			startTimeUpdater(exchange);
 		} catch (DBException e) {
-			Util.showWarningDlg(view, e.getMessage());
+			Util.showWarningDlg(view.asComponent(), e.getMessage());
 			view.messagePanel().show(e.getMessage(), Color.RED);
 		}
 	}
 
 	@Override
 	public void onAssetChange(String assetName) {
-		if (assetName == null || assetName.isBlank()) {
-			return;
-		}
 		try {
 			if (currentBroker != null) {
 				/*
@@ -79,12 +77,21 @@ public class TradeController implements TradeViewListener {
 				   for new trade context
 				 */
 				currentBroker.cancelTradeContext(tradeContextId);
-				view.info().clear();
-				view.goal().setValue(null);
-				view.level().setValue(null);
-				view.techSL().setValue(null);
-				view.techSL().setControlCheckBoxState(false);
-				goalWarning(false);
+			}
+
+			view.info().clear();
+			view.goal().setValue(null);
+			view.level().setValue(null);
+			view.techSL().setValue(null);
+			view.messagePanel().clear();
+			level = null;
+			techStopLoss = null;
+			goal = null;
+			view.techSL().setControlCheckBoxState(false);
+			goalWarning(false);
+
+			if (assetName == null || assetName.isBlank()) {
+				return;
 			}
 
 			currentBroker = BrokerFactory.getBroker(exchange.getBroker(), assetName, exchange.getName(), () -> {
@@ -93,10 +100,10 @@ public class TradeController implements TradeViewListener {
 			});
 
 			// Get the actual asset object from the asset name (and save it in the database if it doesn't exist)
-			Asset  asset        = assetService.getAsset(assetName, view.exchangeBox().getSelectedItem(), currentBroker);
-			String brokerName   = asset.getExchange().getBroker();
-			String exchangeName = asset.getExchange().getName();
-			List<String> assets = assetService.getAssetNames();
+			Asset asset = assetService.getAsset(assetName, view.exchangeBox().getSelectedItem(), currentBroker);
+			String       brokerName   = asset.getExchange().getBroker();
+			String       exchangeName = asset.getExchange().getName();
+			List<String> assets       = assetService.getAssetNames();
 			view.assetLookup().setItems(assets); // because we might have added a new asset
 
 			// Change the exchange box to the actual exchange name from the broker
@@ -110,7 +117,7 @@ public class TradeController implements TradeViewListener {
 			tradeContextId = currentBroker.requestTradeContext(this::tradeContextListener);
 
 		} catch (DBException | BrokerException e) {
-			Util.showWarningDlg(view, e.getMessage());
+			Util.showWarningDlg(view.asComponent(), e.getMessage());
 			view.messagePanel().show(e.getMessage(), Color.RED);
 			view.assetLookup().clear();
 		}
@@ -122,6 +129,8 @@ public class TradeController implements TradeViewListener {
 		view.techSL().setControlCheckBoxState(false);
 		view.techSL().setValue(null);
 		view.goal().setValue(null);
+		goal = null;
+		techStopLoss = null;
 	}
 
 	@Override
@@ -130,8 +139,10 @@ public class TradeController implements TradeViewListener {
 		if (estimationType == EstimationType.MIN_GOAL) {
 			view.goal().setEditable(false);
 			view.goal().setValue(null);
+			goal = null;
 		} else {
 			view.goal().setEditable(true);
+			goal = view.goal().getValue();
 		}
 	}
 
@@ -154,7 +165,7 @@ public class TradeController implements TradeViewListener {
 		ExchangeTime exchangeTime = new ExchangeTime(exchange);
 		timeUpdater = new Timer(1000, e -> {
 			if (exchangeTime.withinTradingHours()) {
-				view.info().setTime(exchangeTime.getNowTime("HH:mm"), Color.GREEN);
+				view.info().setTime(exchangeTime.getNowTime("HH:mm"), Color.GREEN.darker());
 			} else {
 				view.info().setTime(exchangeTime.getNowTime("HH:mm"));
 			}
@@ -180,17 +191,19 @@ public class TradeController implements TradeViewListener {
 	}
 
 	private void tradeContextListener(TradeContext tradeContext) {
-		TradeService tradeService = new TradeService();
-		ExtendedTradeContext ctx = tradeService.getExtendedTradeContext(tradeContext, positionType);
+		TradeService         tradeService = new TradeService();
+		ExtendedTradeContext ctx          = tradeService.getExtendedTradeContext(tradeContext, positionType);
 
-		double high = ctx.getDayHigh();
-		double low = ctx.getDayLow();
-		double spread = ctx.getSpread();
-		double maxRange = ctx.getMaxRange();
+		if (ctx == null) return;
+
+		double high                 = ctx.getDayHigh();
+		double low                  = ctx.getDayLow();
+		double spread               = ctx.getSpread();
+		double maxRange             = ctx.getMaxRange();
 		double maxRangePassedForPos = ctx.getMaxRangePassedForPos();
-		double maxRangeLeftForPos = ctx.getMaxRangeLeftForPos();
-		double price = tradeContext.getPrice();
-		double slippage = ctx.getSlippage();
+		double maxRangeLeftForPos   = ctx.getMaxRangeLeftForPos();
+		double price                = tradeContext.getPrice();
+		double slippage             = ctx.getSlippage();
 
 		view.info().setPrice(fmt(price));
 		view.info().setMaxRangePassed(fmt(maxRangePassedForPos));
@@ -236,6 +249,12 @@ public class TradeController implements TradeViewListener {
 			if (tradeData.hasError()) {
 				view.trafficLight().setRed();
 				view.messagePanel().show(tradeData.getTradeError(), Color.RED.darker());
+				view.info().setBe(null);
+				view.info().setRisk(null);
+				view.info().setRR(null);
+				view.info().setSl(null);
+				view.info().setTp(null);
+				view.info().setOut(null);
 				goalWarning(false);
 			} else if (goalToPass > maxRange) {
 				goalWarning(true);

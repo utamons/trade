@@ -30,4 +30,8 @@ public class MessagePanel extends JPanel {
 		msg.setText(message);
 		msg.setForeground(color);
 	}
+
+	public void clear() {
+		msg.setText("");
+	}
 }

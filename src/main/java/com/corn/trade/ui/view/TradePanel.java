@@ -6,12 +6,13 @@ import com.corn.trade.type.PositionType;
 import com.corn.trade.ui.component.*;
 import com.corn.trade.ui.component.position.PositionPanel;
 import com.corn.trade.ui.controller.TradeController;
+import com.corn.trade.ui.controller.TradeView;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
-public class TradePanel extends BasePanel {
+public class TradePanel extends BasePanel implements TradeView {
 
 	public static final int                TEXT_FIELD_SIZE = 10;
 	private final       LabeledComboBox    exchangeBox;
@@ -39,7 +40,7 @@ public class TradePanel extends BasePanel {
 		assetLookup = new LabeledLookup("Asset:", assets, spacing, fieldHeight, controller::onAssetChange);
 
 		final List<String> exchanges = assetService.getExchangeNames();
-		controller.onExchangeChange(exchanges.get(0));
+
 
 		exchangeBox = new LabeledComboBox("Exchange:", exchanges, spacing, fieldHeight, controller::onExchangeChange);
 
@@ -49,7 +50,6 @@ public class TradePanel extends BasePanel {
 		                                                  fieldHeight,
 		                                                  (positionType) -> controller.onPositionChange(PositionType.fromString(
 				                                                  positionType)));
-
 
 		LabeledComboBox estimationBox = new LabeledComboBox("Estimation:",
 		                                                    EstimationType.getValues(),
@@ -89,7 +89,7 @@ public class TradePanel extends BasePanel {
 		                                 .withVPadding(20)
 		                                 .withHPadding(5)
 		                                 .withVgap(20)
-		                                 .withHgap(50)
+		                                 .withHgap(42)
 		                                 .withHSpacing(5)
 		                                 .build();
 
@@ -112,37 +112,54 @@ public class TradePanel extends BasePanel {
 		position.addPosition("MSFT");
 
 		this.add(panel, BorderLayout.NORTH);
+
+		controller.onExchangeChange(exchanges.get(0));
+		controller.onPositionChange(PositionType.LONG);
+		controller.onEstimationTypeChange(EstimationType.fromString(EstimationType.getValues().get(0)));
 	}
 
+	@Override
 	public LabeledDoubleField techSL() {
 		return techSL;
 	}
 
+	@Override
 	public LabeledDoubleField level() {
 		return level;
 	}
 
+	@Override
 	public LabeledDoubleField goal() {
 		return goal;
 	}
 
+	@Override
 	public LabeledLookup assetLookup() {
 		return assetLookup;
 	}
 
+	@Override
 	public InfoPanel info() {
 		return info;
 	}
 
+	@Override
 	public LabeledComboBox exchangeBox() {
 		return exchangeBox;
 	}
 
+	@Override
 	public MessagePanel messagePanel() {
 		return messagePanel;
 	}
 
+	@Override
 	public TrafficLight trafficLight() {
 		return trafficLight;
+	}
+
+	@Override
+	public Component asComponent() {
+		return this;
 	}
 }
