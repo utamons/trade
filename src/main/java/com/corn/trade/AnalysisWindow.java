@@ -1,9 +1,9 @@
 package com.corn.trade;
 
-import com.corn.trade.component.ColorfulTextWindow;
-import com.corn.trade.component.panel.ParamPanel;
-import com.corn.trade.trade.analysis.TradeCalc;
-import com.corn.trade.trade.analysis.data.TradeData;
+import com.corn.trade.ui.component.ColorfulTextWindow;
+import com.corn.trade.ui.view.ParamPanel;
+import com.corn.trade.service.TradeCalc;
+import com.corn.trade.model.TradeData;
 
 import javax.swing.*;
 import java.awt.*;

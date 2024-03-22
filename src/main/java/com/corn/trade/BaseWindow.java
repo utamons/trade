@@ -1,7 +1,7 @@
 package com.corn.trade;
 
-import com.corn.trade.component.CustomTitleBar;
-import com.corn.trade.component.ResizeListener;
+import com.corn.trade.ui.component.CustomTitleBar;
+import com.corn.trade.ui.component.ResizeListener;
 import com.corn.trade.util.LiquibaseRunner;
 import com.github.weisj.darklaf.LafManager;
 import com.github.weisj.darklaf.theme.*;

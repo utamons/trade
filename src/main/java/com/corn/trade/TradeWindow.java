@@ -1,6 +1,7 @@
 package com.corn.trade;
 
-import com.corn.trade.component.panel.TradePanel;
+import com.corn.trade.ui.view.TradePanel;
+import com.corn.trade.ui.controller.TradeController;
 import com.corn.trade.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,12 +10,12 @@ import javax.swing.*;
 import java.awt.*;
 
 public class TradeWindow extends BaseWindow {
-	private static final  int    PREF_HEIGHT  = 400;
+	private static final  int    PREF_HEIGHT  = 850;
 	private static final  int    PREF_WIDTH   = 330;
 	private static final Logger log          = LoggerFactory.getLogger(TradeWindow.class);
 
 	public TradeWindow(String[] args) {
-		super(args, "Trade", new Dimension(350, 800));
+		super(args, "Trade", new Dimension(350, PREF_HEIGHT));
 	}
 
 	public static void main(String[] args) {
@@ -28,7 +29,8 @@ public class TradeWindow extends BaseWindow {
 	protected void initializeComponents() {
 		TradePanel tradePanel;
 		try {
-			tradePanel = new TradePanel(new Dimension(PREF_WIDTH, PREF_HEIGHT * 2), new Dimension(0, 0), 5, FIELD_HEIGHT);
+			TradeController tradeController = new TradeController();
+			tradePanel = new TradePanel(tradeController, new Dimension(PREF_WIDTH, PREF_HEIGHT), new Dimension(0, 0), 5, FIELD_HEIGHT);
 		} catch (Exception e) {
 			Util.showErrorDlg(frame, "Error initializing TradePanel - " + e.getMessage(), true);
 			throw new RuntimeException(e);

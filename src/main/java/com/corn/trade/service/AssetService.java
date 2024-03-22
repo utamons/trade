@@ -22,12 +22,12 @@ public class AssetService {
 		return exchangeRepo.findAll().stream().sorted().toList();
 	}
 
-	public List<Asset> getTickers() {
+	public List<Asset> getAssets() {
 		return assetRepo.findAll().stream().sorted().toList();
 	}
 
-	public List<String> getTickerNames() {
-		return getTickers().stream().map(Asset::getName).toList();
+	public List<String> getAssetNames() {
+		return getAssets().stream().map(Asset::getName).toList();
 	}
 
 	public List<String> getExchangeNames() {

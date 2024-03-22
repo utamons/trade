@@ -1,6 +1,6 @@
 package com.corn.trade.broker;
 
-import com.corn.trade.trade.analysis.data.TradeContext;
+import com.corn.trade.model.TradeContext;
 
 import java.util.HashMap;
 import java.util.function.Consumer;
