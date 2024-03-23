@@ -57,6 +57,7 @@ public class BrokerFactory {
 						brokers.remove(key);
 						disconnectionTrigger.trigger();
 					});
+					broker.setName(key);
 					log.debug("Created new IBKR broker for {}, exchange {}", assetName, exchangeName);
 					return broker;
 				} catch (IbkrException e) {
@@ -70,9 +71,5 @@ public class BrokerFactory {
 
 	public static String createKey(String brokerName, String assetName, String exchangeName) {
 		return brokerName + "/" + assetName + "/" + exchangeName;
-	}
-
-	static void clearCache() {
-		brokers.clear();
 	}
 }

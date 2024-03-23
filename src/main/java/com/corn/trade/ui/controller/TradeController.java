@@ -20,6 +20,7 @@ import com.corn.trade.util.Util;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.HashMap;
 import java.util.List;
 
 import static com.corn.trade.BaseWindow.ORDER_LUFT;
@@ -37,9 +38,9 @@ public class TradeController implements TradeViewListener {
 	private       EstimationType estimationType;
 	private       Exchange       exchange;
 	private       Broker         currentBroker;
-	private       Timer          timeUpdater = null;
-
-	private int tradeContextId = 0;
+	private       Timer                      timeUpdater    = null;
+	private final HashMap<String,TradeState> tradeStateMap  = new HashMap<>();
+	private       int                        tradeContextId = 0;
 
 	public TradeController() {
 		this.assetService = new AssetService();
@@ -53,8 +54,6 @@ public class TradeController implements TradeViewListener {
 	public void onExchangeChange(String exchangeName) {
 		try {
 			exchange = assetService.getExchange(exchangeName);
-			view.assetLookup().clear();
-			onAssetChange(null);
 
 			// Stop any previous time updater to prevent multiple timers running
 			if (timeUpdater != null) {
@@ -79,6 +78,7 @@ public class TradeController implements TradeViewListener {
 				 */
 				currentBroker.cancelTradeContext(tradeContextId);
 			}
+			saveTradeState();
 
 			view.info().clear();
 			view.goal().setValue(null);
@@ -92,7 +92,10 @@ public class TradeController implements TradeViewListener {
 			goalWarning(false);
 
 			if (assetName == null || assetName.isBlank()) {
+				view.exchangeBox().setEnabled(true);
 				return;
+			} else {
+				view.exchangeBox().setEnabled(false);
 			}
 
 			currentBroker = BrokerFactory.getBroker(exchange.getBroker(), assetName, exchange.getName(), () -> {
@@ -100,6 +103,7 @@ public class TradeController implements TradeViewListener {
 				view.assetLookup().clear();
 				view.info().clear();
 			});
+			restoreTradeState();
 
 			// Get the actual asset object from the asset name (and save it in the database if it doesn't exist)
 			Asset asset = assetService.getAsset(assetName, view.exchangeBox().getSelectedItem(), currentBroker);
@@ -267,6 +271,50 @@ public class TradeController implements TradeViewListener {
 				view.trafficLight().setGreen();
 				view.messagePanel().show("Good to go", Color.GREEN.darker());
 			}
+		}
+	}
+
+	private void saveTradeState() {
+		if (currentBroker == null) {
+			return;
+		}
+		TradeState tradeState = new TradeState(positionType, estimationType, level, techStopLoss, goal);
+		tradeStateMap.put(currentBroker.getName(), tradeState);
+	}
+
+	private void restoreTradeState() {
+		TradeState tradeState = tradeStateMap.get(currentBroker.getName());
+		if (tradeState == null) {
+			return;
+		}
+
+		view.positionBox().setSelectedItem(tradeState.positionType.toString());
+		view.estimationBox().setSelectedItem(tradeState.estimationType.toString());
+		view.level().setValue(tradeState.level);
+		view.techSL().setValue(tradeState.techStopLoss);
+		view.goal().setValue(tradeState.goal);
+		level = tradeState.level;
+		techStopLoss = tradeState.techStopLoss;
+		goal = tradeState.goal;
+		positionType = tradeState.positionType;
+		estimationType = tradeState.estimationType;
+
+		view.techSL().setControlCheckBoxState(tradeState.techStopLoss != null);
+	}
+
+	private static class TradeState {
+		PositionType   positionType;
+		EstimationType estimationType;
+		Double         level;
+		Double         techStopLoss;
+		Double         goal;
+
+		TradeState(PositionType positionType, EstimationType estimationType, Double level, Double techStopLoss, Double goal) {
+			this.positionType = positionType;
+			this.estimationType = estimationType;
+			this.level = level;
+			this.techStopLoss = techStopLoss;
+			this.goal = goal;
 		}
 	}
 }

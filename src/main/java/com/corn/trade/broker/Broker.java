@@ -14,20 +14,29 @@ import java.util.function.Consumer;
 import static com.corn.trade.util.Util.round;
 
 public abstract class Broker {
-	private static final Logger log = LoggerFactory.getLogger(Broker.class);
+	public static final    int                                      BARS_FOR_ADR      = 10;
+	protected static final int                                      ADR_BARS          = 20;
+	private static final   Logger                                   log               =
+			LoggerFactory.getLogger(Broker.class);
+	protected final        HashMap<Integer, Consumer<TradeContext>> contextListeners  = new HashMap<>();
+	protected              List<Bar>                                adrBarList        = new java.util.ArrayList<>();
+	protected              String                                   exchangeName;
+	protected              Double                                   adr;
+	protected              Double                                   ask;
+	protected              Double                                   bid;
+	protected              Double                                   price;
+	protected              Double                                   dayHigh;
+	protected              Double                                   dayLow;
+	protected              int                                      contextListenerId = 0;
+	private                String                                   name;
 
-	public static final    int       BARS_FOR_ADR             = 10;
-	protected static final int       ADR_BARS                 = 20;
-	protected final HashMap<Integer, Consumer<TradeContext>> contextListeners = new HashMap<>();
-	protected              List<Bar> adrBarList               = new java.util.ArrayList<>(ADR_BARS);
-	protected              String    exchangeName;
-	protected              Double    adr;
-	protected              Double    ask;
-	protected              Double    bid;
-	protected              Double    price;
-	protected              Double    dayHigh;
-	protected              Double    dayLow;
-	protected              int       contextListenerId        = 0;
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
 
 	public String getExchangeName() {
 		return exchangeName;
@@ -48,15 +57,18 @@ public abstract class Broker {
 
 	protected abstract void cancelMarketData();
 
-	protected void notifyTradeContext() {
+	protected void notifyTradeContext() throws BrokerException {
 		calculateFilteredAdr();
 		if (contextListeners.isEmpty()) return;
 		TradeContext context = createTradeContext();
 		contextListeners.values().forEach(listener -> listener.accept(context));
 	}
 
-	private void calculateFilteredAdr() {
+	private void calculateFilteredAdr() throws BrokerException {
 		if (adr != null) return;
+		if (adrBarList.isEmpty()) {
+			throw new BrokerException("No ADR data available.");
+		}
 
 		final double ADR_TOLERANCE_PERCENTAGE = 40.0;
 
@@ -66,7 +78,7 @@ public abstract class Broker {
 
 		double initialAverage = rangeList.stream().mapToDouble(Double::doubleValue).average().orElse(0);
 
-		double toleranceValue           = initialAverage * (ADR_TOLERANCE_PERCENTAGE / 100);
+		double toleranceValue = initialAverage * (ADR_TOLERANCE_PERCENTAGE / 100);
 
 		List<Double> filteredList =
 				rangeList.stream().filter(value -> Math.abs(value - initialAverage) <= toleranceValue).toList();
@@ -79,7 +91,8 @@ public abstract class Broker {
 
 		log.debug("Initial ADR: {}", round(initialAverage));
 		log.debug("ADR: {}", adr);
-		log.debug("ADR Range: {}", String.join(",", getLastSome(filteredList).stream().map(Util::round).map(Object::toString).toList()));
+		log.debug("ADR Range: {}",
+		          String.join(",", getLastSome(filteredList).stream().map(Util::round).map(Object::toString).toList()));
 	}
 
 	protected TradeContext createTradeContext() {

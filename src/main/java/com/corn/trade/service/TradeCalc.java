@@ -322,15 +322,8 @@ public class TradeCalc {
 		if (tradeData.getTechStopLoss() != null) {
 			return tradeData.getTechStopLoss();
 		}
-		double stopLoss = isLong() ? breakEven - risk : breakEven + risk;
 
-		if (estimationType() == EstimationType.MIN_STOP_LOSS) {
-			double minStopLoss =
-					isLong() ? getTradeData().getLevel() - ORDER_LUFT : getTradeData().getLevel() + ORDER_LUFT;
-			return isLong() ? Math.max(stopLoss, minStopLoss) : Math.min(stopLoss, minStopLoss);
-		}
-
-		return stopLoss;
+		return isLong() ? breakEven - risk : breakEven + risk;
 	}
 
 	private String areRiskLimitsFailed() {
@@ -377,10 +370,6 @@ public class TradeCalc {
 
 	private int maxQuantity() {
 		return (int) (MAX_VOLUME / reference);
-	}
-
-	private EstimationType estimationType() {
-		return tradeData.getEstimationType();
 	}
 
 	private double slippage() {

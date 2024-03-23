@@ -90,7 +90,11 @@ public class IbkrBroker extends Broker {
 				if (tickType == TickType.LAST) {
 					IbkrBroker.this.price = price;
 				}
-				notifyTradeContext();
+				try {
+					notifyTradeContext();
+				} catch (BrokerException e) {
+					log.error("{}", e.getMessage());
+				}
 			}
 		};
 		dayHighLowDataHandler = new IHistoricalDataHandler() {
@@ -102,7 +106,11 @@ public class IbkrBroker extends Broker {
 
 			@Override
 			public void historicalDataEnd() {
-				notifyTradeContext();
+				try {
+					notifyTradeContext();
+				} catch (BrokerException e) {
+					log.error("{}", e.getMessage());
+				}
 			}
 		};
 
@@ -123,7 +131,11 @@ public class IbkrBroker extends Broker {
 
 			@Override
 			public void historicalDataEnd() {
-				notifyTradeContext();
+				try {
+					notifyTradeContext();
+				} catch (BrokerException e) {
+					log.error("{}", e.getMessage());
+				}
 			}
 		};
 	}

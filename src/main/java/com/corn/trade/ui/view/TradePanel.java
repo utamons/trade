@@ -22,6 +22,9 @@ public class TradePanel extends BasePanel implements TradeView {
 	private final       LabeledDoubleField level;
 	private final       LabeledDoubleField techSL;
 	private final       TrafficLight       trafficLight;
+	private final       LabeledComboBox    positionBox;
+	private final       LabeledComboBox    estimationBox;
+
 	public TradePanel(TradeController controller, Dimension maxSize, Dimension minSize, int spacing, int fieldHeight) {
 		super(maxSize, minSize);
 
@@ -43,19 +46,18 @@ public class TradePanel extends BasePanel implements TradeView {
 
 		exchangeBox = new LabeledComboBox("Exchange:", exchanges, spacing, fieldHeight, controller::onExchangeChange);
 
-		LabeledComboBox positionBox = new LabeledComboBox("Position:",
-		                                                  PositionType.getValues(),
-		                                                  spacing,
-		                                                  fieldHeight,
-		                                                  (positionType) -> controller.onPositionChange(PositionType.fromString(
-				                                                  positionType)));
+		positionBox = new LabeledComboBox("Position:",
+		                                  PositionType.getValues(),
+		                                  spacing,
+		                                  fieldHeight,
+		                                  (positionType) -> controller.onPositionChange(PositionType.fromString(positionType)));
 
-		LabeledComboBox estimationBox = new LabeledComboBox("Estimation:",
-		                                                    EstimationType.getValues(),
-		                                                    spacing,
-		                                                    fieldHeight,
-		                                                    (estimationType) -> controller.onEstimationTypeChange(
-				                                                    EstimationType.fromString(estimationType)));
+		estimationBox = new LabeledComboBox("Estimation:",
+		                                    EstimationType.getValues(),
+		                                    spacing,
+		                                    fieldHeight,
+		                                    (estimationType) -> controller.onEstimationTypeChange(EstimationType.fromString(
+				                                    estimationType)));
 
 		level = new LabeledDoubleField("Level:", TEXT_FIELD_SIZE, spacing, fieldHeight, false, controller::onLevelChange);
 
@@ -115,6 +117,16 @@ public class TradePanel extends BasePanel implements TradeView {
 		controller.onExchangeChange(exchanges.get(0));
 		controller.onPositionChange(PositionType.LONG);
 		controller.onEstimationTypeChange(EstimationType.fromString(EstimationType.getValues().get(0)));
+	}
+
+	@Override
+	public LabeledComboBox positionBox() {
+		return positionBox;
+	}
+
+	@Override
+	public LabeledComboBox estimationBox() {
+		return estimationBox;
 	}
 
 	@Override

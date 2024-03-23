@@ -11,6 +11,8 @@ public interface TradeView {
 	LabeledLookup assetLookup();
 	InfoPanel info();
 	LabeledComboBox exchangeBox();
+	LabeledComboBox positionBox();
+	LabeledComboBox estimationBox();
 	MessagePanel messagePanel();
 	TrafficLight trafficLight();
 	Component asComponent();
