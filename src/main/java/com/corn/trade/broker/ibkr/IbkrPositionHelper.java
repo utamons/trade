@@ -9,13 +9,13 @@ import com.ib.controller.ApiController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class PositionHelper {
+class IbkrPositionHelper {
 
-	public static final Logger                log = LoggerFactory.getLogger(PositionHelper.class);
+	public static final Logger                log = LoggerFactory.getLogger(IbkrPositionHelper.class);
 	private final       IbkrConnectionHandler ibkrConnectionHandler;
 	private final       IbkrBroker            ibkrBroker;
 
-	public PositionHelper(IbkrConnectionHandler ibkrConnectionHandler, IbkrBroker ibkrBroker) {
+	public IbkrPositionHelper(IbkrConnectionHandler ibkrConnectionHandler, IbkrBroker ibkrBroker) {
 		this.ibkrConnectionHandler = ibkrConnectionHandler;
 		this.ibkrBroker = ibkrBroker;
 	}
@@ -52,7 +52,7 @@ class PositionHelper {
 
 				ibkrConnectionHandler.controller().placeOrModifyOrder(lookedUpContract,
 				                                                      closeOrder,
-				                                                      new OrderHandler(lookedUpContract, closeOrder, OrderAction.DROP_ALL, pos, positionType));
+				                                                      new IbkrOrderHandler(lookedUpContract, closeOrder, OrderAction.DROP_ALL, pos, positionType));
 				log.info("Placed DROP ALL id {} {}, qtt: {}", closeOrder.orderId(), contract.symbol(), pos);
 			}
 

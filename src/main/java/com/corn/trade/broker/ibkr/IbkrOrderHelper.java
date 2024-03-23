@@ -12,12 +12,12 @@ import java.util.List;
 
 import static com.corn.trade.util.Util.round;
 
-class OrderHelper {
+class IbkrOrderHelper {
 
-	private static final Logger                log = org.slf4j.LoggerFactory.getLogger(OrderHelper.class);
+	private static final Logger                log = org.slf4j.LoggerFactory.getLogger(IbkrOrderHelper.class);
 	private final        IbkrConnectionHandler ibkrConnectionHandler;
 
-	public OrderHelper(IbkrConnectionHandler ibkrConnectionHandler) {
+	public IbkrOrderHelper(IbkrConnectionHandler ibkrConnectionHandler) {
 		this.ibkrConnectionHandler = ibkrConnectionHandler;
 	}
 
@@ -30,8 +30,7 @@ class OrderHelper {
 	                       Double breakEvenPrice,
 	                       PositionType positionType) {
 		if (!ibkrConnectionHandler.isConnected()) {
-			log.error("Not connected");
-			return;
+			throw new IbkrException("IBKR not connected");
 		}
 
 		Order parent = new Order();
@@ -69,11 +68,11 @@ class OrderHelper {
 
 		ibkrConnectionHandler.controller().placeOrModifyOrder(contractDetails.contract(),
 		                                                      parent,
-		                                                      new OrderHandler(contractDetails.contract(),
-		                                 parent,
-		                                 OrderAction.MAIN,
-		                                 quantityDecimal,
-		                                 positionType));
+		                                                      new IbkrOrderHandler(contractDetails.contract(),
+		                                                                           parent,
+		                                                                           OrderAction.MAIN,
+		                                                                           quantityDecimal,
+		                                                                           positionType));
 
 		if (stop != null) {
 			log.info("Placed main {} {} {}, STP: {}, LMT: {}, QTT: {}, SL: {}, TP: {}, BE: {}",
@@ -103,11 +102,11 @@ class OrderHelper {
 
 		ibkrConnectionHandler.controller().placeOrModifyOrder(contractDetails.contract(),
 		                                                      takeProfit,
-		                                                      new OrderHandler(contractDetails.contract(),
-		                                 takeProfit,
-		                                 OrderAction.TAKE_PROFIT,
-		                                 quantityDecimal,
-		                                 positionType));
+		                                                      new IbkrOrderHandler(contractDetails.contract(),
+		                                                                           takeProfit,
+		                                                                           OrderAction.TAKE_PROFIT,
+		                                                                           quantityDecimal,
+		                                                                           positionType));
 
 		log.info("Placed TP id {} {} {}",
 		         takeProfit.orderId(),
@@ -116,11 +115,11 @@ class OrderHelper {
 
 		ibkrConnectionHandler.controller().placeOrModifyOrder(contractDetails.contract(),
 		                                                      stopLoss,
-		                                                      new OrderHandler(contractDetails.contract(),
-		                                 stopLoss,
-		                                 OrderAction.STOP_LOSS,
-		                                 quantityDecimal,
-		                                 positionType));
+		                                                      new IbkrOrderHandler(contractDetails.contract(),
+		                                                                           stopLoss,
+		                                                                           OrderAction.STOP_LOSS,
+		                                                                           quantityDecimal,
+		                                                                           positionType));
 
 		log.info("Placed SL id {} {} {}",
 		         stopLoss.orderId(),
@@ -128,10 +127,9 @@ class OrderHelper {
 		         stopLossPrice);
 	}
 
-	public void dropAll(PositionHelper positionHelper) {
+	public void dropAll(IbkrPositionHelper ibkrPositionHelper) {
 		if (!ibkrConnectionHandler.isConnected()) {
-			log.error("Not connected");
-			return;
+			throw new IbkrException("IBKR not connected");
 		}
 
 		log.info("Dropping all orders");
@@ -155,7 +153,7 @@ class OrderHelper {
 						log.info("Dropping order {}", order.orderId());
 					});
 				}
-				positionHelper.dropAll();
+				ibkrPositionHelper.dropAll();
 			}
 
 			@Override

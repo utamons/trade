@@ -29,23 +29,31 @@ import static com.corn.trade.util.Util.round;
 
 
 public class TradeController implements TradeViewListener {
-	private final AssetService assetService;
-	private       TradeView    view;
-	private       Double       level;
-	private       Double         techStopLoss;
-	private       Double         goal;
-	private       PositionType   positionType;
-	private       EstimationType estimationType;
-	private       Exchange       exchange;
-	private       Broker         currentBroker;
-	private       Timer                      timeUpdater    = null;
-	private final HashMap<String,TradeState> tradeStateMap  = new HashMap<>();
-	private       int                        tradeContextId = 0;
+	public static final int                         SEND_ORDER_DELAY = 3000;
+	private final       AssetService                assetService;
+	private final       HashMap<String, TradeState> tradeStateMap    = new HashMap<>();
+	private final Timer lockButtonsTimer;
+	private             TradeView                   view;
+	private             Double                      level;
+	private             Double                      techStopLoss;
+	private             Double                      goal;
+	private             PositionType                positionType;
+	private             EstimationType              estimationType;
+	private             Exchange                    exchange;
+	private             Broker                      currentBroker;
+	private             Timer                       timeUpdater      = null;
+	private             int                         tradeContextId   = 0;
+	private             boolean                     locked           = false;
+	private             boolean                     orderClean       = false;
+	private             TradeData                   tradeData;
 
 	public TradeController() {
 		this.assetService = new AssetService();
+		lockButtonsTimer = new Timer(SEND_ORDER_DELAY, e -> checkButtons());
+		lockButtonsTimer.setRepeats(false);
 	}
 
+	@Override
 	public void setView(TradeView view) {
 		this.view = view;
 	}
@@ -106,7 +114,8 @@ public class TradeController implements TradeViewListener {
 			restoreTradeState();
 
 			// Get the actual asset object from the asset name (and save it in the database if it doesn't exist)
-			Asset asset = assetService.getAsset(assetName, view.exchangeBox().getSelectedItem(), currentBroker);
+			Asset        asset        =
+					assetService.getAsset(assetName, view.exchangeBox().getSelectedItem(), currentBroker);
 			String       brokerName   = asset.getExchange().getBroker();
 			String       exchangeName = asset.getExchange().getName();
 			List<String> assets       = assetService.getAssetNames();
@@ -127,6 +136,8 @@ public class TradeController implements TradeViewListener {
 			view.messagePanel().show(e.getMessage(), Color.RED);
 			view.assetLookup().clear();
 		}
+		orderClean = false;
+		checkButtons();
 	}
 
 	@Override
@@ -137,6 +148,8 @@ public class TradeController implements TradeViewListener {
 		view.goal().setValue(null);
 		goal = null;
 		techStopLoss = null;
+		orderClean = false;
+		checkButtons();
 	}
 
 	@Override
@@ -150,21 +163,31 @@ public class TradeController implements TradeViewListener {
 			view.goal().setEditable(true);
 			goal = view.goal().getValue();
 		}
+		orderClean = false;
+		checkButtons();
 	}
 
 	@Override
 	public void onLevelChange(Double level) {
 		this.level = level;
+		orderClean = false;
+		checkButtons();
 	}
 
 	@Override
 	public void onTechStopLossChange(Double techStopLoss) {
 		this.techStopLoss = techStopLoss;
+		orderClean = false;
+		checkButtons();
 	}
 
 	@Override
 	public void onGoalChange(Double goal) {
 		this.goal = goal;
+		if (estimationType != EstimationType.MIN_GOAL) {
+			orderClean = false;
+			checkButtons();
+		}
 	}
 
 	private void startTimeUpdater(Exchange exchange) {
@@ -178,6 +201,18 @@ public class TradeController implements TradeViewListener {
 		});
 		timeUpdater.setInitialDelay(0);
 		timeUpdater.start();
+	}
+
+	private boolean workTime() {
+		if (exchange == null) {
+			return false;
+		}
+		ExchangeTime exchangeTime = new ExchangeTime(exchange);
+		return exchangeTime.withinTradingHours() && exchangeTime.withinWeekDays();
+	}
+
+	private boolean isOrderClean() {
+		return !locked && orderClean && workTime();
 	}
 
 	private void goalWarning(boolean on) {
@@ -217,17 +252,17 @@ public class TradeController implements TradeViewListener {
 		view.info().setSpread(fmt(spread));
 
 		if (level != null) {
-			TradeData tradeData = TradeData.aTradeData()
-			                               .withEstimationType(estimationType)
-			                               .withPositionType(positionType)
-			                               .withPowerReserve(powerReserve())
-			                               .withPrice(price)
-			                               .withLevel(level)
-			                               .withTechStopLoss(techStopLoss)
-			                               .withSlippage(slippage)
-			                               .withGoal(goal)
-			                               .withLuft(ORDER_LUFT)
-			                               .build();
+			tradeData = TradeData.aTradeData()
+			                     .withEstimationType(estimationType)
+			                     .withPositionType(positionType)
+			                     .withPowerReserve(powerReserve())
+			                     .withPrice(price)
+			                     .withLevel(level)
+			                     .withTechStopLoss(techStopLoss)
+			                     .withSlippage(slippage)
+			                     .withGoal(goal)
+			                     .withLuft(ORDER_LUFT)
+			                     .build();
 			try {
 				tradeData = new TradeCalc(tradeData).calculate();
 			} catch (Exception e) {
@@ -262,15 +297,19 @@ public class TradeController implements TradeViewListener {
 				view.info().setTp(null);
 				view.info().setOut(null);
 				goalWarning(false);
+				orderClean = false;
 			} else if (goalToPass > maxRange) {
 				goalWarning(true);
 				view.trafficLight().setGreen();
 				view.messagePanel().show("Goal is too far", Color.ORANGE.darker());
+				orderClean = true;
 			} else {
 				goalWarning(false);
 				view.trafficLight().setGreen();
 				view.messagePanel().show("Good to go", Color.GREEN.darker());
+				orderClean = true;
 			}
+			checkButtons();
 		}
 	}
 
@@ -302,6 +341,56 @@ public class TradeController implements TradeViewListener {
 		view.techSL().setControlCheckBoxState(tradeState.techStopLoss != null);
 	}
 
+	@Override
+	public void onLock() {
+		locked = !locked;
+		view.lockButton().setText(locked ? "Unlock" : "Lock");
+		view.stopLimitButton().setEnabled(!locked && orderClean);
+		view.limitButton().setEnabled(!locked && orderClean);
+	}
+
+	private void checkButtons() {
+		view.stopLimitButton().setEnabled(isOrderClean());
+		view.limitButton().setEnabled(isOrderClean());
+	}
+
+	@Override
+	public void onLimit() {
+		if (tradeData == null) {
+			return;
+		}
+		pauseButtons();
+		TradeData order = tradeData.toBuilder().withOrderStop(null).build();
+		try {
+			currentBroker.placeOrder(order);
+			view.messagePanel().show("Limit order sent", Color.GREEN.darker());
+		} catch (BrokerException e) {
+			view.messagePanel().show(e.getMessage(), Color.RED);
+		}
+	}
+
+	@Override
+	public void onStopLimit() {
+		if (tradeData == null) {
+			return;
+		}
+		pauseButtons();
+		try {
+			currentBroker.placeOrder(tradeData);
+			view.messagePanel().show("Stop-Limit order sent", Color.GREEN.darker());
+		} catch (BrokerException e) {
+			view.messagePanel().show(e.getMessage(), Color.RED);
+		}
+
+	}
+
+	private void pauseButtons() {
+		view.stopLimitButton().setEnabled(false);
+		view.limitButton().setEnabled(false);
+		lockButtonsTimer.start();
+	}
+
+
 	private static class TradeState {
 		PositionType   positionType;
 		EstimationType estimationType;
@@ -309,7 +398,11 @@ public class TradeController implements TradeViewListener {
 		Double         techStopLoss;
 		Double         goal;
 
-		TradeState(PositionType positionType, EstimationType estimationType, Double level, Double techStopLoss, Double goal) {
+		TradeState(PositionType positionType,
+		           EstimationType estimationType,
+		           Double level,
+		           Double techStopLoss,
+		           Double goal) {
 			this.positionType = positionType;
 			this.estimationType = estimationType;
 			this.level = level;

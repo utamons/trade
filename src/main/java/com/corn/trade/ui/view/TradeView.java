@@ -2,6 +2,7 @@ package com.corn.trade.ui.view;
 
 import com.corn.trade.ui.component.*;
 
+import javax.swing.*;
 import java.awt.*;
 
 public interface TradeView {
@@ -15,5 +16,8 @@ public interface TradeView {
 	LabeledComboBox estimationBox();
 	MessagePanel messagePanel();
 	TrafficLight trafficLight();
+	JButton lockButton();
+	JButton stopLimitButton();
+	JButton limitButton();
 	Component asComponent();
 }

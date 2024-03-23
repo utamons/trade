@@ -2,9 +2,7 @@ package com.corn.trade.util;
 
 import com.corn.trade.entity.Exchange;
 
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 
 public class ExchangeTime {
@@ -31,7 +29,13 @@ public class ExchangeTime {
 	public boolean withinTradingHours() {
 		ZonedDateTime nowInExchangeTimeZone = nowInExchangeTZ();
 		LocalTime now = nowInExchangeTimeZone.toLocalTime();
+
 		return now.isAfter(startTrading) && now.isBefore(endTrading);
+	}
+	public boolean withinWeekDays() {
+		ZonedDateTime nowInExchangeTimeZone = nowInExchangeTZ();
+		return !nowInExchangeTimeZone.getDayOfWeek().equals(DayOfWeek.SATURDAY) &&
+		       !nowInExchangeTimeZone.getDayOfWeek().equals(DayOfWeek.SUNDAY);
 	}
 
 	public boolean afterTradingHours() {

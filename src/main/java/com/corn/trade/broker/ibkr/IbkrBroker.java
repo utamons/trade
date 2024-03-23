@@ -4,6 +4,7 @@ import com.corn.trade.broker.Broker;
 import com.corn.trade.broker.BrokerException;
 import com.corn.trade.entity.Exchange;
 import com.corn.trade.jpa.DBException;
+import com.corn.trade.model.TradeData;
 import com.corn.trade.service.AssetService;
 import com.corn.trade.type.TimeFrame;
 import com.corn.trade.util.ExchangeTime;
@@ -26,6 +27,8 @@ public class IbkrBroker extends Broker {
 	private              IHistoricalDataHandler adrDataHandler;
 	private              boolean                requestedMarketData = false;
 
+	private final IbkrOrderHelper ibkrOrderHelper;
+
 	public IbkrBroker(String ticker, String exchange, Trigger disconnectionListener) throws BrokerException {
 		log.debug("init start");
 
@@ -39,6 +42,8 @@ public class IbkrBroker extends Broker {
 		initHandlers();
 
 		initContract(ticker, exchange);
+
+		ibkrOrderHelper = new IbkrOrderHelper(ibkrConnectionHandler);
 
 		log.debug("init finish");
 	}
@@ -196,5 +201,22 @@ public class IbkrBroker extends Broker {
 		ibkrConnectionHandler.controller().cancelTopMktData(mktDataHandler);
 		ibkrConnectionHandler.controller().cancelHistoricalData(dayHighLowDataHandler);
 		requestedMarketData = false;
+	}
+
+	@Override
+	public void placeOrder(TradeData tradeData) throws BrokerException {
+		try {
+			ibkrOrderHelper.placeOrder(contractDetails,
+			                           tradeData.getQuantity(),
+			                           tradeData.getOrderStop(),
+			                           tradeData.getOrderLimit(),
+			                           tradeData.getTechStopLoss() ==
+			                           null ? tradeData.getStopLoss() : tradeData.getTechStopLoss(),
+			                           tradeData.getTakeProfit(),
+			                           tradeData.getBreakEven(),
+			                           tradeData.getPositionType());
+		} catch (IbkrException e) {
+			throw new BrokerException(e.getMessage());
+		}
 	}
 }

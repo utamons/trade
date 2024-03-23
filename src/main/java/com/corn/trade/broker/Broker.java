@@ -2,6 +2,7 @@ package com.corn.trade.broker;
 
 import com.corn.trade.model.Bar;
 import com.corn.trade.model.TradeContext;
+import com.corn.trade.model.TradeData;
 import com.corn.trade.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +57,8 @@ public abstract class Broker {
 	protected abstract void requestMarketData() throws BrokerException;
 
 	protected abstract void cancelMarketData();
+
+	public abstract void placeOrder(TradeData tradeData) throws BrokerException;
 
 	protected void notifyTradeContext() throws BrokerException {
 		calculateFilteredAdr();

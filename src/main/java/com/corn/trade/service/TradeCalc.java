@@ -353,11 +353,11 @@ public class TradeCalc {
 	}
 
 	private void fillOrder() {
-		orderStop = reference;
+		orderStop = reference + (isLong() ? tradeData.getLuft() : -tradeData.getLuft());
 		orderLimit = orderStop +
 		             (isLong() ? tradeData.getSlippage() + tradeData.getLuft() : -tradeData.getSlippage() -
 		                                                                         tradeData.getLuft());
-		takeProfit = isLong() ? reference + tradeData.getPowerReserve() : reference - tradeData.getPowerReserve();
+		takeProfit = isLong() ? orderLimit + tradeData.getPowerReserve() : orderLimit - tradeData.getPowerReserve();
 	}
 
 	private boolean isShort() {

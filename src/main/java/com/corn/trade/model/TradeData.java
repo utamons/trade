@@ -14,7 +14,7 @@ public class TradeData {
 	private final Double         slippage;
 	private final Double         goal;
 	private final Double         luft;
-	private final int            quantity;
+	private final long            quantity;
 	private final Double         orderLimit;
 	private final Double         orderStop;
 	private final Double         stopLoss;
@@ -91,7 +91,7 @@ public class TradeData {
 		return luft;
 	}
 
-	public double getQuantity() {
+	public long getQuantity() {
 		return quantity;
 	}
 
@@ -186,12 +186,12 @@ public class TradeData {
 				                     %s, %s,
 				                     Lvl: %.2f, Goal: %.2f, Pwr: %.2f, Price: %.2f, Slpg: %.2f
 				                     				                     
-				                     Params: Qtt: %d, SL: %.2f, BE: %.2f, TP: %.2f.
+				                     Params: Qtt: %d, SL: %.2f, BE: %.2f, TP: %.2f., Stop: %.2f, Limit: %.2f
 				                     Out: %.2f, %.2f%%
 				                     R/R - %.2f%%, Risk - %.2f, %.2f%%""",
 		                     positionType, estimationType,
 		                     level, goal, powerReserve, price, slippage,
-		                     quantity, stopLoss, breakEven, takeProfit,
+		                     quantity, stopLoss, breakEven, takeProfit, orderStop, orderLimit,
 		                     outputExpected, gain, riskRewardRatioPercent, risk, riskPercent);
 	}
 
@@ -205,7 +205,7 @@ public class TradeData {
 		private Double         slippage;
 		private Double         goal;
 		private Double         luft;
-		private int            quantity;
+		private long            quantity;
 		private Double         orderLimit;
 		private Double         orderStop;
 		private Double         stopLoss;
@@ -227,7 +227,7 @@ public class TradeData {
 			return this;
 		}
 
-		public Builder withQuantity(int quantity) {
+		public Builder withQuantity(long quantity) {
 			this.quantity = quantity;
 			return this;
 		}

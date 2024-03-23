@@ -5,7 +5,7 @@ import com.corn.trade.type.EstimationType;
 import com.corn.trade.type.PositionType;
 import com.corn.trade.ui.component.*;
 import com.corn.trade.ui.component.position.PositionPanel;
-import com.corn.trade.ui.controller.TradeController;
+import com.corn.trade.ui.controller.TradeViewListener;
 
 import javax.swing.*;
 import java.awt.*;
@@ -24,8 +24,11 @@ public class TradePanel extends BasePanel implements TradeView {
 	private final       TrafficLight       trafficLight;
 	private final       LabeledComboBox    positionBox;
 	private final       LabeledComboBox    estimationBox;
+	private final       JButton            lockBtn;
+	private final       JButton            stopLimitBtn;
+	private final       JButton            limitBtn;
 
-	public TradePanel(TradeController controller, Dimension maxSize, Dimension minSize, int spacing, int fieldHeight) {
+	public TradePanel(TradeViewListener controller, Dimension maxSize, Dimension minSize, int spacing, int fieldHeight) {
 		super(maxSize, minSize);
 
 		controller.setView(this);
@@ -75,14 +78,21 @@ public class TradePanel extends BasePanel implements TradeView {
 
 		RowPanel orderPanel = new RowPanel(20);
 
-		JButton lock      = new JButton("Lock");
-		JButton stopLimit = new JButton("Stop-Limit");
-		JButton limit     = new JButton("Limit");
+		lockBtn = new JButton("Lock");
+		lockBtn.addActionListener(e -> controller.onLock());
 
-		orderPanel.add(lock);
+		stopLimitBtn = new JButton("Stop-Limit");
+		stopLimitBtn.addActionListener(e -> controller.onStopLimit());
+		stopLimitBtn.setEnabled(false);
+
+		limitBtn = new JButton("Limit");
+		limitBtn.addActionListener(e -> controller.onLimit());
+		limitBtn.setEnabled(false);
+
+		orderPanel.add(lockBtn);
 		orderPanel.add(trafficLight);
-		orderPanel.add(stopLimit);
-		orderPanel.add(limit);
+		orderPanel.add(stopLimitBtn);
+		orderPanel.add(limitBtn);
 
 		PositionPanel position = new PositionPanel();
 		info = InfoPanel.InfoPanelBuilder.anInfoPanel()
@@ -167,6 +177,21 @@ public class TradePanel extends BasePanel implements TradeView {
 	@Override
 	public TrafficLight trafficLight() {
 		return trafficLight;
+	}
+
+	@Override
+	public JButton lockButton() {
+		return lockBtn;
+	}
+
+	@Override
+	public JButton stopLimitButton() {
+		return stopLimitBtn;
+	}
+
+	@Override
+	public JButton limitButton() {
+		return limitBtn;
 	}
 
 	@Override
