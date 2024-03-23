@@ -5,6 +5,7 @@ import com.corn.trade.broker.BrokerException;
 import com.corn.trade.entity.Exchange;
 import com.corn.trade.jpa.DBException;
 import com.corn.trade.service.AssetService;
+import com.corn.trade.type.TimeFrame;
 import com.corn.trade.util.ExchangeTime;
 import com.corn.trade.util.Trigger;
 import com.ib.client.*;
@@ -14,18 +15,15 @@ import com.ib.controller.ApiController.ITopMktDataHandler;
 import com.ib.controller.Bar;
 
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
 import java.util.List;
 
 public class IbkrBroker extends Broker {
-	public static final  int                    ADR_BARS            = 14;
 	private static final org.slf4j.Logger       log                 = org.slf4j.LoggerFactory.getLogger(IbkrBroker.class);
 	private final        IbkrConnectionHandler  ibkrConnectionHandler;
 	private              ContractDetails        contractDetails;
 	private              ITopMktDataHandler     mktDataHandler;
 	private              IHistoricalDataHandler dayHighLowDataHandler;
 	private              IHistoricalDataHandler adrDataHandler;
-	private              List<Double>           adrList             = new java.util.ArrayList<>(ADR_BARS);
 	private              boolean                requestedMarketData = false;
 
 	public IbkrBroker(String ticker, String exchange, Trigger disconnectionListener) throws BrokerException {
@@ -111,13 +109,20 @@ public class IbkrBroker extends Broker {
 		adrDataHandler = new IHistoricalDataHandler() {
 			@Override
 			public void historicalData(Bar bar) {
-				adrList.add(bar.high() - bar.low());
+				com.corn.trade.model.Bar tradeBar = com.corn.trade.model.Bar.BarBuilder.aBar()
+				                                                                       .withOpen(bar.open())
+				                                                                       .withClose(bar.close())
+				                                                                       .withHigh(bar.high())
+				                                                                       .withLow(bar.low())
+				                                                                       .withVolume(bar.volume().longValue())
+				                                                                       .withTime(bar.time())
+				                                                                       .withTimeFrame(TimeFrame.D1)
+				                                                                       .build();
+				adrBarList.add(tradeBar);
 			}
 
 			@Override
 			public void historicalDataEnd() {
-				adrList = Collections.unmodifiableList(adrList);
-				adr = adrList.stream().mapToDouble(Double::doubleValue).average().orElse(0);
 				notifyTradeContext();
 			}
 		};

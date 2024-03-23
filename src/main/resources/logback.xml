@@ -30,7 +30,7 @@
     </logger>
 
     <!-- Logger for com.corn.trade package -->
-    <logger name="com.corn.trade" level="INFO" additivity="false">
+    <logger name="com.corn.trade" level="DEBUG" additivity="false">
         <appender-ref ref="ROLLING"/>
         <appender-ref ref="STDOUT"/>
     </logger>
