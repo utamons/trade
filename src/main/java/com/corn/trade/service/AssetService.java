@@ -15,8 +15,18 @@ import java.util.Optional;
 
 public class AssetService {
 	private static final Logger       log       = LoggerFactory.getLogger(AssetService.class);
-	private final        ExchangeRepo exchangeRepo = new ExchangeRepo();
-	private final        AssetRepo    assetRepo    = new AssetRepo();
+	private final        ExchangeRepo exchangeRepo;
+	private final        AssetRepo    assetRepo;
+
+	public AssetService(ExchangeRepo exchangeRepo, AssetRepo assetRepo) {
+		this.exchangeRepo = exchangeRepo;
+		this.assetRepo = assetRepo;
+	}
+
+	public AssetService() {
+		this.exchangeRepo = new ExchangeRepo();
+		this.assetRepo = new AssetRepo();
+	}
 
 	public List<Exchange> getExchanges() {
 		return exchangeRepo.findAll().stream().sorted().toList();

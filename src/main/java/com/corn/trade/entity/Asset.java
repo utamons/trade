@@ -44,4 +44,16 @@ public class Asset implements Comparable<Asset> {
 	public int compareTo(Asset o) {
 		return this.getName().compareTo(o.getName());
 	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null || getClass() != obj.getClass()) {
+			return false;
+		}
+		Asset asset = (Asset) obj;
+		return name.equals(asset.name);
+	}
 }

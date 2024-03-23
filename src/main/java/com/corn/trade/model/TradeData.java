@@ -3,6 +3,7 @@ package com.corn.trade.model;
 import com.corn.trade.type.EstimationType;
 import com.corn.trade.type.PositionType;
 
+@SuppressWarnings("unused")
 public class TradeData {
 	private final PositionType   positionType;
 	private final EstimationType estimationType;
