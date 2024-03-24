@@ -35,3 +35,6 @@ build/
 /front/config/config.json
 /src/main/resources/static/
 /front/.scannerwork/
+
+### draw.io ###
+*.drawio.bkp

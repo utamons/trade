@@ -315,7 +315,8 @@ public class TradeCalc {
 	}
 
 	private double getReward() {
-		return isLong() ? takeProfit - breakEven : breakEven - takeProfit;
+		double reward = (isLong() ? takeProfit - breakEven : breakEven - takeProfit);
+		return reward - getTaxes(Math.abs(takeProfit-orderStop));
 	}
 
 	private double calculateStopLoss() {
@@ -353,11 +354,15 @@ public class TradeCalc {
 	}
 
 	private void fillOrder() {
-		orderStop = reference + (isLong() ? tradeData.getLuft() : -tradeData.getLuft());
+		if (reference == tradeData.getLevel())
+			orderStop = reference + (isLong() ? tradeData.getLuft() : -tradeData.getLuft());
+		else
+			orderStop = reference;
+
 		orderLimit = orderStop +
 		             (isLong() ? tradeData.getSlippage() + tradeData.getLuft() : -tradeData.getSlippage() -
 		                                                                         tradeData.getLuft());
-		takeProfit = isLong() ? orderLimit + tradeData.getPowerReserve() : orderLimit - tradeData.getPowerReserve();
+		takeProfit = tradeData.getGoal();
 	}
 
 	private boolean isShort() {
