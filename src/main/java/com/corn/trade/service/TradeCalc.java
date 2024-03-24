@@ -1,8 +1,8 @@
 package com.corn.trade.service;
 
+import com.corn.trade.model.TradeData;
 import com.corn.trade.type.EstimationType;
 import com.corn.trade.type.PositionType;
-import com.corn.trade.model.TradeData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,14 +62,15 @@ public class TradeCalc {
 	}
 
 	private double getMinPowerReserve(TradeData tradeData) {
-		double minPowerReserve = 0;
-		TradeData temp = tradeData.toBuilder().withEstimationType(EstimationType.MAX_STOP_LOSS).build();
+		double    minPowerReserve = 0;
+		TradeData temp            = tradeData.toBuilder().withEstimationType(EstimationType.MAX_STOP_LOSS).build();
 		do {
 			minPowerReserve = round(minPowerReserve + 0.01);
 			temp = temp.toBuilder().withPowerReserve(minPowerReserve).build();
 			TradeCalc tradeCalc = new TradeCalc(temp);
 			temp = tradeCalc.calculate();
-		} while (temp.getTradeError() != null && minPowerReserve/temp.getPrice() < 0.5); // 50% of price is a reasonable maximum
+		} while (temp.getTradeError() != null &&
+		         minPowerReserve / temp.getPrice() < 0.5); // 50% of price is a reasonable maximum
 		return minPowerReserve;
 	}
 
@@ -121,7 +122,7 @@ public class TradeCalc {
 		// Goal validation based on PositionType
 		if (tradeData.getEstimationType() != EstimationType.MIN_GOAL &&
 		    tradeData.getGoal() != null &&
-		    tradeData.getPrice() != null ) {
+		    tradeData.getPrice() != null) {
 			if (tradeData.getPositionType() == PositionType.LONG && tradeData.getGoal() <= tradeData.getPrice()) {
 				throw new IllegalArgumentException("Goal must be greater than price!");
 			} else if (tradeData.getPositionType() == PositionType.SHORT && tradeData.getGoal() >= tradeData.getPrice()) {
@@ -132,14 +133,13 @@ public class TradeCalc {
 		// Goal and Level relationship validation
 		if (tradeData.getEstimationType() != EstimationType.MIN_GOAL &&
 		    tradeData.getGoal() != null &&
-		    tradeData.getLevel() != null ) {
+		    tradeData.getLevel() != null) {
 			if (tradeData.getPositionType() == PositionType.LONG && tradeData.getGoal() <= tradeData.getLevel()) {
 				throw new IllegalArgumentException("Goal must be greater than level!");
 			} else if (tradeData.getPositionType() == PositionType.SHORT && tradeData.getGoal() >= tradeData.getLevel()) {
 				throw new IllegalArgumentException("Goal must be less than level!");
 			}
 		}
-
 
 
 		reference = getReferencePoint(tradeData);
@@ -241,61 +241,41 @@ public class TradeCalc {
 		tradeError = null;
 		int counter = 0;
 		do {
-			stopLoss = 0;
-			do {
-				counter++;
-				breakEven = getBreakEven(orderLimit);
-				double reward = getReward();
-				risk = getRisk(reward);
-				if (stopLoss == 0)
-					stopLoss = round(calculateStopLoss());
-				// recalculate risk because stop loss might be corrected by slippage
-				risk = recalculatedRisk();
+			counter++;
+			breakEven = getBreakEven(orderLimit);
+			double reward = getReward();
+			risk = getRisk(reward);
+			stopLoss = round(calculateStopLoss(reward));
 
-				fillTradeAndRiskFields(reward);
+			risk = recalculatedRisk();
 
-				log.debug(
-						"Iteration {} - quantity: {}, take profit: {}, stop loss {}, risk: {}, reward: {}, risk reward " +
-						"risk {}% ratio: {}",
-						counter,
-						quantity,
-						fmt(takeProfit),
-						fmt(stopLoss),
-						fmt(risk),
-						fmt(outputExpected),
-						fmt(riskPercent),
-						fmt(riskRewardRatioPercent)
-				);
+			fillTradeAndRiskFields(reward);
 
-				if (stopLossTooSmall()) {
-					break;
-				}
+			log.debug("Iteration {} - quantity: {}, take profit: {}, stop loss {}, risk: {}, reward: {}, risk reward " +
+			          "risk {}% ratio: {}",
+			          counter,
+			          quantity,
+			          fmt(takeProfit),
+			          fmt(stopLoss),
+			          fmt(risk),
+			          fmt(outputExpected),
+			          fmt(riskPercent),
+			          fmt(riskRewardRatioPercent));
 
-				if (tradeData.getTechStopLoss() == null && (riskPercent > MAX_RISK_PERCENT || round(riskRewardRatioPercent) > round(1 / MAX_RISK_REWARD_RATIO * 100)))
-					stopLoss = stopLoss + 0.01 * (isLong() ? 1 : -1);
-				else
-					break;
+			if (stopLossTooSmall()) {
+				break;
+			}
 
-			} while (
-					(riskPercent > MAX_RISK_PERCENT ||
-					 round(riskRewardRatioPercent) > round(1 / MAX_RISK_REWARD_RATIO * 100)) &&
-					stopLoss > 0 &&
-					((isLong() && takeProfit > breakEven) || (isShort() && takeProfit < breakEven))
-			);
-			if (areRiskLimitsFailed() != null)
-				quantity--;
+			if (areRiskLimitsFailed() != null) quantity--;
 		} while (areRiskLimitsFailed() != null && quantity > 0);
 
+		stopLoss = isLong() ? stopLoss + slippage() : stopLoss - slippage();
 		tradeError = areRiskLimitsFailed();
 	}
 
 	private boolean stopLossTooSmall() {
 		return (isLong() && round(stopLoss) >= tradeData.getLevel()) ||
 		       (isShort() && round(stopLoss) <= tradeData.getLevel());
-	}
-
-	public Double getCorrectedStopLoss() {
-		return isLong() ? round(stopLoss - slippage()) : round(stopLoss + slippage());
 	}
 
 	private void fillTradeAndRiskFields(double reward) {
@@ -311,20 +291,20 @@ public class TradeCalc {
 	}
 
 	private double recalculatedRisk() {
-		return isLong() ? breakEven - getCorrectedStopLoss() : getCorrectedStopLoss() - breakEven;
+		return isLong() ? breakEven - stopLoss - slippage() : stopLoss + slippage() - breakEven;
 	}
 
 	private double getReward() {
 		double reward = (isLong() ? takeProfit - breakEven : breakEven - takeProfit);
-		return reward - getTaxes(Math.abs(takeProfit-orderStop));
+		return reward - getTaxes(Math.abs(takeProfit - orderStop));
 	}
 
-	private double calculateStopLoss() {
+	private double calculateStopLoss(double reward) {
 		if (tradeData.getTechStopLoss() != null) {
 			return tradeData.getTechStopLoss();
 		}
 
-		return isLong() ? breakEven - risk : breakEven + risk;
+		return isLong() ? takeProfit - reward - risk : takeProfit + reward + risk;
 	}
 
 	private String areRiskLimitsFailed() {
@@ -349,15 +329,13 @@ public class TradeCalc {
 	}
 
 	private void fillQuantity() {
-		if (quantity == 0)
-			quantity = maxQuantity();
+		if (quantity == 0) quantity = maxQuantity();
 	}
 
 	private void fillOrder() {
 		if (reference == tradeData.getLevel())
 			orderStop = reference + (isLong() ? tradeData.getLuft() : -tradeData.getLuft());
-		else
-			orderStop = reference;
+		else orderStop = reference;
 
 		orderLimit = orderStop +
 		             (isLong() ? tradeData.getSlippage() + tradeData.getLuft() : -tradeData.getSlippage() -
