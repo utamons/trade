@@ -43,9 +43,12 @@ public class AnalysisWindow extends BaseWindow {
 													   if (tradeData.getLevel() != null && tradeData.getPrice() == null) {
 														   td = tradeData.toBuilder().withPrice(tradeData.getLevel()).build();
 													   }
+													   long start = System.currentTimeMillis();
 				                                       TradeCalc tradeCalc = new TradeCalc(td);
+													   long end = System.currentTimeMillis();
 													   paramPanel.populate(tradeCalc.getTradeData());
 				                                       TradeData out = tradeCalc.calculate();
+				                                       log.info("Calculation time: "+(end-start)+" ms");
 													   if (out.getTradeError() != null) {
 														   textWindow.appendText("#"+count+" - doesn't fit to risks", Color.RED.darker(), true);
 														   textWindow.appendText(out.toSourceParams());
