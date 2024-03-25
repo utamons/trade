@@ -22,6 +22,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 import static com.corn.trade.BaseWindow.ORDER_LUFT;
 import static com.corn.trade.util.Util.fmt;
@@ -169,6 +170,9 @@ public class TradeController implements TradeViewListener {
 
 	@Override
 	public void onLevelChange(Double level) {
+		if (Objects.equals(this.level, level)) {
+			return;
+		}
 		this.level = level;
 		orderClean = false;
 		checkButtons();

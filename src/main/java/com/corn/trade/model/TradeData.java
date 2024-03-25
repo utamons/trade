@@ -95,39 +95,39 @@ public class TradeData {
 		return quantity;
 	}
 
-	public double getOrderLimit() {
+	public Double getOrderLimit() {
 		return orderLimit;
 	}
 
-	public double getOrderStop() {
+	public Double getOrderStop() {
 		return orderStop;
 	}
 
-	public double getStopLoss() {
+	public Double getStopLoss() {
 		return stopLoss;
 	}
 
-	public double getTakeProfit() {
+	public Double getTakeProfit() {
 		return takeProfit;
 	}
 
-	public double getBreakEven() {
+	public Double getBreakEven() {
 		return breakEven;
 	}
 
-	public double getRisk() {
+	public Double getRisk() {
 		return risk;
 	}
 
-	public double getOutputExpected() {
+	public Double getOutputExpected() {
 		return outputExpected;
 	}
 
-	public double getRiskPercent() {
+	public Double getRiskPercent() {
 		return riskPercent;
 	}
 
-	public double getGain() {
+	public Double getGain() {
 		return gain;
 	}
 
@@ -139,7 +139,7 @@ public class TradeData {
 		return tradeError != null;
 	}
 
-	public double getRiskRewardRatioPercent() {
+	public Double getRiskRewardRatioPercent() {
 		return riskRewardRatioPercent;
 	}
 
