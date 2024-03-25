@@ -184,13 +184,13 @@ public class TradeData {
 	public String toString() {
 		return String.format("""
 				                     %s, %s,
-				                     Lvl: %.2f, Goal: %.2f, Pwr: %.2f, Price: %.2f, Slpg: %.2f
+				                     Lvl: %.2f, Goal: %.2f(%.2f%%), Pwr: %.2f, Price: %.2f, Slpg: %.2f
 				                     				                     
 				                     Params: Qtt: %d, SL: %.2f, BE: %.2f, TP: %.2f., Stop: %.2f, Limit: %.2f
 				                     Out: %.2f, %.2f%%
 				                     R/R - %.2f%%, Risk - %.2f, %.2f%%""",
 		                     positionType, estimationType,
-		                     level, goal, powerReserve, price, slippage,
+		                     level, goal, (powerReserve/level*100), powerReserve, price, slippage,
 		                     quantity, stopLoss, breakEven, takeProfit, orderStop, orderLimit,
 		                     outputExpected, gain, riskRewardRatioPercent, risk, riskPercent);
 	}

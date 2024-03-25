@@ -141,7 +141,10 @@ public class TradeCalc {
 			}
 		}
 
+		return complement(tradeData);
+	}
 
+	private TradeData complement(TradeData tradeData) {
 		reference = getReferencePoint(tradeData);
 		// Set default slippage if undefined
 		Double slippage = (tradeData.getSlippage() == null) ? tradeData.getLuft() : tradeData.getSlippage();
@@ -199,7 +202,7 @@ public class TradeCalc {
 		return null;
 	}
 
-	private double getTaxes(double sum) {
+	private double getTax(double sum) {
 		return sum * 0.1; // ИПН
 	}
 
@@ -215,14 +218,14 @@ public class TradeCalc {
 		double priceClose      = price;
 		double closeCommission = openCommission;
 		double profit          = abs(priceClose - price) * quantity;
-		double taxes           = getTaxes(profit);
+		double taxes           = getTax(profit);
 		double increment       = isLong() ? 0.01 : -0.01;
 
 		while (profit < openCommission + closeCommission + taxes) {
 			priceClose = priceClose + increment;
 			closeCommission = estimatedCommissionUSD(priceClose);
 			profit = abs(priceClose - price) * quantity;
-			taxes = getTaxes(profit);
+			taxes = getTax(profit);
 		}
 
 		double range   = abs(priceClose - price);
@@ -234,105 +237,9 @@ public class TradeCalc {
 	}
 
 	public void estimate() {
-
-		fillQuantity();
-		fillOrder();
-
 		tradeError = null;
-		int counter = 0;
-		do {
-			counter++;
-			breakEven = getBreakEven(orderLimit);
-			double reward = getReward();
-			risk = getRisk(reward);
-			stopLoss = round(calculateStopLoss(reward));
-
-			risk = recalculatedRisk();
-
-			fillTradeAndRiskFields(reward);
-
-			log.debug("Iteration {} - quantity: {}, take profit: {}, stop loss {}, risk: {}, reward: {}, risk reward " +
-			          "risk {}% ratio: {}",
-			          counter,
-			          quantity,
-			          fmt(takeProfit),
-			          fmt(stopLoss),
-			          fmt(risk),
-			          fmt(outputExpected),
-			          fmt(riskPercent),
-			          fmt(riskRewardRatioPercent));
-
-			if (stopLossTooSmall()) {
-				break;
-			}
-
-			if (areRiskLimitsFailed() != null) quantity--;
-		} while (areRiskLimitsFailed() != null && quantity > 0);
-
-		stopLoss = isLong() ? stopLoss + slippage() : stopLoss - slippage();
-		tradeError = areRiskLimitsFailed();
-	}
-
-	private boolean stopLossTooSmall() {
-		return (isLong() && round(stopLoss) >= tradeData.getLevel()) ||
-		       (isShort() && round(stopLoss) <= tradeData.getLevel());
-	}
-
-	private void fillTradeAndRiskFields(double reward) {
-		outputExpected = reward * quantity;
-		gain = outputExpected / (orderLimit * quantity) * 100;
-		risk = risk * quantity;
-		riskRewardRatioPercent = risk / outputExpected * 100;
-		riskPercent = risk / MAX_VOLUME * 100;
-	}
-
-	private double getRisk(double reward) {
-		return reward / MAX_RISK_REWARD_RATIO;
-	}
-
-	private double recalculatedRisk() {
-		return isLong() ? breakEven - stopLoss - slippage() : stopLoss + slippage() - breakEven;
-	}
-
-	private double getReward() {
-		double reward = (isLong() ? takeProfit - breakEven : breakEven - takeProfit);
-		return reward - getTaxes(Math.abs(takeProfit - orderStop));
-	}
-
-	private double calculateStopLoss(double reward) {
-		if (tradeData.getTechStopLoss() != null) {
-			return tradeData.getTechStopLoss();
-		}
-
-		return isLong() ? takeProfit - reward - risk : takeProfit + reward + risk;
-	}
-
-	private String areRiskLimitsFailed() {
-		String riskFailed = "Doesn't meet risk limits";
-		if ((isLong() && takeProfit <= breakEven) || (isShort() && takeProfit >= breakEven)) {
-			return riskFailed;
-		}
-		if (quantity <= 0) {
-			return riskFailed;
-		}
-		if (stopLossTooSmall()) {
-			String direction = isLong() ? "above" : "below";
-			return String.format("Stop loss %.2f is " + direction + " the level", stopLoss);
-		}
-		if (riskPercent > MAX_RISK_PERCENT) {
-			return riskFailed;
-		}
-		if (round(riskRewardRatioPercent) > round(1 / MAX_RISK_REWARD_RATIO * 100)) {
-			return riskFailed;
-		}
-		return null;
-	}
-
-	private void fillQuantity() {
+		// fill order
 		if (quantity == 0) quantity = maxQuantity();
-	}
-
-	private void fillOrder() {
 		if (reference == tradeData.getLevel())
 			orderStop = reference + (isLong() ? tradeData.getLuft() : -tradeData.getLuft());
 		else orderStop = reference;
@@ -341,6 +248,82 @@ public class TradeCalc {
 		             (isLong() ? tradeData.getSlippage() + tradeData.getLuft() : -tradeData.getSlippage() -
 		                                                                         tradeData.getLuft());
 		takeProfit = tradeData.getGoal();
+
+		do {
+			breakEven = getBreakEven(orderLimit);
+
+			double gross      = Math.abs(takeProfit - orderLimit) * quantity;
+			double tax        = getTax(gross);
+			double commission = estimatedCommissionUSD(orderLimit) + estimatedCommissionUSD(takeProfit);
+			double net        = gross - tax - commission;
+			risk = net * MAX_RISK_REWARD_RATIO;
+
+			stopLoss = isLong() ? takeProfit - net/quantity - risk/quantity : takeProfit + net/quantity + risk/quantity;
+
+			fillTradeAndRiskFields(net);
+
+			log.debug("quantity: {}, take profit: {}, stop loss {}({}), risk: {}, reward: {}, " + "risk {}% rr: {}",
+			          quantity,
+			          fmt(takeProfit),
+			          fmt(stopLoss),
+			          fmt(correctedStopLoss(stopLoss)),
+			          fmt(risk),
+			          fmt(outputExpected),
+			          fmt(riskPercent),
+			          fmt(riskRewardRatioPercent));
+
+			tradeError = areRiskLimitsFailed();
+			log.debug(tradeError);
+		} while (tradeError != null && (quantity = quantity - 1) > 0);
+		if (tradeError == null) {
+			stopLoss = tradeData.getTechStopLoss() != null? tradeData.getTechStopLoss() : correctedStopLoss(stopLoss);
+		}
+		log.debug("MAX_RISK_PERCENT: " + MAX_RISK_PERCENT);
+		log.debug(tradeError);
+	}
+
+	private double correctedStopLoss(double sl) {
+		return isLong() ? sl + slippage() : sl - slippage();
+	}
+
+	private boolean stopLossTooSmall() {
+		double sl = round(correctedStopLoss(stopLoss));
+		if (isLong() && tradeData.getTechStopLoss() != null) {
+			return sl > tradeData.getTechStopLoss();
+		} else if (isShort() && tradeData.getTechStopLoss() != null) {
+			return sl < tradeData.getTechStopLoss();
+		}
+
+		return (isLong() && sl >= tradeData.getLevel()) ||
+		       (isShort() && sl <= tradeData.getLevel());
+	}
+
+	private void fillTradeAndRiskFields(double reward) {
+		outputExpected = reward;
+		gain = outputExpected / (orderLimit * quantity) * 100;
+		riskRewardRatioPercent = risk / outputExpected * 100;
+		riskPercent = risk / MAX_VOLUME * 100;
+	}
+
+	private String areRiskLimitsFailed() {
+		String riskFailed = "Doesn't meet risk limits";
+		if ((isLong() && takeProfit <= breakEven) || (isShort() && takeProfit >= breakEven)) {
+			return riskFailed + " 1";
+		}
+		if (quantity <= 0) {
+			return riskFailed + " 2";
+		}
+		if (stopLossTooSmall()) {
+			String direction = isLong() ? "above" : "below";
+			return String.format("Stop loss %.2f is " + direction + " the level", correctedStopLoss(stopLoss));
+		}
+		if (riskPercent > MAX_RISK_PERCENT) {
+			return riskFailed + " 3";
+		}
+		if (round(riskRewardRatioPercent) > round(1 / MAX_RISK_REWARD_RATIO * 100)) {
+			return riskFailed + " 4";
+		}
+		return null;
 	}
 
 	private boolean isShort() {

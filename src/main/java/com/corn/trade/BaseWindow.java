@@ -99,7 +99,7 @@ public abstract class BaseWindow {
 		frame.getRootPane().setBorder(BorderFactory.createCompoundBorder(border, emptyBorder));
 	}
 
-	private void loadProperties() {
+	public static void loadProperties() {
 		Properties configProps = new Properties();
 		try (InputStream input = new FileInputStream("D:\\bin\\trade.properties")) {
 			configProps.load(input);

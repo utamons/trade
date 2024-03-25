@@ -38,7 +38,12 @@ public class AnalysisWindow extends BaseWindow {
 		paramPanel = new ParamPanel(new Dimension(650, 220), new Dimension(650, 180), 5, FIELD_HEIGHT,
 		                                       (tradeData) -> {
 			                                       try {
-				                                       TradeCalc tradeCalc = new TradeCalc(tradeData);
+													   BaseWindow.loadProperties();
+													   TradeData td = tradeData;
+													   if (tradeData.getLevel() != null && tradeData.getPrice() == null) {
+														   td = tradeData.toBuilder().withPrice(tradeData.getLevel()).build();
+													   }
+				                                       TradeCalc tradeCalc = new TradeCalc(td);
 													   paramPanel.populate(tradeCalc.getTradeData());
 				                                       TradeData out = tradeCalc.calculate();
 													   if (out.getTradeError() != null) {
