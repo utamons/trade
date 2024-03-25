@@ -119,9 +119,6 @@ public class TradePanel extends BasePanel implements TradeView {
 		panel.add(position);
 		panel.add(info);
 
-		position.addPosition("AAPL");
-		position.addPosition("MSFT");
-
 		this.add(panel, BorderLayout.NORTH);
 
 		controller.onExchangeChange(exchanges.get(0));
