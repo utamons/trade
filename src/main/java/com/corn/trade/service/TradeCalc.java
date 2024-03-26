@@ -244,9 +244,7 @@ public class TradeCalc {
 			orderStop = reference + (isLong() ? tradeData.getLuft() : -tradeData.getLuft());
 		else orderStop = reference;
 
-		orderLimit = orderStop +
-		             (isLong() ? tradeData.getSlippage() + tradeData.getLuft() : -tradeData.getSlippage() -
-		                                                                         tradeData.getLuft());
+		orderLimit = orderStop + (isLong() ? tradeData.getSlippage() : -tradeData.getSlippage());
 		takeProfit = tradeData.getGoal();
 
 		do {
@@ -258,7 +256,9 @@ public class TradeCalc {
 			double net        = gross - tax - commission;
 			risk = net * MAX_RISK_REWARD_RATIO;
 
-			stopLoss = isLong() ? takeProfit - net/quantity - risk/quantity : takeProfit + net/quantity + risk/quantity;
+			stopLoss =
+					isLong() ? takeProfit - net / quantity - risk / quantity :
+							takeProfit + net / quantity + risk / quantity;
 
 			fillTradeAndRiskFields(net);
 
@@ -276,7 +276,7 @@ public class TradeCalc {
 			log.debug(tradeError);
 		} while (tradeError != null && (quantity = quantity - 1) > 0);
 		if (tradeError == null) {
-			stopLoss = tradeData.getTechStopLoss() != null? tradeData.getTechStopLoss() : correctedStopLoss(stopLoss);
+			stopLoss = tradeData.getTechStopLoss() != null ? tradeData.getTechStopLoss() : correctedStopLoss(stopLoss);
 		}
 		log.debug("MAX_RISK_PERCENT: " + MAX_RISK_PERCENT);
 		log.debug(tradeError);
@@ -294,8 +294,7 @@ public class TradeCalc {
 			return sl < tradeData.getTechStopLoss();
 		}
 
-		return (isLong() && sl >= tradeData.getLevel()) ||
-		       (isShort() && sl <= tradeData.getLevel());
+		return (isLong() && sl >= tradeData.getLevel()) || (isShort() && sl <= tradeData.getLevel());
 	}
 
 	private void fillTradeAndRiskFields(double reward) {

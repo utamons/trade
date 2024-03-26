@@ -1,5 +1,6 @@
 package com.corn.trade.service;
 
+import com.corn.trade.BaseWindow;
 import com.corn.trade.model.ExtendedTradeContext;
 import com.corn.trade.model.TradeContext;
 import com.corn.trade.type.PositionType;
@@ -17,7 +18,7 @@ public class TradeService {
 			return null;
 		}
 
-		double slippage = positionType == PositionType.LONG ? Math.abs(ask - price) : Math.abs(price - bid);
+		double slippage = getSlippage();
 
 		double range = high - low;
 
@@ -44,4 +45,8 @@ public class TradeService {
 			.build();
 	}
 
+	private double getSlippage() {
+		// todo: Implement slippage calculation
+		return BaseWindow.ORDER_LUFT;
+	}
 }
