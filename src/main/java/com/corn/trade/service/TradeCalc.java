@@ -228,11 +228,6 @@ public class TradeCalc {
 			taxes = getTax(profit);
 		}
 
-		double range   = abs(priceClose - price);
-		double percent = range / powerReserve() * 100;
-
-		log.debug("BE: {}, range {}, {}%", fmt(priceClose), fmt(range), fmt(percent));
-
 		return priceClose;
 	}
 
@@ -262,24 +257,11 @@ public class TradeCalc {
 
 			fillTradeAndRiskFields(net);
 
-			log.debug("quantity: {}, take profit: {}, stop loss {}({}), risk: {}, reward: {}, " + "risk {}% rr: {}",
-			          quantity,
-			          fmt(takeProfit),
-			          fmt(stopLoss),
-			          fmt(correctedStopLoss(stopLoss)),
-			          fmt(risk),
-			          fmt(outputExpected),
-			          fmt(riskPercent),
-			          fmt(riskRewardRatioPercent));
-
 			tradeError = areRiskLimitsFailed();
-			log.debug(tradeError);
 		} while (tradeError != null && (quantity = quantity - 1) > 0);
 		if (tradeError == null) {
 			stopLoss = tradeData.getTechStopLoss() != null ? tradeData.getTechStopLoss() : correctedStopLoss(stopLoss);
 		}
-		log.debug("MAX_RISK_PERCENT: " + MAX_RISK_PERCENT);
-		log.debug(tradeError);
 	}
 
 	private double correctedStopLoss(double sl) {

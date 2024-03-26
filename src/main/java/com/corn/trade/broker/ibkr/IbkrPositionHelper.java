@@ -2,9 +2,7 @@ package com.corn.trade.broker.ibkr;
 
 import com.corn.trade.type.OrderRole;
 import com.corn.trade.type.PositionType;
-import com.ib.client.Contract;
-import com.ib.client.Decimal;
-import com.ib.client.Order;
+import com.ib.client.*;
 import com.ib.controller.ApiController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,12 +19,29 @@ class IbkrPositionHelper {
 	}
 
 	public void dropAll() {
-		log.info("Dropping all positions");
-
 		if (!ibkrConnectionHandler.isConnected()) {
 			log.error("Not connected");
 			return;
 		}
+
+		final Contract lookedUpContract = ibkrBroker.getContractDetails().contract();
+		log.info("Dropping all positions for {}", lookedUpContract.symbol());
+
+		ApiController.ITradeReportHandler tradeReportHandler = new ApiController.ITradeReportHandler() {
+			@Override
+			public void tradeReport(String tradeKey, Contract contract, Execution execution) {
+				log.info("Trade report: {}", tradeKey);
+			}
+
+			@Override
+			public void tradeReportEnd() {
+				// If trade report for our contract is not found, we should repeat requests for reasonable time
+				log.info("Trade report end");
+			}
+
+			@Override
+			public void commissionReport(String tradeKey, CommissionReport commissionReport) {}
+		};
 
 		ApiController.IPositionHandler handler = new ApiController.IPositionHandler() {
 			@Override
@@ -34,6 +49,11 @@ class IbkrPositionHelper {
 				if (pos.isZero()) {
 					return;
 				}
+
+				if (contract.conid() != lookedUpContract.conid()) {
+					return;
+				}
+
 				// Determine the type of position (Long or Short)
 				PositionType positionType = pos.compareTo(Decimal.ZERO) > 0 ? PositionType.LONG : PositionType.SHORT;
 
@@ -48,12 +68,17 @@ class IbkrPositionHelper {
 				closeOrder.transmit(true); // Transmit the order to IBKR
 				closeOrder.totalQuantity(positionType.equals(PositionType.LONG) ? pos : pos.negate()); // Absolute quantity
 
-				Contract lookedUpContract = ibkrBroker.getContractDetails().contract();
-
 				ibkrConnectionHandler.controller().placeOrModifyOrder(lookedUpContract,
 				                                                      closeOrder,
 				                                                      new IbkrOrderHandler(lookedUpContract, closeOrder, OrderRole.DROP_ALL, pos, positionType));
 				log.info("Placed DROP ALL id {} {}, qtt: {}", closeOrder.orderId(), contract.symbol(), pos);
+
+				ExecutionFilter filter = new ExecutionFilter();
+				filter.symbol(lookedUpContract.symbol());
+				filter.secType(lookedUpContract.getSecType());
+
+
+				ibkrConnectionHandler.controller().reqExecutions(filter, tradeReportHandler);
 			}
 
 			@Override

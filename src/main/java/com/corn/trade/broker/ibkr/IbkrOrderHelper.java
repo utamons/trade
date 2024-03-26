@@ -16,9 +16,11 @@ class IbkrOrderHelper {
 
 	private static final Logger                log = org.slf4j.LoggerFactory.getLogger(IbkrOrderHelper.class);
 	private final        IbkrConnectionHandler ibkrConnectionHandler;
+	private final       IbkrBroker            ibkrBroker;
 
-	public IbkrOrderHelper(IbkrConnectionHandler ibkrConnectionHandler) {
+	public IbkrOrderHelper(IbkrConnectionHandler ibkrConnectionHandler, IbkrBroker ibkrBroker) {
 		this.ibkrConnectionHandler = ibkrConnectionHandler;
+		this.ibkrBroker = ibkrBroker;
 	}
 
 	public void placeOrder(ContractDetails contractDetails,
@@ -131,15 +133,18 @@ class IbkrOrderHelper {
 		if (!ibkrConnectionHandler.isConnected()) {
 			throw new IbkrException("IBKR not connected");
 		}
+		final Contract lookedUpContract = ibkrBroker.getContractDetails().contract();
 
-		log.info("Dropping all orders");
+		log.info("Dropping all orders for {}", lookedUpContract.symbol());
 
 		ApiController.ILiveOrderHandler handler = new ApiController.ILiveOrderHandler() {
 			final List<Order> orders = new ArrayList<>();
 
 			@Override
 			public void openOrder(Contract contract, Order order, OrderState orderState) {
-				orders.add(order);
+				if (contract.conid() == lookedUpContract.conid()) {
+					orders.add(order);
+				}
 			}
 
 			@Override

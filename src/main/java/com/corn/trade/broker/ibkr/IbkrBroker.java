@@ -43,7 +43,7 @@ public class IbkrBroker extends Broker {
 
 		initContract(ticker, exchange);
 
-		ibkrOrderHelper = new IbkrOrderHelper(ibkrConnectionHandler);
+		ibkrOrderHelper = new IbkrOrderHelper(ibkrConnectionHandler, this);
 
 		log.debug("init finish");
 	}
