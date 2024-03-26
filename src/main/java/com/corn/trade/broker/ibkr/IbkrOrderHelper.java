@@ -1,7 +1,7 @@
 package com.corn.trade.broker.ibkr;
 
 import com.corn.trade.TradeWindow;
-import com.corn.trade.type.OrderAction;
+import com.corn.trade.type.OrderRole;
 import com.corn.trade.type.PositionType;
 import com.ib.client.*;
 import com.ib.controller.ApiController;
@@ -70,7 +70,7 @@ class IbkrOrderHelper {
 		                                                      parent,
 		                                                      new IbkrOrderHandler(contractDetails.contract(),
 		                                                                           parent,
-		                                                                           OrderAction.MAIN,
+		                                                                           OrderRole.MAIN,
 		                                                                           quantityDecimal,
 		                                                                           positionType));
 
@@ -104,7 +104,7 @@ class IbkrOrderHelper {
 		                                                      takeProfit,
 		                                                      new IbkrOrderHandler(contractDetails.contract(),
 		                                                                           takeProfit,
-		                                                                           OrderAction.TAKE_PROFIT,
+		                                                                           OrderRole.TAKE_PROFIT,
 		                                                                           quantityDecimal,
 		                                                                           positionType));
 
@@ -117,7 +117,7 @@ class IbkrOrderHelper {
 		                                                      stopLoss,
 		                                                      new IbkrOrderHandler(contractDetails.contract(),
 		                                                                           stopLoss,
-		                                                                           OrderAction.STOP_LOSS,
+		                                                                           OrderRole.STOP_LOSS,
 		                                                                           quantityDecimal,
 		                                                                           positionType));
 

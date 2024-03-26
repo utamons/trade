@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="2" author="cornknight">
+        <createTable tableName="trade">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="asset_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(4)" remarks="LONG,SHORT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="quantity" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="limit_price" type="DECIMAL(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="stop_loss_price" type="DECIMAL(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="goal" type="DECIMAL(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="execution_price" type="DECIMAL(10, 2)"/>
+            <column name="status" type="VARCHAR(20)" remarks="OPEN, CLOSED, PARTIALLY_CLOSED">
+                <constraints nullable="false"/>
+            </column>
+            <column name="result" type="VARCHAR(20)" remarks="SUCCESS, STOP_LOSS, BE, DROP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="profit_loss" type="DECIMAL(10, 2)"/>
+            <column name="risk_reward_ratio" type="DECIMAL(10, 2)"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="closed_at" type="TIMESTAMP"/>
+        </createTable>
+        <createTable tableName="order">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="order_id" type="VARCHAR(10)" remarks="internal broker id for the order">
+                <constraints nullable="false"/>
+            </column>
+            <column name="asset_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trade_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="position_type" type="VARCHAR(4)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role" type="VARCHAR(20)" remarks="MAIN, STOP_LOSS, TAKE_PROFIT, DROP_ALL">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(30)" remarks="STP, LMT, STP LMT etc.">
+                <constraints nullable="false"/>
+            </column>
+            <column name="quantity" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price" type="DECIMAL(10, 2)" remarks="i.e. limit price">
+                <constraints nullable="false"/>
+            </column>
+            <column name="aux_price" type="DECIMAL(10, 2)" remarks="i.e stop price"/>
+            <column name="avg_fill_price" type="DECIMAL(10, 2)" remarks="average fill price"/>
+            <column name="status" type="VARCHAR(20)" remarks="NEW, FILLED, CANCELLED, REJECTED, INACTIVE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="time_in_force" type="VARCHAR(20)" remarks="DAY, GTC, IOC, FOK"/>
+            <column name="filled" type="BIGINT" remarks="number of filled positions"/>
+            <column name="remaining" type="BIGINT" remarks="number of remaining positions"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="submitted_at" type="TIMESTAMP"/>
+            <column name="filled_at" type="TIMESTAMP"/>
+            <column name="cancelled_at" type="TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP"/>
+            <column name="errorCode" type="VARCHAR(10)"/>
+            <column name="errorMsg" type="VARCHAR(255)"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="order" baseColumnNames="trade_id"
+                                 constraintName="fk_order_trade_id"
+                                 referencedTableName="trade" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="trade" baseColumnNames="asset_id"
+                                 constraintName="fk_trade_asset_id"
+                                 referencedTableName="asset" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="order" baseColumnNames="asset_id"
+                                 constraintName="fk_order_asset_id"
+                                 referencedTableName="asset" referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>

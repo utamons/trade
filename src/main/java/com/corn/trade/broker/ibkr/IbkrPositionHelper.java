@@ -1,6 +1,6 @@
 package com.corn.trade.broker.ibkr;
 
-import com.corn.trade.type.OrderAction;
+import com.corn.trade.type.OrderRole;
 import com.corn.trade.type.PositionType;
 import com.ib.client.Contract;
 import com.ib.client.Decimal;
@@ -52,7 +52,7 @@ class IbkrPositionHelper {
 
 				ibkrConnectionHandler.controller().placeOrModifyOrder(lookedUpContract,
 				                                                      closeOrder,
-				                                                      new IbkrOrderHandler(lookedUpContract, closeOrder, OrderAction.DROP_ALL, pos, positionType));
+				                                                      new IbkrOrderHandler(lookedUpContract, closeOrder, OrderRole.DROP_ALL, pos, positionType));
 				log.info("Placed DROP ALL id {} {}, qtt: {}", closeOrder.orderId(), contract.symbol(), pos);
 			}
 

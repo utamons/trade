@@ -1,6 +1,6 @@
 package com.corn.trade.type;
 
-public enum OrderAction {
+public enum OrderRole {
 	STOP_LOSS,
 	TAKE_PROFIT,
 	MAIN,
