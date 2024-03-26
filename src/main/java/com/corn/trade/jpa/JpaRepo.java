@@ -27,9 +27,9 @@ public class JpaRepo<T, ID extends Serializable> {
 		String password = TradeWindow.DB_PASSWORD;
 
 		Map<String, String> properties = new HashMap<>();
-		properties.put("javax.persistence.jdbc.user", username);
-		properties.put("javax.persistence.jdbc.password", password);
-		properties.put("javax.persistence.jdbc.url", url);
+		properties.put("jakarta.persistence.jdbc.user", username);
+		properties.put("jakarta.persistence.jdbc.password", password);
+		properties.put("jakarta.persistence.jdbc.url", url);
 
 		this.entityManagerFactory = Persistence.createEntityManagerFactory("TradePersistenceUnit", properties);
 		this.entityManager = entityManagerFactory.createEntityManager();

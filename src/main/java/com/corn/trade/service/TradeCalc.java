@@ -31,7 +31,7 @@ public class TradeCalc {
 	private String tradeError;
 
 	public TradeCalc(TradeData tradeData) {
-		this.tradeData = validateAndComplement(tradeData);
+		this.tradeData = complement(validate(tradeData));
 	}
 
 	@SuppressWarnings("unused")
@@ -74,7 +74,7 @@ public class TradeCalc {
 		return minPowerReserve;
 	}
 
-	private TradeData validateAndComplement(TradeData tradeData) {
+	private TradeData validate(TradeData tradeData) {
 		if (tradeData.getLevel() == null) {
 			throw new IllegalArgumentException("Level is required");
 		}
@@ -141,7 +141,7 @@ public class TradeCalc {
 			}
 		}
 
-		return complement(tradeData);
+		return tradeData;
 	}
 
 	private TradeData complement(TradeData tradeData) {
