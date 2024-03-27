@@ -1,8 +1,13 @@
 package com.corn.trade.broker;
 
+import com.corn.trade.entity.Trade;
+import com.corn.trade.jpa.DBException;
 import com.corn.trade.model.Bar;
 import com.corn.trade.model.TradeContext;
 import com.corn.trade.model.TradeData;
+import com.corn.trade.service.OrderService;
+import com.corn.trade.service.TradeService;
+import com.corn.trade.type.PositionType;
 import com.corn.trade.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +25,8 @@ public abstract class Broker {
 	private static final   Logger                                   log               =
 			LoggerFactory.getLogger(Broker.class);
 	protected final        HashMap<Integer, Consumer<TradeContext>> contextListeners  = new HashMap<>();
+	private final          TradeService                             tradeService;
+	private final          OrderService                             orderService;
 	protected              List<Bar>                                adrBarList        = new java.util.ArrayList<>();
 	protected              String                                   exchangeName;
 	protected              Double                                   adr;
@@ -29,7 +36,17 @@ public abstract class Broker {
 	protected              Double                                   dayHigh;
 	protected              Double                                   dayLow;
 	protected              int                                      contextListenerId = 0;
+	private                String                                   assetName;
 	private                String                                   name;
+
+	public Broker() {
+		this.tradeService = new TradeService();
+		this.orderService = new OrderService();
+	}
+
+	protected void setAssetName(String assetName) {
+		this.assetName = assetName;
+	}
 
 	public String getName() {
 		return name;
@@ -58,7 +75,31 @@ public abstract class Broker {
 
 	protected abstract void cancelMarketData();
 
-	public abstract void placeOrder(TradeData tradeData) throws BrokerException;
+	public void openPosition(TradeData tradeData) throws BrokerException {
+		Trade trade = null;
+		try {
+			trade = tradeService.createTrade(assetName, exchangeName, tradeData);
+		} catch (DBException e) {
+			throw new BrokerException("DB error: ", e);
+		}
+
+		placeOrder(tradeData.getQuantity(),
+		           tradeData.getOrderStop(),
+		           tradeData.getOrderLimit(),
+		           tradeData.getTechStopLoss() == null ? tradeData.getStopLoss() : tradeData.getTechStopLoss(),
+		           tradeData.getTakeProfit(),
+		           tradeData.getPositionType());
+	}
+
+	// todo implement an order listener
+	// todo either implement an order type or rename the method to placeStopLimitOrder
+	// but order type would be better
+	public abstract void placeOrder(long qtt,
+	                                Double stop,
+	                                Double limit,
+	                                Double stopLoss,
+	                                Double takeProfit,
+	                                PositionType positionType) throws BrokerException;
 
 	protected void notifyTradeContext() throws BrokerException {
 		calculateFilteredAdr();

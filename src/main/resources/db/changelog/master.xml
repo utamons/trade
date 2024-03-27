@@ -8,5 +8,6 @@
 
     <include file="init.xml" relativeToChangelogFile="true"/>
     <include file="26_03_24.xml" relativeToChangelogFile="true"/>
+    <include file="27_03_24.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

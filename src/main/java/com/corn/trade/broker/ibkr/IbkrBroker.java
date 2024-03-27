@@ -4,12 +4,13 @@ import com.corn.trade.broker.Broker;
 import com.corn.trade.broker.BrokerException;
 import com.corn.trade.entity.Exchange;
 import com.corn.trade.jpa.DBException;
-import com.corn.trade.model.TradeData;
 import com.corn.trade.service.AssetService;
+import com.corn.trade.type.PositionType;
 import com.corn.trade.type.TimeFrame;
 import com.corn.trade.util.ExchangeTime;
 import com.corn.trade.util.Trigger;
 import com.ib.client.*;
+import com.ib.client.Types.Action;
 import com.ib.controller.ApiController;
 import com.ib.controller.ApiController.IHistoricalDataHandler;
 import com.ib.controller.ApiController.ITopMktDataHandler;
@@ -21,13 +22,12 @@ import java.util.List;
 public class IbkrBroker extends Broker {
 	private static final org.slf4j.Logger       log                 = org.slf4j.LoggerFactory.getLogger(IbkrBroker.class);
 	private final        IbkrConnectionHandler  ibkrConnectionHandler;
+	private final IbkrOrderHelper ibkrOrderHelper;
 	private              ContractDetails        contractDetails;
 	private              ITopMktDataHandler     mktDataHandler;
 	private              IHistoricalDataHandler dayHighLowDataHandler;
 	private              IHistoricalDataHandler adrDataHandler;
 	private              boolean                requestedMarketData = false;
-
-	private final IbkrOrderHelper ibkrOrderHelper;
 
 	public IbkrBroker(String ticker, String exchange, Trigger disconnectionListener) throws BrokerException {
 		log.debug("init start");
@@ -204,17 +204,23 @@ public class IbkrBroker extends Broker {
 	}
 
 	@Override
-	public void placeOrder(TradeData tradeData) throws BrokerException {
+	public void placeOrder(long qtt,
+	                       Double stop,
+	                       Double limit,
+	                       Double stopLoss,
+	                       Double takeProfit,
+	                       PositionType positionType) throws BrokerException {
+		OrderType orderType = stop == null ? OrderType.LMT : OrderType.STP_LMT;
+		Action action = positionType == PositionType.LONG ? Action.BUY : Action.SELL;
 		try {
 			ibkrOrderHelper.placeOrder(contractDetails,
-			                           tradeData.getQuantity(),
-			                           tradeData.getOrderStop(),
-			                           tradeData.getOrderLimit(),
-			                           tradeData.getTechStopLoss() ==
-			                           null ? tradeData.getStopLoss() : tradeData.getTechStopLoss(),
-			                           tradeData.getTakeProfit(),
-			                           tradeData.getBreakEven(),
-			                           tradeData.getPositionType());
+			                           qtt,
+			                           stop,
+			                           limit,
+			                           stopLoss,
+			                           takeProfit,
+			                           action,
+			                           orderType);
 		} catch (IbkrException e) {
 			throw new BrokerException(e.getMessage());
 		}

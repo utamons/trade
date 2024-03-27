@@ -58,6 +58,7 @@ public class BrokerFactory {
 						disconnectionTrigger.trigger();
 					});
 					broker.setName(key);
+					broker.setAssetName(assetName);
 					log.debug("Created new IBKR broker for {}, exchange {}", assetName, exchangeName);
 					return broker;
 				} catch (IbkrException e) {

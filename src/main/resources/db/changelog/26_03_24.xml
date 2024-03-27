@@ -32,9 +32,7 @@
             <column name="status" type="VARCHAR(20)" remarks="OPEN, CLOSED, PARTIALLY_CLOSED">
                 <constraints nullable="false"/>
             </column>
-            <column name="result" type="VARCHAR(20)" remarks="SUCCESS, STOP_LOSS, BE, DROP">
-                <constraints nullable="false"/>
-            </column>
+            <column name="result" type="VARCHAR(20)" remarks="SUCCESS, STOP_LOSS, BE, DROP"/>
             <column name="profit_loss" type="DECIMAL(10, 2)"/>
             <column name="risk_reward_ratio" type="DECIMAL(10, 2)"/>
             <column name="created_at" type="TIMESTAMP">

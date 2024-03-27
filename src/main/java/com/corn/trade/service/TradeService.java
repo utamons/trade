@@ -1,11 +1,30 @@
 package com.corn.trade.service;
 
 import com.corn.trade.BaseWindow;
+import com.corn.trade.entity.Asset;
+import com.corn.trade.entity.Exchange;
+import com.corn.trade.entity.Trade;
+import com.corn.trade.jpa.DBException;
+import com.corn.trade.jpa.TradeRepo;
 import com.corn.trade.model.ExtendedTradeContext;
 import com.corn.trade.model.TradeContext;
+import com.corn.trade.model.TradeData;
 import com.corn.trade.type.PositionType;
+import com.corn.trade.type.TradeStatus;
+import com.corn.trade.util.ExchangeTime;
+
+import java.math.BigDecimal;
 
 public class TradeService {
+
+	public final TradeRepo tradeRepo;
+	public final AssetService assetService;
+
+	public TradeService() {
+		this.tradeRepo = new TradeRepo();
+		this.assetService = new AssetService();
+	}
+
 	public ExtendedTradeContext getExtendedTradeContext(TradeContext tradeContext, PositionType positionType) {
 		Double ask   = tradeContext.getAsk();
 		Double bid   = tradeContext.getBid();
@@ -48,5 +67,22 @@ public class TradeService {
 	private double getSlippage() {
 		// todo: Implement slippage calculation
 		return BaseWindow.ORDER_LUFT;
+	}
+
+	public Trade createTrade(String assetName, String exchangeName, TradeData tradeData) throws DBException {
+		Trade trade = new Trade();
+		Asset asset = assetService.getAsset(assetName, exchangeName);
+		Exchange exchange = asset.getExchange();
+		ExchangeTime exchangeTime = new ExchangeTime(exchange);
+		trade.setAsset(asset);
+		trade.setType(tradeData.getPositionType().name());
+		trade.setQuantity(tradeData.getQuantity());
+		trade.setLimitPrice(BigDecimal.valueOf(tradeData.getOrderLimit()));
+		trade.setStopLossPrice(BigDecimal.valueOf(tradeData.getOrderStop()));
+		trade.setGoal(BigDecimal.valueOf(tradeData.getGoal()));
+		trade.setStatus(TradeStatus.OPEN.name());
+		trade.setCreatedAt(exchangeTime.nowInExchangeTZ().toLocalDateTime());
+		tradeRepo.save(trade);
+		return trade;
 	}
 }

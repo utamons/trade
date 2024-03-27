@@ -49,6 +49,13 @@ public class AssetService {
 		                   .orElseThrow(() -> new DBException("Exchange " + exchangeName + " not found."));
 	}
 
+	public Asset getAsset(String assetName, String exchangeName) throws DBException {
+		Exchange exchange = getExchange(exchangeName);
+
+		return assetRepo.findAsset(assetName, exchange)
+		                .orElseThrow(() -> new DBException("Asset " + assetName + "/" + exchangeName + " not found."));
+	}
+
 	public Asset getAsset(String assetName, String exchangeName, Broker broker) throws DBException, BrokerException {
 		log.debug("start");
 		Exchange exchange = getExchange(exchangeName);

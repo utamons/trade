@@ -366,7 +366,7 @@ public class TradeController implements TradeViewListener {
 		pauseButtons();
 		TradeData order = tradeData.toBuilder().withOrderStop(null).build();
 		try {
-			currentBroker.placeOrder(order);
+			currentBroker.openPosition(order);
 			view.messagePanel().show("Limit order sent", Color.GREEN.darker());
 		} catch (BrokerException e) {
 			view.messagePanel().show(e.getMessage(), Color.RED);
@@ -380,7 +380,7 @@ public class TradeController implements TradeViewListener {
 		}
 		pauseButtons();
 		try {
-			currentBroker.placeOrder(tradeData);
+			currentBroker.openPosition(tradeData);
 			view.messagePanel().show("Stop-Limit order sent", Color.GREEN.darker());
 		} catch (BrokerException e) {
 			view.messagePanel().show(e.getMessage(), Color.RED);

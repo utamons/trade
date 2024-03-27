@@ -2,13 +2,14 @@ package com.corn.trade.entity;
 
 import jakarta.persistence.*;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 
 @SuppressWarnings("unused")
 @Entity
 @Table(name = "order")
-public class Order {
+public class Order implements Serializable {
 
 	@Id
 	@Column(name = "id", nullable = false)
@@ -26,6 +27,9 @@ public class Order {
 
 	@ManyToOne
 	private Trade trade;
+
+	@ManyToOne
+	private Order parentOrder;
 
 	@Column(name = "position_type", nullable = false)
 	private String positionType;
@@ -114,6 +118,14 @@ public class Order {
 
 	public Long getId() {
 		return id;
+	}
+
+	public Order getParentOrder() {
+		return parentOrder;
+	}
+
+	public void setParentOrder(Order parentOrder) {
+		this.parentOrder = parentOrder;
 	}
 
 	/**

@@ -1,7 +1,5 @@
 package com.corn.trade.broker.ibkr;
 
-import com.corn.trade.type.OrderRole;
-import com.corn.trade.type.PositionType;
 import com.ib.client.*;
 import com.ib.controller.ApiController;
 import org.slf4j.Logger;
@@ -11,21 +9,15 @@ class IbkrOrderHandler implements ApiController.IOrderHandler {
 	public static final Logger   log = LoggerFactory.getLogger(IbkrOrderHandler.class);
 	private final       Contract contract;
 	private final Order     order;
-	private final OrderRole orderType;
-	private final Decimal   quantity;
-	private final PositionType positionType;
 	private final long startTime = System.currentTimeMillis();
-	public IbkrOrderHandler(Contract contract, Order order, OrderRole orderType, Decimal quantity, PositionType positionType) {
+	public IbkrOrderHandler(Contract contract, Order order) {
 		this.contract = contract;
 		this.order = order;
-		this.orderType = orderType;
-		this.quantity = quantity;
-		this.positionType = positionType;
 	}
 
 	private String orderInfo() {
 		String parentOrderId = order.parentId() == 0 ? "" : " parent order id: " + order.parentId();
-		return "order id" + order.orderId() + parentOrderId + " " + contract.symbol() + " " + positionType + " " + orderType + " " + order.orderType() + " qtt: " + quantity + " price: " + order.lmtPrice() + " auxPrice: " + order.auxPrice();
+		return "order id" + order.orderId() + parentOrderId + " " + contract.symbol() + " " + order.action() + " " + order.orderType() + " qtt: " + order.totalQuantity() + " price: " + order.lmtPrice() + " auxPrice: " + order.auxPrice();
 	}
 
 	@Override

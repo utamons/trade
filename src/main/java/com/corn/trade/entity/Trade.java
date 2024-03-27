@@ -2,13 +2,15 @@ package com.corn.trade.entity;
 
 import jakarta.persistence.*;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @SuppressWarnings("unused")
 @Entity
 @Table(name = "trade")
-public class Trade {
+public class Trade implements Serializable {
 
 	@Id
 	@Column(name = "id", nullable = false)
@@ -58,7 +60,7 @@ public class Trade {
 	private BigDecimal riskRewardRatio;
 
 	@Column(name = "created_at", nullable = false)
-	private Date createdAt;
+	private LocalDateTime createdAt;
 
 	@Column(name = "closed_at")
 	private Date closedAt;
@@ -177,11 +179,11 @@ public class Trade {
 		return riskRewardRatio;
 	}
 
-	public void setCreatedAt(Date createdAt) {
+	public void setCreatedAt(LocalDateTime createdAt) {
 		this.createdAt = createdAt;
 	}
 
-	public Date getCreatedAt() {
+	public LocalDateTime getCreatedAt() {
 		return createdAt;
 	}
 
