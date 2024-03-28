@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Optional;
 
-public class AssetService {
+public class AssetService extends BaseService {
 	private static final Logger       log       = LoggerFactory.getLogger(AssetService.class);
 	private final        ExchangeRepo exchangeRepo;
 	private final        AssetRepo    assetRepo;
@@ -21,11 +21,15 @@ public class AssetService {
 	public AssetService(ExchangeRepo exchangeRepo, AssetRepo assetRepo) {
 		this.exchangeRepo = exchangeRepo;
 		this.assetRepo = assetRepo;
+		addRepo(exchangeRepo);
+		addRepo(assetRepo);
 	}
 
 	public AssetService() {
 		this.exchangeRepo = new ExchangeRepo();
 		this.assetRepo = new AssetRepo();
+		addRepo(exchangeRepo);
+		addRepo(assetRepo);
 	}
 
 	public List<Exchange> getExchanges() {

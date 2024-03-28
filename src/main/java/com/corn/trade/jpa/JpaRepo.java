@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 @SuppressWarnings("unused")
-public class JpaRepo<T, ID extends Serializable> {
+public class JpaRepo<T, ID extends Serializable> implements IRepo {
 	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(JpaRepo.class);
 	private final        Class<T>         entityClass;
 
@@ -19,14 +19,17 @@ public class JpaRepo<T, ID extends Serializable> {
 		this.entityClass = entityClass;
 	}
 
+	@Override
 	public void withEntityManager(EntityManager entityManager) {
 		this.entityManager = entityManager;
 	}
 
+	@Override
 	public EntityManager getEntityManager() {
 		return entityManager;
 	}
 
+	@Override
 	public void closeEntityManager() {
 		if (entityManager != null) {
 			entityManager.close();
