@@ -2,12 +2,21 @@ package com.corn.trade.service;
 
 import com.corn.trade.entity.Trade;
 import com.corn.trade.jpa.DBException;
+import com.corn.trade.jpa.OrderRepo;
 import com.corn.trade.type.OrderRole;
 import com.corn.trade.type.OrderStatus;
 import com.corn.trade.type.OrderType;
 import com.corn.trade.type.PositionType;
 
-public class OrderService {
+public class OrderService extends BaseService {
+
+	private final OrderRepo orderRepo;
+
+	public OrderService() {
+		this.orderRepo = new OrderRepo(Long.class);
+		addRepo(orderRepo);
+	}
+
 	public Long createOrder(Trade trade,
 	                        PositionType positionType,
 	                        OrderRole role,

@@ -2,6 +2,7 @@ package com.corn.trade.broker.ibkr;
 
 import com.corn.trade.broker.Broker;
 import com.corn.trade.broker.BrokerException;
+import com.corn.trade.broker.OrderBracketIds;
 import com.corn.trade.entity.Exchange;
 import com.corn.trade.jpa.DBException;
 import com.corn.trade.service.AssetService;
@@ -204,16 +205,16 @@ public class IbkrBroker extends Broker {
 	}
 
 	@Override
-	public void placeOrderWithBracket(long qtt,
-	                                  Double stop,
-	                                  Double limit,
-	                                  Double stopLoss,
-	                                  Double takeProfit,
-	                                  PositionType positionType,
-	                                  com.corn.trade.type.OrderType tOrderType) throws BrokerException {
+	public OrderBracketIds placeOrderWithBracket(long qtt,
+	                                             Double stop,
+	                                             Double limit,
+	                                             Double stopLoss,
+	                                             Double takeProfit,
+	                                             PositionType positionType,
+	                                             com.corn.trade.type.OrderType tOrderType) throws BrokerException {
 		Action action = positionType == PositionType.LONG ? Action.BUY : Action.SELL;
 		try {
-			ibkrOrderHelper.placeOrderWithBracket(contractDetails,
+			return ibkrOrderHelper.placeOrderWithBracket(contractDetails,
 			                                      qtt,
 			                                      stop,
 			                                      limit,

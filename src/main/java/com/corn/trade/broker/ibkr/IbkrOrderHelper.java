@@ -1,6 +1,7 @@
 package com.corn.trade.broker.ibkr;
 
 import com.corn.trade.TradeWindow;
+import com.corn.trade.broker.OrderBracketIds;
 import com.ib.client.*;
 import com.ib.client.Types.Action;
 import com.ib.controller.ApiController;
@@ -22,14 +23,14 @@ class IbkrOrderHelper {
 		this.ibkrBroker = ibkrBroker;
 	}
 
-	public void placeOrderWithBracket(ContractDetails contractDetails,
-	                                  long quantity,
-	                                  Double stop,
-	                                  Double limit,
-	                                  Double stopLossPrice,
-	                                  Double takeProfitPrice,
-	                                  Action action,
-	                                  OrderType orderType) {
+	public OrderBracketIds placeOrderWithBracket(ContractDetails contractDetails,
+	                                             long quantity,
+	                                             Double stop,
+	                                             Double limit,
+	                                             Double stopLossPrice,
+	                                             Double takeProfitPrice,
+	                                             Action action,
+	                                             OrderType orderType) {
 		if (!ibkrConnectionHandler.isConnected()) {
 			throw new IbkrException("IBKR not connected");
 		}
@@ -111,6 +112,8 @@ class IbkrOrderHelper {
 		         stopLoss.orderId(),
 		         contractDetails.contract().symbol(),
 		         stopLossPrice);
+
+		return new OrderBracketIds(parent.orderId(), takeProfit.orderId(), stopLoss.orderId());
 	}
 
 	public void dropAll(IbkrPositionHelper ibkrPositionHelper) {

@@ -9,13 +9,14 @@ import com.corn.trade.jpa.TradeRepo;
 import com.corn.trade.model.ExtendedTradeContext;
 import com.corn.trade.model.TradeContext;
 import com.corn.trade.model.TradeData;
+import com.corn.trade.type.OrderStatus;
 import com.corn.trade.type.PositionType;
 import com.corn.trade.type.TradeStatus;
 import com.corn.trade.util.ExchangeTime;
 
 import java.math.BigDecimal;
 
-public class TradeService {
+public class TradeService extends BaseService {
 
 	public final TradeRepo tradeRepo;
 	public final AssetService assetService;
@@ -23,6 +24,7 @@ public class TradeService {
 	public TradeService() {
 		this.tradeRepo = new TradeRepo();
 		this.assetService = new AssetService();
+		addRepo(tradeRepo);
 	}
 
 	public ExtendedTradeContext getExtendedTradeContext(TradeContext tradeContext, PositionType positionType) {
@@ -87,6 +89,10 @@ public class TradeService {
 	}
 
 	public void updateTrade(Long id) {
+		throw new UnsupportedOperationException("Not implemented yet");
+	}
+
+	public void updateTradeStatus(long tradeId, TradeStatus status) {
 		throw new UnsupportedOperationException("Not implemented yet");
 	}
 }

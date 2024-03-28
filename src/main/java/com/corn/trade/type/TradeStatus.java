@@ -1,5 +1,5 @@
 package com.corn.trade.type;
 
 public enum TradeStatus {
-	OPEN, CLOSED, PARTIALLY_CLOSED
+	NEW, OPEN, CLOSED, PARTIALLY_CLOSED
 }

@@ -2,17 +2,19 @@ package com.corn.trade.broker;
 
 import com.corn.trade.entity.Trade;
 import com.corn.trade.jpa.DBException;
+import com.corn.trade.jpa.JpaUtil;
 import com.corn.trade.model.Bar;
 import com.corn.trade.model.TradeContext;
 import com.corn.trade.model.TradeData;
 import com.corn.trade.service.OrderService;
 import com.corn.trade.service.TradeService;
+import com.corn.trade.type.OrderStatus;
 import com.corn.trade.type.OrderType;
 import com.corn.trade.type.PositionType;
+import com.corn.trade.type.TradeStatus;
 import com.corn.trade.util.ChangeOrderListener;
-import com.corn.trade.util.CreateOrderTrigger;
 import com.corn.trade.util.Util;
-import jakarta.transaction.Transactional;
+import jakarta.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,54 +81,65 @@ public abstract class Broker {
 
 	protected abstract void cancelMarketData();
 
-	@Transactional
 	public void openPosition(TradeData tradeData) throws BrokerException {
 		try {
+			// Create trade with three orders
 			final Trade trade = tradeService.createTrade(assetName, exchangeName, tradeData);
+			// Create 3 orders
+			// Create listener to update orders and trade status
+			// todo I need 3 listeners for each order!
+			ChangeOrderListener changeOrderListener = getChangeOrderListener(trade);
 
-			CreateOrderTrigger createOrderTrigger =
-					(role, type, price, auxPrice, quantity, limitPrice, parentId) -> {
-						try {
-							return orderService.createOrder(trade,
-							                                tradeData.getPositionType(),
-							                                role,
-							                                type,
-							                                price,
-							                                auxPrice,
-							                                quantity,
-							                                limitPrice,
-							                                parentId);
-						} catch (DBException e) {
-							return null;
-						}
-					};
+			// Place orders
+			OrderBracketIds bracketIds = placeOrderWithBracket(tradeData.getQuantity(),
+			                                                   tradeData.getOrderStop(),
+			                                                   tradeData.getOrderLimit(),
+			                                                   tradeData.getTechStopLoss() ==
+			                                                   null ? tradeData.getStopLoss() : tradeData.getTechStopLoss(),
+			                                                   tradeData.getTakeProfit(),
+			                                                   tradeData.getPositionType(),
+			                                                   tradeData.getOrderStop() ==
+			                                                   null ? OrderType.LMT : OrderType.STP_LMT,
+			                                                   changeOrderListener);
 
-			ChangeOrderListener changeOrderListener = (id, status, filled, remaining, avgFillPrice) -> {
-				orderService.updateOrder(id, status, filled, remaining, avgFillPrice);
-				tradeService.updateTrade(trade.getId());
-			};
-
-			placeOrderWithBracket(tradeData.getQuantity(),
-			                      tradeData.getOrderStop(),
-			                      tradeData.getOrderLimit(),
-			                      tradeData.getTechStopLoss() ==
-			                      null ? tradeData.getStopLoss() : tradeData.getTechStopLoss(),
-			                      tradeData.getTakeProfit(),
-			                      tradeData.getPositionType(),
-			                      tradeData.getOrderStop() == null ? OrderType.LMT : OrderType.STP_LMT);
-
-		} catch (DBException e) {
+		} catch (BrokerException | DBException e) {
 			throw new BrokerException("DB error: ", e);
 		}
 	}
 
-	public abstract void placeOrderWithBracket(long qtt,
-	                                           Double stop,
-	                                           Double limit,
-	                                           Double stopLoss,
-	                                           Double takeProfit,
-	                                           PositionType positionType,
-	                                           OrderType orderType) throws BrokerException;
+	private static ChangeOrderListener getChangeOrderListener(Long orderId, Trade trade) {
+		long tradeId = trade.getId();
+
+		return (id, parentId, status, filled, remaining, avgFillPrice) -> {
+			OrderService orderService = new OrderService();
+			TradeService tradeService = new TradeService();
+
+			try (EntityManager em          = JpaUtil.getEntityManager()) {
+				orderService.withEntityManager(em);
+				tradeService.withEntityManager(em);
+
+				em.getTransaction().begin();
+				// todo and make broker order id not required for entity!
+				orderService.updateOrder(orderId, id, status, filled, remaining, avgFillPrice);
+				if (parentId == 0 && status == OrderStatus.FILLED) {
+					tradeService.updateTradeStatus(tradeId, TradeStatus.OPEN);
+				}
+				em.getTransaction().commit();
+			} catch (Exception e) {
+				log.error("ChangeOrderListener error: ", e);
+			}
+		};
+	}
+
+	public abstract OrderBracketIds placeOrderWithBracket(long qtt,
+	                                                      Double stop,
+	                                                      Double limit,
+	                                                      Double stopLoss,
+	                                                      Double takeProfit,
+	                                                      PositionType positionType,
+	                                                      OrderType orderType,
+	                                                      ChangeOrderListener changeOrderListener
+	                                                      ) throws BrokerException;
 
 	protected void notifyTradeContext() throws BrokerException {
 		calculateFilteredAdr();

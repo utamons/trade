@@ -31,10 +31,10 @@ public class JpaRepo<T, ID extends Serializable> implements IRepo {
 
 	@Override
 	public void closeEntityManager() {
-		if (entityManager != null) {
+		if (entityManager != null && entityManager.isOpen()) {
 			entityManager.close();
-			entityManager = null;
 		}
+		entityManager = null;
 	}
 
 	protected <R> R executeInsideEntityManager(Function<EntityManager, R> function) {

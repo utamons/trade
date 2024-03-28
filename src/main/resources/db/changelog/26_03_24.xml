@@ -29,7 +29,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="execution_price" type="DECIMAL(10, 2)"/>
-            <column name="status" type="VARCHAR(20)" remarks="OPEN, CLOSED, PARTIALLY_CLOSED">
+            <column name="status" type="VARCHAR(20)" remarks="NEW, OPEN, CLOSED, PARTIALLY_CLOSED">
                 <constraints nullable="false"/>
             </column>
             <column name="result" type="VARCHAR(20)" remarks="SUCCESS, STOP_LOSS, BE, DROP"/>
