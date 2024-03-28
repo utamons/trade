@@ -1,5 +1,6 @@
 package com.corn.trade;
 
+import com.corn.trade.jpa.JpaUtil;
 import com.corn.trade.ui.view.TradePanel;
 import com.corn.trade.ui.controller.TradeController;
 import com.corn.trade.util.Util;
@@ -23,6 +24,10 @@ public class TradeWindow extends BaseWindow {
 			TradeWindow tradeWindow = new TradeWindow(args);
 			tradeWindow.display();
 		});
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			System.out.println("Application is closing, releasing JPA resources...");
+			JpaUtil.close(); // Assuming JPAUtil.close() is a static method to close EntityManagerFactory
+		}));
 	}
 
 	@Override

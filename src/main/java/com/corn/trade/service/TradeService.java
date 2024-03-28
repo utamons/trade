@@ -85,4 +85,8 @@ public class TradeService {
 		tradeRepo.save(trade);
 		return trade;
 	}
+
+	public void updateTrade(Long id) {
+		throw new UnsupportedOperationException("Not implemented yet");
+	}
 }

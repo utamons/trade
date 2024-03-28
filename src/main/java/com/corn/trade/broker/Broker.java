@@ -7,8 +7,12 @@ import com.corn.trade.model.TradeContext;
 import com.corn.trade.model.TradeData;
 import com.corn.trade.service.OrderService;
 import com.corn.trade.service.TradeService;
+import com.corn.trade.type.OrderType;
 import com.corn.trade.type.PositionType;
+import com.corn.trade.util.ChangeOrderListener;
+import com.corn.trade.util.CreateOrderTrigger;
 import com.corn.trade.util.Util;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,31 +79,54 @@ public abstract class Broker {
 
 	protected abstract void cancelMarketData();
 
+	@Transactional
 	public void openPosition(TradeData tradeData) throws BrokerException {
-		Trade trade = null;
 		try {
-			trade = tradeService.createTrade(assetName, exchangeName, tradeData);
+			final Trade trade = tradeService.createTrade(assetName, exchangeName, tradeData);
+
+			CreateOrderTrigger createOrderTrigger =
+					(role, type, price, auxPrice, quantity, limitPrice, parentId) -> {
+						try {
+							return orderService.createOrder(trade,
+							                                tradeData.getPositionType(),
+							                                role,
+							                                type,
+							                                price,
+							                                auxPrice,
+							                                quantity,
+							                                limitPrice,
+							                                parentId);
+						} catch (DBException e) {
+							return null;
+						}
+					};
+
+			ChangeOrderListener changeOrderListener = (id, status, filled, remaining, avgFillPrice) -> {
+				orderService.updateOrder(id, status, filled, remaining, avgFillPrice);
+				tradeService.updateTrade(trade.getId());
+			};
+
+			placeOrderWithBracket(tradeData.getQuantity(),
+			                      tradeData.getOrderStop(),
+			                      tradeData.getOrderLimit(),
+			                      tradeData.getTechStopLoss() ==
+			                      null ? tradeData.getStopLoss() : tradeData.getTechStopLoss(),
+			                      tradeData.getTakeProfit(),
+			                      tradeData.getPositionType(),
+			                      tradeData.getOrderStop() == null ? OrderType.LMT : OrderType.STP_LMT);
+
 		} catch (DBException e) {
 			throw new BrokerException("DB error: ", e);
 		}
-
-		placeOrder(tradeData.getQuantity(),
-		           tradeData.getOrderStop(),
-		           tradeData.getOrderLimit(),
-		           tradeData.getTechStopLoss() == null ? tradeData.getStopLoss() : tradeData.getTechStopLoss(),
-		           tradeData.getTakeProfit(),
-		           tradeData.getPositionType());
 	}
 
-	// todo implement an order listener
-	// todo either implement an order type or rename the method to placeStopLimitOrder
-	// but order type would be better
-	public abstract void placeOrder(long qtt,
-	                                Double stop,
-	                                Double limit,
-	                                Double stopLoss,
-	                                Double takeProfit,
-	                                PositionType positionType) throws BrokerException;
+	public abstract void placeOrderWithBracket(long qtt,
+	                                           Double stop,
+	                                           Double limit,
+	                                           Double stopLoss,
+	                                           Double takeProfit,
+	                                           PositionType positionType,
+	                                           OrderType orderType) throws BrokerException;
 
 	protected void notifyTradeContext() throws BrokerException {
 		calculateFilteredAdr();

@@ -67,6 +67,7 @@ public abstract class BaseWindow {
 		ResizeListener resizeListener = new ResizeListener(frame, TradeWindow.RESIZE_EDGE);
 		frame.addMouseListener(resizeListener);
 		frame.addMouseMotionListener(resizeListener);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 		// Common appearance settings
 		setupLookAndFeel();

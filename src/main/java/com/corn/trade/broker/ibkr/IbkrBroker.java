@@ -204,25 +204,35 @@ public class IbkrBroker extends Broker {
 	}
 
 	@Override
-	public void placeOrder(long qtt,
-	                       Double stop,
-	                       Double limit,
-	                       Double stopLoss,
-	                       Double takeProfit,
-	                       PositionType positionType) throws BrokerException {
-		OrderType orderType = stop == null ? OrderType.LMT : OrderType.STP_LMT;
+	public void placeOrderWithBracket(long qtt,
+	                                  Double stop,
+	                                  Double limit,
+	                                  Double stopLoss,
+	                                  Double takeProfit,
+	                                  PositionType positionType,
+	                                  com.corn.trade.type.OrderType tOrderType) throws BrokerException {
 		Action action = positionType == PositionType.LONG ? Action.BUY : Action.SELL;
 		try {
-			ibkrOrderHelper.placeOrder(contractDetails,
-			                           qtt,
-			                           stop,
-			                           limit,
-			                           stopLoss,
-			                           takeProfit,
-			                           action,
-			                           orderType);
+			ibkrOrderHelper.placeOrderWithBracket(contractDetails,
+			                                      qtt,
+			                                      stop,
+			                                      limit,
+			                                      stopLoss,
+			                                      takeProfit,
+			                                      action,
+			                                      fromTOrderType(tOrderType));
 		} catch (IbkrException e) {
 			throw new BrokerException(e.getMessage());
 		}
+	}
+
+	private OrderType fromTOrderType(com.corn.trade.type.OrderType tOrderType) {
+		return switch (tOrderType) {
+			case STP -> OrderType.STP;
+			case LMT -> OrderType.LMT;
+			case MKT -> OrderType.MKT;
+			case STP_LMT -> OrderType.STP_LMT;
+			case MOC -> OrderType.MOC;
+		};
 	}
 }

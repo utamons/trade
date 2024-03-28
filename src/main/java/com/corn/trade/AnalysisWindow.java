@@ -1,5 +1,6 @@
 package com.corn.trade;
 
+import com.corn.trade.jpa.JpaUtil;
 import com.corn.trade.ui.component.ColorfulTextWindow;
 import com.corn.trade.ui.view.ParamPanel;
 import com.corn.trade.service.TradeCalc;
@@ -20,11 +21,14 @@ public class AnalysisWindow extends BaseWindow {
 		super(args, "Trade Analysis", new Dimension(700, 700));
 	}
 	public static void main(String[] args) {
-
 		SwingUtilities.invokeLater(() -> {
 			AnalysisWindow analysisWindow = new AnalysisWindow(args);
 			analysisWindow.display();
 		});
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			System.out.println("Application is closing, releasing JPA resources...");
+			JpaUtil.close(); // Assuming JPAUtil.close() is a static method to close EntityManagerFactory
+		}));
 	}
 
 	@Override

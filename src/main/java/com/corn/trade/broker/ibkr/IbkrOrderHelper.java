@@ -22,14 +22,14 @@ class IbkrOrderHelper {
 		this.ibkrBroker = ibkrBroker;
 	}
 
-	public void placeOrder(ContractDetails contractDetails,
-	                       long quantity,
-	                       Double stop,
-	                       Double limit,
-	                       Double stopLossPrice,
-	                       Double takeProfitPrice,
-	                       Action action,
-	                       OrderType orderType) {
+	public void placeOrderWithBracket(ContractDetails contractDetails,
+	                                  long quantity,
+	                                  Double stop,
+	                                  Double limit,
+	                                  Double stopLossPrice,
+	                                  Double takeProfitPrice,
+	                                  Action action,
+	                                  OrderType orderType) {
 		if (!ibkrConnectionHandler.isConnected()) {
 			throw new IbkrException("IBKR not connected");
 		}
@@ -59,9 +59,8 @@ class IbkrOrderHelper {
 		//Stop trigger price
 		stopLoss.auxPrice(round(stopLossPrice));
 		stopLoss.totalQuantity(quantityDecimal);
-		//In this case, the low side order will be the last child being sent. Therefore, it needs to set this attribute to
-		// true
-		//to activate all its predecessors
+		// In this case, the low side order will be the last child being sent. Therefore, it needs to set this attribute to
+		// true to activate all its predecessors
 		stopLoss.transmit(true);
 
 		ibkrConnectionHandler.controller().placeOrModifyOrder(contractDetails.contract(),

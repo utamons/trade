@@ -1,73 +1,85 @@
 package com.corn.trade.jpa;
 
-import com.corn.trade.TradeWindow;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 import jakarta.persistence.TypedQuery;
 
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 @SuppressWarnings("unused")
 public class JpaRepo<T, ID extends Serializable> {
 	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(JpaRepo.class);
-	private final Class<T>             type;
-	private final EntityManagerFactory entityManagerFactory;
-	protected final EntityManager        entityManager;
+	private final        Class<T>         entityClass;
 
-	public JpaRepo(Class<T> type) {
-		this.type = type;
+	protected EntityManager entityManager;
 
-		String url      = TradeWindow.DB_URL;
-		String username = TradeWindow.DB_USER;
-		String password = TradeWindow.DB_PASSWORD;
+	public JpaRepo(Class<T> entityClass) {
+		this.entityClass = entityClass;
+	}
 
-		Map<String, String> properties = new HashMap<>();
-		properties.put("jakarta.persistence.jdbc.user", username);
-		properties.put("jakarta.persistence.jdbc.password", password);
-		properties.put("jakarta.persistence.jdbc.url", url);
+	public void withEntityManager(EntityManager entityManager) {
+		this.entityManager = entityManager;
+	}
 
-		this.entityManagerFactory = Persistence.createEntityManagerFactory("TradePersistenceUnit", properties);
-		this.entityManager = entityManagerFactory.createEntityManager();
+	public EntityManager getEntityManager() {
+		return entityManager;
+	}
+
+	public void closeEntityManager() {
+		if (entityManager != null) {
+			entityManager.close();
+			entityManager = null;
+		}
+	}
+
+	protected <R> R executeInsideEntityManager(Function<EntityManager, R> function) {
+		if (entityManager != null) {
+			return function.apply(entityManager);
+		}
+		try (EntityManager em = JpaUtil.getEntityManager()) {
+			em.getTransaction().begin();
+			R result = function.apply(em);
+			em.getTransaction().commit();
+			return result;
+		}
+	}
+
+	protected <R> R executeWithEntityManager(Function<EntityManager, R> function) {
+		if (entityManager != null) {
+			return function.apply(entityManager);
+		}
+		try (EntityManager em = JpaUtil.getEntityManager()) {
+			R result = function.apply(em);
+			return result;
+		}
 	}
 
 	public Optional<T> findById(ID id) {
-		T result = entityManager.find(type, id);
+		T result = executeInsideEntityManager(em -> em.find(entityClass, id));
 		return Optional.ofNullable(result);
 	}
 
 	public void save(T entity) {
-		try {
-			entityManager.getTransaction().begin();
-			entityManager.merge(entity);
-			entityManager.getTransaction().commit();
-		} catch (Exception e) {
-			log.error("Error saving an entity: {} : {}", e, e.getMessage());
-			entityManager.getTransaction().rollback();
-			throw e;
-		}
+		executeInsideEntityManager(em -> {
+			em.persist(entity);
+			return null;
+		});
 	}
 
 	public List<T> findAll() {
-		try {
-			TypedQuery<T> query = entityManager.createQuery("SELECT e FROM " + type.getSimpleName() + " e", type);
+		return executeWithEntityManager(em -> {
+			TypedQuery<T> query = em.createQuery("SELECT e FROM " + entityClass.getName() + " e", entityClass);
 			return query.getResultList();
-		} catch (RuntimeException e) {
-			log.error("Error finding all {} : {}", e, e.getMessage());
-			throw new RuntimeException(e);
-		}
+		});
 	}
 
-	public void close() {
-		if (entityManager != null) {
-			entityManager.close();
-		}
-		if (entityManagerFactory != null) {
-			entityManagerFactory.close();
-		}
+	public void delete(T entity) {
+		executeInsideEntityManager(em -> {
+			T mergedEntity = em.merge(entity);
+			em.remove(mergedEntity);
+			return null;
+		});
 	}
 }
