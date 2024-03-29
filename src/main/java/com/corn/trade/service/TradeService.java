@@ -81,27 +81,37 @@ public class TradeService extends BaseService {
 
 	public Trade createTrade(String assetName, String exchangeName, TradeData tradeData) throws DBException {
 		beginTransaction();
-		Trade trade = new Trade();
-		Exchange exchange = exchangeRepo.findExchange(exchangeName).orElseThrow(()->new DBException("Exchange not found"));
-		Asset asset = assetRepo.findAsset(assetName, exchange).orElseThrow(()->new DBException("Asset not found"));
-		ExchangeTime exchangeTime = new ExchangeTime(exchange);
-		trade.setAsset(asset);
-		trade.setType(tradeData.getPositionType().name());
-		trade.setQuantity(tradeData.getQuantity());
-		trade.setLimitPrice(BigDecimal.valueOf(tradeData.getOrderLimit()));
-		trade.setStopLossPrice(BigDecimal.valueOf(tradeData.getOrderStop()));
-		trade.setGoal(BigDecimal.valueOf(tradeData.getGoal()));
-		trade.setStatus(TradeStatus.OPEN.name());
-		trade.setCreatedAt(exchangeTime.nowInExchangeTZ().toLocalDateTime());
-		tradeRepo.save(trade);
-		commitTransaction();
-		return trade;
+		try {
+			Trade trade = new Trade();
+			Exchange exchange = exchangeRepo.findExchange(exchangeName).orElseThrow(()->new DBException("Exchange not found"));
+			Asset asset = assetRepo.findAsset(assetName, exchange).orElseThrow(()->new DBException("Asset not found"));
+			ExchangeTime exchangeTime = new ExchangeTime(exchange);
+			trade.setAsset(asset);
+			trade.setType(tradeData.getPositionType().name());
+			trade.setQuantity(tradeData.getQuantity());
+			trade.setLimitPrice(BigDecimal.valueOf(tradeData.getOrderLimit()));
+			trade.setStopLossPrice(BigDecimal.valueOf(tradeData.getOrderStop()));
+			trade.setGoal(BigDecimal.valueOf(tradeData.getGoal()));
+			trade.setStatus(TradeStatus.OPEN.name());
+			trade.setCreatedAt(exchangeTime.nowInExchangeTZ().toLocalDateTime());
+			tradeRepo.save(trade);
+			commitTransaction();
+			return trade;
+		} catch (DBException e) {
+			rollbackTransaction();
+			throw e;
+		}
 	}
 
 	public void updateTradeStatus(long tradeId, TradeStatus status) throws DBException {
 		beginTransaction();
-		Trade trade = tradeRepo.findById(tradeId).orElseThrow(() -> new DBException("Trade not found"));
-		trade.setStatus(status.name());
-		commitTransaction();
+		try {
+			Trade trade = tradeRepo.findById(tradeId).orElseThrow(() -> new DBException("Trade not found"));
+			trade.setStatus(status.name());
+			commitTransaction();
+		} catch (DBException e) {
+			rollbackTransaction();
+			throw e;
+		}
 	}
 }

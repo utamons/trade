@@ -52,4 +52,12 @@ public abstract class BaseService {
 			localEm = false;
 		}
 	}
+
+	protected void rollbackTransaction() {
+		if (localEm) {
+			entityManager.getTransaction().rollback();
+			closeEntityManager();
+			localEm = false;
+		}
+	}
 }

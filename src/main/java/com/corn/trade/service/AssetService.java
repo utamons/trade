@@ -59,46 +59,56 @@ public class AssetService extends BaseService {
 	public Asset getAsset(String assetName, String exchangeName, Broker broker) throws DBException, BrokerException {
 		log.debug("start");
 		beginTransaction();
-		Exchange exchange = getExchange(exchangeName);
+		try {
+			Exchange exchange = getExchange(exchangeName);
 
-		Optional<Asset> asset = assetRepo.findAsset(assetName, exchange);
+			Optional<Asset> asset = assetRepo.findAsset(assetName, exchange);
 
-		if (asset.isEmpty()) {
-			log.debug("Asset " + assetName + "/" + exchangeName +" not found. Trying to get it from broker.");
-			String             confirmedExchangeName = broker.getExchangeName();
-			Optional<Exchange> confirmedExchangeOpt     = exchangeRepo.findExchange(confirmedExchangeName);
+			if (asset.isEmpty()) {
+				log.debug("Asset " + assetName + "/" + exchangeName + " not found. Trying to get it from broker.");
+				String             confirmedExchangeName = broker.getExchangeName();
+				Optional<Exchange> confirmedExchangeOpt  = exchangeRepo.findExchange(confirmedExchangeName);
 
-			if (confirmedExchangeOpt.isEmpty()) {
-				throw new BrokerException("Asset " + assetName + " belongs to " + exchangeName + " which is not supported" +
-				                          ".");
-			}
+				if (confirmedExchangeOpt.isEmpty()) {
+					throw new BrokerException("Asset " +
+					                          assetName +
+					                          " belongs to " +
+					                          exchangeName +
+					                          " which is not supported" +
+					                          ".");
+				}
 
-			Exchange confirmedExchange = confirmedExchangeOpt.get();
+				Exchange confirmedExchange = confirmedExchangeOpt.get();
 
-			log.debug("Asset " + assetName + "/" + confirmedExchangeName + " found in broker.");
+				log.debug("Asset " + assetName + "/" + confirmedExchangeName + " found in broker.");
 
-			asset = assetRepo.findAsset(assetName, confirmedExchange);
+				asset = assetRepo.findAsset(assetName, confirmedExchange);
 
-			if (asset.isPresent()) {
-				log.debug("Asset " + assetName + "/" + confirmedExchangeName + " found in database.");
+				if (asset.isPresent()) {
+					log.debug("Asset " + assetName + "/" + confirmedExchangeName + " found in database.");
+					log.debug("finish");
+					commitTransaction();
+					return asset.get();
+				}
+
+				log.debug("Saving asset " + assetName + "/" + confirmedExchangeName + " to database.");
+
+				Asset newAsset = new Asset();
+				newAsset.setName(assetName);
+				newAsset.setExchange(confirmedExchange);
+				assetRepo.save(newAsset);
+				commitTransaction();
+
+				log.debug("finish");
+				return newAsset;
+			} else {
+				commitTransaction();
 				log.debug("finish");
 				return asset.get();
 			}
-
-			log.debug("Saving asset " + assetName + "/" + confirmedExchangeName + " to database.");
-
-			Asset newAsset = new Asset();
-			newAsset.setName(assetName);
-			newAsset.setExchange(confirmedExchange);
-			assetRepo.save(newAsset);
-			commitTransaction();
-
-			log.debug("finish");
-			return newAsset;
-		} else {
-			commitTransaction();
-			log.debug("finish");
-			return asset.get();
+		} catch (DBException | BrokerException e) {
+			rollbackTransaction();
+			throw e;
 		}
 	}
 }
