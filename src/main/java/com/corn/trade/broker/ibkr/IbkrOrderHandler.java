@@ -59,7 +59,6 @@ class IbkrOrderHandler implements ApiController.IOrderHandler {
 			return;
 		}
 		changeOrderListener.onOrderChange(order.orderId(),
-		                                  parentId,
 		                                  fromOrderStatus(status),
 		                                  filled.longValue(),
 		                                  remaining.longValue(),

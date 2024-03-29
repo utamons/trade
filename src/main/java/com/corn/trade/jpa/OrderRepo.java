@@ -2,8 +2,8 @@ package com.corn.trade.jpa;
 
 import com.corn.trade.entity.Order;
 
-public class OrderRepo extends JpaRepo<Long, Order> {
-	public OrderRepo(Class<Long> type) {
+public class OrderRepo extends JpaRepo<Order, Long> {
+	public OrderRepo(Class<Order> type) {
 		super(type);
 	}
 }

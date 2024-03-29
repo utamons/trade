@@ -14,7 +14,7 @@ public class ExchangeRepo extends JpaRepo<Exchange, Long> {
 
 	public Optional<Exchange> findExchange(String exchangeName) throws DBException {
 		try {
-			return executeWithEntityManager(em -> {
+			return executeInsideEntityManager(em -> {
 				TypedQuery<Exchange> query = em.createQuery("SELECT e FROM Exchange e where e.name=:name", Exchange.class);
 				query.setParameter("name", exchangeName);
 				return Optional.of(query.getSingleResult());

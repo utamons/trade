@@ -41,21 +41,18 @@ public class JpaRepo<T, ID extends Serializable> implements IRepo {
 		if (entityManager != null) {
 			return function.apply(entityManager);
 		}
-		try (EntityManager em = JpaUtil.getEntityManager()) {
+		EntityManager em = JpaUtil.getEntityManager();
+		try {
 			em.getTransaction().begin();
 			R result = function.apply(em);
 			em.getTransaction().commit();
 			return result;
-		}
-	}
-
-	protected <R> R executeWithEntityManager(Function<EntityManager, R> function) {
-		if (entityManager != null) {
-			return function.apply(entityManager);
-		}
-		try (EntityManager em = JpaUtil.getEntityManager()) {
-			R result = function.apply(em);
-			return result;
+		} catch (Exception e) {
+			log.error("Error executing inside entity manager", e);
+			em.getTransaction().rollback();
+			throw e;
+		} finally {
+			em.close();
 		}
 	}
 
@@ -64,15 +61,26 @@ public class JpaRepo<T, ID extends Serializable> implements IRepo {
 		return Optional.ofNullable(result);
 	}
 
-	public void save(T entity) {
+	public void update(T entity) {
 		executeInsideEntityManager(em -> {
-			em.persist(entity);
+			em.merge(entity);
 			return null;
 		});
 	}
 
+	public T getById(ID id) {
+		return executeInsideEntityManager(em -> em.find(entityClass, id));
+	}
+
+	public T save(T entity) {
+		return executeInsideEntityManager(em -> {
+			em.persist(entity);
+			return entity;
+		});
+	}
+
 	public List<T> findAll() {
-		return executeWithEntityManager(em -> {
+		return executeInsideEntityManager(em -> {
 			TypedQuery<T> query = em.createQuery("SELECT e FROM " + entityClass.getName() + " e", entityClass);
 			return query.getResultList();
 		});

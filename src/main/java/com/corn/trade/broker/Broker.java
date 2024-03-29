@@ -2,6 +2,7 @@ package com.corn.trade.broker;
 
 import com.corn.trade.entity.Order;
 import com.corn.trade.entity.Trade;
+import com.corn.trade.jpa.DBException;
 import com.corn.trade.jpa.JpaUtil;
 import com.corn.trade.model.Bar;
 import com.corn.trade.model.TradeContext;
@@ -82,17 +83,18 @@ public abstract class Broker {
 			tradeService.withEntityManager(em);
 
 			em.getTransaction().begin();
+			OrderType orderType = tradeData.getOrderStop() == null ? OrderType.LMT : OrderType.STP_LMT;
 
-			// Create trade with three orders
+			// Create trade
 			final Trade trade = tradeService.createTrade(assetName, exchangeName, tradeData);
 			// Create 3 orders
-			final Order mainOrder = orderService.createOrder(trade, tradeData, OrderRole.MAIN);
-			final Order takeProfitOrder = orderService.createOrder(trade, tradeData, OrderRole.TAKE_PROFIT);
-			final Order stopLossOrder = orderService.createOrder(trade, tradeData, OrderRole.STOP_LOSS);
+			final Order mainOrder = orderService.createOrder(trade, tradeData, OrderRole.MAIN, orderType, null);
+			final Order takeProfitOrder = orderService.createOrder(trade, tradeData, OrderRole.TAKE_PROFIT, OrderType.LMT, mainOrder);
+			final Order stopLossOrder = orderService.createOrder(trade, tradeData, OrderRole.STOP_LOSS, OrderType.STP, mainOrder);
 			// Create listeners to update orders and trade status
-			ChangeOrderListener mainOrderListener = getChangeOrderListener(mainOrder.getId(), trade.getId());
-			ChangeOrderListener tpOrderListener = getChangeOrderListener(takeProfitOrder.getId(), trade.getId());
-			ChangeOrderListener slOrderListener = getChangeOrderListener(stopLossOrder.getId(), trade.getId());
+			ChangeOrderListener mainOrderListener = getChangeOrderListener(mainOrder.getId(), trade.getId(), OrderRole.MAIN);
+			ChangeOrderListener tpOrderListener = getChangeOrderListener(takeProfitOrder.getId(), trade.getId(), OrderRole.TAKE_PROFIT);
+			ChangeOrderListener slOrderListener = getChangeOrderListener(stopLossOrder.getId(), trade.getId(), OrderRole.STOP_LOSS);
 
 			// Place orders
 			OrderBracketIds bracketIds = placeOrderWithBracket(tradeData.getQuantity(),
@@ -102,16 +104,15 @@ public abstract class Broker {
 			                                                   null ? tradeData.getStopLoss() : tradeData.getTechStopLoss(),
 			                                                   tradeData.getTakeProfit(),
 			                                                   tradeData.getPositionType(),
-			                                                   tradeData.getOrderStop() ==
-			                                                   null ? OrderType.LMT : OrderType.STP_LMT,
+			                                                   orderType,
 			                                                   mainOrderListener,
 			                                                   tpOrderListener,
 			                                                   slOrderListener);
 
 			// Update order ids
-			orderService.updateOrderIds(mainOrder.getId(), bracketIds.mainId(), 0);
-			orderService.updateOrderIds(takeProfitOrder.getId(), bracketIds.takeProfitId(), bracketIds.mainId());
-			orderService.updateOrderIds(stopLossOrder.getId(), bracketIds.stopLossId(), bracketIds.mainId());
+			orderService.updateOrderId(mainOrder.getId(), bracketIds.mainId());
+			orderService.updateOrderId(takeProfitOrder.getId(), bracketIds.takeProfitId());
+			orderService.updateOrderId(stopLossOrder.getId(), bracketIds.stopLossId());
 
 			em.getTransaction().commit();
 		} catch (Exception e) {
@@ -127,10 +128,10 @@ public abstract class Broker {
 		}
 	}
 
-	private static ChangeOrderListener getChangeOrderListener(Long id, Long tradeId) {
+	private static ChangeOrderListener getChangeOrderListener(Long id, Long tradeId, OrderRole role) {
 		return new ChangeOrderListener() {
 			@Override
-			public void onOrderChange(long orderId, long parentId, OrderStatus status, long filled, long remaining, double avgFillPrice) {
+			public void onOrderChange(long orderId, OrderStatus status, long filled, long remaining, double avgFillPrice) {
 				OrderService orderService = new OrderService();
 				TradeService tradeService = new TradeService();
 
@@ -143,8 +144,11 @@ public abstract class Broker {
 					em.getTransaction().begin();
 
 					orderService.updateOrder(id, orderId, status, filled, remaining, avgFillPrice);
-					if (parentId == 0 && status == OrderStatus.FILLED) {
+					if (role == OrderRole.MAIN && status == OrderStatus.FILLED) {
 						tradeService.updateTradeStatus(tradeId, TradeStatus.OPEN);
+					}
+					if ((role == OrderRole.TAKE_PROFIT || role == OrderRole.STOP_LOSS) && status == OrderStatus.FILLED) {
+						tradeService.updateTradeStatus(tradeId, TradeStatus.CLOSED);
 					}
 					em.getTransaction().commit();
 				} catch (Exception e) {
@@ -152,6 +156,7 @@ public abstract class Broker {
 					if (em != null && em.getTransaction().isActive()) {
 						em.getTransaction().rollback();
 					}
+					throw new RuntimeException(e);
 				} finally {
 					if (em != null && em.isOpen()) {
 						em.close();
@@ -162,7 +167,12 @@ public abstract class Broker {
 			@Override
 			public void onOrderError(long id, String errorCode, String errorMsg) {
 				OrderService orderService = new OrderService();
-				orderService.updateOrderError(id, errorCode, errorMsg);
+				try {
+					orderService.updateOrderError(id, errorCode, errorMsg);
+				} catch (DBException e) {
+					log.error("ChangeOrderListener error: ", e);
+					throw new RuntimeException(e);
+				}
 			}
 		};
 	}

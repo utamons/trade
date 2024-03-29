@@ -39,17 +39,17 @@ class IbkrOrderHelper {
 			throw new IbkrException("IBKR not connected");
 		}
 
-		Order parent = new Order();
-		parent.action(action);
-		parent.orderType(orderType);
+		Order main = new Order();
+		main.action(action);
+		main.orderType(orderType);
 
 		Decimal quantityDecimal = Decimal.get(quantity);
-		parent.totalQuantity(quantityDecimal);
-		parent.lmtPrice(round(limit));
+		main.totalQuantity(quantityDecimal);
+		main.lmtPrice(round(limit));
 		if (stop != null) {
-			parent.auxPrice(round(stop));
+			main.auxPrice(round(stop));
 		}
-		parent.transmit(false);
+		main.transmit(false);
 
 		Order takeProfit = new Order();
 		takeProfit.action(action == Action.SELL ? Action.BUY : Action.SELL);
@@ -70,15 +70,15 @@ class IbkrOrderHelper {
 
 		ibkrConnectionHandler.controller()
 		                     .placeOrModifyOrder(contractDetails.contract(),
-		                                         parent,
+		                                         main,
 		                                         new IbkrOrderHandler(contractDetails.contract(),
-		                                                              parent,
+		                                                              main,
 		                                                              mainOrderListener));
 
 		if (orderType == OrderType.STP_LMT) {
 			log.info("Placed main {} {} {}, STP: {}, LMT: {}, QTT: {}, SL: {}, TP: {}",
-			         parent.orderId(),
-			         parent.action(),
+			         main.orderId(),
+			         main.action(),
 			         contractDetails.contract().symbol(),
 			         round(stop),
 			         round(limit),
@@ -87,8 +87,8 @@ class IbkrOrderHelper {
 			         round(takeProfitPrice));
 		} else {
 			log.info("Placed main {} {} {}, LMT: {}, QTT: {}, SL: {}, TP: {}",
-			         parent.orderId(),
-			         parent.action(),
+			         main.orderId(),
+			         main.action(),
 			         contractDetails.contract().symbol(),
 			         round(limit),
 			         quantityDecimal,
@@ -96,8 +96,8 @@ class IbkrOrderHelper {
 			         round(takeProfitPrice));
 		}
 
-		takeProfit.parentId(parent.orderId());
-		stopLoss.parentId(parent.orderId());
+		takeProfit.parentId(main.orderId());
+		stopLoss.parentId(main.orderId());
 
 		ibkrConnectionHandler.controller()
 		                     .placeOrModifyOrder(contractDetails.contract(),
@@ -117,7 +117,7 @@ class IbkrOrderHelper {
 
 		log.info("Placed SL id {} {} {}", stopLoss.orderId(), contractDetails.contract().symbol(), stopLossPrice);
 
-		return new OrderBracketIds(parent.orderId(), takeProfit.orderId(), stopLoss.orderId());
+		return new OrderBracketIds(main.orderId(), takeProfit.orderId(), stopLoss.orderId());
 	}
 
 	public void dropAll(IbkrPositionHelper ibkrPositionHelper) {

@@ -17,7 +17,7 @@ public class AssetRepo extends JpaRepo<Asset, Long> {
 
 	public Optional<Asset> findAsset(String assetName, Exchange exchange) throws DBException {
 		try {
-			return executeWithEntityManager(em -> {
+			return executeInsideEntityManager(em -> {
 				TypedQuery<Asset> query =
 						em.createQuery("SELECT a FROM Asset a where a.name=:name and a.exchange=:exchange", Asset.class);
 				query.setParameter("name", assetName);

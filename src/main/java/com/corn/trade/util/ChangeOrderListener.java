@@ -5,7 +5,6 @@ import com.corn.trade.type.OrderStatus;
 public interface ChangeOrderListener {
 	void onOrderChange(
 			long id,
-			long parentId,
 			OrderStatus status,
 			long filled,
 			long remaining,
