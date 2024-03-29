@@ -3,11 +3,13 @@ package com.corn.trade.service;
 import com.corn.trade.entity.Order;
 import com.corn.trade.entity.Trade;
 import com.corn.trade.jpa.DBException;
+import com.corn.trade.jpa.JpaUtil;
 import com.corn.trade.jpa.OrderRepo;
 import com.corn.trade.model.TradeData;
 import com.corn.trade.type.OrderRole;
 import com.corn.trade.type.OrderStatus;
 import com.corn.trade.type.OrderType;
+import jakarta.persistence.EntityManager;
 
 import java.math.BigDecimal;
 
@@ -21,16 +23,18 @@ public class OrderService extends BaseService {
 	}
 
 	public void updateOrder(long id, long orderId, OrderStatus status, long filled, long remaining, double avgFillPrice) throws DBException {
+		beginTransaction();
 		Order order = orderRepo.findById(id).orElseThrow(() -> new DBException("Order not found"));
 		order.setOrderId(String.valueOf(orderId));
 		order.setStatus(status.name());
 		order.setFilled(filled);
 		order.setRemaining(remaining);
 		order.setAvgFillPrice(BigDecimal.valueOf(avgFillPrice));
-		orderRepo.update(order);
+		commitTransaction();
 	}
 
 	public Order createOrder(Trade trade, TradeData tradeData, OrderRole orderRole, OrderType orderType, Order parentOrder) {
+		beginTransaction();
 		Order order = new Order();
 		order.setTrade(trade);
 		order.setAsset(trade.getAsset());
@@ -43,19 +47,25 @@ public class OrderService extends BaseService {
 		if (parentOrder != null) {
 			order.setParentOrder(parentOrder);
 		}
-		return orderRepo.save(order);
+		orderRepo.save(order);
+		commitTransaction();
+		return order;
 	}
 
 	public void updateOrderId(Long id, int orderId) throws DBException {
+		beginTransaction();
 		Order order = orderRepo.findById(id).orElseThrow(() -> new DBException("Order not found"));
 		order.setOrderId(String.valueOf(orderId));
 		orderRepo.update(order);
+		commitTransaction();
 	}
 
 	public void updateOrderError(long id, String errorCode, String errorMsg) throws DBException {
+		beginTransaction();
 		Order order = orderRepo.findById(id).orElseThrow(() -> new DBException("Order not found"));
 		order.setErrorCode(errorCode);
 		order.setErrorMsg(errorMsg);
 		orderRepo.update(order);
+		commitTransaction();
 	}
 }
