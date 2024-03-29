@@ -9,7 +9,6 @@ import com.corn.trade.jpa.TradeRepo;
 import com.corn.trade.model.ExtendedTradeContext;
 import com.corn.trade.model.TradeContext;
 import com.corn.trade.model.TradeData;
-import com.corn.trade.type.OrderStatus;
 import com.corn.trade.type.PositionType;
 import com.corn.trade.type.TradeStatus;
 import com.corn.trade.util.ExchangeTime;

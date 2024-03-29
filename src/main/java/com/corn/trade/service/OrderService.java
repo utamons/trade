@@ -3,13 +3,11 @@ package com.corn.trade.service;
 import com.corn.trade.entity.Order;
 import com.corn.trade.entity.Trade;
 import com.corn.trade.jpa.DBException;
-import com.corn.trade.jpa.JpaUtil;
 import com.corn.trade.jpa.OrderRepo;
 import com.corn.trade.model.TradeData;
 import com.corn.trade.type.OrderRole;
 import com.corn.trade.type.OrderStatus;
 import com.corn.trade.type.OrderType;
-import jakarta.persistence.EntityManager;
 
 import java.math.BigDecimal;
 
