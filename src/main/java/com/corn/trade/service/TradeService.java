@@ -90,6 +90,7 @@ public class TradeService extends BaseService {
 		trade.setGoal(BigDecimal.valueOf(tradeData.getGoal()));
 		trade.setStatus(TradeStatus.OPEN.name());
 		trade.setCreatedAt(exchangeTime.nowInExchangeTZ().toLocalDateTime());
+		tradeRepo.save(trade);
 		commitTransaction();
 		return trade;
 	}

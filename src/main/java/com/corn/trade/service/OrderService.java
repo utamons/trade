@@ -54,7 +54,6 @@ public class OrderService extends BaseService {
 		beginTransaction();
 		Order order = orderRepo.findById(id).orElseThrow(() -> new DBException("Order not found"));
 		order.setOrderId(String.valueOf(orderId));
-		orderRepo.update(order);
 		commitTransaction();
 	}
 
@@ -63,7 +62,6 @@ public class OrderService extends BaseService {
 		Order order = orderRepo.findById(id).orElseThrow(() -> new DBException("Order not found"));
 		order.setErrorCode(errorCode);
 		order.setErrorMsg(errorMsg);
-		orderRepo.update(order);
 		commitTransaction();
 	}
 }
