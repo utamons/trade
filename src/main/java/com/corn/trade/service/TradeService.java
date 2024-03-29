@@ -4,12 +4,13 @@ import com.corn.trade.BaseWindow;
 import com.corn.trade.entity.Asset;
 import com.corn.trade.entity.Exchange;
 import com.corn.trade.entity.Trade;
+import com.corn.trade.jpa.AssetRepo;
 import com.corn.trade.jpa.DBException;
+import com.corn.trade.jpa.ExchangeRepo;
 import com.corn.trade.jpa.TradeRepo;
 import com.corn.trade.model.ExtendedTradeContext;
 import com.corn.trade.model.TradeContext;
 import com.corn.trade.model.TradeData;
-import com.corn.trade.type.OrderStatus;
 import com.corn.trade.type.PositionType;
 import com.corn.trade.type.TradeStatus;
 import com.corn.trade.util.ExchangeTime;
@@ -18,13 +19,17 @@ import java.math.BigDecimal;
 
 public class TradeService extends BaseService {
 
-	public final TradeRepo tradeRepo;
-	public final AssetService assetService;
+	private final TradeRepo tradeRepo;
+	private final AssetRepo assetRepo;
+	private final ExchangeRepo exchangeRepo;
 
 	public TradeService() {
 		this.tradeRepo = new TradeRepo();
-		this.assetService = new AssetService();
+		this.assetRepo = new AssetRepo();
+		this.exchangeRepo = new ExchangeRepo();
 		addRepo(tradeRepo);
+		addRepo(assetRepo);
+		addRepo(exchangeRepo);
 	}
 
 	public ExtendedTradeContext getExtendedTradeContext(TradeContext tradeContext, PositionType positionType) {
@@ -74,8 +79,8 @@ public class TradeService extends BaseService {
 	public Trade createTrade(String assetName, String exchangeName, TradeData tradeData) throws DBException {
 		beginTransaction();
 		Trade trade = new Trade();
-		Asset asset = assetService.getAsset(assetName, exchangeName);
-		Exchange exchange = asset.getExchange();
+		Exchange exchange = exchangeRepo.findExchange(exchangeName).orElseThrow(()->new DBException("Exchange not found"));
+		Asset asset = assetRepo.findAsset(assetName, exchange).orElseThrow(()->new DBException("Asset not found"));
 		ExchangeTime exchangeTime = new ExchangeTime(exchange);
 		trade.setAsset(asset);
 		trade.setType(tradeData.getPositionType().name());
@@ -85,7 +90,6 @@ public class TradeService extends BaseService {
 		trade.setGoal(BigDecimal.valueOf(tradeData.getGoal()));
 		trade.setStatus(TradeStatus.OPEN.name());
 		trade.setCreatedAt(exchangeTime.nowInExchangeTZ().toLocalDateTime());
-		tradeRepo.save(trade);
 		commitTransaction();
 		return trade;
 	}
