@@ -6,7 +6,7 @@ import jakarta.persistence.EntityManager;
 import java.util.List;
 
 public abstract class BaseService {
-	private List<IRepo> repos;
+	private final List<IRepo> repos = new java.util.ArrayList<>();
 
 	protected void addRepo(IRepo repo) {
 		repos.add(repo);

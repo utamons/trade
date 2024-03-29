@@ -1,8 +1,10 @@
 package com.corn.trade.service;
 
+import com.corn.trade.entity.Order;
 import com.corn.trade.entity.Trade;
 import com.corn.trade.jpa.DBException;
 import com.corn.trade.jpa.OrderRepo;
+import com.corn.trade.model.TradeData;
 import com.corn.trade.type.OrderRole;
 import com.corn.trade.type.OrderStatus;
 import com.corn.trade.type.OrderType;
@@ -17,20 +19,20 @@ public class OrderService extends BaseService {
 		addRepo(orderRepo);
 	}
 
-	public Long createOrder(Trade trade,
-	                        PositionType positionType,
-	                        OrderRole role,
-	                        OrderType type,
-	                        double price,
-	                        double auxPrice,
-	                        double quantity,
-	                        double limitPrice,
-	                        long parentId) throws DBException {
+
+	public void updateOrder(long id, long orderId, OrderStatus status, long filled, long remaining, double avgFillPrice) {
 		throw new UnsupportedOperationException("Not implemented yet");
-		//return null;
 	}
 
-	public void updateOrder(long id, OrderStatus status, double filled, double remaining, double avgFillPrice) {
+	public Order createOrder(Trade trade, TradeData tradeData, OrderRole orderRole) {
+		throw new UnsupportedOperationException("Not implemented yet");
+	}
+
+	public void updateOrderIds(Long id, int orderId, int parentId) {
+		throw new UnsupportedOperationException("Not implemented yet");
+	}
+
+	public void updateOrderError(long id, String errorCode, String errorMsg) {
 		throw new UnsupportedOperationException("Not implemented yet");
 	}
 }

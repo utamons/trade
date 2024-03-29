@@ -1,17 +1,14 @@
 package com.corn.trade.broker;
 
+import com.corn.trade.entity.Order;
 import com.corn.trade.entity.Trade;
-import com.corn.trade.jpa.DBException;
 import com.corn.trade.jpa.JpaUtil;
 import com.corn.trade.model.Bar;
 import com.corn.trade.model.TradeContext;
 import com.corn.trade.model.TradeData;
 import com.corn.trade.service.OrderService;
 import com.corn.trade.service.TradeService;
-import com.corn.trade.type.OrderStatus;
-import com.corn.trade.type.OrderType;
-import com.corn.trade.type.PositionType;
-import com.corn.trade.type.TradeStatus;
+import com.corn.trade.type.*;
 import com.corn.trade.util.ChangeOrderListener;
 import com.corn.trade.util.Util;
 import jakarta.persistence.EntityManager;
@@ -31,8 +28,6 @@ public abstract class Broker {
 	private static final   Logger                                   log               =
 			LoggerFactory.getLogger(Broker.class);
 	protected final        HashMap<Integer, Consumer<TradeContext>> contextListeners  = new HashMap<>();
-	private final          TradeService                             tradeService;
-	private final          OrderService                             orderService;
 	protected              List<Bar>                                adrBarList        = new java.util.ArrayList<>();
 	protected              String                                   exchangeName;
 	protected              Double                                   adr;
@@ -44,11 +39,6 @@ public abstract class Broker {
 	protected              int                                      contextListenerId = 0;
 	private                String                                   assetName;
 	private                String                                   name;
-
-	public Broker() {
-		this.tradeService = new TradeService();
-		this.orderService = new OrderService();
-	}
 
 	protected void setAssetName(String assetName) {
 		this.assetName = assetName;
@@ -82,13 +72,27 @@ public abstract class Broker {
 	protected abstract void cancelMarketData();
 
 	public void openPosition(TradeData tradeData) throws BrokerException {
+		OrderService orderService = new OrderService();
+		TradeService tradeService = new TradeService();
+
+		EntityManager em = null;
 		try {
+			em = JpaUtil.getEntityManager();
+			orderService.withEntityManager(em);
+			tradeService.withEntityManager(em);
+
+			em.getTransaction().begin();
+
 			// Create trade with three orders
 			final Trade trade = tradeService.createTrade(assetName, exchangeName, tradeData);
 			// Create 3 orders
-			// Create listener to update orders and trade status
-			// todo I need 3 listeners for each order!
-			ChangeOrderListener changeOrderListener = getChangeOrderListener(trade);
+			final Order mainOrder = orderService.createOrder(trade, tradeData, OrderRole.MAIN);
+			final Order takeProfitOrder = orderService.createOrder(trade, tradeData, OrderRole.TAKE_PROFIT);
+			final Order stopLossOrder = orderService.createOrder(trade, tradeData, OrderRole.STOP_LOSS);
+			// Create listeners to update orders and trade status
+			ChangeOrderListener mainOrderListener = getChangeOrderListener(mainOrder.getId(), trade.getId());
+			ChangeOrderListener tpOrderListener = getChangeOrderListener(takeProfitOrder.getId(), trade.getId());
+			ChangeOrderListener slOrderListener = getChangeOrderListener(stopLossOrder.getId(), trade.getId());
 
 			// Place orders
 			OrderBracketIds bracketIds = placeOrderWithBracket(tradeData.getQuantity(),
@@ -100,33 +104,65 @@ public abstract class Broker {
 			                                                   tradeData.getPositionType(),
 			                                                   tradeData.getOrderStop() ==
 			                                                   null ? OrderType.LMT : OrderType.STP_LMT,
-			                                                   changeOrderListener);
+			                                                   mainOrderListener,
+			                                                   tpOrderListener,
+			                                                   slOrderListener);
 
-		} catch (BrokerException | DBException e) {
-			throw new BrokerException("DB error: ", e);
+			// Update order ids
+			orderService.updateOrderIds(mainOrder.getId(), bracketIds.mainId(), 0);
+			orderService.updateOrderIds(takeProfitOrder.getId(), bracketIds.takeProfitId(), bracketIds.mainId());
+			orderService.updateOrderIds(stopLossOrder.getId(), bracketIds.stopLossId(), bracketIds.mainId());
+
+			em.getTransaction().commit();
+		} catch (Exception e) {
+			log.error("openPosition error: ", e);
+			if (em != null && em.getTransaction().isActive()) {
+				em.getTransaction().rollback();
+			}
+			throw new BrokerException(e.getMessage(), e);
+		} finally {
+			if (em != null && em.isOpen()) {
+				em.close();
+			}
 		}
 	}
 
-	private static ChangeOrderListener getChangeOrderListener(Long orderId, Trade trade) {
-		long tradeId = trade.getId();
+	private static ChangeOrderListener getChangeOrderListener(Long id, Long tradeId) {
+		return new ChangeOrderListener() {
+			@Override
+			public void onOrderChange(long orderId, long parentId, OrderStatus status, long filled, long remaining, double avgFillPrice) {
+				OrderService orderService = new OrderService();
+				TradeService tradeService = new TradeService();
 
-		return (id, parentId, status, filled, remaining, avgFillPrice) -> {
-			OrderService orderService = new OrderService();
-			TradeService tradeService = new TradeService();
+				EntityManager em = null;
+				try {
+					em = JpaUtil.getEntityManager();
+					orderService.withEntityManager(em);
+					tradeService.withEntityManager(em);
 
-			try (EntityManager em          = JpaUtil.getEntityManager()) {
-				orderService.withEntityManager(em);
-				tradeService.withEntityManager(em);
+					em.getTransaction().begin();
 
-				em.getTransaction().begin();
-				// todo and make broker order id not required for entity!
-				orderService.updateOrder(orderId, id, status, filled, remaining, avgFillPrice);
-				if (parentId == 0 && status == OrderStatus.FILLED) {
-					tradeService.updateTradeStatus(tradeId, TradeStatus.OPEN);
+					orderService.updateOrder(id, orderId, status, filled, remaining, avgFillPrice);
+					if (parentId == 0 && status == OrderStatus.FILLED) {
+						tradeService.updateTradeStatus(tradeId, TradeStatus.OPEN);
+					}
+					em.getTransaction().commit();
+				} catch (Exception e) {
+					log.error("ChangeOrderListener error: ", e);
+					if (em != null && em.getTransaction().isActive()) {
+						em.getTransaction().rollback();
+					}
+				} finally {
+					if (em != null && em.isOpen()) {
+						em.close();
+					}
 				}
-				em.getTransaction().commit();
-			} catch (Exception e) {
-				log.error("ChangeOrderListener error: ", e);
+			}
+
+			@Override
+			public void onOrderError(long id, String errorCode, String errorMsg) {
+				OrderService orderService = new OrderService();
+				orderService.updateOrderError(id, errorCode, errorMsg);
 			}
 		};
 	}
@@ -138,7 +174,9 @@ public abstract class Broker {
 	                                                      Double takeProfit,
 	                                                      PositionType positionType,
 	                                                      OrderType orderType,
-	                                                      ChangeOrderListener changeOrderListener
+	                                                      ChangeOrderListener mainOrderListener,
+	                                                      ChangeOrderListener tpOrderListener,
+	                                                      ChangeOrderListener slOrderListener
 	                                                      ) throws BrokerException;
 
 	protected void notifyTradeContext() throws BrokerException {

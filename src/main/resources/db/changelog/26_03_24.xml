@@ -44,9 +44,7 @@
             <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="order_id" type="VARCHAR(10)" remarks="internal broker id for the order">
-                <constraints nullable="false"/>
-            </column>
+            <column name="order_id" type="VARCHAR(10)" remarks="internal broker id for the order"/>
             <column name="asset_id" type="BIGINT">
                 <constraints nullable="false"/>
             </column>

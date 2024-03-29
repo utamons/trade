@@ -2,14 +2,15 @@ package com.corn.trade.util;
 
 import com.corn.trade.type.OrderStatus;
 
-@FunctionalInterface
 public interface ChangeOrderListener {
 	void onOrderChange(
 			long id,
 			long parentId,
 			OrderStatus status,
-			double filled,
-            double remaining,
+			long filled,
+			long remaining,
 			double avgFillPrice
 			);
+
+	void onOrderError(long id, String errorCode, String errorMsg);
 }

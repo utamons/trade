@@ -8,6 +8,7 @@ import com.corn.trade.jpa.DBException;
 import com.corn.trade.service.AssetService;
 import com.corn.trade.type.PositionType;
 import com.corn.trade.type.TimeFrame;
+import com.corn.trade.util.ChangeOrderListener;
 import com.corn.trade.util.ExchangeTime;
 import com.corn.trade.util.Trigger;
 import com.ib.client.*;
@@ -23,7 +24,7 @@ import java.util.List;
 public class IbkrBroker extends Broker {
 	private static final org.slf4j.Logger       log                 = org.slf4j.LoggerFactory.getLogger(IbkrBroker.class);
 	private final        IbkrConnectionHandler  ibkrConnectionHandler;
-	private final IbkrOrderHelper ibkrOrderHelper;
+	private final        IbkrOrderHelper        ibkrOrderHelper;
 	private              ContractDetails        contractDetails;
 	private              ITopMktDataHandler     mktDataHandler;
 	private              IHistoricalDataHandler dayHighLowDataHandler;
@@ -211,29 +212,46 @@ public class IbkrBroker extends Broker {
 	                                             Double stopLoss,
 	                                             Double takeProfit,
 	                                             PositionType positionType,
-	                                             com.corn.trade.type.OrderType tOrderType) throws BrokerException {
+	                                             com.corn.trade.type.OrderType tOrderType,
+	                                             ChangeOrderListener mainOrderListener,
+	                                             ChangeOrderListener tpOrderListener,
+	                                             ChangeOrderListener slOrderListener) throws BrokerException {
 		Action action = positionType == PositionType.LONG ? Action.BUY : Action.SELL;
 		try {
 			return ibkrOrderHelper.placeOrderWithBracket(contractDetails,
-			                                      qtt,
-			                                      stop,
-			                                      limit,
-			                                      stopLoss,
-			                                      takeProfit,
-			                                      action,
-			                                      fromTOrderType(tOrderType));
+			                                             qtt,
+			                                             stop,
+			                                             limit,
+			                                             stopLoss,
+			                                             takeProfit,
+			                                             action,
+			                                             fromTOrderType(tOrderType),
+			                                             mainOrderListener,
+			                                             tpOrderListener,
+			                                             slOrderListener);
 		} catch (IbkrException e) {
 			throw new BrokerException(e.getMessage());
 		}
 	}
 
-	private OrderType fromTOrderType(com.corn.trade.type.OrderType tOrderType) {
+	public static OrderType fromTOrderType(com.corn.trade.type.OrderType tOrderType) {
 		return switch (tOrderType) {
 			case STP -> OrderType.STP;
 			case LMT -> OrderType.LMT;
 			case MKT -> OrderType.MKT;
 			case STP_LMT -> OrderType.STP_LMT;
 			case MOC -> OrderType.MOC;
+		};
+	}
+
+	public static com.corn.trade.type.OrderStatus fromOrderStatus(OrderStatus status) {
+		return switch (status) {
+			case ApiPending, PreSubmitted, PendingSubmit, PendingCancel -> com.corn.trade.type.OrderStatus.PENDING;
+			case ApiCancelled, Cancelled -> com.corn.trade.type.OrderStatus.CANCELLED;
+			case Submitted -> com.corn.trade.type.OrderStatus.SUBMITTED;
+			case Filled -> com.corn.trade.type.OrderStatus.FILLED;
+			case Inactive -> com.corn.trade.type.OrderStatus.INACTIVE;
+			case Unknown -> com.corn.trade.type.OrderStatus.UNKNOWN;
 		};
 	}
 }

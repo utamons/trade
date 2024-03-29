@@ -2,6 +2,7 @@ package com.corn.trade.broker.ibkr;
 
 import com.corn.trade.TradeWindow;
 import com.corn.trade.broker.OrderBracketIds;
+import com.corn.trade.util.ChangeOrderListener;
 import com.ib.client.*;
 import com.ib.client.Types.Action;
 import com.ib.controller.ApiController;
@@ -16,7 +17,7 @@ class IbkrOrderHelper {
 
 	private static final Logger                log = org.slf4j.LoggerFactory.getLogger(IbkrOrderHelper.class);
 	private final        IbkrConnectionHandler ibkrConnectionHandler;
-	private final       IbkrBroker            ibkrBroker;
+	private final        IbkrBroker            ibkrBroker;
 
 	public IbkrOrderHelper(IbkrConnectionHandler ibkrConnectionHandler, IbkrBroker ibkrBroker) {
 		this.ibkrConnectionHandler = ibkrConnectionHandler;
@@ -30,7 +31,10 @@ class IbkrOrderHelper {
 	                                             Double stopLossPrice,
 	                                             Double takeProfitPrice,
 	                                             Action action,
-	                                             OrderType orderType) {
+	                                             OrderType orderType,
+	                                             ChangeOrderListener mainOrderListener,
+	                                             ChangeOrderListener tpOrderListener,
+	                                             ChangeOrderListener slOrderListener) {
 		if (!ibkrConnectionHandler.isConnected()) {
 			throw new IbkrException("IBKR not connected");
 		}
@@ -64,15 +68,17 @@ class IbkrOrderHelper {
 		// true to activate all its predecessors
 		stopLoss.transmit(true);
 
-		ibkrConnectionHandler.controller().placeOrModifyOrder(contractDetails.contract(),
-		                                                      parent,
-		                                                      new IbkrOrderHandler(contractDetails.contract(),
-		                                                                           parent));
+		ibkrConnectionHandler.controller()
+		                     .placeOrModifyOrder(contractDetails.contract(),
+		                                         parent,
+		                                         new IbkrOrderHandler(contractDetails.contract(),
+		                                                              parent,
+		                                                              mainOrderListener));
 
 		if (orderType == OrderType.STP_LMT) {
 			log.info("Placed main {} {} {}, STP: {}, LMT: {}, QTT: {}, SL: {}, TP: {}",
 			         parent.orderId(),
-					 parent.action(),
+			         parent.action(),
 			         contractDetails.contract().symbol(),
 			         round(stop),
 			         round(limit),
@@ -93,25 +99,23 @@ class IbkrOrderHelper {
 		takeProfit.parentId(parent.orderId());
 		stopLoss.parentId(parent.orderId());
 
-		ibkrConnectionHandler.controller().placeOrModifyOrder(contractDetails.contract(),
-		                                                      takeProfit,
-		                                                      new IbkrOrderHandler(contractDetails.contract(),
-		                                                                           takeProfit));
+		ibkrConnectionHandler.controller()
+		                     .placeOrModifyOrder(contractDetails.contract(),
+		                                         takeProfit,
+		                                         new IbkrOrderHandler(contractDetails.contract(),
+		                                                              takeProfit,
+		                                                              tpOrderListener));
 
-		log.info("Placed TP id {} {} {}",
-		         takeProfit.orderId(),
-		         contractDetails.contract().symbol(),
-		         takeProfitPrice);
+		log.info("Placed TP id {} {} {}", takeProfit.orderId(), contractDetails.contract().symbol(), takeProfitPrice);
 
-		ibkrConnectionHandler.controller().placeOrModifyOrder(contractDetails.contract(),
-		                                                      stopLoss,
-		                                                      new IbkrOrderHandler(contractDetails.contract(),
-		                                                                           stopLoss));
+		ibkrConnectionHandler.controller()
+		                     .placeOrModifyOrder(contractDetails.contract(),
+		                                         stopLoss,
+		                                         new IbkrOrderHandler(contractDetails.contract(),
+		                                                              stopLoss,
+		                                                              slOrderListener));
 
-		log.info("Placed SL id {} {} {}",
-		         stopLoss.orderId(),
-		         contractDetails.contract().symbol(),
-		         stopLossPrice);
+		log.info("Placed SL id {} {} {}", stopLoss.orderId(), contractDetails.contract().symbol(), stopLossPrice);
 
 		return new OrderBracketIds(parent.orderId(), takeProfit.orderId(), stopLoss.orderId());
 	}
