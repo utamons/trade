@@ -12,9 +12,6 @@
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} %-5level: %msg%n</pattern>
         </encoder>
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>INFO</level>
-        </filter>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>d://trade.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>7</maxHistory>

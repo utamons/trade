@@ -252,10 +252,20 @@ public class TradeCalc {
 			risk = net * MAX_RISK_REWARD_RATIO;
 
 			stopLoss =
-					isLong() ? takeProfit - net / quantity - risk / quantity :
-							takeProfit + net / quantity + risk / quantity;
+					isLong() ? breakEven - risk / quantity :
+							breakEven + risk / quantity;
 
 			fillTradeAndRiskFields(net);
+
+			log.debug("quantity: {}, take profit: {}, stop loss {}({}), risk: {}, reward: {}, " + "risk {}% rr: {}",
+			          quantity,
+			          fmt(takeProfit),
+			          fmt(stopLoss),
+			          fmt(correctedStopLoss(stopLoss)),
+			          fmt(risk),
+			          fmt(outputExpected),
+			          fmt(riskPercent),
+			          fmt(riskRewardRatioPercent));
 
 			tradeError = areRiskLimitsFailed();
 		} while (tradeError != null && (quantity = quantity - 1) > 0);
@@ -301,7 +311,7 @@ public class TradeCalc {
 		if (riskPercent > MAX_RISK_PERCENT) {
 			return riskFailed + " 3";
 		}
-		if (round(riskRewardRatioPercent) > round(1 / MAX_RISK_REWARD_RATIO * 100)) {
+		if (round(riskRewardRatioPercent) > round(MAX_RISK_REWARD_RATIO * 100)) {
 			return riskFailed + " 4";
 		}
 		return null;
