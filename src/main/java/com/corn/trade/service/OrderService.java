@@ -20,7 +20,7 @@ public class OrderService extends BaseService {
 		addRepo(orderRepo);
 	}
 
-	public void updateOrder(long id, long orderId, OrderStatus status, long filled, long remaining, double avgFillPrice) throws DBException {
+	public synchronized void updateOrder(long id, long orderId, OrderStatus status, long filled, long remaining, double avgFillPrice) throws DBException {
 		beginTransaction();
 		Order order = orderRepo.findById(id).orElseThrow(() -> new DBException("Order not found"));
 		order.setOrderId(String.valueOf(orderId));
@@ -31,7 +31,7 @@ public class OrderService extends BaseService {
 		commitTransaction();
 	}
 
-	public Order createOrder(Trade trade, TradeData tradeData, OrderRole orderRole, OrderType orderType, Order parentOrder) {
+	public synchronized Order createOrder(Trade trade, TradeData tradeData, OrderRole orderRole, OrderType orderType, Order parentOrder) {
 		beginTransaction();
 		Order order = new Order();
 		order.setTrade(trade);
@@ -50,14 +50,14 @@ public class OrderService extends BaseService {
 		return order;
 	}
 
-	public void updateOrderId(Long id, int orderId) throws DBException {
+	public synchronized void updateOrderId(Long id, int orderId) throws DBException {
 		beginTransaction();
 		Order order = orderRepo.findById(id).orElseThrow(() -> new DBException("Order not found"));
 		order.setOrderId(String.valueOf(orderId));
 		commitTransaction();
 	}
 
-	public void updateOrderError(long id, String errorCode, String errorMsg) throws DBException {
+	public synchronized void updateOrderError(long id, String errorCode, String errorMsg) throws DBException {
 		beginTransaction();
 		Order order = orderRepo.findById(id).orElseThrow(() -> new DBException("Order not found"));
 		order.setErrorCode(errorCode);

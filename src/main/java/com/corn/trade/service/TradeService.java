@@ -17,6 +17,9 @@ import com.corn.trade.util.ExchangeTime;
 
 import java.math.BigDecimal;
 
+/*
+  The class is not intended to be shared across threads, it is not thread-safe!
+ */
 public class TradeService extends BaseService {
 
 	private final TradeRepo tradeRepo;

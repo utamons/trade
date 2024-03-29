@@ -6,6 +6,9 @@ import jakarta.persistence.EntityManager;
 
 import java.util.List;
 
+/*
+  The class is not intended to be shared across threads, it is not thread-safe!
+ */
 public abstract class BaseService {
 	private final List<IRepo> repos = new java.util.ArrayList<>();
 

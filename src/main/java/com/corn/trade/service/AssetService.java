@@ -13,6 +13,9 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Optional;
 
+/*
+  The class is not intended to be shared across threads, it is not thread-safe!
+ */
 public class AssetService extends BaseService {
 	private static final Logger       log       = LoggerFactory.getLogger(AssetService.class);
 	private final        ExchangeRepo exchangeRepo;
@@ -53,15 +56,9 @@ public class AssetService extends BaseService {
 		                   .orElseThrow(() -> new DBException("Exchange " + exchangeName + " not found."));
 	}
 
-	public Asset getAsset(String assetName, String exchangeName) throws DBException {
-		Exchange exchange = getExchange(exchangeName);
-
-		return assetRepo.findAsset(assetName, exchange)
-		                .orElseThrow(() -> new DBException("Asset " + assetName + "/" + exchangeName + " not found."));
-	}
-
 	public Asset getAsset(String assetName, String exchangeName, Broker broker) throws DBException, BrokerException {
 		log.debug("start");
+		beginTransaction();
 		Exchange exchange = getExchange(exchangeName);
 
 		Optional<Asset> asset = assetRepo.findAsset(assetName, exchange);
@@ -94,10 +91,12 @@ public class AssetService extends BaseService {
 			newAsset.setName(assetName);
 			newAsset.setExchange(confirmedExchange);
 			assetRepo.save(newAsset);
+			commitTransaction();
 
 			log.debug("finish");
 			return newAsset;
 		} else {
+			commitTransaction();
 			log.debug("finish");
 			return asset.get();
 		}
