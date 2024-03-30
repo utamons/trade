@@ -38,8 +38,7 @@ public abstract class BaseService {
 
 	protected void beginTransaction() {
 		if (entityManager == null) {
-			entityManager = JpaUtil.getEntityManager();
-			withEntityManager(entityManager);
+			withEntityManager(JpaUtil.getEntityManager());
 			localEm = true;
 			entityManager.getTransaction().begin();
 		}
