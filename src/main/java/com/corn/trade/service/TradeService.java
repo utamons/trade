@@ -15,7 +15,7 @@ import com.corn.trade.type.PositionType;
 import com.corn.trade.type.TradeStatus;
 import com.corn.trade.util.ExchangeTime;
 
-import java.math.BigDecimal;
+import static com.corn.trade.util.Util.toBigDecimal;
 
 /*
   The class is not intended to be shared across threads, it is not thread-safe!
@@ -89,8 +89,10 @@ public class TradeService extends BaseService {
 			trade.setAsset(asset);
 			trade.setType(tradeData.getPositionType().name());
 			trade.setQuantity(tradeData.getQuantity());
-			trade.setStopLossPrice(BigDecimal.valueOf(tradeData.getOrderStop()));
-			trade.setGoal(BigDecimal.valueOf(tradeData.getGoal()));
+			trade.setInitialPrice(toBigDecimal(tradeData.getOrderLimit()));
+			trade.setStopLossPrice(toBigDecimal(tradeData.getOrderStop()));
+			trade.setGoal(toBigDecimal(tradeData.getGoal()));
+			trade.setRemainingQuantity(tradeData.getQuantity());
 			trade.setStatus(TradeStatus.OPEN.name());
 			trade.setCreatedAt(exchangeTime.nowInExchangeTZ().toLocalDateTime());
 			tradeRepo.save(trade);

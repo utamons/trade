@@ -3,11 +3,8 @@ package com.corn.trade.broker;
 import com.corn.trade.model.Bar;
 import com.corn.trade.model.TradeContext;
 import com.corn.trade.model.TradeData;
-import com.corn.trade.type.OrderRole;
-import com.corn.trade.type.OrderStatus;
 import com.corn.trade.type.OrderType;
 import com.corn.trade.type.PositionType;
-import com.corn.trade.util.ChangeOrderListener;
 import com.corn.trade.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +31,7 @@ public abstract class Broker {
 	protected              Double                                   dayHigh;
 	protected              Double                                   dayLow;
 	protected              int                                      contextListenerId = 0;
+	private                PositionManager                          positionManager;
 	private                String                                   assetName;
 	private                String                                   name;
 
@@ -43,6 +41,10 @@ public abstract class Broker {
 
 	public String getName() {
 		return name;
+	}
+
+	public String getAssetName() {
+		return assetName;
 	}
 
 	public void setName(String name) {
@@ -69,15 +71,20 @@ public abstract class Broker {
 	protected abstract void cancelMarketData();
 
 	public void openPosition(TradeData tradeData) throws BrokerException {
-			// Place orders
-			OrderBracketIds bracketIds = placeOrderWithBracket(tradeData.getQuantity(),
-			                                                   tradeData.getOrderStop(),
-			                                                   tradeData.getOrderLimit(),
-			                                                   tradeData.getTechStopLoss() ==
-			                                                   null ? tradeData.getStopLoss() : tradeData.getTechStopLoss(),
-			                                                   tradeData.getTakeProfit(),
-			                                                   tradeData.getPositionType(),
-			                                                   tradeData.getOrderStop() == null ? OrderType.LMT : OrderType.STP_LMT);
+		// Place orders
+		OrderType orderType = tradeData.getOrderStop() == null ? OrderType.LMT : OrderType.STP_LMT;
+		OrderBracketIds bracketIds = placeOrderWithBracket(tradeData.getQuantity(),
+		                                                   tradeData.getOrderStop(),
+		                                                   tradeData.getOrderLimit(),
+		                                                   tradeData.getTechStopLoss() ==
+		                                                   null ? tradeData.getStopLoss() : tradeData.getTechStopLoss(),
+		                                                   tradeData.getTakeProfit(),
+		                                                   tradeData.getPositionType(),
+		                                                   orderType);
+		if (positionManager == null) {
+			positionManager = new PositionManager(this);
+		}
+		positionManager.openPosition(tradeData, bracketIds, orderType);
 	}
 
 	public abstract OrderBracketIds placeOrderWithBracket(long qtt,

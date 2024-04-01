@@ -30,4 +30,11 @@ public class Util {
 		}
 		return BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_UP).doubleValue();
 	}
+
+	public static BigDecimal toBigDecimal(Double value) {
+		if (value == null) {
+			return null;
+		}
+		return BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_UP);
+	}
 }
