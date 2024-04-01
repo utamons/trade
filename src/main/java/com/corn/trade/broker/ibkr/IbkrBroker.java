@@ -8,7 +8,6 @@ import com.corn.trade.jpa.DBException;
 import com.corn.trade.service.AssetService;
 import com.corn.trade.type.PositionType;
 import com.corn.trade.type.TimeFrame;
-import com.corn.trade.util.ChangeOrderListener;
 import com.corn.trade.util.ExchangeTime;
 import com.corn.trade.util.Trigger;
 import com.ib.client.*;
@@ -212,10 +211,7 @@ public class IbkrBroker extends Broker {
 	                                             Double stopLoss,
 	                                             Double takeProfit,
 	                                             PositionType positionType,
-	                                             com.corn.trade.type.OrderType tOrderType,
-	                                             ChangeOrderListener mainOrderListener,
-	                                             ChangeOrderListener tpOrderListener,
-	                                             ChangeOrderListener slOrderListener) throws BrokerException {
+	                                             com.corn.trade.type.OrderType tOrderType) throws BrokerException {
 		Action action = positionType == PositionType.LONG ? Action.BUY : Action.SELL;
 		try {
 			return ibkrOrderHelper.placeOrderWithBracket(contractDetails,
@@ -225,10 +221,7 @@ public class IbkrBroker extends Broker {
 			                                             stopLoss,
 			                                             takeProfit,
 			                                             action,
-			                                             fromTOrderType(tOrderType),
-			                                             mainOrderListener,
-			                                             tpOrderListener,
-			                                             slOrderListener);
+			                                             fromTOrderType(tOrderType));
 		} catch (IbkrException e) {
 			throw new BrokerException(e.getMessage());
 		}

@@ -69,7 +69,7 @@ class IbkrPositionHelper {
 
 				ibkrConnectionHandler.controller().placeOrModifyOrder(lookedUpContract,
 				                                                      closeOrder,
-				                                                      new IbkrOrderHandler(lookedUpContract, closeOrder, null));
+				                                                      new IbkrOrderHandler(lookedUpContract, closeOrder));
 				log.info("Placed DROP ALL id {} {}, qtt: {}", closeOrder.orderId(), contract.symbol(), pos);
 
 				ExecutionFilter filter = new ExecutionFilter();

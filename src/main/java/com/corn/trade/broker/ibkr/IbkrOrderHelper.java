@@ -2,7 +2,6 @@ package com.corn.trade.broker.ibkr;
 
 import com.corn.trade.TradeWindow;
 import com.corn.trade.broker.OrderBracketIds;
-import com.corn.trade.util.ChangeOrderListener;
 import com.ib.client.*;
 import com.ib.client.Types.Action;
 import com.ib.controller.ApiController;
@@ -31,10 +30,7 @@ class IbkrOrderHelper {
 	                                             Double stopLossPrice,
 	                                             Double takeProfitPrice,
 	                                             Action action,
-	                                             OrderType orderType,
-	                                             ChangeOrderListener mainOrderListener,
-	                                             ChangeOrderListener tpOrderListener,
-	                                             ChangeOrderListener slOrderListener) {
+	                                             OrderType orderType) {
 		if (!ibkrConnectionHandler.isConnected()) {
 			throw new IbkrException("IBKR not connected");
 		}
@@ -72,8 +68,7 @@ class IbkrOrderHelper {
 		                     .placeOrModifyOrder(contractDetails.contract(),
 		                                         main,
 		                                         new IbkrOrderHandler(contractDetails.contract(),
-		                                                              main,
-		                                                              mainOrderListener));
+		                                                              main));
 
 		if (orderType == OrderType.STP_LMT) {
 			log.info("Placed main {} {} {}, STP: {}, LMT: {}, QTT: {}, SL: {}, TP: {}",
@@ -103,8 +98,7 @@ class IbkrOrderHelper {
 		                     .placeOrModifyOrder(contractDetails.contract(),
 		                                         takeProfit,
 		                                         new IbkrOrderHandler(contractDetails.contract(),
-		                                                              takeProfit,
-		                                                              tpOrderListener));
+		                                                              takeProfit));
 
 		log.info("Placed TP id {} {} {}", takeProfit.orderId(), contractDetails.contract().symbol(), takeProfitPrice);
 
@@ -112,8 +106,7 @@ class IbkrOrderHelper {
 		                     .placeOrModifyOrder(contractDetails.contract(),
 		                                         stopLoss,
 		                                         new IbkrOrderHandler(contractDetails.contract(),
-		                                                              stopLoss,
-		                                                              slOrderListener));
+		                                                              stopLoss));
 
 		log.info("Placed SL id {} {} {}", stopLoss.orderId(), contractDetails.contract().symbol(), stopLossPrice);
 

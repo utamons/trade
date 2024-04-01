@@ -1,6 +1,5 @@
 package com.corn.trade.broker.ibkr;
 
-import com.corn.trade.util.ChangeOrderListener;
 import com.ib.client.*;
 import com.ib.controller.ApiController;
 import org.slf4j.Logger;
@@ -12,12 +11,10 @@ class IbkrOrderHandler implements ApiController.IOrderHandler {
 	public static final Logger              log       = LoggerFactory.getLogger(IbkrOrderHandler.class);
 	private final       Contract            contract;
 	private final       Order               order;
-	private final       ChangeOrderListener changeOrderListener;
 
-	public IbkrOrderHandler(Contract contract, Order order, ChangeOrderListener changeOrderListener) {
+	public IbkrOrderHandler(Contract contract, Order order) {
 		this.contract = contract;
 		this.order = order;
-		this.changeOrderListener = changeOrderListener;
 	}
 
 	private String orderInfo() {
@@ -54,23 +51,22 @@ class IbkrOrderHandler implements ApiController.IOrderHandler {
 	                        int clientId,
 	                        String whyHeld,
 	                        double mktCapPrice) {
-		log.info("{} status: {}", orderInfo(), status);
-		if (changeOrderListener == null) {
-			return;
-		}
-		changeOrderListener.onOrderChange(order.orderId(),
-		                                  fromOrderStatus(status),
-		                                  filled.longValue(),
-		                                  remaining.longValue(),
-		                                  avgFillPrice);
+		log.info("{} status: {}, filled: {}, remaining: {}, avgFillPrice: {}, lastFillPrice: {}, permId: {}, parentId: {}, clientId: {}, whyHeld: {}, mktCapPrice: {}",
+		         orderInfo(),
+		         fromOrderStatus(status),
+		         filled,
+		         remaining,
+		         avgFillPrice,
+		         lastFillPrice,
+		         permId,
+		         parentId,
+		         clientId,
+		         whyHeld,
+		         mktCapPrice);
 	}
 
 	@Override
 	public void handle(int errorCode, String errorMsg) {
 		log.error("{} errorCode: {}, errorMsg: {}", orderInfo(), errorCode, errorMsg);
-		if (changeOrderListener == null) {
-			return;
-		}
-		changeOrderListener.onOrderError(order.orderId(), String.valueOf(errorCode), errorMsg);
 	}
 }

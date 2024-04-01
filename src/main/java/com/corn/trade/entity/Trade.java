@@ -2,15 +2,13 @@ package com.corn.trade.entity;
 
 import jakarta.persistence.*;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Date;
+import java.util.List;
 
-@SuppressWarnings("unused")
 @Entity
 @Table(name = "trade")
-public class Trade implements Serializable {
+public class Trade {
 
 	@Id
 	@Column(name = "id", nullable = false)
@@ -19,6 +17,9 @@ public class Trade implements Serializable {
 
 	@ManyToOne
 	private Asset asset;
+
+	@OneToMany(mappedBy = "trade")
+	private List<Order> orders;
 
 	/**
 	 * LONG,SHORT
@@ -29,8 +30,8 @@ public class Trade implements Serializable {
 	@Column(name = "quantity", nullable = false)
 	private Long quantity;
 
-	@Column(name = "limit_price", nullable = false)
-	private BigDecimal limitPrice;
+	@Column(name = "initial_price", nullable = false)
+	private BigDecimal initialPrice;
 
 	@Column(name = "stop_loss_price", nullable = false)
 	private BigDecimal stopLossPrice;
@@ -38,11 +39,11 @@ public class Trade implements Serializable {
 	@Column(name = "goal", nullable = false)
 	private BigDecimal goal;
 
-	@Column(name = "execution_price")
-	private BigDecimal executionPrice;
+	@Column(name = "remaining_quantity", nullable = false)
+	private Long remainingQuantity;
 
 	/**
-	 * OPEN, CLOSED, PARTIALLY_CLOSED
+	 * NEW, OPEN, CLOSED, PARTIALLY_CLOSED
 	 */
 	@Column(name = "status", nullable = false)
 	private String status;
@@ -50,7 +51,7 @@ public class Trade implements Serializable {
 	/**
 	 * SUCCESS, STOP_LOSS, BE, DROP
 	 */
-	@Column(name = "result", nullable = false)
+	@Column(name = "result")
 	private String result;
 
 	@Column(name = "profit_loss")
@@ -63,7 +64,7 @@ public class Trade implements Serializable {
 	private LocalDateTime createdAt;
 
 	@Column(name = "closed_at")
-	private Date closedAt;
+	private LocalDateTime closedAt;
 
 	public void setId(Long id) {
 		this.id = id;
@@ -73,12 +74,20 @@ public class Trade implements Serializable {
 		return id;
 	}
 
+	public Asset getAsset() {
+		return asset;
+	}
+
 	public void setAsset(Asset asset) {
 		this.asset = asset;
 	}
 
-	public Asset getAsset() {
-		return asset;
+	public List<Order> getOrders() {
+		return orders;
+	}
+
+	public void setOrders(List<Order> orders) {
+		this.orders = orders;
 	}
 
 	/**
@@ -103,12 +112,12 @@ public class Trade implements Serializable {
 		return quantity;
 	}
 
-	public void setLimitPrice(BigDecimal limitPrice) {
-		this.limitPrice = limitPrice;
+	public void setInitialPrice(BigDecimal initialPrice) {
+		this.initialPrice = initialPrice;
 	}
 
-	public BigDecimal getLimitPrice() {
-		return limitPrice;
+	public BigDecimal getInitialPrice() {
+		return initialPrice;
 	}
 
 	public void setStopLossPrice(BigDecimal stopLossPrice) {
@@ -127,23 +136,23 @@ public class Trade implements Serializable {
 		return goal;
 	}
 
-	public void setExecutionPrice(BigDecimal executionPrice) {
-		this.executionPrice = executionPrice;
+	public void setRemainingQuantity(Long remainingQuantity) {
+		this.remainingQuantity = remainingQuantity;
 	}
 
-	public BigDecimal getExecutionPrice() {
-		return executionPrice;
+	public Long getRemainingQuantity() {
+		return remainingQuantity;
 	}
 
 	/**
-	 * OPEN, CLOSED, PARTIALLY_CLOSED
+	 * NEW, OPEN, CLOSED, PARTIALLY_CLOSED
 	 */
 	public void setStatus(String status) {
 		this.status = status;
 	}
 
 	/**
-	 * OPEN, CLOSED, PARTIALLY_CLOSED
+	 * NEW, OPEN, CLOSED, PARTIALLY_CLOSED
 	 */
 	public String getStatus() {
 		return status;
@@ -187,58 +196,11 @@ public class Trade implements Serializable {
 		return createdAt;
 	}
 
-	public void setClosedAt(Date closedAt) {
+	public void setClosedAt(LocalDateTime closedAt) {
 		this.closedAt = closedAt;
 	}
 
-	public Date getClosedAt() {
+	public LocalDateTime getClosedAt() {
 		return closedAt;
-	}
-
-	@Override
-	public String toString() {
-		return "Trade{" +
-		       "id=" +
-		       id +
-		       '\'' +
-		       "assetId=" + asset +
-		       '\'' +
-		       "type=" +
-		       type +
-		       '\'' +
-		       "quantity=" +
-		       quantity +
-		       '\'' +
-		       "limitPrice=" +
-		       limitPrice +
-		       '\'' +
-		       "stopLossPrice=" +
-		       stopLossPrice +
-		       '\'' +
-		       "goal=" +
-		       goal +
-		       '\'' +
-		       "executionPrice=" +
-		       executionPrice +
-		       '\'' +
-		       "status=" +
-		       status +
-		       '\'' +
-		       "result=" +
-		       result +
-		       '\'' +
-		       "profitLoss=" +
-		       profitLoss +
-		       '\'' +
-		       "riskRewardRatio=" +
-		       riskRewardRatio +
-		       '\'' +
-		       "createdAt=" +
-		       createdAt +
-		       '\'' +
-		       "closedAt=" +
-		       closedAt +
-		       '\'' +
-		       '}';
 	}
 }

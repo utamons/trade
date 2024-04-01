@@ -89,7 +89,6 @@ public class TradeService extends BaseService {
 			trade.setAsset(asset);
 			trade.setType(tradeData.getPositionType().name());
 			trade.setQuantity(tradeData.getQuantity());
-			trade.setLimitPrice(BigDecimal.valueOf(tradeData.getOrderLimit()));
 			trade.setStopLossPrice(BigDecimal.valueOf(tradeData.getOrderStop()));
 			trade.setGoal(BigDecimal.valueOf(tradeData.getGoal()));
 			trade.setStatus(TradeStatus.OPEN.name());

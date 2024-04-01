@@ -2,14 +2,13 @@ package com.corn.trade.entity;
 
 import jakarta.persistence.*;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @SuppressWarnings("unused")
 @Entity
 @Table(name = "order")
-public class Order implements Serializable {
+public class Order {
 
 	@Id
 	@Column(name = "id", nullable = false)
@@ -19,20 +18,11 @@ public class Order implements Serializable {
 	/**
 	 * internal broker id for the order
 	 */
-	@Column(name = "order_id", nullable = false)
+	@Column(name = "order_id")
 	private String orderId;
 
 	@ManyToOne
-	private Asset asset;
-
-	@ManyToOne
 	private Trade trade;
-
-	@ManyToOne
-	private Order parentOrder;
-
-	@Column(name = "position_type", nullable = false)
-	private String positionType;
 
 	/**
 	 * MAIN, STOP_LOSS, TAKE_PROFIT, DROP_ALL
@@ -61,56 +51,18 @@ public class Order implements Serializable {
 	@Column(name = "aux_price")
 	private BigDecimal auxPrice;
 
-	/**
-	 * average fill price
-	 */
-	@Column(name = "avg_fill_price")
-	private BigDecimal avgFillPrice;
+	@Column(name = "avg_price")
+	private BigDecimal avgPrice;
 
 	/**
-	 * NEW, FILLED, CANCELLED, REJECTED, INACTIVE
+	 * ACTIVE, EXECUTED
 	 */
-	@Column(name = "status", nullable = false)
+	@Column(name = "status")
 	private String status;
 
-	/**
-	 * DAY, GTC, IOC, FOK
-	 */
-	@Column(name = "time_in_force")
-	private String timeInForce;
+	private LocalDateTime createdAt;
 
-	/**
-	 * number of filled positions
-	 */
-	@Column(name = "filled")
-	private Long filled;
-
-	/**
-	 * number of remaining positions
-	 */
-	@Column(name = "remaining")
-	private Long remaining;
-
-	@Column(name = "created_at", nullable = false)
-	private Date createdAt;
-
-	@Column(name = "submitted_at")
-	private Date submittedAt;
-
-	@Column(name = "filled_at")
-	private Date filledAt;
-
-	@Column(name = "cancelled_at")
-	private Date cancelledAt;
-
-	@Column(name = "updated_at")
-	private Date updatedAt;
-
-	@Column(name = "errorCode")
-	private String errorCode;
-
-	@Column(name = "errorMsg")
-	private String errorMsg;
+	private LocalDateTime executedAt;
 
 	public void setId(Long id) {
 		this.id = id;
@@ -118,14 +70,6 @@ public class Order implements Serializable {
 
 	public Long getId() {
 		return id;
-	}
-
-	public Order getParentOrder() {
-		return parentOrder;
-	}
-
-	public void setParentOrder(Order parentOrder) {
-		this.parentOrder = parentOrder;
 	}
 
 	/**
@@ -142,28 +86,12 @@ public class Order implements Serializable {
 		return orderId;
 	}
 
-	public Asset getAsset() {
-		return asset;
-	}
-
-	public void setAsset(Asset asset) {
-		this.asset = asset;
-	}
-
 	public Trade getTrade() {
 		return trade;
 	}
 
 	public void setTrade(Trade trade) {
 		this.trade = trade;
-	}
-
-	public void setPositionType(String positionType) {
-		this.positionType = positionType;
-	}
-
-	public String getPositionType() {
-		return positionType;
 	}
 
 	/**
@@ -230,199 +158,41 @@ public class Order implements Serializable {
 		return auxPrice;
 	}
 
-	/**
-	 * average fill price
-	 */
-	public void setAvgFillPrice(BigDecimal avgFillPrice) {
-		this.avgFillPrice = avgFillPrice;
+	public void setAvgPrice(BigDecimal avgPrice) {
+		this.avgPrice = avgPrice;
+	}
+
+	public BigDecimal getAvgPrice() {
+		return avgPrice;
 	}
 
 	/**
-	 * average fill price
-	 */
-	public BigDecimal getAvgFillPrice() {
-		return avgFillPrice;
-	}
-
-	/**
-	 * NEW, FILLED, CANCELLED, REJECTED, INACTIVE
+	 * ACTIVE, EXECUTED
 	 */
 	public void setStatus(String status) {
 		this.status = status;
 	}
 
 	/**
-	 * NEW, FILLED, CANCELLED, REJECTED, INACTIVE
+	 * ACTIVE, EXECUTED
 	 */
 	public String getStatus() {
 		return status;
 	}
 
-	/**
-	 * DAY, GTC, IOC, FOK
-	 */
-	public void setTimeInForce(String timeInForce) {
-		this.timeInForce = timeInForce;
-	}
-
-	/**
-	 * DAY, GTC, IOC, FOK
-	 */
-	public String getTimeInForce() {
-		return timeInForce;
-	}
-
-	/**
-	 * number of filled positions
-	 */
-	public void setFilled(Long filled) {
-		this.filled = filled;
-	}
-
-	/**
-	 * number of filled positions
-	 */
-	public Long getFilled() {
-		return filled;
-	}
-
-	/**
-	 * number of remaining positions
-	 */
-	public void setRemaining(Long remaining) {
-		this.remaining = remaining;
-	}
-
-	/**
-	 * number of remaining positions
-	 */
-	public Long getRemaining() {
-		return remaining;
-	}
-
-	public void setCreatedAt(Date createdAt) {
-		this.createdAt = createdAt;
-	}
-
-	public Date getCreatedAt() {
+	public LocalDateTime getCreatedAt() {
 		return createdAt;
 	}
 
-	public void setSubmittedAt(Date submittedAt) {
-		this.submittedAt = submittedAt;
+	public void setCreatedAt(LocalDateTime createdAt) {
+		this.createdAt = createdAt;
 	}
 
-	public Date getSubmittedAt() {
-		return submittedAt;
+	public LocalDateTime getExecutedAt() {
+		return executedAt;
 	}
 
-	public void setFilledAt(Date filledAt) {
-		this.filledAt = filledAt;
-	}
-
-	public Date getFilledAt() {
-		return filledAt;
-	}
-
-	public void setCancelledAt(Date cancelledAt) {
-		this.cancelledAt = cancelledAt;
-	}
-
-	public Date getCancelledAt() {
-		return cancelledAt;
-	}
-
-	public void setUpdatedAt(Date updatedAt) {
-		this.updatedAt = updatedAt;
-	}
-
-	public Date getUpdatedAt() {
-		return updatedAt;
-	}
-
-	public void setErrorCode(String errorCode) {
-		this.errorCode = errorCode;
-	}
-
-	public String getErrorCode() {
-		return errorCode;
-	}
-
-	public void setErrorMsg(String errorMsg) {
-		this.errorMsg = errorMsg;
-	}
-
-	public String getErrorMsg() {
-		return errorMsg;
-	}
-
-	@Override
-	public String toString() {
-		return "Order{" +
-		       "id=" +
-		       id +
-		       '\'' +
-		       "orderId=" +
-		       orderId +
-		       '\'' +
-		       "assetId=" + asset +
-		       '\'' +
-		       "tradeId=" + trade +
-		       '\'' +
-		       "positionType=" +
-		       positionType +
-		       '\'' +
-		       "role=" +
-		       role +
-		       '\'' +
-		       "type=" +
-		       type +
-		       '\'' +
-		       "quantity=" +
-		       quantity +
-		       '\'' +
-		       "price=" +
-		       price +
-		       '\'' +
-		       "auxPrice=" +
-		       auxPrice +
-		       '\'' +
-		       "avgFillPrice=" +
-		       avgFillPrice +
-		       '\'' +
-		       "status=" +
-		       status +
-		       '\'' +
-		       "timeInForce=" +
-		       timeInForce +
-		       '\'' +
-		       "filled=" +
-		       filled +
-		       '\'' +
-		       "remaining=" +
-		       remaining +
-		       '\'' +
-		       "createdAt=" +
-		       createdAt +
-		       '\'' +
-		       "submittedAt=" +
-		       submittedAt +
-		       '\'' +
-		       "filledAt=" +
-		       filledAt +
-		       '\'' +
-		       "cancelledAt=" +
-		       cancelledAt +
-		       '\'' +
-		       "updatedAt=" +
-		       updatedAt +
-		       '\'' +
-		       "errorCode=" +
-		       errorCode +
-		       '\'' +
-		       "errorMsg=" +
-		       errorMsg +
-		       '\'' +
-		       '}';
+	public void setExecutedAt(LocalDateTime executedAt) {
+		this.executedAt = executedAt;
 	}
 }
