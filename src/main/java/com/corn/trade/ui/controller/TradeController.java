@@ -273,6 +273,7 @@ public class TradeController implements TradeViewListener {
 				view.messagePanel().show(e.getMessage(), Color.RED);
 				view.trafficLight().setRed();
 				goalWarning(false);
+				orderClean = false;
 				return;
 			}
 
@@ -306,13 +307,14 @@ public class TradeController implements TradeViewListener {
 				goalWarning(true);
 				view.trafficLight().setGreen();
 				view.messagePanel().show("Goal is too far", Color.ORANGE.darker());
-				orderClean = true;
+				orderClean = !tradeContext.isPositionOpen();
 			} else {
 				goalWarning(false);
 				view.trafficLight().setGreen();
 				view.messagePanel().show("Good to go", Color.GREEN.darker());
-				orderClean = true;
+				orderClean = !tradeContext.isPositionOpen();
 			}
+
 			checkButtons();
 		}
 	}

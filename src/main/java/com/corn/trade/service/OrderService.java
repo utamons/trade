@@ -4,8 +4,10 @@ import com.corn.trade.broker.OrderBracketIds;
 import com.corn.trade.entity.Order;
 import com.corn.trade.entity.Trade;
 import com.corn.trade.jpa.OrderRepo;
+import com.corn.trade.model.BracketOrders;
 import com.corn.trade.model.TradeData;
 import com.corn.trade.type.OrderRole;
+import com.corn.trade.type.OrderStatus;
 import com.corn.trade.type.OrderType;
 import com.corn.trade.util.ExchangeTime;
 
@@ -18,47 +20,49 @@ public class OrderService extends BaseService {
 		orderRepo = new OrderRepo(Order.class);
 	}
 
-	public void createBracketOrders(Trade trade, TradeData tradeData, OrderBracketIds bracketIds, OrderType mainOrderType,
-	                                ExchangeTime exchangeTime) {
+	public BracketOrders saveNewBracketOrders(Trade trade, TradeData tradeData, OrderBracketIds bracketIds, OrderType mainOrderType,
+	                                          ExchangeTime exchangeTime) {
 		beginTransaction();
 
+		Order mainOrder, stopLossOrder, takeProfitOrder;
+
 		try {
-			Order order = new Order();
-			order.setTrade(trade);
-			order.setOrderId(String.valueOf(bracketIds.mainId()));
-			order.setRole(OrderRole.MAIN.name());
-			order.setType(mainOrderType.name());
-			order.setQuantity(tradeData.getQuantity());
-			order.setPrice(toBigDecimal(tradeData.getOrderLimit()));
-			order.setAuxPrice(toBigDecimal(tradeData.getOrderStop()));
-			order.setCreatedAt(exchangeTime.nowInExchangeTZ().toLocalDateTime());
-			order.setStatus("NEW");
+			mainOrder = new Order();
+			mainOrder.setTrade(trade);
+			mainOrder.setOrderId(String.valueOf(bracketIds.mainId()));
+			mainOrder.setRole(OrderRole.MAIN.name());
+			mainOrder.setType(mainOrderType.name());
+			mainOrder.setQuantity(tradeData.getQuantity());
+			mainOrder.setPrice(toBigDecimal(tradeData.getOrderLimit()));
+			mainOrder.setAuxPrice(toBigDecimal(tradeData.getOrderStop()));
+			mainOrder.setCreatedAt(exchangeTime.nowInExchangeTZ().toLocalDateTime());
+			mainOrder.setStatus(OrderStatus.NEW.name());
 
-			orderRepo.save(order);
+			orderRepo.save(mainOrder);
 
-			Order stopLossOrder = new Order();
+			stopLossOrder = new Order();
 			stopLossOrder.setTrade(trade);
             stopLossOrder.setOrderId(String.valueOf(bracketIds.stopLossId()));
-			order.setRole(OrderRole.STOP_LOSS.name());
+			stopLossOrder.setRole(OrderRole.STOP_LOSS.name());
 			stopLossOrder.setType(OrderType.STP.name());
-			order.setQuantity(tradeData.getQuantity());
+			stopLossOrder.setQuantity(tradeData.getQuantity());
 			stopLossOrder.setPrice(toBigDecimal(tradeData.getStopLoss()));
 			stopLossOrder.setQuantity(tradeData.getQuantity());
 			stopLossOrder.setCreatedAt(exchangeTime.nowInExchangeTZ().toLocalDateTime());
-			order.setStatus("NEW");
+			stopLossOrder.setStatus(OrderStatus.NEW.name());
 
 			orderRepo.save(stopLossOrder);
 
-			Order takeProfitOrder = new Order();
+			takeProfitOrder = new Order();
 			takeProfitOrder.setTrade(trade);
 			takeProfitOrder.setOrderId(String.valueOf(bracketIds.takeProfitId()));
-			order.setRole(OrderRole.TAKE_PROFIT.name());
+			takeProfitOrder.setRole(OrderRole.TAKE_PROFIT.name());
 			takeProfitOrder.setType(OrderType.LMT.name());
-			order.setQuantity(tradeData.getQuantity());
+			takeProfitOrder.setQuantity(tradeData.getQuantity());
 			takeProfitOrder.setPrice(toBigDecimal(tradeData.getGoal()));
 			takeProfitOrder.setQuantity(tradeData.getQuantity());
 			takeProfitOrder.setCreatedAt(exchangeTime.nowInExchangeTZ().toLocalDateTime());
-			order.setStatus("NEW");
+			takeProfitOrder.setStatus(OrderStatus.NEW.name());
 
 			orderRepo.save(takeProfitOrder);
 
@@ -67,5 +71,6 @@ public class OrderService extends BaseService {
 			rollbackTransaction();
 			throw e;
 		}
+		return new BracketOrders(mainOrder, stopLossOrder, takeProfitOrder);
 	}
 }

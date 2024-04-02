@@ -110,7 +110,7 @@ class IbkrOrderHelper {
 
 		log.info("Placed SL id {} {} {}", stopLoss.orderId(), contractDetails.contract().symbol(), stopLossPrice);
 
-		return new OrderBracketIds(main.orderId(), takeProfit.orderId(), stopLoss.orderId());
+		return new OrderBracketIds(String.valueOf(main.orderId()), String.valueOf(takeProfit.orderId()), String.valueOf(stopLoss.orderId()));
 	}
 
 	public void dropAll(IbkrPositionHelper ibkrPositionHelper) {

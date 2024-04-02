@@ -79,7 +79,7 @@ public class TradeService extends BaseService {
 		return BaseWindow.ORDER_LUFT;
 	}
 
-	public Trade createTrade(String assetName, String exchangeName, TradeData tradeData) throws DBException {
+	public Trade saveNewTrade(String assetName, String exchangeName, TradeData tradeData) throws DBException {
 		beginTransaction();
 		try {
 			Trade trade = new Trade();
@@ -93,7 +93,7 @@ public class TradeService extends BaseService {
 			trade.setStopLossPrice(toBigDecimal(tradeData.getOrderStop()));
 			trade.setGoal(toBigDecimal(tradeData.getGoal()));
 			trade.setRemainingQuantity(tradeData.getQuantity());
-			trade.setStatus(TradeStatus.OPEN.name());
+			trade.setStatus(TradeStatus.NEW.name());
 			trade.setCreatedAt(exchangeTime.nowInExchangeTZ().toLocalDateTime());
 			tradeRepo.save(trade);
 			commitTransaction();

@@ -5,6 +5,7 @@ import com.corn.trade.broker.BrokerException;
 import com.corn.trade.broker.OrderBracketIds;
 import com.corn.trade.entity.Exchange;
 import com.corn.trade.jpa.DBException;
+import com.corn.trade.model.ExecutionData;
 import com.corn.trade.service.AssetService;
 import com.corn.trade.type.PositionType;
 import com.corn.trade.type.TimeFrame;
@@ -19,6 +20,7 @@ import com.ib.controller.Bar;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public class IbkrBroker extends Broker {
 	private static final org.slf4j.Logger       log                 = org.slf4j.LoggerFactory.getLogger(IbkrBroker.class);
@@ -57,6 +59,27 @@ public class IbkrBroker extends Broker {
 		       exchangeTime.endTrading().format(DateTimeFormatter.ofPattern("HH:mm:ss")) +
 		       " " +
 		       exchange.getTimeZone();
+	}
+
+	public static OrderType fromTOrderType(com.corn.trade.type.OrderType tOrderType) {
+		return switch (tOrderType) {
+			case STP -> OrderType.STP;
+			case LMT -> OrderType.LMT;
+			case MKT -> OrderType.MKT;
+			case STP_LMT -> OrderType.STP_LMT;
+			case MOC -> OrderType.MOC;
+		};
+	}
+
+	public static com.corn.trade.type.OrderStatus fromOrderStatus(OrderStatus status) {
+		return switch (status) {
+			case ApiPending, PreSubmitted, PendingSubmit, PendingCancel -> com.corn.trade.type.OrderStatus.PENDING;
+			case ApiCancelled, Cancelled -> com.corn.trade.type.OrderStatus.CANCELLED;
+			case Submitted -> com.corn.trade.type.OrderStatus.SUBMITTED;
+			case Filled -> com.corn.trade.type.OrderStatus.FILLED;
+			case Inactive -> com.corn.trade.type.OrderStatus.INACTIVE;
+			case Unknown -> com.corn.trade.type.OrderStatus.UNKNOWN;
+		};
 	}
 
 	private void initContract(String ticker, String exchange) throws BrokerException {
@@ -205,6 +228,41 @@ public class IbkrBroker extends Broker {
 	}
 
 	@Override
+	public void requestExecutionData(CompletableFuture<List<ExecutionData>> executions) throws BrokerException {
+		ExecutionFilter filter = new ExecutionFilter();
+		filter.symbol(contractDetails.contract().symbol());
+		filter.secType(contractDetails.contract().secType().name());
+		final ExchangeTime exchangeTime = getExchangeTime();
+
+		ibkrConnectionHandler.controller().reqExecutions(filter, new ApiController.ITradeReportHandler() {
+			final List<Execution> executionList = new java.util.ArrayList<>();
+
+			@Override
+			public void tradeReport(String tradeKey, Contract contract, Execution execution) {
+				if (contract.conid() == contractDetails.contract().conid()) executionList.add(execution);
+			}
+
+			@Override
+			public void tradeReportEnd() {
+				executions.complete(executionList.stream()
+				                                 .map(execution -> new ExecutionData(String.valueOf(execution.orderId()),
+				                                                                     getAssetName(),
+				                                                                     exchangeTime.nowInExchangeTZ()
+				                                                                                 .toLocalDateTime(),
+				                                                                     execution.price(),
+				                                                                     execution.avgPrice(),
+				                                                                     execution.shares().longValue()))
+				                                 .toList());
+			}
+
+			@Override
+			public void commissionReport(String tradeKey, CommissionReport commissionReport) {
+				log.debug("commission {}", commissionReport.commission());
+			}
+		});
+	}
+
+	@Override
 	public OrderBracketIds placeOrderWithBracket(long qtt,
 	                                             Double stop,
 	                                             Double limit,
@@ -227,24 +285,4 @@ public class IbkrBroker extends Broker {
 		}
 	}
 
-	public static OrderType fromTOrderType(com.corn.trade.type.OrderType tOrderType) {
-		return switch (tOrderType) {
-			case STP -> OrderType.STP;
-			case LMT -> OrderType.LMT;
-			case MKT -> OrderType.MKT;
-			case STP_LMT -> OrderType.STP_LMT;
-			case MOC -> OrderType.MOC;
-		};
-	}
-
-	public static com.corn.trade.type.OrderStatus fromOrderStatus(OrderStatus status) {
-		return switch (status) {
-			case ApiPending, PreSubmitted, PendingSubmit, PendingCancel -> com.corn.trade.type.OrderStatus.PENDING;
-			case ApiCancelled, Cancelled -> com.corn.trade.type.OrderStatus.CANCELLED;
-			case Submitted -> com.corn.trade.type.OrderStatus.SUBMITTED;
-			case Filled -> com.corn.trade.type.OrderStatus.FILLED;
-			case Inactive -> com.corn.trade.type.OrderStatus.INACTIVE;
-			case Unknown -> com.corn.trade.type.OrderStatus.UNKNOWN;
-		};
-	}
 }

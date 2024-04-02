@@ -1,17 +1,24 @@
 package com.corn.trade.broker;
 
+import com.corn.trade.entity.Exchange;
+import com.corn.trade.jpa.DBException;
 import com.corn.trade.model.Bar;
+import com.corn.trade.model.ExecutionData;
 import com.corn.trade.model.TradeContext;
 import com.corn.trade.model.TradeData;
+import com.corn.trade.service.AssetService;
 import com.corn.trade.type.OrderType;
 import com.corn.trade.type.PositionType;
+import com.corn.trade.util.ExchangeTime;
 import com.corn.trade.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 import static com.corn.trade.util.Util.round;
@@ -35,20 +42,38 @@ public abstract class Broker {
 	private                String                                   assetName;
 	private                String                                   name;
 
-	protected void setAssetName(String assetName) {
-		this.assetName = assetName;
-	}
-
 	public String getName() {
 		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	public String getAssetName() {
 		return assetName;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	protected void setAssetName(String assetName) {
+		this.assetName = assetName;
+	}
+
+	private ExchangeTime exchangeTime;
+
+	public ExchangeTime getExchangeTime() throws BrokerException {
+		if (exchangeName == null) {
+			throw new IllegalStateException("Exchange name not set.");
+		}
+		if (exchangeTime == null) {
+			Exchange exchange;
+			try {
+				exchange = new AssetService().getExchange(exchangeName);
+			} catch (DBException e) {
+				throw new BrokerException("Error getting exchange",e);
+			}
+			exchangeTime = new ExchangeTime(exchange);
+		}
+		return exchangeTime;
 	}
 
 	public String getExchangeName() {
@@ -69,6 +94,8 @@ public abstract class Broker {
 	protected abstract void requestMarketData() throws BrokerException;
 
 	protected abstract void cancelMarketData();
+
+	public abstract void requestExecutionData(CompletableFuture<List<ExecutionData>> executions) throws BrokerException;
 
 	public void openPosition(TradeData tradeData) throws BrokerException {
 		// Place orders
@@ -141,6 +168,7 @@ public abstract class Broker {
 		                                       .withDayHigh(dayHigh)
 		                                       .withDayLow(dayLow)
 		                                       .withAdr(adr)
+		                                       .withPositionOpen(positionManager != null && positionManager.isPositionOpen())
 		                                       .build();
 	}
 
