@@ -48,7 +48,7 @@ public class Position {
 		return new Position.Builder();
 	}
 
-	public Position.Builder toBuilder() {
+	public Position.Builder copy() {
 		return new Position.Builder(this);
 	}
 
@@ -111,5 +111,17 @@ public class Position {
 	@Override
 	public int hashCode() {
 		return Objects.hash(symbol, quantity, averagePrice, marketValue, unrealizedPnl, realizedPnl);
+	}
+
+	@Override
+	public String toString() {
+		return "Position{" +
+				"symbol='" + symbol + '\'' +
+				", quantity=" + quantity +
+				", averagePrice=" + averagePrice +
+				", marketValue=" + marketValue +
+				", unrealizedPnl=" + unrealizedPnl +
+				", realizedPnl=" + realizedPnl +
+				'}';
 	}
 }

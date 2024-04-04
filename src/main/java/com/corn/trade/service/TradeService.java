@@ -14,6 +14,10 @@ import com.corn.trade.model.TradeData;
 import com.corn.trade.type.PositionType;
 import com.corn.trade.type.TradeStatus;
 import com.corn.trade.util.ExchangeTime;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.corn.trade.util.Util.toBigDecimal;
 
@@ -22,6 +26,7 @@ import static com.corn.trade.util.Util.toBigDecimal;
  */
 public class TradeService extends BaseService {
 
+	private static final Logger log = LoggerFactory.getLogger(TradeService.class);
 	private final TradeRepo tradeRepo;
 	private final AssetRepo assetRepo;
 	private final ExchangeRepo exchangeRepo;
@@ -82,18 +87,36 @@ public class TradeService extends BaseService {
 	public void saveNewTrade(String assetName, String exchangeName, TradeData tradeData) throws DBException {
 		beginTransaction();
 		try {
-			Trade trade = new Trade();
+
 			Exchange exchange = exchangeRepo.findExchange(exchangeName).orElseThrow(()->new DBException("Exchange not found"));
 			Asset asset = assetRepo.findAsset(assetName, exchange).orElseThrow(()->new DBException("Asset not found"));
 			ExchangeTime exchangeTime = new ExchangeTime(exchange);
+
+			Trade existingTrade = null;
+			try {
+				existingTrade = entityManager.createQuery("select a from Trade a where a.asset = :asset and a.status = :status", Trade.class)
+				              .setParameter("asset", asset)
+				              .setParameter("status", TradeStatus.OPEN.name())
+				              .getSingleResult();
+			} catch (NoResultException e) {
+				log.info("No existing trade found for asset {}", assetName);
+			} catch (PersistenceException e) {
+				throw new DBException(e);
+			}
+
+			if (existingTrade != null) {
+				throw new DBException("Trade already exists for asset " + assetName);
+			}
+
+			Trade trade = new Trade();
 			trade.setAsset(asset);
 			trade.setType(tradeData.getPositionType().name());
 			trade.setQuantity(tradeData.getQuantity());
 			trade.setInitialPrice(toBigDecimal(tradeData.getOrderLimit()));
-			trade.setStopLossPrice(toBigDecimal(tradeData.getOrderStop()));
+			trade.setStopLossPrice(toBigDecimal(tradeData.getStopLoss()));
 			trade.setGoal(toBigDecimal(tradeData.getGoal()));
 			trade.setRemainingQuantity(tradeData.getQuantity());
-			trade.setStatus(TradeStatus.NEW.name());
+			trade.setStatus(TradeStatus.OPEN.name());
 			trade.setCreatedAt(exchangeTime.nowInExchangeTZ().toLocalDateTime());
 			tradeRepo.save(trade);
 			commitTransaction();

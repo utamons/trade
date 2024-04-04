@@ -48,7 +48,7 @@
             <column name="asset_id" type="BIGINT">
                 <constraints nullable="false"/>
             </column>
-            <column name="type" type="VARCHAR(4)" remarks="LONG,SHORT">
+            <column name="type" type="VARCHAR(5)" remarks="LONG,SHORT">
                 <constraints nullable="false"/>
             </column>
             <column name="quantity" type="BIGINT">

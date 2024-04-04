@@ -7,7 +7,7 @@ import com.corn.trade.ui.view.TradeView;
 public interface TradeViewListener {
 	void onExchangeChange(String exchangeName);
 	void onAssetChange(String assetName);
-	void onPositionChange(PositionType positionType);
+	void onPositionTypeChange(PositionType positionType);
 	void onEstimationTypeChange(EstimationType estimationType);
 	void onLevelChange(Double level);
 	void onTechStopLossChange(Double techStopLoss);

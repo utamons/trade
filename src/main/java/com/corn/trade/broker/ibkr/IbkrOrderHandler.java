@@ -5,16 +5,26 @@ import com.ib.controller.ApiController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.function.Consumer;
+
 import static com.corn.trade.broker.ibkr.IbkrBroker.fromOrderStatus;
 
 class IbkrOrderHandler implements ApiController.IOrderHandler {
-	public static final Logger              log       = LoggerFactory.getLogger(IbkrOrderHandler.class);
-	private final       Contract            contract;
-	private final       Order               order;
+	public static final Logger            log = LoggerFactory.getLogger(IbkrOrderHandler.class);
+	private final       Contract          contract;
+	private final       Order             order;
+	private final       Consumer<Boolean> executionListener;
 
 	public IbkrOrderHandler(Contract contract, Order order) {
 		this.contract = contract;
 		this.order = order;
+		this.executionListener = null;
+	}
+
+	public IbkrOrderHandler(Contract contract, Order order, Consumer<Boolean> executionListener) {
+		this.contract = contract;
+		this.order = order;
+		this.executionListener = executionListener;
 	}
 
 	private String orderInfo() {
@@ -51,18 +61,30 @@ class IbkrOrderHandler implements ApiController.IOrderHandler {
 	                        int clientId,
 	                        String whyHeld,
 	                        double mktCapPrice) {
-		log.info("{} status: {}, filled: {}, remaining: {}, avgFillPrice: {}, lastFillPrice: {}, permId: {}, parentId: {}, clientId: {}, whyHeld: {}, mktCapPrice: {}",
-		         orderInfo(),
-		         fromOrderStatus(status),
-		         filled,
-		         remaining,
-		         avgFillPrice,
-		         lastFillPrice,
-		         permId,
-		         parentId,
-		         clientId,
-		         whyHeld,
-		         mktCapPrice);
+		log.info(
+				"{} status: {}, filled: {}, remaining: {}, avgFillPrice: {}, lastFillPrice: {}, permId: {}, parentId: {}, " +
+				"clientId: {}, whyHeld: {}, mktCapPrice: {}",
+				orderInfo(),
+				fromOrderStatus(status),
+				filled,
+				remaining,
+				avgFillPrice,
+				lastFillPrice,
+				permId,
+				parentId,
+				clientId,
+				whyHeld,
+				mktCapPrice);
+		if (executionListener != null) {
+			if (status == OrderStatus.Filled) {
+				executionListener.accept(true);
+			} else if (status == OrderStatus.Cancelled ||
+			           status == OrderStatus.ApiCancelled ||
+			           status == OrderStatus.Inactive ||
+			           status == OrderStatus.Unknown) {
+				executionListener.accept(false);
+			}
+		}
 	}
 
 	@Override

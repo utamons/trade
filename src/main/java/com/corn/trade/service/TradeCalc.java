@@ -257,7 +257,7 @@ public class TradeCalc {
 
 			fillTradeAndRiskFields(net);
 
-			log.debug("quantity: {}, take profit: {}, stop loss {}({}), risk: {}, reward: {}, " + "risk {}% rr: {}",
+			/*log.debug("quantity: {}, take profit: {}, stop loss {}({}), risk: {}, reward: {}, " + "risk {}% rr: {}",
 			          quantity,
 			          fmt(takeProfit),
 			          fmt(stopLoss),
@@ -265,7 +265,7 @@ public class TradeCalc {
 			          fmt(risk),
 			          fmt(outputExpected),
 			          fmt(riskPercent),
-			          fmt(riskRewardRatioPercent));
+			          fmt(riskRewardRatioPercent));*/
 
 			tradeError = areRiskLimitsFailed();
 		} while (tradeError != null && (quantity = quantity - 1) > 0);

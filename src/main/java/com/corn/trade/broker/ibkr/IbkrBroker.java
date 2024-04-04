@@ -3,6 +3,7 @@ package com.corn.trade.broker.ibkr;
 import com.corn.trade.broker.Broker;
 import com.corn.trade.broker.BrokerException;
 import com.corn.trade.broker.OrderBracketIds;
+import com.corn.trade.broker.iPositionSubscriber;
 import com.corn.trade.entity.Exchange;
 import com.corn.trade.jpa.DBException;
 import com.corn.trade.model.ExecutionData;
@@ -21,11 +22,12 @@ import com.ib.controller.Bar;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 public class IbkrBroker extends Broker {
-	private static final org.slf4j.Logger       log                 = org.slf4j.LoggerFactory.getLogger(IbkrBroker.class);
-	private final        IbkrConnectionHandler  ibkrConnectionHandler;
-	private final        IbkrOrderHelper        ibkrOrderHelper;
+	private static final org.slf4j.Logger      log                 = org.slf4j.LoggerFactory.getLogger(IbkrBroker.class);
+	private              IbkrConnectionHandler ibkrConnectionHandler;
+	private final        IbkrOrderHelper       ibkrOrderHelper;
 	private              ContractDetails        contractDetails;
 	private              ITopMktDataHandler     mktDataHandler;
 	private              IHistoricalDataHandler dayHighLowDataHandler;
@@ -33,20 +35,14 @@ public class IbkrBroker extends Broker {
 	private              boolean                requestedMarketData = false;
 
 	public IbkrBroker(String ticker, String exchange, Trigger disconnectionListener) throws BrokerException {
+		super(disconnectionListener);
 		log.debug("init start");
 
-		try {
-			this.ibkrConnectionHandler = IbkrConnectionHandlerFactory.getConnectionHandler();
-			this.ibkrConnectionHandler.setDisconnectionListener(disconnectionListener);
-		} catch (IbkrException e) {
-			throw new BrokerException(e.getMessage(), e);
-		}
-
 		initHandlers();
-
 		initContract(ticker, exchange);
 
 		ibkrOrderHelper = new IbkrOrderHelper(ibkrConnectionHandler, this);
+		positionSubscriber = IbkrPositionSubscriberFactory.getPositionSubscriber();
 
 		log.debug("init finish");
 	}
@@ -174,6 +170,21 @@ public class IbkrBroker extends Broker {
 	}
 
 	@Override
+	protected iPositionSubscriber createPositionSubscriber() {
+		return IbkrPositionSubscriberFactory.getPositionSubscriber();
+	}
+
+	@Override
+	protected void initConnection(Trigger disconnectionListener) throws BrokerException {
+		try {
+			this.ibkrConnectionHandler = IbkrConnectionHandlerFactory.getConnectionHandler();
+			this.ibkrConnectionHandler.setDisconnectionListener(disconnectionListener);
+		} catch (IbkrException e) {
+			throw new BrokerException(e.getMessage(), e);
+		}
+	}
+
+	@Override
 	protected synchronized void requestAdr() throws BrokerException {
 		if (adr != null) {
 			notifyTradeContext();
@@ -269,7 +280,8 @@ public class IbkrBroker extends Broker {
 	                                             Double stopLoss,
 	                                             Double takeProfit,
 	                                             PositionType positionType,
-	                                             com.corn.trade.type.OrderType tOrderType) throws BrokerException {
+	                                             com.corn.trade.type.OrderType tOrderType,
+	                                             Consumer<Boolean> mainExecutionListener) throws BrokerException {
 		Action action = positionType == PositionType.LONG ? Action.BUY : Action.SELL;
 		try {
 			return ibkrOrderHelper.placeOrderWithBracket(contractDetails,
@@ -279,7 +291,8 @@ public class IbkrBroker extends Broker {
 			                                             stopLoss,
 			                                             takeProfit,
 			                                             action,
-			                                             fromTOrderType(tOrderType));
+			                                             fromTOrderType(tOrderType),
+			                                             mainExecutionListener);
 		} catch (IbkrException e) {
 			throw new BrokerException(e.getMessage());
 		}

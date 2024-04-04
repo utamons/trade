@@ -53,7 +53,7 @@ public class TradePanel extends BasePanel implements TradeView {
 		                                  PositionType.getValues(),
 		                                  spacing,
 		                                  fieldHeight,
-		                                  (positionType) -> controller.onPositionChange(PositionType.fromString(positionType)));
+		                                  (positionType) -> controller.onPositionTypeChange(PositionType.fromString(positionType)));
 
 		estimationBox = new LabeledComboBox("Estimation:",
 		                                    EstimationType.getValues(),
@@ -122,7 +122,7 @@ public class TradePanel extends BasePanel implements TradeView {
 		this.add(panel, BorderLayout.NORTH);
 
 		controller.onExchangeChange(exchanges.get(0));
-		controller.onPositionChange(PositionType.LONG);
+		controller.onPositionTypeChange(PositionType.LONG);
 		controller.onEstimationTypeChange(EstimationType.fromString(EstimationType.getValues().get(0)));
 	}
 

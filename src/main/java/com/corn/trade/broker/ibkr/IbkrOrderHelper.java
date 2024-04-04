@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static com.corn.trade.util.Util.round;
 
@@ -30,7 +31,7 @@ class IbkrOrderHelper {
 	                                             Double stopLossPrice,
 	                                             Double takeProfitPrice,
 	                                             Action action,
-	                                             OrderType orderType) {
+	                                             OrderType orderType, Consumer<Boolean> mainExecutionListener) {
 		if (!ibkrConnectionHandler.isConnected()) {
 			throw new IbkrException("IBKR not connected");
 		}
@@ -68,7 +69,7 @@ class IbkrOrderHelper {
 		                     .placeOrModifyOrder(contractDetails.contract(),
 		                                         main,
 		                                         new IbkrOrderHandler(contractDetails.contract(),
-		                                                              main));
+		                                                              main, mainExecutionListener));
 
 		if (orderType == OrderType.STP_LMT) {
 			log.info("Placed main {} {} {}, STP: {}, LMT: {}, QTT: {}, SL: {}, TP: {}",

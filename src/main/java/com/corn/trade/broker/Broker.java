@@ -8,6 +8,7 @@ import com.corn.trade.service.TradeService;
 import com.corn.trade.type.OrderType;
 import com.corn.trade.type.PositionType;
 import com.corn.trade.util.ExchangeTime;
+import com.corn.trade.util.Trigger;
 import com.corn.trade.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,30 +16,37 @@ import org.slf4j.LoggerFactory;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 import static com.corn.trade.util.Util.round;
 
 public abstract class Broker {
-	public static final    int                                      BARS_FOR_ADR      = 10;
-	protected static final int                                      ADR_BARS          = 20;
-	private static final   Logger                                   log               =
-			LoggerFactory.getLogger(Broker.class);
-	protected final        HashMap<Integer, Consumer<TradeContext>> contextListeners  = new HashMap<>();
-	protected              List<Bar>                                adrBarList        = new java.util.ArrayList<>();
-	protected              String                                   exchangeName;
-	protected              Double                                   adr;
-	protected              Double                                   ask;
-	protected              Double                                   bid;
-	protected              Double                                   price;
-	protected              Double                                   dayHigh;
-	protected              Double                                   dayLow;
-	protected              int                                      contextListenerId = 0;
-	private                String                                   assetName;
-	private                String                                   name;
+	public static final    int                                  BARS_FOR_ADR      = 10;
+	protected static final int                                  ADR_BARS          = 20;
+	private static final   Logger                               log               = LoggerFactory.getLogger(Broker.class);
+	protected final        Map<Integer, Consumer<TradeContext>> contextListeners  = new HashMap<>();
+	protected              List<Bar>                            adrBarList        = new java.util.ArrayList<>();
+	protected              String                               exchangeName;
+	protected              Double                               adr;
+	protected              Double                               ask;
+	protected              Double                               bid;
+	protected              Double                               price;
+	protected              Double                               dayHigh;
+	protected              Double                               dayLow;
+	protected              int                                  contextListenerId = 0;
+	protected              iPositionSubscriber                  positionSubscriber;
+	private                String                               assetName;
+	private                String                               name;
+
+	public Broker(Trigger disconnectionTrigger) throws BrokerException {
+		initConnection(disconnectionTrigger);
+		this.positionSubscriber = createPositionSubscriber();
+	}
 
 	private OrderBracketIds bracketIds;
+	private ExchangeTime    exchangeTime;
 
 	public String getName() {
 		return name;
@@ -56,7 +64,9 @@ public abstract class Broker {
 		this.assetName = assetName;
 	}
 
-	private ExchangeTime exchangeTime;
+	protected abstract iPositionSubscriber createPositionSubscriber();
+
+	protected abstract void initConnection(Trigger disconnectionTrigger) throws BrokerException;
 
 	public ExchangeTime getExchangeTime() throws BrokerException {
 		if (exchangeName == null) {
@@ -67,7 +77,7 @@ public abstract class Broker {
 			try {
 				exchange = new AssetService().getExchange(exchangeName);
 			} catch (DBException e) {
-				throw new BrokerException("Error getting exchange",e);
+				throw new BrokerException("Error getting exchange", e);
 			}
 			exchangeTime = new ExchangeTime(exchange);
 		}
@@ -87,6 +97,10 @@ public abstract class Broker {
 		return contextListenerId;
 	}
 
+	public synchronized void requestPosition(Consumer<Position> positionListener) {
+		positionSubscriber.addListener(assetName, positionListener);
+	}
+
 	protected abstract void requestAdr() throws BrokerException;
 
 	protected abstract void requestMarketData() throws BrokerException;
@@ -99,21 +113,26 @@ public abstract class Broker {
 		// Place orders
 		OrderType orderType = tradeData.getOrderStop() == null ? OrderType.LMT : OrderType.STP_LMT;
 		bracketIds = placeOrderWithBracket(tradeData.getQuantity(),
-		                                                   tradeData.getOrderStop(),
-		                                                   tradeData.getOrderLimit(),
-		                                                   tradeData.getTechStopLoss() ==
-		                                                   null ? tradeData.getStopLoss() : tradeData.getTechStopLoss(),
-		                                                   tradeData.getTakeProfit(),
-		                                                   tradeData.getPositionType(),
-		                                                   orderType);
-		TradeService tradeService = new TradeService();
-		try {
-			tradeService.saveNewTrade(assetName, exchangeName, tradeData);
-		} catch (DBException e) {
-			throw new BrokerException(e);
-		}
-		// We must check the main order status to be sure that the position is opened
-		// And after that we can request for the new position updates
+		                                   tradeData.getOrderStop(),
+		                                   tradeData.getOrderLimit(),
+		                                   tradeData.getTechStopLoss() ==
+		                                   null ? tradeData.getStopLoss() : tradeData.getTechStopLoss(),
+		                                   tradeData.getTakeProfit(),
+		                                   tradeData.getPositionType(),
+		                                   orderType,
+		                                   (mainExecution) -> {
+			                                   // We must check the main order status to be sure that the position is opened
+			                                   // And after that we can request for the new position updates
+			                                   if (mainExecution) {
+				                                   TradeService tradeService = new TradeService();
+				                                   try {
+					                                   tradeService.saveNewTrade(assetName, exchangeName, tradeData);
+					                                   positionSubscriber.request();
+				                                   } catch (DBException e) {
+					                                   log.error("Error saving new trade {}", e.getMessage());
+				                                   }
+			                                   }
+		                                   });
 	}
 
 	public abstract OrderBracketIds placeOrderWithBracket(long qtt,
@@ -122,7 +141,9 @@ public abstract class Broker {
 	                                                      Double stopLoss,
 	                                                      Double takeProfit,
 	                                                      PositionType positionType,
-	                                                      OrderType orderType) throws BrokerException;
+	                                                      OrderType orderType,
+	                                                      Consumer<Boolean> mainExecutionListener) throws BrokerException;
+
 
 	protected void notifyTradeContext() throws BrokerException {
 		calculateFilteredAdr();

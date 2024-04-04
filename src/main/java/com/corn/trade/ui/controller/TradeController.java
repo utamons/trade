@@ -17,6 +17,8 @@ import com.corn.trade.type.PositionType;
 import com.corn.trade.ui.view.TradeView;
 import com.corn.trade.util.ExchangeTime;
 import com.corn.trade.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -31,6 +33,7 @@ import static com.corn.trade.util.Util.round;
 
 public class TradeController implements TradeViewListener {
 	public static final int                         SEND_ORDER_DELAY = 3000;
+	private static final Logger log = LoggerFactory.getLogger(TradeController.class);
 	private final       AssetService                assetService;
 	private final       HashMap<String, TradeState> tradeStateMap    = new HashMap<>();
 	private final Timer lockButtonsTimer;
@@ -142,7 +145,7 @@ public class TradeController implements TradeViewListener {
 	}
 
 	@Override
-	public void onPositionChange(PositionType positionType) {
+	public void onPositionTypeChange(PositionType positionType) {
 		this.positionType = positionType;
 		view.techSL().setControlCheckBoxState(false);
 		view.techSL().setValue(null);
@@ -368,6 +371,9 @@ public class TradeController implements TradeViewListener {
 		pauseButtons();
 		TradeData order = tradeData.toBuilder().withOrderStop(null).build();
 		try {
+			currentBroker.requestPosition((position) -> {
+				log.info("Position got to TradeController: {}", position);
+			});
 			currentBroker.openPosition(order);
 			view.messagePanel().show("Limit order sent", Color.GREEN.darker());
 		} catch (BrokerException e) {
@@ -382,6 +388,9 @@ public class TradeController implements TradeViewListener {
 		}
 		pauseButtons();
 		try {
+			currentBroker.requestPosition((position) -> {
+				log.info("Position got to TradeController: {}", position);
+			});
 			currentBroker.openPosition(tradeData);
 			view.messagePanel().show("Stop-Limit order sent", Color.GREEN.darker());
 		} catch (BrokerException e) {
