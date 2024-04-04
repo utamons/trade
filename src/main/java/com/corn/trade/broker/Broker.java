@@ -14,7 +14,6 @@ import com.corn.trade.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -38,7 +37,6 @@ public abstract class Broker {
 	protected              Double                                   dayHigh;
 	protected              Double                                   dayLow;
 	protected              int                                      contextListenerId = 0;
-	private                PositionManager                          positionManager;
 	private                String                                   assetName;
 	private                String                                   name;
 
@@ -108,10 +106,7 @@ public abstract class Broker {
 		                                                   tradeData.getTakeProfit(),
 		                                                   tradeData.getPositionType(),
 		                                                   orderType);
-		if (positionManager == null) {
-			positionManager = new PositionManager(this);
-		}
-		positionManager.openPosition(tradeData, bracketIds, orderType);
+		// Save order ids
 	}
 
 	public abstract OrderBracketIds placeOrderWithBracket(long qtt,
@@ -168,7 +163,7 @@ public abstract class Broker {
 		                                       .withDayHigh(dayHigh)
 		                                       .withDayLow(dayLow)
 		                                       .withAdr(adr)
-		                                       .withPositionOpen(positionManager != null && positionManager.isPositionOpen())
+		                                       .withPositionOpen(false)
 		                                       .build();
 	}
 
