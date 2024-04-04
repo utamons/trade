@@ -1,5 +1,6 @@
 package com.corn.trade;
 
+import com.corn.trade.type.Stage;
 import com.corn.trade.ui.component.CustomTitleBar;
 import com.corn.trade.ui.component.ResizeListener;
 import com.corn.trade.util.LiquibaseRunner;
@@ -30,24 +31,23 @@ public abstract class BaseWindow {
 	public static double ORDER_LUFT            = 0.02;
 	public static String DB_URL;
 	public static String DB_USER;
-	public static String DB_PASSWORD;
-
+	public static String  DB_PASSWORD;
+	public static Stage   STAGE;
 	public static boolean SIMULATION_MODE = false;
 	protected static final  Theme  DARK_THEME   = new OneDarkTheme();
 	protected static final  Theme  LIGHT_THEME  = new IntelliJTheme();
 	protected static String dbKey = "db_url_dev";
-	protected static String stage = null;
 	protected final  JFrame frame;
 
 	protected static final Logger log = LoggerFactory.getLogger(BaseWindow.class);
 
 	private String getTitle(String appName) {
-		return appName + " v. " + version + " (" + stage + ")";
+		return appName + " v. " + version + " (" + STAGE + ")";
 	}
 
 	public BaseWindow(String[] args, String appName, Dimension size) {
-		stage = args.length>0 && args[0].equals("-dev")? "dev" : "prod";
-		dbKey = stage.equals("dev")? "db_url_dev" : "db_url_prod";
+		STAGE = args.length>0 && args[0].equals("-dev")? Stage.DEV : Stage.PROD;
+		dbKey = STAGE == Stage.DEV? "db_url_dev" : "db_url_prod";
 
 		loadProperties();
 

@@ -1,5 +1,6 @@
 package com.corn.trade.broker.ibkr;
 
+import com.corn.trade.type.Stage;
 import com.corn.trade.util.Trigger;
 import com.ib.client.Contract;
 import com.ib.client.ContractDetails;
@@ -12,19 +13,22 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.corn.trade.BaseWindow.STAGE;
+
 class IbkrConnectionHandler implements IConnectionHandler {
-
-	private static final org.slf4j.Logger log = LoggerFactory.getLogger(IbkrConnectionHandler.class);
-
-	private final IConnectionConfiguration connectionConfiguration =
-			new IConnectionConfiguration.DefaultConnectionConfiguration();
-	private       IbkrApiController        controller;
-	private final ContractLookuper  lookuper = contract -> com.ib.client.Util.lookupContract(controller(), contract);
-
-	private final List<Trigger> disconnectionListeners = new ArrayList<>();
+	private static final org.slf4j.Logger         log                     =
+			LoggerFactory.getLogger(IbkrConnectionHandler.class);
+	private final        IConnectionConfiguration connectionConfiguration =
+			STAGE == Stage.DEV ? new IConnectionConfiguration.PaperConnectionConfiguration() :
+					new IConnectionConfiguration.DefaultConnectionConfiguration();
+	private final        List<Trigger>            disconnectionListeners  = new ArrayList<>();
+	private              IbkrApiController        controller;
+	private final        ContractLookuper         lookuper                =
+			contract -> com.ib.client.Util.lookupContract(controller(), contract);
 
 	/**
 	 * Initiates connection to TWS. It's an asynchronous process, so connection might not be ready immediately.
+	 *
 	 * @see IbkrConnectionChecker
 	 */
 	void run() {
@@ -36,6 +40,7 @@ class IbkrConnectionHandler implements IConnectionHandler {
 
 	/**
 	 * Adds a listener, which detects disconnection
+	 *
 	 * @param disconnectionListener listener
 	 */
 	void setDisconnectionListener(Trigger disconnectionListener) {
@@ -43,13 +48,12 @@ class IbkrConnectionHandler implements IConnectionHandler {
 	}
 
 	boolean isConnected() {
-		return ((IbkrApiController)controller()).isConnected();
+		return ((IbkrApiController) controller()).isConnected();
 	}
 
 	List<ContractDetails> lookupContract(Contract contract) {
 		log.debug("lookupContract start");
-		if (!isConnected())
-			throw new IbkrException("IBKR not connected");
+		if (!isConnected()) throw new IbkrException("IBKR not connected");
 		List<ContractDetails> contractDetails = lookuper.lookupContract(contract);
 		log.debug("lookupContract finish");
 		return contractDetails;

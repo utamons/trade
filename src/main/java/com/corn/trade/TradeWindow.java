@@ -54,6 +54,6 @@ public class TradeWindow extends BaseWindow {
 		log.info("order luft: {}", ORDER_LUFT);
 		log.info("debug level: {}", DEBUG_LEVEL);
 
-		log.info("Trade version {} ({}) is started", version, stage);
+		log.info("Trade version {} ({}) is started", version, STAGE);
 	}
 }
