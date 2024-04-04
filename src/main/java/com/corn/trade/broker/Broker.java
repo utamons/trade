@@ -2,11 +2,9 @@ package com.corn.trade.broker;
 
 import com.corn.trade.entity.Exchange;
 import com.corn.trade.jpa.DBException;
-import com.corn.trade.model.Bar;
-import com.corn.trade.model.ExecutionData;
-import com.corn.trade.model.TradeContext;
-import com.corn.trade.model.TradeData;
+import com.corn.trade.model.*;
 import com.corn.trade.service.AssetService;
+import com.corn.trade.service.TradeService;
 import com.corn.trade.type.OrderType;
 import com.corn.trade.type.PositionType;
 import com.corn.trade.util.ExchangeTime;
@@ -39,6 +37,8 @@ public abstract class Broker {
 	protected              int                                      contextListenerId = 0;
 	private                String                                   assetName;
 	private                String                                   name;
+
+	private OrderBracketIds bracketIds;
 
 	public String getName() {
 		return name;
@@ -98,7 +98,7 @@ public abstract class Broker {
 	public void openPosition(TradeData tradeData) throws BrokerException {
 		// Place orders
 		OrderType orderType = tradeData.getOrderStop() == null ? OrderType.LMT : OrderType.STP_LMT;
-		OrderBracketIds bracketIds = placeOrderWithBracket(tradeData.getQuantity(),
+		bracketIds = placeOrderWithBracket(tradeData.getQuantity(),
 		                                                   tradeData.getOrderStop(),
 		                                                   tradeData.getOrderLimit(),
 		                                                   tradeData.getTechStopLoss() ==
@@ -106,7 +106,14 @@ public abstract class Broker {
 		                                                   tradeData.getTakeProfit(),
 		                                                   tradeData.getPositionType(),
 		                                                   orderType);
-		// Save order ids
+		TradeService tradeService = new TradeService();
+		try {
+			tradeService.saveNewTrade(assetName, exchangeName, tradeData);
+		} catch (DBException e) {
+			throw new BrokerException(e);
+		}
+		// We must check the main order status to be sure that the position is opened
+		// And after that we can request for the new position updates
 	}
 
 	public abstract OrderBracketIds placeOrderWithBracket(long qtt,

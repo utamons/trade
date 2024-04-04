@@ -79,7 +79,7 @@ public class TradeService extends BaseService {
 		return BaseWindow.ORDER_LUFT;
 	}
 
-	public Trade saveNewTrade(String assetName, String exchangeName, TradeData tradeData) throws DBException {
+	public void saveNewTrade(String assetName, String exchangeName, TradeData tradeData) throws DBException {
 		beginTransaction();
 		try {
 			Trade trade = new Trade();
@@ -97,7 +97,6 @@ public class TradeService extends BaseService {
 			trade.setCreatedAt(exchangeTime.nowInExchangeTZ().toLocalDateTime());
 			tradeRepo.save(trade);
 			commitTransaction();
-			return trade;
 		} catch (DBException e) {
 			rollbackTransaction();
 			throw e;

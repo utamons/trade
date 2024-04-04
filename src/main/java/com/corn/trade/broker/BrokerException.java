@@ -7,4 +7,8 @@ public class BrokerException extends Exception {
 	public BrokerException(String message, Throwable cause) {
 		super(message, cause);
 	}
+
+	public BrokerException(Throwable cause) {
+		super(cause);
+	}
 }
