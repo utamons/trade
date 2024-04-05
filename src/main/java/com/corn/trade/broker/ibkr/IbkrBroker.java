@@ -3,10 +3,10 @@ package com.corn.trade.broker.ibkr;
 import com.corn.trade.broker.Broker;
 import com.corn.trade.broker.BrokerException;
 import com.corn.trade.broker.OrderBracketIds;
-import com.corn.trade.broker.iPositionSubscriber;
 import com.corn.trade.entity.Exchange;
 import com.corn.trade.jpa.DBException;
 import com.corn.trade.model.ExecutionData;
+import com.corn.trade.model.Position;
 import com.corn.trade.service.AssetService;
 import com.corn.trade.type.PositionType;
 import com.corn.trade.type.TimeFrame;
@@ -25,9 +25,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 public class IbkrBroker extends Broker {
-	private static final org.slf4j.Logger      log                 = org.slf4j.LoggerFactory.getLogger(IbkrBroker.class);
-	private              IbkrConnectionHandler ibkrConnectionHandler;
-	private final        IbkrOrderHelper       ibkrOrderHelper;
+	private static final org.slf4j.Logger       log                 = org.slf4j.LoggerFactory.getLogger(IbkrBroker.class);
+	private final        IbkrOrderHelper        ibkrOrderHelper;
+	private final        IbkrPositionSubscriber positionSubscriber;
+	private              IbkrConnectionHandler  ibkrConnectionHandler;
 	private              ContractDetails        contractDetails;
 	private              ITopMktDataHandler     mktDataHandler;
 	private              IHistoricalDataHandler dayHighLowDataHandler;
@@ -170,11 +171,6 @@ public class IbkrBroker extends Broker {
 	}
 
 	@Override
-	protected iPositionSubscriber createPositionSubscriber() {
-		return IbkrPositionSubscriberFactory.getPositionSubscriber();
-	}
-
-	@Override
 	protected void initConnection(Trigger disconnectionListener) throws BrokerException {
 		try {
 			this.ibkrConnectionHandler = IbkrConnectionHandlerFactory.getConnectionHandler();
@@ -182,6 +178,34 @@ public class IbkrBroker extends Broker {
 		} catch (IbkrException e) {
 			throw new BrokerException(e.getMessage(), e);
 		}
+	}
+
+	@Override
+	public int addPositionListener(Consumer<Position> positionListener) throws BrokerException {
+		return positionSubscriber.addListener(contractDetails.contract().conid(), getAccount(), positionListener);
+	}
+
+	private String getAccount() throws BrokerException {
+		List<String> accounts = ibkrConnectionHandler.getAccountList();
+		if (accounts.size() != 1) {
+			throw new BrokerException("Expected one account, got " + accounts.size());
+		}
+		return accounts.get(0);
+	}
+
+	@Override
+	public void removePositionListener(int id) throws BrokerException {
+		positionSubscriber.removeListener(contractDetails.contract().conid(), getAccount(), id);
+	}
+
+	@Override
+	protected void requestPositionUpdates() throws BrokerException {
+		positionSubscriber.subscribe(assetName, contractDetails.contract().conid(), getAccount());
+	}
+
+	@Override
+	protected void cancelPositionUpdates() throws BrokerException {
+		positionSubscriber.unsubscribe(contractDetails.contract().conid(), getAccount());
 	}
 
 	@Override

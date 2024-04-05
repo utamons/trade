@@ -371,8 +371,8 @@ public class TradeController implements TradeViewListener {
 		pauseButtons();
 		TradeData order = tradeData.toBuilder().withOrderStop(null).build();
 		try {
-			currentBroker.requestPosition((position) -> {
-				log.info("Position got to TradeController: {}", position);
+			currentBroker.addPositionListener((position) -> {
+				log.debug("Position got to TradeController: {}", position);
 			});
 			currentBroker.openPosition(order);
 			view.messagePanel().show("Limit order sent", Color.GREEN.darker());
@@ -388,8 +388,8 @@ public class TradeController implements TradeViewListener {
 		}
 		pauseButtons();
 		try {
-			currentBroker.requestPosition((position) -> {
-				log.info("Position got to TradeController: {}", position);
+			currentBroker.addPositionListener((position) -> {
+				log.debug("Position got to TradeController: {}", position);
 			});
 			currentBroker.openPosition(tradeData);
 			view.messagePanel().show("Stop-Limit order sent", Color.GREEN.darker());

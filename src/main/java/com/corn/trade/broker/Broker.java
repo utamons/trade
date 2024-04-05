@@ -36,13 +36,11 @@ public abstract class Broker {
 	protected              Double                               dayHigh;
 	protected              Double                               dayLow;
 	protected              int                                  contextListenerId = 0;
-	protected              iPositionSubscriber                  positionSubscriber;
-	private                String                               assetName;
+	protected              String                               assetName;
 	private                String                               name;
 
 	public Broker(Trigger disconnectionTrigger) throws BrokerException {
 		initConnection(disconnectionTrigger);
-		this.positionSubscriber = createPositionSubscriber();
 	}
 
 	private OrderBracketIds bracketIds;
@@ -63,8 +61,6 @@ public abstract class Broker {
 	protected void setAssetName(String assetName) {
 		this.assetName = assetName;
 	}
-
-	protected abstract iPositionSubscriber createPositionSubscriber();
 
 	protected abstract void initConnection(Trigger disconnectionTrigger) throws BrokerException;
 
@@ -97,9 +93,13 @@ public abstract class Broker {
 		return contextListenerId;
 	}
 
-	public synchronized void requestPosition(Consumer<Position> positionListener) {
-		positionSubscriber.addListener(assetName, positionListener);
-	}
+	public abstract int addPositionListener(Consumer<Position> positionListener) throws BrokerException;
+
+	public abstract void removePositionListener(int id) throws BrokerException;
+
+	protected abstract void requestPositionUpdates() throws BrokerException;
+
+	protected abstract void cancelPositionUpdates() throws BrokerException;
 
 	protected abstract void requestAdr() throws BrokerException;
 
@@ -127,9 +127,11 @@ public abstract class Broker {
 				                                   TradeService tradeService = new TradeService();
 				                                   try {
 					                                   tradeService.saveNewTrade(assetName, exchangeName, tradeData);
-					                                   positionSubscriber.request();
+					                                   requestPositionUpdates();
 				                                   } catch (DBException e) {
 					                                   log.error("Error saving new trade {}", e.getMessage());
+				                                   } catch (BrokerException e) {
+					                                   log.error("Error requesting position updates {}", e.getMessage());
 				                                   }
 			                                   }
 		                                   });

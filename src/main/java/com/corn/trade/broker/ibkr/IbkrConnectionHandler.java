@@ -18,13 +18,15 @@ import static com.corn.trade.BaseWindow.STAGE;
 class IbkrConnectionHandler implements IConnectionHandler {
 	private static final org.slf4j.Logger         log                     =
 			LoggerFactory.getLogger(IbkrConnectionHandler.class);
-	private final        IConnectionConfiguration connectionConfiguration =
-			STAGE == Stage.DEV ? new IConnectionConfiguration.PaperConnectionConfiguration() :
-					new IConnectionConfiguration.DefaultConnectionConfiguration();
+	private final        IConnectionConfiguration connectionConfiguration = STAGE ==
+	                                                                        Stage.DEV ?
+			new IConnectionConfiguration.PaperConnectionConfiguration() :
+			new IConnectionConfiguration.DefaultConnectionConfiguration();
 	private final        List<Trigger>            disconnectionListeners  = new ArrayList<>();
 	private              IbkrApiController        controller;
 	private final        ContractLookuper         lookuper                =
 			contract -> com.ib.client.Util.lookupContract(controller(), contract);
+	private              List<String>             accountList;
 
 	/**
 	 * Initiates connection to TWS. It's an asynchronous process, so connection might not be ready immediately.
@@ -59,6 +61,10 @@ class IbkrConnectionHandler implements IConnectionHandler {
 		return contractDetails;
 	}
 
+	List<String> getAccountList() {
+		return accountList;
+	}
+
 	@Override
 	public void connected() {
 		show("connected");
@@ -72,7 +78,7 @@ class IbkrConnectionHandler implements IConnectionHandler {
 
 	@Override
 	public void accountList(List<String> list) {
-		show("accountList " + list);
+		accountList = list;
 	}
 
 
