@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.corn.trade.BaseWindow.*;
-import static com.corn.trade.util.Util.fmt;
 import static com.corn.trade.util.Util.round;
 import static java.lang.Math.abs;
 
@@ -45,7 +44,7 @@ public class TradeCalc {
 
 	public TradeData calculate() {
 		estimate();
-		return tradeData.toBuilder()
+		return tradeData.copy()
 		                .withQuantity(quantity)
 		                .withOrderLimit(orderLimit)
 		                .withOrderStop(orderStop)
@@ -63,10 +62,10 @@ public class TradeCalc {
 
 	private double getMinPowerReserve(TradeData tradeData) {
 		double    minPowerReserve = 0;
-		TradeData temp            = tradeData.toBuilder().withEstimationType(EstimationType.MAX_STOP_LOSS).build();
+		TradeData temp            = tradeData.copy().withEstimationType(EstimationType.MAX_STOP_LOSS).build();
 		do {
 			minPowerReserve = round(minPowerReserve + 0.01);
-			temp = temp.toBuilder().withPowerReserve(minPowerReserve).build();
+			temp = temp.copy().withPowerReserve(minPowerReserve).build();
 			TradeCalc tradeCalc = new TradeCalc(temp);
 			temp = tradeCalc.calculate();
 		} while (temp.getTradeError() != null &&
@@ -150,7 +149,7 @@ public class TradeCalc {
 		Double slippage = (tradeData.getSlippage() == null) ? tradeData.getLuft() : tradeData.getSlippage();
 
 		// Update the TradeData object with calculated values or defaults
-		TradeData.Builder builder = tradeData.toBuilder().withSlippage(slippage);
+		TradeData.Builder builder = tradeData.copy().withSlippage(slippage);
 
 		// Computation for goal and powerReserve
 		if (tradeData.getEstimationType() != EstimationType.MIN_GOAL) {

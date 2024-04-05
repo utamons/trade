@@ -5,6 +5,8 @@ import com.corn.trade.type.PositionType;
 
 @SuppressWarnings("unused")
 public class TradeData {
+	public static int counter = 0;
+	private final int            id = counter++;
 	private final PositionType   positionType;
 	private final EstimationType estimationType;
 	private final Double         powerReserve;
@@ -61,6 +63,10 @@ public class TradeData {
 
 	public PositionType getPositionType() {
 		return positionType;
+	}
+
+	public int getId() {
+		return id;
 	}
 
 	public Double getPowerReserve() {
@@ -143,7 +149,7 @@ public class TradeData {
 		return riskRewardRatioPercent;
 	}
 
-	public Builder toBuilder() {
+	public Builder copy() {
 		return new Builder()
 				.withPositionType(this.positionType)
 				.withEstimationType(this.estimationType)

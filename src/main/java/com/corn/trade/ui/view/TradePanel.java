@@ -4,7 +4,6 @@ import com.corn.trade.service.AssetService;
 import com.corn.trade.type.EstimationType;
 import com.corn.trade.type.PositionType;
 import com.corn.trade.ui.component.*;
-import com.corn.trade.ui.component.position.PositionPanel;
 import com.corn.trade.ui.controller.TradeViewListener;
 
 import javax.swing.*;
@@ -27,6 +26,7 @@ public class TradePanel extends BasePanel implements TradeView {
 	private final       JButton            lockBtn;
 	private final       JButton            stopLimitBtn;
 	private final       JButton            limitBtn;
+	private final PositionPanel positionPanel;
 
 	public TradePanel(TradeViewListener controller, Dimension maxSize, Dimension minSize, int spacing, int fieldHeight) {
 		super(maxSize, minSize);
@@ -94,7 +94,7 @@ public class TradePanel extends BasePanel implements TradeView {
 		orderPanel.add(stopLimitBtn);
 		orderPanel.add(limitBtn);
 
-		PositionPanel position = new PositionPanel();
+		positionPanel = new PositionPanel();
 		info = InfoPanel.InfoPanelBuilder.anInfoPanel()
 		                                 .withFontSize(15)
 		                                 .withVPadding(20)
@@ -116,7 +116,7 @@ public class TradePanel extends BasePanel implements TradeView {
 		panel.add(techSL);
 		panel.add(messagePanel);
 		panel.add(orderPanel);
-		panel.add(position);
+		panel.add(positionPanel);
 		panel.add(info);
 
 		this.add(panel, BorderLayout.NORTH);
@@ -124,10 +124,11 @@ public class TradePanel extends BasePanel implements TradeView {
 		controller.onExchangeChange(exchanges.get(0));
 		controller.onPositionTypeChange(PositionType.LONG);
 		controller.onEstimationTypeChange(EstimationType.fromString(EstimationType.getValues().get(0)));
+		controller.setPositionPanel(positionPanel);
 	}
 
 	@Override
-	public LabeledComboBox positionBox() {
+	public LabeledComboBox positionTypeBox() {
 		return positionBox;
 	}
 
@@ -189,6 +190,11 @@ public class TradePanel extends BasePanel implements TradeView {
 	@Override
 	public JButton limitButton() {
 		return limitBtn;
+	}
+
+	@Override
+	public PositionPanel getPositionPanel() {
+		return positionPanel;
 	}
 
 	@Override

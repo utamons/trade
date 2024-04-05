@@ -12,12 +12,13 @@ public interface TradeView {
 	LabeledLookup assetLookup();
 	InfoPanel info();
 	LabeledComboBox exchangeBox();
-	LabeledComboBox positionBox();
+	LabeledComboBox positionTypeBox();
 	LabeledComboBox estimationBox();
 	MessagePanel messagePanel();
 	TrafficLight trafficLight();
 	JButton lockButton();
 	JButton stopLimitButton();
 	JButton limitButton();
+	PositionPanel getPositionPanel();
 	Component asComponent();
 }

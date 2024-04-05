@@ -4,6 +4,8 @@ import javax.swing.*;
 import java.awt.*;
 import com.corn.trade.ui.component.InfoField;
 
+import static com.corn.trade.util.Util.fmt;
+
 public class PosInfoRow extends JPanel {
 	private final InfoField qttField, slField, beField, psField, plField;
 	private final JLabel label;
@@ -37,23 +39,31 @@ public class PosInfoRow extends JPanel {
 		return label;
 	}
 
-	public InfoField getQttField() {
-		return qttField;
+	public void setQtt(long qtt) {
+		qttField.setInfoText(String.valueOf(qtt));
 	}
 
-	public InfoField getSlField() {
-		return slField;
+	public void setSl(Double sl) {
+		slField.setInfoText(fmt(sl));
 	}
 
-	public InfoField getBeField() {
-		return beField;
+	public void setBe(Double be) {
+		beField.setInfoText(fmt(be));
 	}
 
-	public InfoField getPsField() {
-		return psField;
+	public void setPs(Double ps) {
+		psField.setInfoText(fmt(ps), true);
 	}
 
-	public InfoField getPlField() {
-		return plField;
+	public void setPl(Double pl) {
+		plField.setInfoText(fmt(pl));
+	}
+
+	public void setPsColor(Color color) {
+		psField.setInfoFieldColor(color);
+	}
+
+	public void setPlColor(Color color) {
+		plField.setInfoFieldColor(color);
 	}
 }

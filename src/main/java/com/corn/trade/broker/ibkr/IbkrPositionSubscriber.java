@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
@@ -16,7 +17,7 @@ import java.util.function.Consumer;
 public class IbkrPositionSubscriber {
 	private final static Logger log = LoggerFactory.getLogger(IbkrPositionSubscriber.class);
 
-	private final Map<String, Map<Integer, Consumer<Position>>> listeners  = new HashMap<>();
+	private final Map<String, Map<Integer, Consumer<Position>>> listeners  = new ConcurrentHashMap<>();
 	private final Map<String, ApiController.IPnLSingleHandler>  handlers   = new HashMap<>();
 	private final IbkrConnectionHandler                         connectionHandler;
 	private       int                                           listenerId = 0;
@@ -39,7 +40,7 @@ public class IbkrPositionSubscriber {
 
 	public synchronized int addListener(int contractId, String account, Consumer<Position> listener) {
 		Map<Integer, Consumer<Position>> contractGroup =
-				this.listeners.computeIfAbsent(getContractKey(contractId, account), k -> new HashMap<>());
+				this.listeners.computeIfAbsent(getContractKey(contractId, account), k -> new ConcurrentHashMap<>());
 		contractGroup.put(++listenerId, listener);
 		return listenerId;
 	}
@@ -58,6 +59,16 @@ public class IbkrPositionSubscriber {
 		}
 	}
 
+	/*
+	  Переподписываться для получения новых позиций - необязательно. Если есть старый хендлер,
+	  то у нас есть и позиция, только с нулевым qtt и он продолжает её слушать.
+	  Поэтому можно просто добавлять и убирать листенеры. Подписываться можно если нет хендлера и
+	  следовательно у нас новая позиция.
+
+	  PnL, который мы получаем, может быть положительным даже если цена ниже BE, поскольку брокер
+	  ничего не знает о налогах, и не учитывает вторую комиссию за выход из сделки.
+	  Тут стоит подумать, может быть есть смысл вычислять unrealized PnL самостоятельно.
+	 */
 	public synchronized void subscribe(String symbol, int contractId, String account) {
 		log.info("Subscribing to PnL for contractId: {}, account: {}", contractId, account);
 		ApiController.IPnLSingleHandler handler = (reqId, pos, dailyPnL, unrealizedPnL, realizedPnL, value) -> {
@@ -70,6 +81,12 @@ public class IbkrPositionSubscriber {
 			                            .build();
 			notifyListeners(contractId, account, position);
 		};
+
+		ApiController.IPnLSingleHandler oldHandler = handlers.get(getContractKey(contractId, account));
+
+		if (oldHandler != null) {
+			connectionHandler.controller().cancelPnLSingle(oldHandler);
+		}
 
 		handlers.put(getContractKey(contractId, account), handler);
 

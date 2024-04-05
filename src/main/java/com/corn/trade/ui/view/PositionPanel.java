@@ -1,4 +1,6 @@
-package com.corn.trade.ui.component.position;
+package com.corn.trade.ui.view;
+
+import com.corn.trade.ui.component.position.PositionRow;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -7,9 +9,9 @@ import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PositionPanel extends JPanel {
-	private final Map<String, Position> positions;
-	private final JPanel contentPanel;
+public class PositionPanel extends JPanel implements PositionView {
+	private final Map<String, PositionRow> positions;
+	private final JPanel                   contentPanel;
 	private final JLabel noPositionsLabel;
 
 	public PositionPanel() {
@@ -35,24 +37,27 @@ public class PositionPanel extends JPanel {
 		updateDisplay();
 	}
 
-	public void addPosition(String label) {
+	@Override
+	public PositionRow addPosition(String label) {
 		if (positions.isEmpty()) {
 			remove(noPositionsLabel);
 			add(contentPanel, BorderLayout.CENTER);
 		}
-		Position position = new Position();
-		position.getInfoRow().getLabel().setText(label);
-		positions.put(label, position);
-		contentPanel.add(position);
+		PositionRow positionRow = new PositionRow();
+		positionRow.setLabel(label);
+		positions.put(label, positionRow);
+		contentPanel.add(positionRow);
 		contentPanel.revalidate();
 		contentPanel.repaint();
 		updateDisplay();
+		return positionRow;
 	}
 
+	@Override
 	public void removePosition(String label) {
-		Position position = positions.remove(label);
-		if (position != null) {
-			contentPanel.remove(position);
+		PositionRow positionRow = positions.remove(label);
+		if (positionRow != null) {
+			contentPanel.remove(positionRow);
 			contentPanel.revalidate();
 			contentPanel.repaint();
 		}

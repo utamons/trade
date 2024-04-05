@@ -45,7 +45,7 @@ public class AnalysisWindow extends BaseWindow {
 													   BaseWindow.loadProperties();
 													   TradeData td = tradeData;
 													   if (tradeData.getLevel() != null && tradeData.getPrice() == null) {
-														   td = tradeData.toBuilder().withPrice(tradeData.getLevel()).build();
+														   td = tradeData.copy().withPrice(tradeData.getLevel()).build();
 													   }
 													   long start = System.currentTimeMillis();
 				                                       TradeCalc tradeCalc = new TradeCalc(td);
