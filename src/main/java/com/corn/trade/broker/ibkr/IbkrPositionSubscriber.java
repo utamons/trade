@@ -12,7 +12,6 @@ import java.util.function.Consumer;
 /**
  * This is a subscriber for IBKR positions.
  * It also supports a list of listeners, which will be notified when a position is updated.
- * If there are no positions, it will cancel the subscription.
  */
 public class IbkrPositionSubscriber {
 	private final static Logger log = LoggerFactory.getLogger(IbkrPositionSubscriber.class);
@@ -55,7 +54,7 @@ public class IbkrPositionSubscriber {
 
 		if (contractGroup.isEmpty()) {
 			listeners.remove(getContractKey(contractId, account));
-			unsubscribe(contractId, account);
+			log.warn("No more listeners for contractId: {}, account: {}", contractId, account);
 		}
 	}
 
