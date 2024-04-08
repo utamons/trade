@@ -34,26 +34,26 @@ import static com.corn.trade.util.Util.round;
 
 
 public class TradeController implements TradeViewListener {
-	public static final int                         SEND_ORDER_DELAY    = 3000;
-	private static final Logger log = LoggerFactory.getLogger(TradeController.class);
-	private final       AssetService                assetService;
-	private final       HashMap<String, TradeState> tradeStateMap       = new HashMap<>();
-	private final       Timer                       lockButtonsTimer;
-	private             TradeView                   view;
-	private             Double                      level;
-	private             Double                      techStopLoss;
-	private             Double                      goal;
-	private             PositionType                positionType;
-	private             EstimationType              estimationType;
-	private             Exchange                    exchange;
-	private             Broker                      currentBroker;
-	private             Timer                       timeUpdater         = null;
-	private             int                         tradeContextId      = 0;
-	private             boolean                     locked              = false;
-	private             boolean                     orderClean          = false;
-	private             TradeData                   tradeData;
-	private             PositionController          positionController;
-	private             Map<String, Integer>        positionListenerIds = new HashMap<>();
+	public static final  int                         SEND_ORDER_DELAY    = 3000;
+	private static final Logger                      log                 = LoggerFactory.getLogger(TradeController.class);
+	private final        AssetService                assetService;
+	private final        HashMap<String, TradeState> tradeStateMap       = new HashMap<>();
+	private final        Timer                       lockButtonsTimer;
+	private              TradeView                   view;
+	private              Double                      level;
+	private              Double                      techStopLoss;
+	private              Double                      goal;
+	private              PositionType                positionType;
+	private              EstimationType              estimationType;
+	private              Exchange                    exchange;
+	private              Broker                      currentBroker;
+	private              Timer                       timeUpdater         = null;
+	private              int                         tradeContextId      = 0;
+	private              boolean                     locked              = false;
+	private              boolean                     orderClean          = false;
+	private              TradeData                   tradeData;
+	private              PositionController          positionController;
+	private              Map<String, Integer>        positionListenerIds = new HashMap<>();
 
 	public TradeController() {
 		this.assetService = new AssetService();
@@ -127,8 +127,7 @@ public class TradeController implements TradeViewListener {
 			restoreTradeState();
 
 			// Get the actual asset object from the asset name (and save it in the database if it doesn't exist)
-			Asset        asset        =
-					assetService.getAsset(assetName, view.exchangeBox().getSelectedItem(), currentBroker);
+			Asset asset = assetService.getAsset(assetName, view.exchangeBox().getSelectedItem(), currentBroker);
 			String       brokerName   = asset.getExchange().getBroker();
 			String       exchangeName = asset.getExchange().getName();
 			List<String> assets       = assetService.getAssetNames();
@@ -227,8 +226,8 @@ public class TradeController implements TradeViewListener {
 		return exchangeTime.withinTradingHours() && exchangeTime.withinWeekDays();
 	}
 
-	private boolean isOrderClean() {
-		return !locked && orderClean && workTime();
+	private boolean canOpenPosition() {
+		return !locked && orderClean && workTime() && !currentBroker.isOpenPosition();
 	}
 
 	private void goalWarning(boolean on) {
@@ -368,8 +367,8 @@ public class TradeController implements TradeViewListener {
 	}
 
 	private void checkButtons() {
-		view.stopLimitButton().setEnabled(isOrderClean());
-		view.limitButton().setEnabled(isOrderClean());
+		view.stopLimitButton().setEnabled(canOpenPosition());
+		view.limitButton().setEnabled(canOpenPosition());
 	}
 
 	@Override
@@ -380,26 +379,35 @@ public class TradeController implements TradeViewListener {
 		pauseButtons();
 		TradeData order = tradeData.copy().withOrderStop(null).build();
 		try {
-			int id = currentBroker.addPositionListener((position) -> {
-				if (position.getQuantity() == 0) {
-					try {
-						currentBroker.removePositionListener(getPositionListenerId(position.getSymbol()));
-					} catch (BrokerException e) {
-						log.error(e.getMessage());
-					}
-				}
-				positionController.updatePosition(order, position);
-			});
-			positionListenerIds.put(currentBroker.getAssetName(), id);
-			currentBroker.openPosition(order);
+			openPosition(order);
 			view.messagePanel().show("Limit order sent", Color.GREEN.darker());
 		} catch (BrokerException e) {
 			view.messagePanel().show(e.getMessage(), Color.RED);
 		}
 	}
 
-	private int getPositionListenerId(String assetName) {
-		return positionListenerIds.get(assetName);
+	private void openPosition(TradeData order) {
+		int id = currentBroker.addPositionListener((position) -> {
+			if (position.getQuantity() == 0) {
+				removePositionListener(position.getSymbol());
+			}
+			positionController.updatePosition(order, position);
+		});
+		addPositionListener(currentBroker.getAssetName(), id);
+
+		currentBroker.openPosition(order);
+	}
+
+	private void removePositionListener(String assetName) {
+		if (positionListenerIds.containsKey(assetName)) {
+				currentBroker.removePositionListener(positionListenerIds.get(assetName));
+		}
+	}
+
+	private void addPositionListener(String assetName, int id) {
+		if (!positionListenerIds.containsKey(assetName)) {
+			positionListenerIds.put(assetName, id);
+		}
 	}
 
 	@Override
@@ -409,18 +417,7 @@ public class TradeController implements TradeViewListener {
 		}
 		pauseButtons();
 		try {
-			int id = currentBroker.addPositionListener((position) -> {
-				if (position.getQuantity() == 0) {
-					try {
-						currentBroker.removePositionListener(getPositionListenerId(position.getSymbol()));
-					} catch (BrokerException e) {
-						log.error(e.getMessage());
-					}
-				}
-				positionController.updatePosition(tradeData, position);
-			});
-			positionListenerIds.put(currentBroker.getAssetName(), id);
-			currentBroker.openPosition(tradeData);
+			openPosition(tradeData);
 			view.messagePanel().show("Stop-Limit order sent", Color.GREEN.darker());
 		} catch (BrokerException e) {
 			view.messagePanel().show(e.getMessage(), Color.RED);

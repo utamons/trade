@@ -5,8 +5,6 @@ import com.corn.trade.type.PositionType;
 
 @SuppressWarnings("unused")
 public class TradeData {
-	public static int counter = 0;
-	private final int            id = counter++;
 	private final PositionType   positionType;
 	private final EstimationType estimationType;
 	private final Double         powerReserve;
@@ -63,10 +61,6 @@ public class TradeData {
 
 	public PositionType getPositionType() {
 		return positionType;
-	}
-
-	public int getId() {
-		return id;
 	}
 
 	public Double getPowerReserve() {
@@ -191,7 +185,7 @@ public class TradeData {
 		return String.format("""
 				                     %s, %s,
 				                     Lvl: %.2f, Goal: %.2f(%.2f%%), Pwr: %.2f, Price: %.2f, Slpg: %.2f
-				                     				                     
+				                     				                    \s
 				                     Params: Qtt: %d, SL: %.2f, BE: %.2f, TP: %.2f., Stop: %.2f, Limit: %.2f
 				                     Out: %.2f, %.2f%%
 				                     R/R - %.2f%%, Risk - %.2f, %.2f%%""",

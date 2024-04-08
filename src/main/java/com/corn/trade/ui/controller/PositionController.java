@@ -2,6 +2,7 @@ package com.corn.trade.ui.controller;
 
 import com.corn.trade.model.Position;
 import com.corn.trade.model.TradeData;
+import com.corn.trade.service.TradeCalc;
 import com.corn.trade.ui.component.position.PositionRow;
 import com.corn.trade.ui.view.PositionView;
 import org.slf4j.Logger;
@@ -12,8 +13,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class PositionController {
-	private static Logger log = LoggerFactory.getLogger(PositionController.class);
-
 	private final PositionView             view;
 	private final Map<String, PositionRow> positions;
 
@@ -23,7 +22,6 @@ public class PositionController {
 	}
 
 	public void updatePosition(TradeData tradeData, Position position) {
-		log.info("tradeData id: {}", tradeData.getId());
 		PositionRow positionRow = positions.computeIfAbsent(position.getSymbol(), view::addPosition);
 
 		long qtt = position.getQuantity();
@@ -43,6 +41,9 @@ public class PositionController {
 
 		if (unrealizedPnl == Double.MAX_VALUE)
 			unrealizedPnl = 0.0;
+		else {
+			unrealizedPnl -= TradeCalc.estimatedCommissionIbkrUSD(qtt, price);
+		}
 
 		positionRow.setQtt(qtt);
 		positionRow.setSl(sl);

@@ -59,17 +59,11 @@ public class IbkrPositionSubscriber {
 		}
 	}
 
-	/*
-	  Переподписываться для получения новых позиций - необязательно. Если есть старый хендлер,
-	  то у нас есть и позиция, только с нулевым qtt и он продолжает её слушать.
-	  Поэтому можно просто добавлять и убирать листенеры. Подписываться можно если нет хендлера и
-	  следовательно у нас новая позиция.
-
-	  PnL, который мы получаем, может быть положительным даже если цена ниже BE, поскольку брокер
-	  ничего не знает о налогах, и не учитывает вторую комиссию за выход из сделки.
-	  Тут стоит подумать, может быть есть смысл вычислять unrealized PnL самостоятельно.
-	 */
 	public synchronized void subscribe(String symbol, int contractId, String account) {
+		if (handlers.containsKey(getContractKey(contractId, account))) {
+			log.info("Already subscribed to PnL for contractId: {}, account: {}", contractId, account);
+			return;
+		}
 		log.info("Subscribing to PnL for contractId: {}, account: {}", contractId, account);
 		ApiController.IPnLSingleHandler handler = (reqId, pos, dailyPnL, unrealizedPnL, realizedPnL, value) -> {
 			Position position = Position.aPosition()

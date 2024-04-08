@@ -201,11 +201,11 @@ public class TradeCalc {
 		return null;
 	}
 
-	private double getTax(double sum) {
+	public static double getTax(double sum) {
 		return sum * 0.1; // ИПН
 	}
 
-	public double estimatedCommissionUSD(double price) {
+	public static double estimatedCommissionIbkrUSD(long quantity, double price) {
 		double max    = quantity * price / 100.0;
 		double min    = quantity * 0.005;
 		double amount = Math.min(max, min);
@@ -213,7 +213,7 @@ public class TradeCalc {
 	}
 
 	public double getBreakEven(double price) {
-		double openCommission  = estimatedCommissionUSD(price);
+		double openCommission  = estimatedCommissionIbkrUSD(quantity, price);
 		double priceClose      = price;
 		double closeCommission = openCommission;
 		double profit          = abs(priceClose - price) * quantity;
@@ -222,7 +222,7 @@ public class TradeCalc {
 
 		while (profit < openCommission + closeCommission + taxes) {
 			priceClose = priceClose + increment;
-			closeCommission = estimatedCommissionUSD(priceClose);
+			closeCommission = estimatedCommissionIbkrUSD(quantity, priceClose);
 			profit = abs(priceClose - price) * quantity;
 			taxes = getTax(profit);
 		}
@@ -246,7 +246,7 @@ public class TradeCalc {
 
 			double gross      = Math.abs(takeProfit - orderLimit) * quantity;
 			double tax        = getTax(gross);
-			double commission = estimatedCommissionUSD(orderLimit) + estimatedCommissionUSD(takeProfit);
+			double commission = estimatedCommissionIbkrUSD(quantity, orderLimit) + estimatedCommissionIbkrUSD(quantity, takeProfit);
 			double net        = gross - tax - commission;
 			risk = net * MAX_RISK_REWARD_RATIO;
 
@@ -331,9 +331,4 @@ public class TradeCalc {
 	private double slippage() {
 		return tradeData.getSlippage();
 	}
-
-	private double powerReserve() {
-		return tradeData.getPowerReserve();
-	}
-
 }

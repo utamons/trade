@@ -100,6 +100,7 @@ public class LabeledDoubleField extends JPanel {
 			textField.setEnabled(isSelected);
 			if (!isSelected) {
 				textField.setText("");
+				feedConsumer(consumer);
 			}
 		});
 

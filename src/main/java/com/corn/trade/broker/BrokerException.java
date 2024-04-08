@@ -1,6 +1,6 @@
 package com.corn.trade.broker;
 
-public class BrokerException extends Exception {
+public class BrokerException extends RuntimeException {
 	public BrokerException(String message) {
 		super(message);
 	}

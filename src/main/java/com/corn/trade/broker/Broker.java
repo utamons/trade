@@ -1,12 +1,14 @@
 package com.corn.trade.broker;
 
 import com.corn.trade.entity.Exchange;
+import com.corn.trade.entity.Trade;
 import com.corn.trade.jpa.DBException;
 import com.corn.trade.model.*;
 import com.corn.trade.service.AssetService;
 import com.corn.trade.service.TradeService;
 import com.corn.trade.type.OrderType;
 import com.corn.trade.type.PositionType;
+import com.corn.trade.type.TradeStatus;
 import com.corn.trade.util.ExchangeTime;
 import com.corn.trade.util.Trigger;
 import com.corn.trade.util.Util;
@@ -38,13 +40,14 @@ public abstract class Broker {
 	protected              int                                  contextListenerId = 0;
 	protected              String                               assetName;
 	private                String                               name;
+	private                boolean                              openPosition      = false;
+	private                OrderBracketIds                      bracketIds;
+	private                ExchangeTime                         exchangeTime;
+	private                int                                  positionListenerId = 0;
 
 	public Broker(Trigger disconnectionTrigger) throws BrokerException {
 		initConnection(disconnectionTrigger);
 	}
-
-	private OrderBracketIds bracketIds;
-	private ExchangeTime    exchangeTime;
 
 	public String getName() {
 		return name;
@@ -110,6 +113,15 @@ public abstract class Broker {
 	public abstract void requestExecutionData(CompletableFuture<List<ExecutionData>> executions) throws BrokerException;
 
 	public void openPosition(TradeData tradeData) throws BrokerException {
+		TradeService tradeService = new TradeService();
+		try {
+			if (tradeService.getOpenTrade(assetName, exchangeName) != null) {
+				throw new BrokerException("There is already an open position for this asset.");
+			}
+		} catch (DBException e) {
+			throw new BrokerException(e);
+		}
+
 		// Place orders
 		OrderType orderType = tradeData.getOrderStop() == null ? OrderType.LMT : OrderType.STP_LMT;
 		bracketIds = placeOrderWithBracket(tradeData.getQuantity(),
@@ -124,10 +136,16 @@ public abstract class Broker {
 			                                   // We must check the main order status to be sure that the position is opened
 			                                   // And after that we can request for the new position updates
 			                                   if (mainExecution) {
-				                                   TradeService tradeService = new TradeService();
 				                                   try {
-					                                   tradeService.saveNewTrade(assetName, exchangeName, tradeData);
+					                                   Trade trade = tradeService.saveNewTrade(assetName, exchangeName, tradeData);
 					                                   requestPositionUpdates();
+					                                   positionListenerId = addPositionListener(position -> {
+						                                   if (position.getQuantity() == 0) {
+															   removePositionListener(positionListenerId);
+							                                   closePosition(trade.getId());
+						                                   }
+					                                   });
+													   openPosition = true;
 				                                   } catch (DBException e) {
 					                                   log.error("Error saving new trade {}", e.getMessage());
 				                                   } catch (BrokerException e) {
@@ -135,6 +153,16 @@ public abstract class Broker {
 				                                   }
 			                                   }
 		                                   });
+	}
+
+	private void closePosition(long tradeId) {
+		openPosition = false;
+		TradeService tradeService = new TradeService();
+		try {
+			tradeService.updateTradeStatus(tradeId, TradeStatus.CLOSED);
+		} catch (DBException e) {
+			log.error("Error updating trade status {}", e.getMessage());
+		}
 	}
 
 	public abstract OrderBracketIds placeOrderWithBracket(long qtt,
@@ -193,7 +221,6 @@ public abstract class Broker {
 		                                       .withDayHigh(dayHigh)
 		                                       .withDayLow(dayLow)
 		                                       .withAdr(adr)
-		                                       .withPositionOpen(false)
 		                                       .build();
 	}
 
@@ -210,5 +237,9 @@ public abstract class Broker {
 		} else {
 			return rangeList;
 		}
+	}
+
+	public boolean isOpenPosition() {
+		return openPosition;
 	}
 }

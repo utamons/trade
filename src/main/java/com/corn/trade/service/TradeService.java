@@ -14,7 +14,6 @@ import com.corn.trade.model.TradeData;
 import com.corn.trade.type.PositionType;
 import com.corn.trade.type.TradeStatus;
 import com.corn.trade.util.ExchangeTime;
-import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,10 +25,10 @@ import static com.corn.trade.util.Util.toBigDecimal;
  */
 public class TradeService extends BaseService {
 
-	private static final Logger log = LoggerFactory.getLogger(TradeService.class);
-	private final TradeRepo tradeRepo;
-	private final AssetRepo assetRepo;
-	private final ExchangeRepo exchangeRepo;
+	private static final Logger       log = LoggerFactory.getLogger(TradeService.class);
+	private final        TradeRepo    tradeRepo;
+	private final        AssetRepo    assetRepo;
+	private final        ExchangeRepo exchangeRepo;
 
 	public TradeService() {
 		this.tradeRepo = new TradeRepo();
@@ -63,20 +62,20 @@ public class TradeService extends BaseService {
 		// Ideally all goals should be within this range
 		double maxRange = adrUsed > 100 ? range : adr;
 
-		double fromHigh        = high - price;
-		double fromLow         = price - low;
-		double passed          = positionType == PositionType.LONG ? fromLow : fromHigh;
+		double fromHigh             = high - price;
+		double fromLow              = price - low;
+		double passed               = positionType == PositionType.LONG ? fromLow : fromHigh;
 		double maxRangePassedForPos = (passed / maxRange) * 100;
 		double maxRangeLeftForPos   = 100 - maxRangePassedForPos;
 
 		return ExtendedTradeContext.ExtendedTradeContextBuilder.anExtendedTradeContext()
-			.withTradeContext(tradeContext)
-			.withSlippage(slippage)
-			.withSpread(spread)
-			.withMaxRange(maxRange)
-			.withMaxRangePassedForPos(maxRangePassedForPos)
-			.withMaxRangeLeftForPos(maxRangeLeftForPos)
-			.build();
+		                                                       .withTradeContext(tradeContext)
+		                                                       .withSlippage(slippage)
+		                                                       .withSpread(spread)
+		                                                       .withMaxRange(maxRange)
+		                                                       .withMaxRangePassedForPos(maxRangePassedForPos)
+		                                                       .withMaxRangeLeftForPos(maxRangeLeftForPos)
+		                                                       .build();
 	}
 
 	private double getSlippage() {
@@ -84,28 +83,31 @@ public class TradeService extends BaseService {
 		return BaseWindow.ORDER_LUFT;
 	}
 
-	public void saveNewTrade(String assetName, String exchangeName, TradeData tradeData) throws DBException {
+	public Trade getOpenTrade(String assetName, String exchangeName) throws DBException {
+		try {
+			Exchange exchange =
+					exchangeRepo.findExchange(exchangeName).orElseThrow(() -> new DBException("Exchange not found"));
+			Asset asset = assetRepo.findAsset(assetName, exchange).orElseThrow(() -> new DBException("Asset not found"));
+			return tradeRepo.getOpenTrade(asset);
+		} catch (PersistenceException e) {
+			throw new DBException(e);
+		}
+	}
+
+	public Trade saveNewTrade(String assetName, String exchangeName, TradeData tradeData) throws DBException {
 		beginTransaction();
 		try {
 
-			Exchange exchange = exchangeRepo.findExchange(exchangeName).orElseThrow(()->new DBException("Exchange not found"));
-			Asset asset = assetRepo.findAsset(assetName, exchange).orElseThrow(()->new DBException("Asset not found"));
+			Exchange exchange =
+					exchangeRepo.findExchange(exchangeName).orElseThrow(() -> new DBException("Exchange not found"));
+			Asset asset = assetRepo.findAsset(assetName, exchange).orElseThrow(() -> new DBException("Asset not found"));
 			ExchangeTime exchangeTime = new ExchangeTime(exchange);
 
-			Trade existingTrade = null;
-			try {
-				existingTrade = entityManager.createQuery("select a from Trade a where a.asset = :asset and a.status = :status", Trade.class)
-				              .setParameter("asset", asset)
-				              .setParameter("status", TradeStatus.OPEN.name())
-				              .getSingleResult();
-			} catch (NoResultException e) {
-				log.info("No existing trade found for asset {}", assetName);
-			} catch (PersistenceException e) {
-				throw new DBException(e);
-			}
+			Trade existingTrade = getOpenTrade(assetName, exchangeName);
 
 			if (existingTrade != null) {
-				throw new DBException("Trade already exists for asset " + assetName);
+				log.debug("Trade already exists for asset {}", assetName);
+				return existingTrade;
 			}
 
 			Trade trade = new Trade();
@@ -120,6 +122,7 @@ public class TradeService extends BaseService {
 			trade.setCreatedAt(exchangeTime.nowInExchangeTZ().toLocalDateTime());
 			tradeRepo.save(trade);
 			commitTransaction();
+			return trade;
 		} catch (DBException e) {
 			rollbackTransaction();
 			throw e;
