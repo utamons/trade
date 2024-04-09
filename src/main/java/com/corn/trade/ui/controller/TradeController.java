@@ -70,20 +70,6 @@ public class TradeController implements TradeViewListener {
 	@Override
 	public void setPositionPanel(PositionPanel positionPanel) {
 		this.positionController = new PositionController(positionPanel);
-		TradeData order = TradeData.aTradeData()
-		                           .withBreakEven(44.3)
-		                           .withGoal(45.0)
-		                           .withStopLoss(44.2)
-		                           .withQuantity(100)
-		                           .withPrice(44.5)
-		                           .build();
-		Position position = Position.aPosition()
-		                            .withSymbol("AAPL")
-		                            .withQuantity(50)
-		                            .withMarketValue(2215.0)
-		                            .withUnrealizedPnl(11.2)
-		                            .build();
-		positionController.updatePosition(order, position);
 	}
 
 	@Override
