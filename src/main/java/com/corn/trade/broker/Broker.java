@@ -96,13 +96,17 @@ public abstract class Broker {
 		return contextListenerId;
 	}
 
+	public abstract int addPnListener(Consumer<PnL> pnlListener) throws BrokerException;
+
+	public abstract void removePnListener(int id) throws BrokerException;
+
 	public abstract int addPositionListener(Consumer<Position> positionListener) throws BrokerException;
 
 	public abstract void removePositionListener(int id) throws BrokerException;
 
 	protected abstract void requestPositionUpdates() throws BrokerException;
 
-	protected abstract void cancelPositionUpdates() throws BrokerException;
+	public abstract void requestPnLUpdates() throws BrokerException;
 
 	protected abstract void requestAdr() throws BrokerException;
 

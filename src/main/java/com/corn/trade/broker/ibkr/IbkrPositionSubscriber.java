@@ -86,12 +86,4 @@ public class IbkrPositionSubscriber {
 
 		connectionHandler.controller().reqPnLSingle(account, "", contractId, handler);
 	}
-
-	public synchronized void unsubscribe(int contractId, String account) {
-		log.info("Unsubscribing from PnL for contractId: {}, account: {}", contractId, account);
-		ApiController.IPnLSingleHandler handler = handlers.remove(getContractKey(contractId, account));
-		if (handler != null) {
-			connectionHandler.controller().cancelPnLSingle(handler);
-		}
-	}
 }

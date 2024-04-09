@@ -7,7 +7,6 @@ import com.corn.trade.entity.Asset;
 import com.corn.trade.entity.Exchange;
 import com.corn.trade.jpa.DBException;
 import com.corn.trade.model.ExtendedTradeContext;
-import com.corn.trade.model.Position;
 import com.corn.trade.model.TradeContext;
 import com.corn.trade.model.TradeData;
 import com.corn.trade.service.AssetService;
@@ -55,6 +54,7 @@ public class TradeController implements TradeViewListener {
 	private              boolean                     orderClean          = false;
 	private              TradeData                   tradeData;
 	private              PositionController          positionController;
+	private              int                         pnlListenerId       = 0;
 
 	public TradeController() {
 		this.assetService = new AssetService();
@@ -144,6 +144,10 @@ public class TradeController implements TradeViewListener {
 			view.messagePanel().show(brokerName + " is connected.");
 
 			tradeContextId = currentBroker.requestTradeContext(this::tradeContextListener);
+			if (pnlListenerId == 0) {
+				pnlListenerId = currentBroker.addPnListener(pnl -> view.info().setPnl(pnl.realized()));
+				currentBroker.requestPnLUpdates();
+			}
 
 		} catch (DBException | BrokerException e) {
 			Util.showWarningDlg(view.asComponent(), e.getMessage());
@@ -388,9 +392,6 @@ public class TradeController implements TradeViewListener {
 		}
 	}
 
-	/*
-	   todo Нужно проверить отображение двух позиций одновременно. Пока оно вроде как не работает.
-	 */
 	private void openPosition(TradeData order) {
 		int id = currentBroker.addPositionListener((position) -> {
 			if (position.getQuantity() == 0) {

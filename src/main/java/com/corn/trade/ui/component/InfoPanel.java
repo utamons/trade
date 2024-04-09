@@ -16,9 +16,9 @@ public class InfoPanel extends JPanel {
 		price = new InfoField("Price:", fontSize, 0, hSpacing, 30);
 		spread = new InfoField("Spread:", fontSize, 0, hSpacing, 30);
 		time = new InfoField("Time:", fontSize, 0, hSpacing, 30);
-		pl = new InfoField("P/L:", fontSize, 0, hSpacing, 30);
-		maxRangePassed = new InfoField("MR (pass):", fontSize, 0, hSpacing, 30);
-		maxRangeLeft = new InfoField("MR (left):", fontSize, 0, hSpacing, 30);
+		pl = new InfoField("P/L(daily):", fontSize, 0, hSpacing, 30);
+		maxRangePassed = new InfoField("MR(pass):", fontSize, 0, hSpacing, 30);
+		maxRangeLeft = new InfoField("MR(left):", fontSize, 0, hSpacing, 30);
 		sl = new InfoField("SL:", fontSize, 0, hSpacing, 30);
 		be = new InfoField("BE:", fontSize, 0, hSpacing, 30);
 		tp = new InfoField("TP:", fontSize, 0, hSpacing, 30);
@@ -82,9 +82,16 @@ public class InfoPanel extends JPanel {
 		this.spread.setInfoText(spread);
 	}
 
-	@SuppressWarnings("unused")
-	public void setPl(String pl) {
+	public void setPnl(double pnl) {
+		String pl = String.format("%.2f", pnl);
 		this.pl.setInfoText(pl);
+		if (pnl > 0) {
+			this.pl.setInfoFieldColor(Color.GREEN.darker());
+		} else if (pnl < 0) {
+			this.pl.setInfoFieldColor(Color.RED.darker());
+		} else {
+			this.pl.setInfoFieldColor(UIManager.getColor("Label.foreground"));
+		}
 	}
 
 	public void setMaxRangePassed(String maxRangePassed) {
@@ -103,7 +110,6 @@ public class InfoPanel extends JPanel {
 		price.clear();
 		spread.clear();
 		time.clear();
-		pl.clear();
 		maxRangePassed.clear();
 		maxRangeLeft.clear();
 		sl.clear();

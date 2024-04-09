@@ -25,15 +25,17 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 public class IbkrBroker extends Broker {
-	private static final org.slf4j.Logger       log                 = org.slf4j.LoggerFactory.getLogger(IbkrBroker.class);
+	private static final org.slf4j.Logger       log = org.slf4j.LoggerFactory.getLogger(IbkrBroker.class);
 	private final        IbkrOrderHelper        ibkrOrderHelper;
 	private final        IbkrPositionSubscriber positionSubscriber;
-	private              IbkrConnectionHandler  ibkrConnectionHandler;
-	private              ContractDetails        contractDetails;
-	private              ITopMktDataHandler     mktDataHandler;
-	private              IHistoricalDataHandler dayHighLowDataHandler;
-	private              IHistoricalDataHandler adrDataHandler;
-	private              boolean                requestedMarketData = false;
+	private              IbkrPnLSubscriber      pnlSubscriber;
+
+	private IbkrConnectionHandler  ibkrConnectionHandler;
+	private ContractDetails        contractDetails;
+	private ITopMktDataHandler     mktDataHandler;
+	private IHistoricalDataHandler dayHighLowDataHandler;
+	private IHistoricalDataHandler adrDataHandler;
+	private boolean                requestedMarketData = false;
 
 	public IbkrBroker(String ticker, String exchange, Trigger disconnectionListener) throws BrokerException {
 		super(disconnectionListener);
@@ -43,7 +45,7 @@ public class IbkrBroker extends Broker {
 		initContract(ticker, exchange);
 
 		ibkrOrderHelper = new IbkrOrderHelper(ibkrConnectionHandler, this);
-		positionSubscriber = IbkrPositionSubscriberFactory.getPositionSubscriber();
+		positionSubscriber = IbkrSubscriberFactory.getPositionSubscriber();
 
 		log.debug("init finish");
 	}
@@ -185,6 +187,19 @@ public class IbkrBroker extends Broker {
 		return positionSubscriber.addListener(contractDetails.contract().conid(), getAccount(), positionListener);
 	}
 
+	@Override
+	public int addPnListener(Consumer<com.corn.trade.model.PnL> pnlListener) throws BrokerException {
+		if (pnlSubscriber == null) {
+			pnlSubscriber = IbkrSubscriberFactory.getPnlSubscriber();
+		}
+		return pnlSubscriber.addListener(getAccount(), pnlListener);
+	}
+
+	@Override
+	public void removePnListener(int id) throws BrokerException {
+		pnlSubscriber.removeListener(getAccount(), id);
+	}
+
 	private String getAccount() throws BrokerException {
 		List<String> accounts = ibkrConnectionHandler.getAccountList();
 		if (accounts.size() != 1) {
@@ -204,8 +219,11 @@ public class IbkrBroker extends Broker {
 	}
 
 	@Override
-	protected void cancelPositionUpdates() throws BrokerException {
-		positionSubscriber.unsubscribe(contractDetails.contract().conid(), getAccount());
+	public void requestPnLUpdates() throws BrokerException {
+		if (pnlSubscriber == null) {
+			pnlSubscriber = IbkrSubscriberFactory.getPnlSubscriber();
+		}
+		pnlSubscriber.subscribe(getAccount());
 	}
 
 	@Override
