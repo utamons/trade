@@ -11,7 +11,7 @@ public class PositionRow extends JPanel {
 	public PositionRow() {
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-		posInfoRow = new PosInfoRow("AFRM", 12, 5, 1, 2);
+		posInfoRow = new PosInfoRow("AFRM", 12, 5, 3, 3);
 		buttonRow = new ButtonRow(12, 5, 1);
 
 		add(posInfoRow);
@@ -22,7 +22,7 @@ public class PositionRow extends JPanel {
 		posInfoRow.getLabel().setText(label);
 	}
 
-	public void setQtt(long qtt) {
+	public void setQtt(String qtt) {
 		posInfoRow.setQtt(qtt);
 	}
 
@@ -30,12 +30,12 @@ public class PositionRow extends JPanel {
 		posInfoRow.setSl(sl);
 	}
 
-	public void setBe(Double be) {
-		posInfoRow.setBe(be);
+	public void setGoal(Double goal) {
+		posInfoRow.setGoal(goal);
 	}
 
-	public void setPs(Double ps) {
-		posInfoRow.setPs(ps);
+	public void setDst(Double dst) {
+		posInfoRow.setDst(dst);
 	}
 
 	public void setPl(Double pl) {

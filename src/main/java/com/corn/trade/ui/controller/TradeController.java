@@ -7,6 +7,7 @@ import com.corn.trade.entity.Asset;
 import com.corn.trade.entity.Exchange;
 import com.corn.trade.jpa.DBException;
 import com.corn.trade.model.ExtendedTradeContext;
+import com.corn.trade.model.Position;
 import com.corn.trade.model.TradeContext;
 import com.corn.trade.model.TradeData;
 import com.corn.trade.service.AssetService;
@@ -39,6 +40,7 @@ public class TradeController implements TradeViewListener {
 	private final        AssetService                assetService;
 	private final        HashMap<String, TradeState> tradeStateMap       = new HashMap<>();
 	private final        Timer                       lockButtonsTimer;
+	private final        Map<String, Integer>        positionListenerIds = new HashMap<>();
 	private              TradeView                   view;
 	private              Double                      level;
 	private              Double                      techStopLoss;
@@ -53,7 +55,6 @@ public class TradeController implements TradeViewListener {
 	private              boolean                     orderClean          = false;
 	private              TradeData                   tradeData;
 	private              PositionController          positionController;
-	private              Map<String, Integer>        positionListenerIds = new HashMap<>();
 
 	public TradeController() {
 		this.assetService = new AssetService();
@@ -69,6 +70,20 @@ public class TradeController implements TradeViewListener {
 	@Override
 	public void setPositionPanel(PositionPanel positionPanel) {
 		this.positionController = new PositionController(positionPanel);
+		TradeData order = TradeData.aTradeData()
+		                           .withBreakEven(44.3)
+		                           .withGoal(45.0)
+		                           .withStopLoss(44.2)
+		                           .withQuantity(100)
+		                           .withPrice(44.5)
+		                           .build();
+		Position position = Position.aPosition()
+		                            .withSymbol("AAPL")
+		                            .withQuantity(50)
+		                            .withMarketValue(2215.0)
+		                            .withUnrealizedPnl(11.2)
+		                            .build();
+		positionController.updatePosition(order, position);
 	}
 
 	@Override
@@ -127,7 +142,8 @@ public class TradeController implements TradeViewListener {
 			restoreTradeState();
 
 			// Get the actual asset object from the asset name (and save it in the database if it doesn't exist)
-			Asset asset = assetService.getAsset(assetName, view.exchangeBox().getSelectedItem(), currentBroker);
+			Asset        asset        =
+					assetService.getAsset(assetName, view.exchangeBox().getSelectedItem(), currentBroker);
 			String       brokerName   = asset.getExchange().getBroker();
 			String       exchangeName = asset.getExchange().getName();
 			List<String> assets       = assetService.getAssetNames();
@@ -386,6 +402,9 @@ public class TradeController implements TradeViewListener {
 		}
 	}
 
+	/*
+	   todo Нужно проверить отображение двух позиций одновременно. Пока оно вроде как не работает.
+	 */
 	private void openPosition(TradeData order) {
 		int id = currentBroker.addPositionListener((position) -> {
 			if (position.getQuantity() == 0) {
@@ -400,7 +419,7 @@ public class TradeController implements TradeViewListener {
 
 	private void removePositionListener(String assetName) {
 		if (positionListenerIds.containsKey(assetName)) {
-				currentBroker.removePositionListener(positionListenerIds.get(assetName));
+			currentBroker.removePositionListener(positionListenerIds.get(assetName));
 		}
 	}
 

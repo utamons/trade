@@ -7,52 +7,64 @@ import com.corn.trade.ui.component.InfoField;
 import static com.corn.trade.util.Util.fmt;
 
 public class PosInfoRow extends JPanel {
-	private final InfoField qttField, slField, beField, psField, plField;
+	private final InfoField qttField, slField, goalField, dstField, plField;
 	private final JLabel label;
 
 	public PosInfoRow(String labelText, int fontSize, int padding, int hgap, int hSpacing) {
-		// Set the component layout
-		setLayout(new GridLayout(1, 6, hgap, 0));
+		setLayout(new GridBagLayout());
 		setBorder(BorderFactory.createEmptyBorder(padding, padding, padding, padding));
-		//setBackground(Color.LIGHT_GRAY);
+		setPreferredSize(new Dimension(150, 30));
+
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.fill = GridBagConstraints.VERTICAL;
+		gbc.insets = new Insets(0, 0, 0, hgap);
 
 		label = new JLabel(labelText);
 		label.setFont(new Font(label.getFont().getName(), Font.BOLD, fontSize));
 		JPanel labelPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, hSpacing, 0));
 		labelPanel.add(label);
 
+
 		qttField = new InfoField("Qtt:", fontSize, 0, hSpacing, 30);
 		slField = new InfoField("Sl:", fontSize, 0, hSpacing, 30);
-		beField = new InfoField("Be:", fontSize, 0, hSpacing,30);
-		psField = new InfoField("Ps:", fontSize, 0, hSpacing,30);
+		goalField = new InfoField("Gl:", fontSize, 0, hSpacing, 30);
+		dstField = new InfoField("Dst:", fontSize, 0, hSpacing, 30);
 		plField = new InfoField("P/L:", fontSize, 0, hSpacing, 30);
 
-		add(labelPanel);
-		add(qttField);
-		add(slField);
-		add(beField);
-		add(psField);
-		add(plField);
+		gbc.gridx = 0;
+		gbc.gridwidth = 1;
+		add(labelPanel, gbc);
+
+		gbc.gridx = 1;
+		add(qttField, gbc);
+		gbc.gridx = 2;
+		add(slField, gbc);
+		gbc.gridx = 3;
+		add(goalField, gbc);
+		gbc.gridx = 4;
+		add(dstField, gbc);
+		gbc.gridx = 5;
+		add(plField, gbc);
 	}
 
 	public JLabel getLabel() {
 		return label;
 	}
 
-	public void setQtt(long qtt) {
-		qttField.setInfoText(String.valueOf(qtt));
+	public void setQtt(String qtt) {
+		qttField.setInfoText(qtt);
 	}
 
 	public void setSl(Double sl) {
 		slField.setInfoText(fmt(sl));
 	}
 
-	public void setBe(Double be) {
-		beField.setInfoText(fmt(be));
+	public void setGoal(Double goal) {
+		goalField.setInfoText(fmt(goal));
 	}
 
-	public void setPs(Double ps) {
-		psField.setInfoText(fmt(ps), true);
+	public void setDst(Double dst) {
+		dstField.setInfoText(fmt(dst), true);
 	}
 
 	public void setPl(Double pl) {
@@ -60,7 +72,7 @@ public class PosInfoRow extends JPanel {
 	}
 
 	public void setPsColor(Color color) {
-		psField.setInfoFieldColor(color);
+		dstField.setInfoFieldColor(color);
 	}
 
 	public void setPlColor(Color color) {

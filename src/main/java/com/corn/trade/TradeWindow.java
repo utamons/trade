@@ -12,11 +12,11 @@ import java.awt.*;
 
 public class TradeWindow extends BaseWindow {
 	private static final  int    PREF_HEIGHT  = 850;
-	private static final  int    PREF_WIDTH   = 330;
+	private static final  int    PREF_WIDTH   = 450;
 	private static final Logger log          = LoggerFactory.getLogger(TradeWindow.class);
 
 	public TradeWindow(String[] args) {
-		super(args, "Trade", new Dimension(350, PREF_HEIGHT));
+		super(args, "Trade", new Dimension(PREF_WIDTH, PREF_HEIGHT));
 	}
 
 	public static void main(String[] args) {

@@ -5,8 +5,6 @@ import com.corn.trade.model.TradeData;
 import com.corn.trade.service.TradeCalc;
 import com.corn.trade.ui.component.position.PositionRow;
 import com.corn.trade.ui.view.PositionView;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.util.HashMap;
@@ -36,7 +34,8 @@ public class PositionController {
 		double goal = tradeData.getGoal();
 		double be = tradeData.getBreakEven();
 		double sl = tradeData.getStopLoss();
-		double ps = Math.abs(price - sl) / Math.abs(goal - sl) * 100;
+		// distance from stop loss to goal
+		double dst = Math.abs(price - sl) / Math.abs(goal - sl) * 100;
 		double unrealizedPnl = position.getUnrealizedPnl();
 
 		if (unrealizedPnl == Double.MAX_VALUE)
@@ -45,13 +44,15 @@ public class PositionController {
 			unrealizedPnl -= TradeCalc.estimatedCommissionIbkrUSD(qtt, price);
 		}
 
-		positionRow.setQtt(qtt);
+		positionRow.setQtt(qtt+"/"+tradeData.getQuantity());
 		positionRow.setSl(sl);
-		positionRow.setBe(be);
-		positionRow.setPs(ps);
+		positionRow.setGoal(goal);
+		positionRow.setDst(dst);
 		positionRow.setPl(unrealizedPnl);
 
-		if (unrealizedPnl >= 0) {
+		if (unrealizedPnl >= 0 && price < be) {
+			positionRow.setPlColor(Color.ORANGE.darker());
+		} else if (unrealizedPnl >= 0) {
 			positionRow.setPlColor(Color.GREEN.darker());
 		} else  {
 			positionRow.setPlColor(Color.RED.darker());
