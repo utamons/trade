@@ -309,6 +309,7 @@ public class TradeController implements TradeViewListener {
 			double goalFromLow  = tradeData.getGoal() - low;
 			double goalToPass   = positionType == PositionType.LONG ? goalFromLow : goalFromHigh;
 
+			// todo this is the place for asking RiskManager for permission to trade
 			if (tradeData.hasError()) {
 				view.trafficLight().setRed();
 				view.messagePanel().show(tradeData.getTradeError(), Color.RED.darker());
@@ -397,7 +398,7 @@ public class TradeController implements TradeViewListener {
 			if (position.getQuantity() == 0) {
 				removePositionListener(position.getSymbol());
 			}
-			positionController.updatePosition(order, position);
+			positionController.updatePosition(currentBroker, order, position);
 		});
 		addPositionListener(currentBroker.getAssetName(), id);
 

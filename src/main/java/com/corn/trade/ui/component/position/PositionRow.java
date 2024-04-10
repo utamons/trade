@@ -50,10 +50,6 @@ public class PositionRow extends JPanel {
 		posInfoRow.setPlColor(color);
 	}
 
-	public JButton getFixButton() {
-		return buttonRow.getFixButton();
-	}
-
 	public JButton getButton25() {
 		return buttonRow.getButton25();
 	}
@@ -66,7 +62,7 @@ public class PositionRow extends JPanel {
 		return buttonRow.getButton75();
 	}
 
-	public JButton getAllButton() {
-		return buttonRow.getAllButton();
+	public JButton getButton100() {
+		return buttonRow.getButton100();
 	}
 }

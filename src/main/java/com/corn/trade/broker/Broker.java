@@ -6,12 +6,14 @@ import com.corn.trade.jpa.DBException;
 import com.corn.trade.model.*;
 import com.corn.trade.service.AssetService;
 import com.corn.trade.service.TradeService;
+import com.corn.trade.type.ActionType;
 import com.corn.trade.type.OrderType;
 import com.corn.trade.type.PositionType;
 import com.corn.trade.type.TradeStatus;
 import com.corn.trade.util.ExchangeTime;
 import com.corn.trade.util.Trigger;
 import com.corn.trade.util.Util;
+import com.ib.client.Contract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +43,7 @@ public abstract class Broker {
 	protected              String                               assetName;
 	private                String                               name;
 	private                boolean                              openPosition      = false;
-	private                OrderBracketIds                      bracketIds;
+	protected              OrderBracketIds                      bracketIds;
 	private                ExchangeTime                         exchangeTime;
 	private                int                                  positionListenerId = 0;
 
@@ -178,6 +180,13 @@ public abstract class Broker {
 	                                                      OrderType orderType,
 	                                                      Consumer<Boolean> mainExecutionListener) throws BrokerException;
 
+	public abstract void placeOrder(long quantity,
+	                                Double stop,
+	                                Double limit,
+	                                ActionType actionType,
+	                                OrderType orderType,
+	                                Consumer<Boolean> executionListener) throws BrokerException;
+
 
 	protected void notifyTradeContext() throws BrokerException {
 		calculateFilteredAdr();
@@ -246,4 +255,8 @@ public abstract class Broker {
 	public boolean isOpenPosition() {
 		return openPosition;
 	}
+
+	public abstract void cleanAllOrders();
+
+	public abstract void setStopLossQuantity(long quantity, double stopLossPrice, ActionType actionType);
 }

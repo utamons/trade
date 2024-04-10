@@ -8,6 +8,7 @@ import com.corn.trade.jpa.DBException;
 import com.corn.trade.model.ExecutionData;
 import com.corn.trade.model.Position;
 import com.corn.trade.service.AssetService;
+import com.corn.trade.type.ActionType;
 import com.corn.trade.type.PositionType;
 import com.corn.trade.type.TimeFrame;
 import com.corn.trade.util.ExchangeTime;
@@ -44,7 +45,7 @@ public class IbkrBroker extends Broker {
 		initHandlers();
 		initContract(ticker, exchange);
 
-		ibkrOrderHelper = new IbkrOrderHelper(ibkrConnectionHandler, this);
+		ibkrOrderHelper = new IbkrOrderHelper(ibkrConnectionHandler);
 		positionSubscriber = IbkrSubscriberFactory.getPositionSubscriber();
 
 		log.debug("init finish");
@@ -340,4 +341,24 @@ public class IbkrBroker extends Broker {
 		}
 	}
 
+	@Override
+	public void placeOrder(long qtt, Double stop, Double limit, ActionType actionType, com.corn.trade.type.OrderType tOrderType, Consumer<Boolean> executionListener) throws BrokerException {
+		Action action = actionType == ActionType.BUY ? Action.BUY : Action.SELL;
+		try {
+			ibkrOrderHelper.placeOrder(contractDetails, qtt, stop, limit, action, fromTOrderType(tOrderType), executionListener);
+		} catch (IbkrException e) {
+			throw new BrokerException(e.getMessage());
+		}
+	}
+
+	@Override
+	public void cleanAllOrders() {
+		ibkrOrderHelper.cleanAllOrders(contractDetails.contract());
+	}
+
+	@Override
+	public void setStopLossQuantity(long quantity, double stopLossPrice, ActionType actionType) {
+		Action action = actionType == ActionType.BUY ? Action.BUY : Action.SELL;
+		ibkrOrderHelper.setStopLossQuantity(Integer.parseInt(bracketIds.stopLossId()), contractDetails.contract(), quantity, stopLossPrice, action);
+	}
 }

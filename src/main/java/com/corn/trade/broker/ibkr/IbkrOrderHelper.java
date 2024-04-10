@@ -17,11 +17,73 @@ class IbkrOrderHelper {
 
 	private static final Logger                log = org.slf4j.LoggerFactory.getLogger(IbkrOrderHelper.class);
 	private final        IbkrConnectionHandler ibkrConnectionHandler;
-	private final        IbkrBroker            ibkrBroker;
 
-	public IbkrOrderHelper(IbkrConnectionHandler ibkrConnectionHandler, IbkrBroker ibkrBroker) {
+	public IbkrOrderHelper(IbkrConnectionHandler ibkrConnectionHandler) {
 		this.ibkrConnectionHandler = ibkrConnectionHandler;
-		this.ibkrBroker = ibkrBroker;
+	}
+
+	public void placeOrder(ContractDetails contractDetails,
+	                       long quantity,
+	                       Double stop,
+	                       Double limit,
+	                       Action action,
+	                       OrderType orderType,
+	                       Consumer<Boolean> executionListener) {
+		if (!ibkrConnectionHandler.isConnected()) {
+			throw new IbkrException("IBKR not connected");
+		}
+
+		Order main = prepareOrder(quantity, stop, limit, action, orderType, true);
+
+		ibkrConnectionHandler.controller()
+		                     .placeOrModifyOrder(contractDetails.contract(),
+		                                         main,
+		                                         new IbkrOrderHandler(contractDetails.contract(),
+		                                                              main, executionListener));
+
+		log.info("Placed order {} {} {}, LMT: {}, QTT: {}, STP: {}",
+		         main.orderId(),
+		         main.action(),
+		         contractDetails.contract().symbol(),
+		         round(limit),
+		         quantity,
+		         round(stop));
+	}
+
+	private static Order prepareOrder(long quantity, Double stop, Double limit, Action action, OrderType orderType, boolean transmit) {
+		Order order = new Order();
+		order.action(action);
+		order.orderType(orderType);
+
+		Decimal quantityDecimal = Decimal.get(quantity);
+		order.totalQuantity(quantityDecimal);
+		order.lmtPrice(round(limit));
+		if (orderType == OrderType.STP || orderType == OrderType.STP_LMT) {
+			order.auxPrice(round(stop));
+		}
+		order.transmit(transmit);
+		return order;
+	}
+
+	public void setStopLossQuantity(int orderId, Contract contract, long quantity, double stopLossPrice, Action action) {
+		if (!ibkrConnectionHandler.isConnected()) {
+			throw new IbkrException("IBKR not connected");
+		}
+
+		Order stopLoss = new Order();
+		stopLoss.orderId(orderId);
+		stopLoss.action(action);
+		stopLoss.orderType(OrderType.STP);
+		stopLoss.auxPrice(round(stopLossPrice));
+		stopLoss.totalQuantity(Decimal.get(quantity));
+		stopLoss.transmit(true);
+
+		ibkrConnectionHandler.controller()
+		                     .placeOrModifyOrder(contract,
+		                                         stopLoss,
+		                                         new IbkrOrderHandler(contract, stopLoss));
+
+		log.info("Decreased SL id {} {} {}", stopLoss.orderId(), contract.symbol(), stopLossPrice);
 	}
 
 	public OrderBracketIds placeOrderWithBracket(ContractDetails contractDetails,
@@ -36,31 +98,14 @@ class IbkrOrderHelper {
 			throw new IbkrException("IBKR not connected");
 		}
 
-		Order main = new Order();
-		main.action(action);
-		main.orderType(orderType);
-
-		Decimal quantityDecimal = Decimal.get(quantity);
-		main.totalQuantity(quantityDecimal);
-		main.lmtPrice(round(limit));
-		if (stop != null) {
-			main.auxPrice(round(stop));
-		}
-		main.transmit(false);
-
-		Order takeProfit = new Order();
-		takeProfit.action(action == Action.SELL ? Action.BUY : Action.SELL);
-		takeProfit.orderType(OrderType.LMT);
-		takeProfit.totalQuantity(quantityDecimal);
-		takeProfit.lmtPrice(round(takeProfitPrice));
-		takeProfit.transmit(false);
+		Order main = prepareOrder(quantity, stop, limit, action, orderType, false);
 
 		Order stopLoss = new Order();
 		stopLoss.action(action == Action.SELL ? Action.BUY : Action.SELL);
 		stopLoss.orderType(OrderType.STP);
 		//Stop trigger price
 		stopLoss.auxPrice(round(stopLossPrice));
-		stopLoss.totalQuantity(quantityDecimal);
+		stopLoss.totalQuantity(Decimal.get(quantity));
 		// In this case, the low side order will be the last child being sent. Therefore, it needs to set this attribute to
 		// true to activate all its predecessors
 		stopLoss.transmit(true);
@@ -78,7 +123,7 @@ class IbkrOrderHelper {
 			         contractDetails.contract().symbol(),
 			         round(stop),
 			         round(limit),
-			         quantityDecimal,
+			         quantity,
 			         round(stopLossPrice),
 			         round(takeProfitPrice));
 		} else {
@@ -87,21 +132,12 @@ class IbkrOrderHelper {
 			         main.action(),
 			         contractDetails.contract().symbol(),
 			         round(limit),
-			         quantityDecimal,
+			         quantity,
 			         round(stopLossPrice),
 			         round(takeProfitPrice));
 		}
 
-		takeProfit.parentId(main.orderId());
 		stopLoss.parentId(main.orderId());
-
-		ibkrConnectionHandler.controller()
-		                     .placeOrModifyOrder(contractDetails.contract(),
-		                                         takeProfit,
-		                                         new IbkrOrderHandler(contractDetails.contract(),
-		                                                              takeProfit));
-
-		log.info("Placed TP id {} {} {}", takeProfit.orderId(), contractDetails.contract().symbol(), takeProfitPrice);
 
 		ibkrConnectionHandler.controller()
 		                     .placeOrModifyOrder(contractDetails.contract(),
@@ -111,23 +147,23 @@ class IbkrOrderHelper {
 
 		log.info("Placed SL id {} {} {}", stopLoss.orderId(), contractDetails.contract().symbol(), stopLossPrice);
 
-		return new OrderBracketIds(String.valueOf(main.orderId()), String.valueOf(takeProfit.orderId()), String.valueOf(stopLoss.orderId()));
+		return new OrderBracketIds(String.valueOf(main.orderId()), String.valueOf(stopLoss.orderId()), null);
 	}
 
-	public void dropAll(IbkrPositionHelper ibkrPositionHelper) {
+	public void cleanAllOrders(Contract contract) {
 		if (!ibkrConnectionHandler.isConnected()) {
 			throw new IbkrException("IBKR not connected");
 		}
-		final Contract lookedUpContract = ibkrBroker.getContractDetails().contract();
 
-		log.info("Dropping all orders for {}", lookedUpContract.symbol());
+
+		log.info("Dropping all orders for {}", contract.symbol());
 
 		ApiController.ILiveOrderHandler handler = new ApiController.ILiveOrderHandler() {
 			final List<Order> orders = new ArrayList<>();
 
 			@Override
 			public void openOrder(Contract contract, Order order, OrderState orderState) {
-				if (contract.conid() == lookedUpContract.conid()) {
+				if (contract.conid() == contract.conid()) {
 					orders.add(order);
 				}
 			}
@@ -143,7 +179,6 @@ class IbkrOrderHelper {
 						log.info("Dropping order {}", order.orderId());
 					});
 				}
-				ibkrPositionHelper.dropAll();
 			}
 
 			@Override

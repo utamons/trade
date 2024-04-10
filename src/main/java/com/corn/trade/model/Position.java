@@ -73,6 +73,7 @@ public class Position {
 			this.realizedPnl = other.realizedPnl;
 		}
 
+
 		public Builder withSymbol(String symbol) {
 			this.symbol = symbol;
 			return this;
