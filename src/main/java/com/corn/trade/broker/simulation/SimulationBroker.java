@@ -34,7 +34,6 @@ public class SimulationBroker extends Broker {
 
 	private final Timer                 positionTimer;
 	private final TradeContextGenerator tradeContextGenerator;
-	private       Trigger               disconnectionTrigger;
 	private       int                   pnlListenerId      = 0;
 	private       int                   positionListenerId = 0;
 	private       long                  quantity           = 100;
@@ -46,7 +45,7 @@ public class SimulationBroker extends Broker {
 	public SimulationBroker(Trigger disconnectionTrigger) throws BrokerException {
 		super(disconnectionTrigger);
 		exchangeName = "TEST";
-		tradeContextGenerator = new TradeContextGenerator();
+		tradeContextGenerator = new TradeContextGenerator(true);
 		tradeContextTimer = new java.util.Timer("tradeContextTimer", false);
 
 
@@ -75,7 +74,7 @@ public class SimulationBroker extends Broker {
 
 	@Override
 	protected void initConnection(Trigger disconnectionTrigger) throws BrokerException {
-		this.disconnectionTrigger = disconnectionTrigger;
+		log.debug("Initializing connection");
 	}
 
 	@Override
@@ -170,7 +169,7 @@ public class SimulationBroker extends Broker {
 	                       ActionType actionType,
 	                       OrderType orderType,
 	                       Consumer<Boolean> executionListener) throws BrokerException {
-		log.debug("Placing order with quantity " + quantity + " at price " + price);
+		log.debug("Placing order with quantity {} at price {} ", quantity, price);
 		this.quantity -= quantity;
 		executionListener.accept(true);
 	}

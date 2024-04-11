@@ -13,12 +13,21 @@ public class TradeContextGenerator {
 
 	private double step = 0.01;
 
-	public TradeContextGenerator() {
-		ask = MIN_PRICE + MAX_SPREAD;
-		bid = MIN_PRICE;
-		price = MIN_PRICE;
-		high = MIN_PRICE;
-		low = MIN_PRICE;
+	public TradeContextGenerator(boolean fromHigh) {
+		if (fromHigh) {
+			ask = MAX_PRICE;
+			bid = MAX_PRICE - MAX_SPREAD;
+			price = MAX_PRICE;
+			high = MAX_PRICE;
+			low = MAX_PRICE - MAX_SPREAD;
+			step = -step;
+		} else {
+			ask = MIN_PRICE + MAX_SPREAD;
+			bid = MIN_PRICE;
+			price = MIN_PRICE;
+			high = MIN_PRICE;
+			low = MIN_PRICE;
+		}
 	}
 
 	public Context next() {
