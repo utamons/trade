@@ -196,11 +196,6 @@ public class IbkrBroker extends Broker {
 		return pnlSubscriber.addListener(getAccount(), pnlListener);
 	}
 
-	@Override
-	public void removePnListener(int id) throws BrokerException {
-		pnlSubscriber.removeListener(getAccount(), id);
-	}
-
 	private String getAccount() throws BrokerException {
 		List<String> accounts = ibkrConnectionHandler.getAccountList();
 		if (accounts.size() != 1) {

@@ -400,6 +400,7 @@ public class TradeController implements TradeViewListener {
 			}
 			positionController.updatePosition(currentBroker, order, position);
 		});
+		log.debug("Position listener added with id {}", id);
 		addPositionListener(currentBroker.getAssetName(), id);
 
 		currentBroker.openPosition(order);
@@ -407,6 +408,7 @@ public class TradeController implements TradeViewListener {
 
 	private void removePositionListener(String assetName) {
 		if (positionListenerIds.containsKey(assetName)) {
+			log.debug("Removing position listener with id {}", positionListenerIds.get(assetName));
 			currentBroker.removePositionListener(positionListenerIds.get(assetName));
 		}
 	}

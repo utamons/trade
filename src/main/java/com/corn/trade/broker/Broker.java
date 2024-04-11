@@ -13,7 +13,6 @@ import com.corn.trade.type.TradeStatus;
 import com.corn.trade.util.ExchangeTime;
 import com.corn.trade.util.Trigger;
 import com.corn.trade.util.Util;
-import com.ib.client.Contract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,8 +99,6 @@ public abstract class Broker {
 
 	public abstract int addPnListener(Consumer<PnL> pnlListener) throws BrokerException;
 
-	public abstract void removePnListener(int id) throws BrokerException;
-
 	public abstract int addPositionListener(Consumer<Position> positionListener) throws BrokerException;
 
 	public abstract void removePositionListener(int id) throws BrokerException;
@@ -119,6 +116,7 @@ public abstract class Broker {
 	public abstract void requestExecutionData(CompletableFuture<List<ExecutionData>> executions) throws BrokerException;
 
 	public void openPosition(TradeData tradeData) throws BrokerException {
+	    log.debug("Opening position for asset {} on exchange {}", assetName, exchangeName);
 		TradeService tradeService = new TradeService();
 		try {
 			if (tradeService.getOpenTrade(assetName, exchangeName) != null) {
@@ -147,11 +145,13 @@ public abstract class Broker {
 					                                   requestPositionUpdates();
 					                                   positionListenerId = addPositionListener(position -> {
 						                                   if (position.getQuantity() == 0) {
+															   log.info("Position closed, removing positionListenerId = {}", positionListenerId);
 															   removePositionListener(positionListenerId);
 							                                   closePosition(trade.getId());
 						                                   }
 					                                   });
 													   openPosition = true;
+													   log.info("Position opened, positionListenerId = {}", positionListenerId);
 				                                   } catch (DBException e) {
 					                                   log.error("Error saving new trade {}", e.getMessage());
 				                                   } catch (BrokerException e) {

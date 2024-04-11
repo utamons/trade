@@ -16,60 +16,51 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 public class SimulationBroker extends Broker {
-	private final Logger  log = LoggerFactory.getLogger(SimulationBroker.class);
+	private static final long                             TRADE_CONTEXT_UPDATE_INTERVAL = 500;
+	private static final long                             POSITION_UPDATE_INTERVAL      = 1000;
+	private final        Logger                           log                           =
+			LoggerFactory.getLogger(SimulationBroker.class);
+	private final        Map<Integer, Consumer<PnL>>      pnlListeners                  = new HashMap<>();
+	private final        Map<Integer, Consumer<Position>> positionListeners             = new ConcurrentHashMap<>();
+	private final        java.util.Timer                            tradeContextTimer;
 
-	private static final long TRADE_CONTEXT_UPDATE_INTERVAL = 1000;
-	private static final long POSITION_UPDATE_INTERVAL = 1000;
-
-	private       Trigger disconnectionTrigger;
-	private final List<Consumer<PnL>> pnlListeners = new ArrayList<>();
-	private final List<Consumer<Position>> positionListeners = new CopyOnWriteArrayList<>();;
-	private int pnlListenerId = 0;
-	private int positionListenerId = 0;
-	private long quantity = 100;
-	private Double startPrice;
-
-	private final Timer        tradeContextTimer;
-	private final Timer        positionTimer;
-	private       PositionType positionType;
-	private Double unRealizedPnl;
-	private Double realizedPnl;
-
+	private final Timer                 positionTimer;
 	private final TradeContextGenerator tradeContextGenerator;
+	private       Trigger               disconnectionTrigger;
+	private       int                   pnlListenerId      = 0;
+	private       int                   positionListenerId = 0;
+	private       long                  quantity           = 100;
+	private       Double                startPrice;
+	private       PositionType          positionType;
+	private       Double                unRealizedPnl;
+	private       Double                realizedPnl        = 0.0;
 
 	public SimulationBroker(Trigger disconnectionTrigger) throws BrokerException {
 		super(disconnectionTrigger);
 		exchangeName = "TEST";
 		tradeContextGenerator = new TradeContextGenerator();
-		tradeContextTimer = new Timer((int) TRADE_CONTEXT_UPDATE_INTERVAL, e -> {
-			TradeContextGenerator.Context context = tradeContextGenerator.next();
-			ask = context.ask();
-			bid = context.bid();
-			price = context.price();
-			dayHigh = context.high();
-			dayLow = context.low();
-			notifyTradeContext();
-		});
-		tradeContextTimer.setRepeats(true);
+		tradeContextTimer = new java.util.Timer("tradeContextTimer", false);
+
+
 		positionTimer = new Timer((int) POSITION_UPDATE_INTERVAL, e -> {
-			unRealizedPnl = getUnrealizedPnl();
-			Position position =
-					Position.aPosition()
-					        .withSymbol(assetName)
-					        .withQuantity(quantity)
-							.withMarketValue(quantity * price)
-							.withUnrealizedPnl(unRealizedPnl)
-					        .build();
-			synchronized (this) {
-				positionListeners.forEach(pl -> pl.accept(position));
+			if (quantity > 0) {
+				unRealizedPnl = getUnrealizedPnl();
 			}
+			Position position = Position.aPosition()
+			                            .withSymbol(assetName)
+			                            .withQuantity(quantity)
+			                            .withMarketValue(quantity * price)
+			                            .withUnrealizedPnl(unRealizedPnl)
+			                            .build();
+			positionListeners.values().forEach(pl -> pl.accept(position));
 		});
 	}
 
@@ -89,25 +80,22 @@ public class SimulationBroker extends Broker {
 
 	@Override
 	public synchronized int addPnListener(Consumer<PnL> pnlListener) throws BrokerException {
-		pnlListeners.add(pnlListener);
-		return ++pnlListenerId;
-	}
-
-	@Override
-	public synchronized void removePnListener(int id) throws BrokerException {
-		pnlListeners.remove(id);
+		pnlListeners.put(++pnlListenerId, pnlListener);
+		return pnlListenerId;
 	}
 
 	@Override
 	public synchronized int addPositionListener(Consumer<Position> positionListener) throws BrokerException {
-		positionListeners.add(positionListener);
-		return ++positionListenerId;
+		positionListeners.put(++positionListenerId, positionListener);
+		return positionListenerId;
 	}
 
 	@Override
 	public synchronized void removePositionListener(int id) throws BrokerException {
-		log.debug("Removing position listener with id " + id);
+		log.debug("removePositionListener :Removing position listener with id {}", id);
+		positionTimer.stop();
 		positionListeners.remove(id);
+		positionTimer.start();
 	}
 
 	@Override
@@ -134,13 +122,24 @@ public class SimulationBroker extends Broker {
 	@Override
 	protected void requestMarketData() throws BrokerException {
 		log.debug("Requesting market data");
-		tradeContextTimer.start();
+		tradeContextTimer.scheduleAtFixedRate(new java.util.TimerTask() {
+			@Override
+			public void run() {
+				TradeContextGenerator.Context context = tradeContextGenerator.next();
+				ask = context.ask();
+				bid = context.bid();
+				price = context.price();
+				dayHigh = context.high();
+				dayLow = context.low();
+				notifyTradeContext();
+			}
+		}, 0, TRADE_CONTEXT_UPDATE_INTERVAL);
 	}
 
 	@Override
 	protected void cancelMarketData() {
 		log.debug("Cancelling market data");
-		tradeContextTimer.stop();
+		tradeContextTimer.cancel();
 	}
 
 	@Override
@@ -183,12 +182,14 @@ public class SimulationBroker extends Broker {
 
 	@Override
 	public void setStopLossQuantity(long quantity, double stopLossPrice, ActionType actionType) {
-		log.debug("Setting stop loss quantity to " + quantity + " at price " + stopLossPrice);
+		log.debug("Setting stop loss quantity to {} at price {}", quantity, stopLossPrice);
 	}
 
-	protected void closePosition(long tradeId)  {
+	protected void closePosition(long tradeId) {
 		super.closePosition(tradeId);
 		realizedPnl += unRealizedPnl;
-		pnlListeners.forEach(pl -> pl.accept(new PnL(realizedPnl, realizedPnl, unRealizedPnl)));
+		log.debug("Closing position with realizedPnl {}, unRealizedPnl {}", realizedPnl, unRealizedPnl);
+		log.debug("Pnl listeners size {} ", pnlListeners.size());
+		pnlListeners.values().forEach(pl -> pl.accept(new PnL(realizedPnl, realizedPnl, unRealizedPnl)));
 	}
 }
