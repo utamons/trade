@@ -9,6 +9,8 @@ import com.corn.trade.type.OrderType;
 import com.corn.trade.type.PositionType;
 import com.corn.trade.ui.component.position.PositionRow;
 import com.corn.trade.ui.view.PositionView;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -22,7 +24,8 @@ import java.util.function.Consumer;
  */
 @SuppressWarnings("DuplicatedCode")
 public class PositionController {
-	private final PositionView             view;
+	private static final Logger log = LoggerFactory.getLogger(PositionController.class);
+	private final PositionView view;
 	private final Map<String, PositionRow> positions;
 	private final Map<String, Long>        oldQuantities = new HashMap<>();
 	private final Map<String, Boolean>     locked        = new HashMap<>();
@@ -86,7 +89,7 @@ public class PositionController {
 
 		PositionType positionType = tradeData.getPositionType(); // Long or Short position
 		long         initialQtt   = tradeData.getQuantity(); // initial quantity when position was opened
-		long         qtt          = position.getQuantity(); // current quantity
+		long         qtt          = Math.abs(position.getQuantity()); // current quantity
 
 		oldQuantities.put(position.getSymbol(), qtt); // save current quantity for future comparison
 		double       percentLeft  = (double) qtt / initialQtt * 100; // percentage of quantity left compared to initial quantity
@@ -122,7 +125,7 @@ public class PositionController {
 		positionRow.setDst(dst);
 		positionRow.setPl(unrealizedPnl);
 
-		if (unrealizedPnl >= 0 && price < be) {
+		if (unrealizedPnl >= 0 && isBefore(positionType, price, be)) {
 			positionRow.setPlColor(Color.ORANGE.darker());
 		} else if (unrealizedPnl >= 0) {
 			positionRow.setPlColor(Color.GREEN.darker());
@@ -130,9 +133,9 @@ public class PositionController {
 			positionRow.setPlColor(Color.RED.darker());
 		}
 
-		if (price < be) {
+		if (isBefore(positionType, price, be)) {
 			positionRow.setPsColor(Color.RED.darker());
-		} else if (price < goal) {
+		} else if (isBefore(positionType, price, goal)) {
 			positionRow.setPsColor(Color.ORANGE.darker());
 		} else {
 			positionRow.setPsColor(Color.GREEN.darker());
@@ -163,7 +166,7 @@ public class PositionController {
 			btn75.addActionListener(getActionListener(position, positionRow, broker, qtt75, price, positionType, handler));
 			btn50.addActionListener(getActionListener(position, positionRow, broker, qtt50, price, positionType, handler));
 			btn25.addActionListener(getActionListener(position, positionRow, broker, qtt25, price, positionType, handler));
-		} else if (percentLeft < 100 && percentLeft > 75) { // re-set listeners for buttons
+		} else if (percentLeft < 100 && percentLeft >= 75) { // re-set listeners for buttons
 			btn100.setEnabled(false);
 			cleanListeners(btn75);
 			cleanListeners(btn50);
@@ -177,7 +180,7 @@ public class PositionController {
 			                                          handler));
 			btn50.addActionListener(getActionListener(position, positionRow, broker, qtt50, price, positionType, handler));
 			btn25.addActionListener(getActionListener(position, positionRow, broker, qtt25, price, positionType, handler));
-		} else if (percentLeft < 75 && percentLeft > 50) { // re-set listeners for buttons
+		} else if (percentLeft < 75 && percentLeft >= 50) { // re-set listeners for buttons
 			btn100.setEnabled(false);
 			btn75.setEnabled(false);
 			cleanListeners(btn50);
@@ -190,7 +193,7 @@ public class PositionController {
 			                                          positionType,
 			                                          handler));
 			btn25.addActionListener(getActionListener(position, positionRow, broker, qtt25, price, positionType, handler));
-		} else if (percentLeft < 50 && percentLeft > 25) { // re-set listeners for buttons
+		} else if (percentLeft < 50 && percentLeft >= 25) { // re-set listeners for buttons
 			btn100.setEnabled(false);
 			btn75.setEnabled(false);
 			btn50.setEnabled(false);
@@ -203,6 +206,10 @@ public class PositionController {
 			                                          positionType,
 			                                          handler));
 		}
+	}
+
+	private static boolean isBefore(PositionType positionType, double price, double be) {
+		return (positionType == PositionType.LONG && price < be) || (positionType == PositionType.SHORT && price > be);
 	}
 
 	/**
@@ -227,10 +234,11 @@ public class PositionController {
 	                                         PositionType positionType,
 	                                         Consumer<Boolean> handler) {
 		return e -> {
+			log.debug("Partially closing position {} with quantity {}", position.getSymbol(), Math.abs(qtt));
 			locked.put(position.getSymbol(), true);
 			lockAllButtons(positionRow);
 			ActionType action = positionType == PositionType.LONG ? ActionType.SELL : ActionType.BUY;
-			broker.placeOrder(qtt, null, price, action, OrderType.LMT, handler);
+			broker.placeOrder(Math.abs(qtt), null, price, action, OrderType.LMT, handler);
 		};
 	}
 }
