@@ -161,7 +161,7 @@ public abstract class Broker {
 		                                   });
 	}
 
-	private void closePosition(long tradeId) {
+	protected void closePosition(long tradeId) {
 		openPosition = false;
 		TradeService tradeService = new TradeService();
 		try {

@@ -64,6 +64,10 @@ public class Bar {
 		return volume;
 	}
 
+	public static BarBuilder aBar() {
+		return new BarBuilder();
+	}
+
 
 	public static final class BarBuilder {
 		private double    open;

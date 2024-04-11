@@ -17,6 +17,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+/**
+ * Controller for position view. Supports many positions tracking at once.
+ */
 @SuppressWarnings("DuplicatedCode")
 public class PositionController {
 	private final PositionView             view;
@@ -50,7 +53,13 @@ public class PositionController {
 		positionRow.getButton25().setEnabled(true);
 	}
 
-	private Consumer<Boolean> getHandler(String symbol) {
+	/**
+	 * Returns a handler which triggers when order is executed
+	 *
+	 * @param symbol - a symbol of the order
+	 * @return a handler for order execution
+	 */
+	private Consumer<Boolean> getOrderExecutionHandler(String symbol) {
 		return (any) -> {
 			locked.remove(symbol);
 			PositionRow positionRow = positions.get(symbol);
@@ -58,51 +67,55 @@ public class PositionController {
 		};
 	}
 
+	/**
+	 * Updates position state in real time
+	 *
+	 * @param broker - a broker object (provides broker's functionality)
+	 * @param tradeData - current trade context
+	 * @param position - current position data
+	 */
 	public void updatePosition(Broker broker, TradeData tradeData, Position position) {
 		PositionRow positionRow = positions.computeIfAbsent(position.getSymbol(), view::addPosition);
-		Long		oldQtt      = oldQuantities.get(position.getSymbol());
+		Long		oldQtt      = oldQuantities.get(position.getSymbol()); // old quantity from previous position state
 
-
+        // buttons for partially closing position (100%, 75%, 50%, 25%)
 		JButton btn100 = positionRow.getButton100();
 		JButton btn75  = positionRow.getButton75();
 		JButton btn50  = positionRow.getButton50();
 		JButton btn25  = positionRow.getButton25();
 
-		PositionType positionType = tradeData.getPositionType();
-		long         initialQtt   = tradeData.getQuantity();
-		long         qtt          = position.getQuantity();
-		oldQuantities.put(position.getSymbol(), qtt);
-		double       percentLeft  = (double) qtt / initialQtt * 100;
+		PositionType positionType = tradeData.getPositionType(); // Long or Short position
+		long         initialQtt   = tradeData.getQuantity(); // initial quantity when position was opened
+		long         qtt          = position.getQuantity(); // current quantity
 
-		double price = position.getMarketValue() / position.getQuantity();
-		double goal  = tradeData.getGoal();
-		double be    = tradeData.getBreakEven();
-		double sl    = tradeData.getStopLoss();
+		oldQuantities.put(position.getSymbol(), qtt); // save current quantity for future comparison
+		double       percentLeft  = (double) qtt / initialQtt * 100; // percentage of quantity left compared to initial quantity
+
+		double price = position.getMarketValue() / position.getQuantity(); // current price of the position
+		double goal  = tradeData.getGoal(); // goal price
+		double be    = tradeData.getBreakEven(); // break even price
+		double sl    = tradeData.getStopLoss(); // stop loss price
 		// distance from stop loss to goal
 		double dst           = Math.abs(price - sl) / Math.abs(goal - sl) * 100;
 		double unrealizedPnl = position.getUnrealizedPnl();
 
-		if (unrealizedPnl == Double.MAX_VALUE) unrealizedPnl = 0.0;
+		if (unrealizedPnl == Double.MAX_VALUE) unrealizedPnl = 0.0; // IBKR API sends Double.MAX_VALUE as null value
 		else {
-			unrealizedPnl -= TradeCalc.estimatedCommissionIbkrUSD(qtt, price);
+			unrealizedPnl -= TradeCalc.estimatedCommissionIbkrUSD(qtt, price); // subtract commission for closing position from unrealized profit
 		}
 
-		/*
-		  todo Стоит использовать для симуляции TSLA, она активно меняет контекст.
-		   Нужно проверить, что с кнопками и обработчиками, если контекст активно меняется, при тестировании они не работали.
-		   Когда всё оттестирую для LONG и буду в нём уверен, нужно потестировать для SHORT.
-		 */
-		if (qtt == 0) {
+		if (qtt == 0) { // if position is closed
 			view.removePosition(position.getSymbol());
 			positions.remove(position.getSymbol());
-			broker.cleanAllOrders();
+			broker.cleanAllOrders(); // cancel all active orders remaining for this position
 			oldQuantities.remove(position.getSymbol());
 			return;
-		} else if (oldQtt != null && qtt < oldQtt) {
+		} else if (oldQtt != null && qtt < oldQtt) { // set stop loss to new quantity
 			ActionType action = positionType == PositionType.LONG ? ActionType.SELL : ActionType.BUY;
 			broker.setStopLossQuantity(qtt,sl, action);
 		}
 
+		// update position row in the view with new data
 		positionRow.setQtt(qtt + "/" + tradeData.getQuantity());
 		positionRow.setSl(sl);
 		positionRow.setGoal(goal);
@@ -125,16 +138,17 @@ public class PositionController {
 			positionRow.setPsColor(Color.GREEN.darker());
 		}
 
+		// buttons setup ======================================================================================
 		long qtt75 = (long) (initialQtt * 0.75);
 		long qtt50 = (long) (initialQtt * 0.50);
 		long qtt25 = (long) (initialQtt * 0.25);
 
-		Consumer<Boolean> handler = getHandler(position.getSymbol());
+		Consumer<Boolean> handler = getOrderExecutionHandler(position.getSymbol());
 
-		if (locked.get(position.getSymbol()) != null) {
+		if (locked.get(position.getSymbol()) != null) { // if partially closing buttons are locked (order is being executed)
 			//noinspection UnnecessaryReturnStatement
 			return;
-		} else if (percentLeft == 100) {
+		} else if (percentLeft == 100) { // re-set listeners for buttons
 			cleanListeners(btn100);
 			cleanListeners(btn75);
 			cleanListeners(btn50);
@@ -149,7 +163,7 @@ public class PositionController {
 			btn75.addActionListener(getActionListener(position, positionRow, broker, qtt75, price, positionType, handler));
 			btn50.addActionListener(getActionListener(position, positionRow, broker, qtt50, price, positionType, handler));
 			btn25.addActionListener(getActionListener(position, positionRow, broker, qtt25, price, positionType, handler));
-		} else if (percentLeft < 100 && percentLeft > 75) {
+		} else if (percentLeft < 100 && percentLeft > 75) { // re-set listeners for buttons
 			btn100.setEnabled(false);
 			cleanListeners(btn75);
 			cleanListeners(btn50);
@@ -163,7 +177,7 @@ public class PositionController {
 			                                          handler));
 			btn50.addActionListener(getActionListener(position, positionRow, broker, qtt50, price, positionType, handler));
 			btn25.addActionListener(getActionListener(position, positionRow, broker, qtt25, price, positionType, handler));
-		} else if (percentLeft < 75 && percentLeft > 50) {
+		} else if (percentLeft < 75 && percentLeft > 50) { // re-set listeners for buttons
 			btn100.setEnabled(false);
 			btn75.setEnabled(false);
 			cleanListeners(btn50);
@@ -176,7 +190,7 @@ public class PositionController {
 			                                          positionType,
 			                                          handler));
 			btn25.addActionListener(getActionListener(position, positionRow, broker, qtt25, price, positionType, handler));
-		} else if (percentLeft < 50 && percentLeft > 25) {
+		} else if (percentLeft < 50 && percentLeft > 25) { // re-set listeners for buttons
 			btn100.setEnabled(false);
 			btn75.setEnabled(false);
 			btn50.setEnabled(false);
@@ -190,6 +204,20 @@ public class PositionController {
 			                                          handler));
 		}
 	}
+
+	/**
+	 * Returns an action listener for partially closing position
+	 *
+	 * @param position - current position data
+	 * @param positionRow - current position row in the view
+	 * @param broker - a broker object (provides broker's functionality)
+	 * @param qtt - quantity to close
+	 * @param price - current price of the position
+	 * @param positionType - Long or Short position
+	 * @param handler - a handler for order execution confirmation
+	 *
+	 * @return an action listener for partially closing position
+	 */
 
 	private ActionListener getActionListener(Position position,
 	                                         PositionRow positionRow,

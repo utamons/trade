@@ -2,6 +2,7 @@ package com.corn.trade.broker;
 
 import com.corn.trade.broker.ibkr.IbkrBroker;
 import com.corn.trade.broker.ibkr.IbkrException;
+import com.corn.trade.broker.simulation.SimulationBroker;
 import com.corn.trade.util.Trigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,11 +46,10 @@ public class BrokerFactory {
 	}
 
 	public static Broker instantiateBroker(String brokerName,
-	                                        String assetName,
-	                                        String exchangeName,
-	                                        Trigger disconnectionTrigger) throws BrokerException {
+	                                       String assetName,
+	                                       String exchangeName,
+	                                       Trigger disconnectionTrigger) throws BrokerException {
 		String key = createKey(brokerName, assetName, exchangeName);
-		//noinspection SwitchStatementWithTooFewBranches
 		switch (brokerName) {
 			case "IBKR":
 				try {
@@ -64,7 +64,13 @@ public class BrokerFactory {
 				} catch (IbkrException e) {
 					throw new BrokerException("Failed to instantiate IBKR Broker: " + e.getMessage(), e);
 				}
-				// Future case for new brokers here
+			case "TEST": {
+				SimulationBroker broker = new SimulationBroker(disconnectionTrigger);
+				broker.setName(key);
+				broker.setAssetName(assetName);
+				log.debug("Created new Test broker for {}, exchange {}", assetName, exchangeName);
+				return broker;
+			}
 			default:
 				throw new BrokerException("Unsupported broker: " + brokerName);
 		}

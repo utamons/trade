@@ -1,3 +1,4 @@
 id,name,broker,currency_id,time_zone,trading_hours
 1,NASDAQ,IBKR,1,US/Eastern,09:30-16:00
 2,NYSE,IBKR,1,US/Eastern,09:30-16:00
+3,TEST,TEST,1,Asia/Almaty,00:00-23:59
