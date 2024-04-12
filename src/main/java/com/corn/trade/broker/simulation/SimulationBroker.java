@@ -155,7 +155,7 @@ public class SimulationBroker extends Broker {
 
 	@Override
 	public void requestExecutionData(CompletableFuture<List<ExecutionData>> executions) throws BrokerException {
-		// not needed for now
+		executions.complete(new ArrayList<>());
 	}
 
 	@Override
