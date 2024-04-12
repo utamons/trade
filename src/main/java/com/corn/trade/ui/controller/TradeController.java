@@ -128,8 +128,7 @@ public class TradeController implements TradeViewListener {
 			restoreTradeState();
 
 			// Get the actual asset object from the asset name (and save it in the database if it doesn't exist)
-			Asset        asset        =
-					assetService.getAsset(assetName, view.exchangeBox().getSelectedItem(), currentBroker);
+			Asset asset = assetService.getAsset(assetName, view.exchangeBox().getSelectedItem(), currentBroker);
 			String       brokerName   = asset.getExchange().getBroker();
 			String       exchangeName = asset.getExchange().getName();
 			List<String> assets       = assetService.getAssetNames();
@@ -279,6 +278,7 @@ public class TradeController implements TradeViewListener {
 			                     .withPowerReserve(powerReserve())
 			                     .withPrice(price)
 			                     .withLevel(level)
+			                     .withLevel(level)
 			                     .withTechStopLoss(techStopLoss)
 			                     .withSlippage(slippage)
 			                     .withGoal(goal)
@@ -401,7 +401,7 @@ public class TradeController implements TradeViewListener {
 			positionController.updatePosition(currentBroker, order, position);
 		});
 		log.debug("Position listener added with id {}", id);
-		addPositionListener(currentBroker.getAssetName(), id);
+		positionListenerIds.put(currentBroker.getAssetName(), id);
 
 		currentBroker.openPosition(order);
 	}
@@ -410,12 +410,6 @@ public class TradeController implements TradeViewListener {
 		if (positionListenerIds.containsKey(assetName)) {
 			log.debug("Removing position listener with id {}", positionListenerIds.get(assetName));
 			currentBroker.removePositionListener(positionListenerIds.get(assetName));
-		}
-	}
-
-	private void addPositionListener(String assetName, int id) {
-		if (!positionListenerIds.containsKey(assetName)) {
-			positionListenerIds.put(assetName, id);
 		}
 	}
 

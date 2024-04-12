@@ -30,7 +30,7 @@ public class SimulationBroker extends Broker {
 			LoggerFactory.getLogger(SimulationBroker.class);
 	private final        Map<Integer, Consumer<PnL>>      pnlListeners                  = new HashMap<>();
 	private final        Map<Integer, Consumer<Position>> positionListeners             = new ConcurrentHashMap<>();
-	private final        java.util.Timer                            tradeContextTimer;
+	private final        java.util.Timer                  tradeContextTimer;
 
 	private final Timer                 positionTimer;
 	private final TradeContextGenerator tradeContextGenerator;
@@ -45,7 +45,7 @@ public class SimulationBroker extends Broker {
 	public SimulationBroker(Trigger disconnectionTrigger) throws BrokerException {
 		super(disconnectionTrigger);
 		exchangeName = "TEST";
-		tradeContextGenerator = new TradeContextGenerator(true);
+		tradeContextGenerator = new TradeContextGenerator(false);
 		tradeContextTimer = new java.util.Timer("tradeContextTimer", false);
 
 
@@ -74,7 +74,7 @@ public class SimulationBroker extends Broker {
 
 	@Override
 	protected void initConnection(Trigger disconnectionTrigger) throws BrokerException {
-		log.debug("Initializing connection");
+		Broker.log.debug("Initializing connection");
 	}
 
 	@Override
@@ -93,8 +93,20 @@ public class SimulationBroker extends Broker {
 	public synchronized void removePositionListener(int id) throws BrokerException {
 		log.debug("removePositionListener :Removing position listener with id {}", id);
 		positionTimer.stop();
-		positionListeners.remove(id);
-		positionTimer.start();
+		if (positionListeners.remove(id) == null) {
+			log.warn("removePositionListener :Position listener with id {} not found", id);
+		} else {
+			log.debug("removePositionListener :Position listener with id {} removed", id);
+		}
+		if (positionListeners.isEmpty()) {
+			log.debug("removePositionListener :No more position listeners, stopping position updates");
+			positionTimer.stop();
+		} else {
+			log.debug("removePositionListener :Position listeners remained {}:", positionListeners.size());
+			for (Integer key : positionListeners.keySet()) {
+				log.debug("removePositionListener : id {}", key);
+			}
+		}
 	}
 
 	@Override

@@ -27,9 +27,9 @@ import static com.corn.trade.util.Util.round;
 
 public abstract class Broker {
 	public static final    int                                  BARS_FOR_ADR      = 10;
-	protected static final int                                  ADR_BARS          = 20;
-	private static final   Logger                               log               = LoggerFactory.getLogger(Broker.class);
-	protected final        Map<Integer, Consumer<TradeContext>> contextListeners  = new HashMap<>();
+	protected static final int                                  ADR_BARS         = 20;
+	protected static final Logger                               log              = LoggerFactory.getLogger(Broker.class);
+	protected final        Map<Integer, Consumer<TradeContext>> contextListeners = new HashMap<>();
 	protected              List<Bar>                            adrBarList        = new java.util.ArrayList<>();
 	protected              String                               exchangeName;
 	protected              Double                               adr;
