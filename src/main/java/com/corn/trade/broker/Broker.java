@@ -5,6 +5,7 @@ import com.corn.trade.entity.Trade;
 import com.corn.trade.jpa.DBException;
 import com.corn.trade.model.*;
 import com.corn.trade.service.AssetService;
+import com.corn.trade.service.OrderService;
 import com.corn.trade.service.TradeService;
 import com.corn.trade.type.ActionType;
 import com.corn.trade.type.OrderType;
@@ -164,8 +165,16 @@ public abstract class Broker {
 	protected void closePosition(long tradeId) {
 		openPosition = false;
 		TradeService tradeService = new TradeService();
+		OrderService orderService = new OrderService();
 		try {
-			tradeService.updateTradeStatus(tradeId, TradeStatus.CLOSED);
+			Trade trade = tradeService.updateTradeStatus(tradeId, TradeStatus.CLOSED);
+			CompletableFuture<List<ExecutionData>> executions = new CompletableFuture<>();
+			requestExecutionData(executions);
+			executions.thenAcceptAsync(executionDataList -> executionDataList.forEach(executionData -> {
+				if (executionData.time().plusSeconds(30).isAfter(trade.getCreatedAt())) {
+					orderService.saveExecution(trade, bracketIds, executionData);
+				}
+			}));
 		} catch (DBException e) {
 			log.error("Error updating trade status {}", e.getMessage());
 		}

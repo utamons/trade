@@ -441,3 +441,4 @@ public class TradeController implements TradeViewListener {
 	                          Double techStopLoss,
 	                          Double goal) {}
 }
+

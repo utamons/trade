@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @SuppressWarnings("unused")
 @Entity
-@Table(name = "order")
+@Table(name = "orders")
 public class Order {
 
 	@Id
@@ -42,8 +42,8 @@ public class Order {
 	/**
 	 * i.e. limit price
 	 */
-	@Column(name = "price", nullable = false)
-	private BigDecimal price;
+	@Column(name = "stop_price")
+	private BigDecimal stopPrice;
 
 	/**
 	 * i.e stop price
@@ -60,8 +60,10 @@ public class Order {
 	@Column(name = "status")
 	private String status;
 
+	@Column(name = "created_at")
 	private LocalDateTime createdAt;
 
+	@Column(name = "executed_at")
 	private LocalDateTime executedAt;
 
 	public void setId(Long id) {
@@ -133,15 +135,15 @@ public class Order {
 	/**
 	 * i.e. limit price
 	 */
-	public void setPrice(BigDecimal price) {
-		this.price = price;
+	public void setStopPrice(BigDecimal price) {
+		this.stopPrice = price;
 	}
 
 	/**
 	 * i.e. limit price
 	 */
-	public BigDecimal getPrice() {
-		return price;
+	public BigDecimal getStopPrice() {
+		return stopPrice;
 	}
 
 	/**

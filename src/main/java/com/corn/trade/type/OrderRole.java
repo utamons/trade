@@ -3,6 +3,7 @@ package com.corn.trade.type;
 public enum OrderRole {
 	STOP_LOSS,
 	TAKE_PROFIT,
+	PARTIAL_CLOJURE,
 	MAIN,
-	DROP_ALL
+	UNKNOWN, DROP_ALL
 }

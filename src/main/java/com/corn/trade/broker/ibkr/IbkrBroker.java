@@ -293,14 +293,15 @@ public class IbkrBroker extends Broker {
 
 			@Override
 			public void tradeReportEnd() {
+				log.debug("tradeReportEnd executionList size: {}", executionList.size());
 				executions.complete(executionList.stream()
 				                                 .map(execution -> new ExecutionData(String.valueOf(execution.orderId()),
 				                                                                     getAssetName(),
-				                                                                     exchangeTime.nowInExchangeTZ()
-				                                                                                 .toLocalDateTime(),
+				                                                                     exchangeTime.ibkrExecutionToLocalDateTime(execution.time()),
 				                                                                     execution.price(),
 				                                                                     execution.avgPrice(),
-				                                                                     execution.shares().longValue()))
+				                                                                     execution.shares().longValue(),
+				                                                                     execution.side()))
 				                                 .toList());
 			}
 
@@ -337,10 +338,21 @@ public class IbkrBroker extends Broker {
 	}
 
 	@Override
-	public void placeOrder(long qtt, Double stop, Double limit, ActionType actionType, com.corn.trade.type.OrderType tOrderType, Consumer<Boolean> executionListener) throws BrokerException {
+	public void placeOrder(long qtt,
+	                       Double stop,
+	                       Double limit,
+	                       ActionType actionType,
+	                       com.corn.trade.type.OrderType tOrderType,
+	                       Consumer<Boolean> executionListener) throws BrokerException {
 		Action action = actionType == ActionType.BUY ? Action.BUY : Action.SELL;
 		try {
-			ibkrOrderHelper.placeOrder(contractDetails, qtt, stop, limit, action, fromTOrderType(tOrderType), executionListener);
+			ibkrOrderHelper.placeOrder(contractDetails,
+			                           qtt,
+			                           stop,
+			                           limit,
+			                           action,
+			                           fromTOrderType(tOrderType),
+			                           executionListener);
 		} catch (IbkrException e) {
 			throw new BrokerException(e.getMessage());
 		}
@@ -354,6 +366,10 @@ public class IbkrBroker extends Broker {
 	@Override
 	public void setStopLossQuantity(long quantity, double stopLossPrice, ActionType actionType) {
 		Action action = actionType == ActionType.BUY ? Action.BUY : Action.SELL;
-		ibkrOrderHelper.setStopLossQuantity(Integer.parseInt(bracketIds.stopLossId()), contractDetails.contract(), quantity, stopLossPrice, action);
+		ibkrOrderHelper.setStopLossQuantity(Integer.parseInt(bracketIds.stopLossId()),
+		                                    contractDetails.contract(),
+		                                    quantity,
+		                                    stopLossPrice,
+		                                    action);
 	}
 }

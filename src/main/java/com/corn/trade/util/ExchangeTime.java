@@ -51,4 +51,10 @@ public class ExchangeTime {
 	public LocalTime endTrading() {
 		return endTrading;
 	}
+
+	public LocalDateTime ibkrExecutionToLocalDateTime(String dateTimeString) {
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss z");
+		ZonedDateTime zonedDateTime = ZonedDateTime.parse(dateTimeString, formatter);
+		return zonedDateTime.toLocalDateTime();
+	}
 }

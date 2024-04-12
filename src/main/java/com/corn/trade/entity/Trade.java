@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@SuppressWarnings("unused")
 @Entity
 @Table(name = "trade")
 public class Trade {
@@ -38,9 +39,6 @@ public class Trade {
 
 	@Column(name = "goal", nullable = false)
 	private BigDecimal goal;
-
-	@Column(name = "remaining_quantity", nullable = false)
-	private Long remainingQuantity;
 
 	/**
 	 * NEW, OPEN, CLOSED, PARTIALLY_CLOSED
@@ -134,14 +132,6 @@ public class Trade {
 
 	public BigDecimal getGoal() {
 		return goal;
-	}
-
-	public void setRemainingQuantity(Long remainingQuantity) {
-		this.remainingQuantity = remainingQuantity;
-	}
-
-	public Long getRemainingQuantity() {
-		return remainingQuantity;
 	}
 
 	/**

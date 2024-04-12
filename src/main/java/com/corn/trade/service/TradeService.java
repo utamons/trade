@@ -117,7 +117,6 @@ public class TradeService extends BaseService {
 			trade.setInitialPrice(toBigDecimal(tradeData.getOrderLimit()));
 			trade.setStopLossPrice(toBigDecimal(tradeData.getStopLoss()));
 			trade.setGoal(toBigDecimal(tradeData.getGoal()));
-			trade.setRemainingQuantity(tradeData.getQuantity());
 			trade.setStatus(TradeStatus.OPEN.name());
 			trade.setCreatedAt(exchangeTime.nowInExchangeTZ().toLocalDateTime());
 			tradeRepo.save(trade);
@@ -129,12 +128,17 @@ public class TradeService extends BaseService {
 		}
 	}
 
-	public void updateTradeStatus(long tradeId, TradeStatus status) throws DBException {
+	public Trade updateTradeStatus(long tradeId, TradeStatus status) throws DBException {
 		beginTransaction();
 		try {
 			Trade trade = tradeRepo.findById(tradeId).orElseThrow(() -> new DBException("Trade not found"));
 			trade.setStatus(status.name());
+			if (status == TradeStatus.CLOSED) {
+				ExchangeTime exchangeTime = new ExchangeTime(trade.getAsset().getExchange());
+				trade.setClosedAt(exchangeTime.nowInExchangeTZ().toLocalDateTime());
+			}
 			commitTransaction();
+			return trade;
 		} catch (DBException e) {
 			rollbackTransaction();
 			throw e;
