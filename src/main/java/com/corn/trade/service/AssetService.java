@@ -65,7 +65,7 @@ public class AssetService extends BaseService {
 			Optional<Asset> asset = assetRepo.findAsset(assetName, exchange);
 
 			if (asset.isEmpty()) {
-				log.debug("Asset " + assetName + "/" + exchangeName + " not found. Trying to get it from broker.");
+				log.debug("Asset {}/{} not found. Trying to get it from broker.", assetName, exchangeName);
 				String             confirmedExchangeName = broker.getExchangeName();
 				Optional<Exchange> confirmedExchangeOpt  = exchangeRepo.findExchange(confirmedExchangeName);
 
@@ -80,18 +80,18 @@ public class AssetService extends BaseService {
 
 				Exchange confirmedExchange = confirmedExchangeOpt.get();
 
-				log.debug("Asset " + assetName + "/" + confirmedExchangeName + " found in broker.");
+				log.debug("Asset {}/{} found in broker.", assetName, confirmedExchangeName);
 
 				asset = assetRepo.findAsset(assetName, confirmedExchange);
 
 				if (asset.isPresent()) {
-					log.debug("Asset " + assetName + "/" + confirmedExchangeName + " found in database.");
+					log.debug("Asset {}/{} found in database.", assetName, confirmedExchangeName);
 					log.debug("finish");
 					commitTransaction();
 					return asset.get();
 				}
 
-				log.debug("Saving asset " + assetName + "/" + confirmedExchangeName + " to database.");
+				log.debug("Saving asset {}/{} to database.", assetName, confirmedExchangeName);
 
 				Asset newAsset = new Asset();
 				newAsset.setName(assetName);

@@ -52,7 +52,7 @@ public class AnalysisWindow extends BaseWindow {
 													   long end = System.currentTimeMillis();
 													   paramPanel.populate(tradeCalc.getTradeData());
 				                                       TradeData out = tradeCalc.calculate();
-				                                       log.info("Calculation time: "+(end-start)+" ms");
+				                                       log.info("Calculation time: {} ms", end - start);
 													   if (out.getTradeError() != null) {
 														   textWindow.appendText("#"+count+" - doesn't fit to risks", Color.RED.darker(), true);
 														   textWindow.appendText(out.toSourceParams());

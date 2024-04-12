@@ -1,6 +1,5 @@
 package com.corn.trade.broker.ibkr;
 
-import com.corn.trade.broker.Broker;
 import com.corn.trade.model.Position;
 import com.ib.controller.ApiController;
 import org.slf4j.Logger;

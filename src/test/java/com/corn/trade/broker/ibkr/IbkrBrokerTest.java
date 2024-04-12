@@ -13,7 +13,6 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class IbkrBrokerTest {
@@ -24,7 +23,7 @@ class IbkrBrokerTest {
 	}
 
 	@Test
-	void testInitContractSuccessfullyForNasdaq() throws Exception {
+	void testInitContractSuccessfullyForNasdaq() {
 		String  ticker                = "AAPL";
 		String  exchangeName          = "NASDAQ";
 		Trigger disconnectionListener = mock(Trigger.class);
@@ -55,7 +54,7 @@ class IbkrBrokerTest {
 	}
 
 	@Test
-	void testInitContractSuccessfullyForNyse() throws Exception {
+	void testInitContractSuccessfullyForNyse() {
 		String  ticker                = "AAPL";
 		String  exchangeName          = "NYSE";
 		Trigger disconnectionListener = mock(Trigger.class);
@@ -86,7 +85,7 @@ class IbkrBrokerTest {
 	}
 
 	@Test
-	void testInitContractSuccessfullyForOtherExch() throws Exception {
+	void testInitContractSuccessfullyForOtherExch() {
 		String  ticker                = "AAPL";
 		String  exchangeName          = "OTHER_EXCHANGE";
 		Trigger disconnectionListener = mock(Trigger.class);
@@ -116,7 +115,7 @@ class IbkrBrokerTest {
 	}
 
 	@Test
-	void testInitContractSuccessfullyForChangedExchange() throws Exception {
+	void testInitContractSuccessfullyForChangedExchange() {
 		String  ticker                = "AAPL";
 		String  exchangeName          = "NASDAQ";
 		Trigger disconnectionListener = mock(Trigger.class);

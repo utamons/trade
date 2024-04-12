@@ -435,11 +435,11 @@ public class TradeController implements TradeViewListener {
 
 
 	private static class TradeState {
-		PositionType   positionType;
-		EstimationType estimationType;
-		Double         level;
-		Double         techStopLoss;
-		Double         goal;
+		final PositionType   positionType;
+		final EstimationType estimationType;
+		final Double         level;
+		final Double techStopLoss;
+		final Double goal;
 
 		TradeState(PositionType positionType,
 		           EstimationType estimationType,

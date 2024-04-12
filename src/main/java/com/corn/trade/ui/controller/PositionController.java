@@ -22,7 +22,6 @@ import java.util.function.Consumer;
 /**
  * Controller for position view. Supports many positions tracking at once.
  */
-@SuppressWarnings("DuplicatedCode")
 public class PositionController {
 	private static final Logger                   log           = LoggerFactory.getLogger(PositionController.class);
 	private final        PositionView             view;
@@ -44,8 +43,8 @@ public class PositionController {
 		positionRow.getButton25().setEnabled(false);
 	}
 
-	private static boolean isBefore(PositionType positionType, double price, double be) {
-		return (positionType == PositionType.LONG && price < be) || (positionType == PositionType.SHORT && price > be);
+	private static boolean isBefore(PositionType positionType, double price, double aPoint) {
+		return (positionType == PositionType.LONG && price < aPoint) || (positionType == PositionType.SHORT && price > aPoint);
 	}
 
 	/**
@@ -56,18 +55,18 @@ public class PositionController {
 	 * @param position  - current position data
 	 */
 	public void updatePosition(Broker broker, TradeData tradeData, Position position) {
-		String      symbol      = position.getSymbol();
+		String symbol = position.getSymbol();
+		// Get or create UI view for the position ============================================
 		PositionRow positionRow = positionRows.computeIfAbsent(symbol, view::addPosition);
 		if (!positions.containsKey(symbol)) {
-			initButtonListeners(broker, tradeData, position, positionRow);
+			// Initialize button listeners only once for the new position
+			initButtonListeners(broker, tradeData, symbol, positionRow);
 		}
-		positions.put(symbol, position);
-		Long oldQtt = oldQuantities.get(symbol); // old quantity from previous position state
 
+		// Prepare data =================================================
 		PositionType positionType = tradeData.getPositionType(); // Long or Short position
+		Long         oldQtt       = oldQuantities.get(symbol); // old quantity from previous position state
 		long         qtt          = Math.abs(position.getQuantity()); // current quantity
-
-		oldQuantities.put(symbol, qtt); // save current quantity for future comparison
 
 		double price = position.getMarketValue() / position.getQuantity(); // current price of the position
 		double goal  = tradeData.getGoal(); // goal price
@@ -75,24 +74,12 @@ public class PositionController {
 		double sl    = tradeData.getStopLoss(); // stop loss price
 		// distance from stop loss to goal
 		double dst           = Math.abs(price - sl) / Math.abs(goal - sl) * 100;
-		double unrealizedPnl = position.getUnrealizedPnl();
+		double unrealizedPnl = getUnrealizedPnl(position, qtt, price);
 
-		if (unrealizedPnl == Double.MAX_VALUE) unrealizedPnl = 0.0; // IBKR API sends Double.MAX_VALUE as null value
-		else {
-			unrealizedPnl -=
-					TradeCalc.estimatedCommissionIbkrUSD(qtt, price); // subtract commission for closing position from
-			// unrealized profit
-		}
+		oldQuantities.put(symbol, qtt); // save current quantity for future comparison
+		positions.put(symbol, position); // save current position data
 
-		if (qtt == 0) { // if position is closed
-			closePosition(broker, symbol);
-			return;
-		} else if (oldQtt != null && qtt < oldQtt) { // set stop loss to new quantity
-			ActionType action = positionType == PositionType.LONG ? ActionType.SELL : ActionType.BUY;
-			broker.setStopLossQuantity(qtt, sl, action);
-		}
-
-		// update position row in the view with new data
+		// Update UI view =================================================
 		positionRow.setQtt(qtt + "/" + tradeData.getQuantity());
 		positionRow.setSl(sl);
 		positionRow.setGoal(goal);
@@ -114,7 +101,30 @@ public class PositionController {
 		} else {
 			positionRow.setPsColor(Color.GREEN.darker());
 		}
+
+		// Process data =================================================
+		if (qtt == 0) { // if position is closed
+			closePosition(broker, symbol);
+		} else if (oldQtt != null && qtt < oldQtt) { // adjust stop loss quantity
+			ActionType action = positionType == PositionType.LONG ? ActionType.SELL : ActionType.BUY;
+			broker.setStopLossQuantity(qtt, sl, action);
+		}
 	}
+
+	private static double getUnrealizedPnl(Position position, long qtt, double price) {
+		double unrealizedPnl = position.getUnrealizedPnl();
+
+		if (unrealizedPnl == Double.MAX_VALUE) unrealizedPnl = 0.0; // IBKR API sends Double.MAX_VALUE as null value
+		else {
+			// subtract commission for closing position from
+			// unrealized profit to get more accurate data
+			// actually this code calculates commission only for IBKR/USD currently, because I don't use
+			// other brokers in my trading at the moment. It should be extended to support other brokers and currencies
+			unrealizedPnl -= TradeCalc.estimatedCommissionIbkrUSD(qtt, price);
+		}
+		return unrealizedPnl;
+	}
+
 	private void closePosition(Broker broker, String symbol) {
 		view.removePosition(symbol);
 		positionRows.remove(symbol);
@@ -138,43 +148,46 @@ public class PositionController {
 		}
 	}
 
-	private void initButtonListeners(Broker broker, TradeData tradeData, Position position, PositionRow positionRow) {
+	private void initButtonListeners(Broker broker, TradeData tradeData, String symbol, PositionRow positionRow) {
 		cleanButtonListeners(positionRow);
 		positionRow.getButton100()
-		           .addActionListener(getActionListener(position.getSymbol(),
+		           .addActionListener(getActionListener(symbol,
 		                                                positionRow,
 		                                                broker,
 		                                                tradeData.getPositionType(),
 		                                                tradeData.getQuantity()));
 		positionRow.getButton75()
-		           .addActionListener(getActionListener(position.getSymbol(),
+		           .addActionListener(getActionListener(symbol,
 		                                                positionRow,
 		                                                broker,
 		                                                tradeData.getPositionType(),
 		                                                tradeData.getQuantity()));
 		positionRow.getButton50()
-		           .addActionListener(getActionListener(position.getSymbol(),
+		           .addActionListener(getActionListener(symbol,
 		                                                positionRow,
 		                                                broker,
 		                                                tradeData.getPositionType(),
 		                                                tradeData.getQuantity()));
 		positionRow.getButton25()
-		           .addActionListener(getActionListener(position.getSymbol(),
+		           .addActionListener(getActionListener(symbol,
 		                                                positionRow,
 		                                                broker,
 		                                                tradeData.getPositionType(),
 		                                                tradeData.getQuantity()));
 	}
 
+	// Update button states based on the current quantity
 	private void updateButtonStates(PositionRow positionRow, long initialQuantity, long currentQuantity) {
 		double percentLeft = (double) currentQuantity / initialQuantity * 100;
 
+		// enable only the buttons that remain within the current quantity
 		positionRow.getButton100().setEnabled(percentLeft >= 100);
 		positionRow.getButton75().setEnabled(percentLeft >= 75);
 		positionRow.getButton50().setEnabled(percentLeft >= 50);
 		positionRow.getButton25().setEnabled(percentLeft >= 25);
 	}
 
+	// Get action listener for the button
 	private ActionListener getActionListener(String symbol,
 	                                         PositionRow positionRow,
 	                                         Broker broker,
@@ -185,14 +198,14 @@ public class PositionController {
 				log.warn("Position {} is currently locked", symbol);
 				return;
 			}
-			locked.put(symbol, true);
+			locked.put(symbol, true); // lock the position to prevent multiple closures at once
 			lockAllButtons(positionRow);
 
 			JButton source = (JButton) e.getSource();
-			long    qtt    = calculateQuantityForClosure(source,
-			                                             positionRow,
-			                                             initialQtt,
-			                                             Math.abs(positions.get(symbol).getQuantity()));
+			long qtt = calculateQuantityForClosure(source,
+			                                       positionRow,
+			                                       initialQtt,
+			                                       Math.abs(positions.get(symbol).getQuantity()));
 
 			double     price  = positions.get(symbol).getMarketValue() / Math.abs(positions.get(symbol).getQuantity());
 			ActionType action = positionType == PositionType.LONG ? ActionType.SELL : ActionType.BUY;
@@ -201,6 +214,7 @@ public class PositionController {
 		};
 	}
 
+	// Get order execution handler for the position
 	private Consumer<Boolean> getOrderExecutionHandler(String symbol, long orderQuantity, long initialQuantity) {
 		return executed -> {
 			if (executed) {
@@ -217,9 +231,10 @@ public class PositionController {
 		};
 	}
 
+	// Calculate quantity for closure based on the button clicked
+	// It's either percentage of the initial quantity or the current quantity if this is the last closure
 	private long calculateQuantityForClosure(JButton source, PositionRow positionRow, long initialQtt, long currentQtt) {
-		log.debug("Calculating quantity for closure, initial quantity: {}, current quantity: {}", initialQtt,
-		          currentQtt);
+		log.debug("Calculating quantity for closure, initial quantity: {}, current quantity: {}", initialQtt, currentQtt);
 		if (source == positionRow.getButton75() && currentQtt == initialQtt) {
 			return (long) (initialQtt * 0.75);
 		}
