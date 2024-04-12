@@ -128,7 +128,8 @@ public class TradeController implements TradeViewListener {
 			restoreTradeState();
 
 			// Get the actual asset object from the asset name (and save it in the database if it doesn't exist)
-			Asset asset = assetService.getAsset(assetName, view.exchangeBox().getSelectedItem(), currentBroker);
+			Asset asset =
+					assetService.getAsset(assetName, view.exchangeBox().getSelectedItem(), currentBroker);
 			String       brokerName   = asset.getExchange().getBroker();
 			String       exchangeName = asset.getExchange().getName();
 			List<String> assets       = assetService.getAssetNames();
@@ -434,23 +435,9 @@ public class TradeController implements TradeViewListener {
 	}
 
 
-	private static class TradeState {
-		final PositionType   positionType;
-		final EstimationType estimationType;
-		final Double         level;
-		final Double techStopLoss;
-		final Double goal;
-
-		TradeState(PositionType positionType,
-		           EstimationType estimationType,
-		           Double level,
-		           Double techStopLoss,
-		           Double goal) {
-			this.positionType = positionType;
-			this.estimationType = estimationType;
-			this.level = level;
-			this.techStopLoss = techStopLoss;
-			this.goal = goal;
-		}
-	}
+	private record TradeState(PositionType positionType,
+	                          EstimationType estimationType,
+	                          Double level,
+	                          Double techStopLoss,
+	                          Double goal) {}
 }

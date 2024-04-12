@@ -47,6 +47,20 @@ public class PositionController {
 		return (positionType == PositionType.LONG && price < aPoint) || (positionType == PositionType.SHORT && price > aPoint);
 	}
 
+	private static double getUnrealizedPnl(Position position, long qtt, double price) {
+		double unrealizedPnl = position.getUnrealizedPnl();
+
+		if (unrealizedPnl == Double.MAX_VALUE) unrealizedPnl = 0.0; // IBKR API sends Double.MAX_VALUE as null value
+		else {
+			// subtract commission for closing position from
+			// unrealized profit to get more accurate data
+			// actually this code calculates commission only for IBKR/USD currently, because I don't use
+			// other brokers in my trading at the moment. It should be extended to support other brokers and currencies
+			unrealizedPnl -= TradeCalc.estimatedCommissionIbkrUSD(qtt, price);
+		}
+		return unrealizedPnl;
+	}
+
 	/**
 	 * Updates position state in real time
 	 *
@@ -109,20 +123,6 @@ public class PositionController {
 			ActionType action = positionType == PositionType.LONG ? ActionType.SELL : ActionType.BUY;
 			broker.setStopLossQuantity(qtt, sl, action);
 		}
-	}
-
-	private static double getUnrealizedPnl(Position position, long qtt, double price) {
-		double unrealizedPnl = position.getUnrealizedPnl();
-
-		if (unrealizedPnl == Double.MAX_VALUE) unrealizedPnl = 0.0; // IBKR API sends Double.MAX_VALUE as null value
-		else {
-			// subtract commission for closing position from
-			// unrealized profit to get more accurate data
-			// actually this code calculates commission only for IBKR/USD currently, because I don't use
-			// other brokers in my trading at the moment. It should be extended to support other brokers and currencies
-			unrealizedPnl -= TradeCalc.estimatedCommissionIbkrUSD(qtt, price);
-		}
-		return unrealizedPnl;
 	}
 
 	private void closePosition(Broker broker, String symbol) {
