@@ -21,33 +21,32 @@ import java.io.InputStream;
 import java.util.Properties;
 
 public abstract class BaseWindow {
-	protected static final String version = "2.0";
-	protected static final int RESIZE_EDGE = 4;
-	protected static final  int    FIELD_HEIGHT = 40;
-	public static        int    DEBUG_LEVEL  = 1;
-	public static double MAX_VOLUME            = 2000.0;
-	public static double MAX_RISK_PERCENT      = 0.3;
-	public static double MAX_RISK_REWARD_RATIO = 3.0;
-	public static double ORDER_LUFT            = 0.02;
-	public static String DB_URL;
-	public static String DB_USER;
-	public static String  DB_PASSWORD;
-	public static Stage   STAGE;
-	public static boolean SIMULATION_MODE = false;
-	protected static final  Theme  DARK_THEME   = new OneDarkTheme();
-	protected static final  Theme  LIGHT_THEME  = new IntelliJTheme();
-	protected static String dbKey = "db_url_dev";
-	protected final  JFrame frame;
-
-	protected static final Logger log = LoggerFactory.getLogger(BaseWindow.class);
-
-	private String getTitle(String appName) {
-		return appName + " v. " + version + " (" + STAGE + ")";
-	}
+	protected static final String  version               = "2.0";
+	protected static final int     RESIZE_EDGE           = 4;
+	protected static final int     FIELD_HEIGHT          = 40;
+	protected static final Theme   DARK_THEME            = new OneDarkTheme();
+	protected static final Theme   LIGHT_THEME           = new IntelliJTheme();
+	protected static final Logger  log                   = LoggerFactory.getLogger(BaseWindow.class);
+	public static          int     DEBUG_LEVEL           = 1;
+	public static          double  MAX_VOLUME            = 2000.0;
+	public static          double  MAX_RISK_PERCENT      = 0.3;
+	public static          double  MAX_RISK_REWARD_RATIO = 3.0;
+	public static          double  ORDER_LUFT            = 0.02;
+	public static          String  DB_URL;
+	public static          String  DB_USER;
+	public static          String  DB_PASSWORD;
+	public static          Stage   STAGE;
+	public static          boolean SIMULATION_MODE       = false;
+	protected static       String  dbKey                 = "db_url_dev";
+	public static          long    MAX_TRADES_PER_DAY    = 3;
+	public static          double  MAX_DAILY_LOSS        = -30.0;
+	public static          double  MAX_WEEKLY_LOSS       = -90.0;
+	public static          double  MAX_MONTHLY_LOSS      = -300.0;
+	protected final        JFrame  frame;
 
 	public BaseWindow(String[] args, String appName, Dimension size) {
-		STAGE = args.length>0 && args[0].equals("-dev")? Stage.DEV : Stage.PROD;
-		dbKey = STAGE == Stage.DEV? "db_url_dev" : "db_url_prod";
+		STAGE = args.length > 0 && args[0].equals("-dev") ? Stage.DEV : Stage.PROD;
+		dbKey = STAGE == Stage.DEV ? "db_url_dev" : "db_url_prod";
 
 		loadProperties();
 
@@ -78,6 +77,35 @@ public abstract class BaseWindow {
 		initializeComponents();
 	}
 
+	public static void loadProperties() {
+		Properties configProps = new Properties();
+		try (InputStream input = new FileInputStream("D:\\bin\\trade.properties")) {
+			configProps.load(input);
+
+			MAX_VOLUME = Integer.parseInt(configProps.getProperty("max_volume", "2000"));
+			MAX_RISK_REWARD_RATIO =
+					Double.parseDouble(configProps.getProperty("max_risk_reward_ratio", "3"));
+			MAX_RISK_PERCENT = Double.parseDouble(configProps.getProperty("max_risk_percent", "0.5"));
+			ORDER_LUFT = Double.parseDouble(configProps.getProperty("order_luft", "0.02"));
+			DEBUG_LEVEL = Integer.parseInt(configProps.getProperty("debug_level", "2"));
+			DB_URL = configProps.getProperty(dbKey, null);
+			DB_USER = configProps.getProperty("db_user", null);
+			DB_PASSWORD = configProps.getProperty("db_password", null);
+			SIMULATION_MODE = Boolean.parseBoolean(configProps.getProperty("simulation_mode", "false"));
+			MAX_TRADES_PER_DAY = Long.parseLong(configProps.getProperty("max_trades_per_day", "3"));
+			MAX_DAILY_LOSS = Double.parseDouble(configProps.getProperty("max_daily_loss", "-30.0"));
+			MAX_WEEKLY_LOSS = Double.parseDouble(configProps.getProperty("max_weekly_loss", "-90.0"));
+			MAX_MONTHLY_LOSS = Double.parseDouble(configProps.getProperty("max_monthly_loss", "-300.0"));
+
+		} catch (IOException ex) {
+			log.error("Error loading properties file: {}, {}", "D:\\bin\\trade.properties", ex.getMessage());
+		}
+	}
+
+	private String getTitle(String appName) {
+		return appName + " v. " + version + " (" + STAGE + ")";
+	}
+
 	protected abstract void initializeComponents();
 
 	private void setupLookAndFeel() {
@@ -96,35 +124,11 @@ public abstract class BaseWindow {
 
 	private void setupBorder() {
 		Border border = BorderFactory.createLineBorder(Color.LIGHT_GRAY);
-		Border emptyBorder = BorderFactory.createEmptyBorder(TradeWindow.RESIZE_EDGE, TradeWindow.RESIZE_EDGE, TradeWindow.RESIZE_EDGE, TradeWindow.RESIZE_EDGE);
+		Border emptyBorder = BorderFactory.createEmptyBorder(TradeWindow.RESIZE_EDGE,
+		                                                     TradeWindow.RESIZE_EDGE,
+		                                                     TradeWindow.RESIZE_EDGE,
+		                                                     TradeWindow.RESIZE_EDGE);
 		frame.getRootPane().setBorder(BorderFactory.createCompoundBorder(border, emptyBorder));
-	}
-
-	public static void loadProperties() {
-		Properties configProps = new Properties();
-		try (InputStream input = new FileInputStream("D:\\bin\\trade.properties")) {
-			configProps.load(input);
-
-			MAX_VOLUME = Integer.parseInt(configProps.getProperty("max_volume", "2000"));
-			MAX_RISK_REWARD_RATIO =
-					Double.parseDouble(configProps.getProperty("max_risk_reward_ratio", "3"));
-			MAX_RISK_PERCENT = Double.parseDouble(configProps.getProperty("max_risk_percent", "0.5"));
-			ORDER_LUFT = Double.parseDouble(configProps.getProperty("order_luft", "0.02"));
-			DEBUG_LEVEL = Integer.parseInt(configProps.getProperty("debug_level", "2"));
-			DB_URL = configProps.getProperty(dbKey, null);
-			DB_USER = configProps.getProperty("db_user", null);
-			DB_PASSWORD = configProps.getProperty("db_password", null);
-			SIMULATION_MODE = Boolean.parseBoolean(configProps.getProperty("simulation_mode", "false"));
-
-		} catch (IOException ex) {
-			log.error("Error loading properties file: {}, {}", "D:\\bin\\trade.properties", ex.getMessage());
-		}
-	}
-
-	public static class CustomThemeListener implements ThemePreferenceListener {
-		public void themePreferenceChanged(final ThemePreferenceChangeEvent e) {
-			LafManager.installTheme(e.getPreferredThemeStyle());
-		}
 	}
 
 	public void display() {
@@ -137,6 +141,12 @@ public abstract class BaseWindow {
 			if (UIManager.get(key) instanceof Font) {
 				UIManager.put(key, new Font("Arial", Font.PLAIN, 14));
 			}
+		}
+	}
+
+	public static class CustomThemeListener implements ThemePreferenceListener {
+		public void themePreferenceChanged(final ThemePreferenceChangeEvent e) {
+			LafManager.installTheme(e.getPreferredThemeStyle());
 		}
 	}
 }

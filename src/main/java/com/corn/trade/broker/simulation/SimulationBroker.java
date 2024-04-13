@@ -7,6 +7,7 @@ import com.corn.trade.model.Bar;
 import com.corn.trade.model.ExecutionData;
 import com.corn.trade.model.PnL;
 import com.corn.trade.model.Position;
+import com.corn.trade.risk.RiskManager;
 import com.corn.trade.type.ActionType;
 import com.corn.trade.type.OrderType;
 import com.corn.trade.type.PositionType;
@@ -196,8 +197,8 @@ public class SimulationBroker extends Broker {
 		log.debug("Setting stop loss quantity to {} at price {}", quantity, stopLossPrice);
 	}
 
-	protected void closePosition(long tradeId) {
-		super.closePosition(tradeId);
+	protected void closePosition(long tradeId, RiskManager riskManager) {
+		super.closePosition(tradeId, riskManager);
 		realizedPnl += unRealizedPnl;
 		log.debug("Closing position with realizedPnl {}, unRealizedPnl {}", realizedPnl, unRealizedPnl);
 		log.debug("Pnl listeners size {} ", pnlListeners.size());

@@ -19,6 +19,5 @@ public interface TradeView {
 	JButton lockButton();
 	JButton stopLimitButton();
 	JButton limitButton();
-	PositionPanel getPositionPanel();
 	Component asComponent();
 }

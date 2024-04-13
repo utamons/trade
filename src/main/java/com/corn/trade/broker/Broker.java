@@ -4,6 +4,7 @@ import com.corn.trade.entity.Exchange;
 import com.corn.trade.entity.Trade;
 import com.corn.trade.jpa.DBException;
 import com.corn.trade.model.*;
+import com.corn.trade.risk.RiskManager;
 import com.corn.trade.service.AssetService;
 import com.corn.trade.service.OrderService;
 import com.corn.trade.service.TradeService;
@@ -116,7 +117,7 @@ public abstract class Broker {
 
 	public abstract void requestExecutionData(CompletableFuture<List<ExecutionData>> executions) throws BrokerException;
 
-	public void openPosition(TradeData tradeData) throws BrokerException {
+	public void openPosition(TradeData tradeData, RiskManager riskManager) throws BrokerException {
 	    log.debug("Opening position for asset {} on exchange {}", assetName, exchangeName);
 		TradeService tradeService = new TradeService();
 		try {
@@ -148,7 +149,7 @@ public abstract class Broker {
 						                                   if (position.getQuantity() == 0) {
 															   log.info("Position closed, removing positionListenerId = {}", positionListenerId);
 															   removePositionListener(positionListenerId);
-							                                   closePosition(trade.getId());
+							                                   closePosition(trade.getId(), riskManager);
 						                                   }
 					                                   });
 													   openPosition = true;
@@ -162,12 +163,13 @@ public abstract class Broker {
 		                                   });
 	}
 
-	protected void closePosition(long tradeId) {
+	protected void closePosition(long tradeId, RiskManager riskManager) {
 		openPosition = false;
 		TradeService tradeService = new TradeService();
 		OrderService orderService = new OrderService();
 		try {
 			Trade trade = tradeService.updateTradeStatus(tradeId, TradeStatus.CLOSED);
+			riskManager.countTrades();
 			CompletableFuture<List<ExecutionData>> executions = new CompletableFuture<>();
 			requestExecutionData(executions);
 			executions.thenAcceptAsync(executionDataList -> executionDataList.forEach(executionData -> {

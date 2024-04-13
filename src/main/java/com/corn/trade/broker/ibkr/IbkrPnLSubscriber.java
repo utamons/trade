@@ -37,20 +37,6 @@ public class IbkrPnLSubscriber {
 		return listenerId;
 	}
 
-	public synchronized void removeListener(String account, int listenerId) {
-		Map<Integer, Consumer<PnL>> contractGroup = this.listeners.get(account);
-		if (contractGroup == null) {
-			return;
-		}
-
-		contractGroup.remove(listenerId);
-
-		if (contractGroup.isEmpty()) {
-			listeners.remove(account);
-			log.warn("No more listeners for account: {}", account);
-		}
-	}
-
 	public synchronized void subscribe(String account) {
 		if (handlers.containsKey(account)) {
 			log.info("Already subscribed to PnL for account: {}", account);

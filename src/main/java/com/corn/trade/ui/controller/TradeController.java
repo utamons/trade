@@ -9,6 +9,7 @@ import com.corn.trade.jpa.DBException;
 import com.corn.trade.model.ExtendedTradeContext;
 import com.corn.trade.model.TradeContext;
 import com.corn.trade.model.TradeData;
+import com.corn.trade.risk.RiskManager;
 import com.corn.trade.service.AssetService;
 import com.corn.trade.service.TradeCalc;
 import com.corn.trade.service.TradeService;
@@ -18,6 +19,7 @@ import com.corn.trade.ui.view.PositionPanel;
 import com.corn.trade.ui.view.TradeView;
 import com.corn.trade.util.ExchangeTime;
 import com.corn.trade.util.Util;
+import liquibase.exception.DatabaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +42,7 @@ public class TradeController implements TradeViewListener {
 	private final        HashMap<String, TradeState> tradeStateMap       = new HashMap<>();
 	private final        Timer                       lockButtonsTimer;
 	private final        Map<String, Integer>        positionListenerIds = new HashMap<>();
+	private final        RiskManager                 riskManager;
 	private              TradeView                   view;
 	private              Double                      level;
 	private              Double                      techStopLoss;
@@ -56,10 +59,11 @@ public class TradeController implements TradeViewListener {
 	private              PositionController          positionController;
 	private              int                         pnlListenerId       = 0;
 
-	public TradeController() {
+	public TradeController() throws DatabaseException {
 		this.assetService = new AssetService();
 		lockButtonsTimer = new Timer(SEND_ORDER_DELAY, e -> checkButtons());
 		lockButtonsTimer.setRepeats(false);
+		riskManager = new RiskManager();
 	}
 
 	@Override
@@ -145,7 +149,14 @@ public class TradeController implements TradeViewListener {
 
 			tradeContextId = currentBroker.requestTradeContext(this::tradeContextListener);
 			if (pnlListenerId == 0) {
-				pnlListenerId = currentBroker.addPnListener(pnl -> view.info().setPnl(pnl.realized()));
+				pnlListenerId = currentBroker.addPnListener(pnl -> {
+					view.info().setPnl(pnl.realized());
+					try {
+						riskManager.updatePnL(pnl);
+					} catch (DatabaseException e) {
+						view.messagePanel().error(e.getMessage());
+					}
+				});
 				currentBroker.requestPnLUpdates();
 			}
 
@@ -154,7 +165,7 @@ public class TradeController implements TradeViewListener {
 			view.messagePanel().error(e.getMessage());
 			view.assetLookup().clear();
 		}
-			orderClean = false;
+		orderClean = false;
 		checkButtons();
 	}
 
@@ -239,7 +250,7 @@ public class TradeController implements TradeViewListener {
 		if (currentBroker == null) {
 			return false;
 		}
-		return !locked && orderClean && workTime() && !currentBroker.isOpenPosition();
+		return !locked && orderClean && workTime() && !currentBroker.isOpenPosition() && riskManager.canTrade();
 	}
 
 	private void goalWarning(boolean on) {
@@ -316,7 +327,10 @@ public class TradeController implements TradeViewListener {
 			double goalFromLow  = tradeData.getGoal() - low;
 			double goalToPass   = positionType == PositionType.LONG ? goalFromLow : goalFromHigh;
 
-			// todo this is the place for asking RiskManager for permission to trade
+			if (!riskManager.canTrade()) {
+				view.trafficLight().setRed();
+				view.messagePanel().error(riskManager.getRiskError());
+			}
 			if (tradeData.hasError()) {
 				view.trafficLight().setRed();
 				view.messagePanel().error(tradeData.getTradeError());
@@ -332,12 +346,12 @@ public class TradeController implements TradeViewListener {
 				goalWarning(true);
 				view.trafficLight().setGreen();
 				view.messagePanel().warning("Goal is too far");
-				orderClean = !tradeContext.isPositionOpen();
+				orderClean = true;
 			} else {
 				goalWarning(false);
 				view.trafficLight().setGreen();
 				view.messagePanel().info("Good to go");
-				orderClean = !tradeContext.isPositionOpen();
+				orderClean = true;
 			}
 
 			checkButtons();
@@ -410,7 +424,7 @@ public class TradeController implements TradeViewListener {
 		log.debug("Position listener added with id {}", id);
 		positionListenerIds.put(currentBroker.getAssetName(), id);
 
-		currentBroker.openPosition(order);
+		currentBroker.openPosition(order, riskManager);
 	}
 
 	private void removePositionListener(String assetName) {
@@ -431,6 +445,14 @@ public class TradeController implements TradeViewListener {
 			view.messagePanel().success("Stop-Limit order sent");
 		} catch (BrokerException e) {
 			view.messagePanel().error(e.getMessage());
+		}
+	}
+
+	@Override
+	public void checkRisk() {
+		if (!riskManager.canTrade()) {
+			view.trafficLight().setRed();
+			view.messagePanel().error(riskManager.getRiskError());
 		}
 	}
 

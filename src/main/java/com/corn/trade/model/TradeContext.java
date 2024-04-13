@@ -7,17 +7,14 @@ public class TradeContext {
 	private final Double dayHigh;
 	private final Double dayLow;
 	private final Double adr;
-	private final boolean positionOpen;
 
-	private TradeContext(Double ask, Double bid, Double price, Double dayHigh, Double dayLow, Double adr,
-	                     boolean positionOpen) {
+	private TradeContext(Double ask, Double bid, Double price, Double dayHigh, Double dayLow, Double adr) {
 		this.ask = ask;
 		this.bid = bid;
 		this.price = price;
 		this.dayHigh = dayHigh;
 		this.dayLow = dayLow;
 		this.adr = adr;
-		this.positionOpen = positionOpen;
 	}
 
 	public Double getAsk() {
@@ -44,10 +41,6 @@ public class TradeContext {
 		return adr;
 	}
 
-	public boolean isPositionOpen() {
-		return positionOpen;
-	}
-
 	public static final class TradeContextBuilder {
 		private Double ask;
 		private Double bid;
@@ -56,18 +49,11 @@ public class TradeContext {
 		private Double dayLow;
 		private Double adr;
 
-		private boolean positionOpen;
-
 		private TradeContextBuilder() {
 		}
 
 		public static TradeContextBuilder aTradeContext() {
 			return new TradeContextBuilder();
-		}
-
-		public TradeContextBuilder withPositionOpen(boolean positionOpen) {
-			this.positionOpen = positionOpen;
-			return this;
 		}
 
 		public TradeContextBuilder withAsk(Double ask) {
@@ -101,7 +87,7 @@ public class TradeContext {
 		}
 
 		public TradeContext build() {
-			return new TradeContext(ask, bid, price, dayHigh, dayLow, adr, positionOpen);
+			return new TradeContext(ask, bid, price, dayHigh, dayLow, adr);
 		}
 	}
 }

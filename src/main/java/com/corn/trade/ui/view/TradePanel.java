@@ -26,7 +26,6 @@ public class TradePanel extends BasePanel implements TradeView {
 	private final       JButton            lockBtn;
 	private final       JButton            stopLimitBtn;
 	private final       JButton            limitBtn;
-	private final PositionPanel positionPanel;
 
 	public TradePanel(TradeViewListener controller, Dimension maxSize, Dimension minSize, int spacing, int fieldHeight) {
 		super(maxSize, minSize);
@@ -53,7 +52,8 @@ public class TradePanel extends BasePanel implements TradeView {
 		                                  PositionType.getValues(),
 		                                  spacing,
 		                                  fieldHeight,
-		                                  (positionType) -> controller.onPositionTypeChange(PositionType.fromString(positionType)));
+		                                  (positionType) -> controller.onPositionTypeChange(PositionType.fromString(
+				                                  positionType)));
 
 		estimationBox = new LabeledComboBox("Estimation:",
 		                                    EstimationType.getValues(),
@@ -94,7 +94,7 @@ public class TradePanel extends BasePanel implements TradeView {
 		orderPanel.add(stopLimitBtn);
 		orderPanel.add(limitBtn);
 
-		positionPanel = new PositionPanel();
+		PositionPanel positionPanel = new PositionPanel();
 		info = InfoPanel.InfoPanelBuilder.anInfoPanel()
 		                                 .withFontSize(15)
 		                                 .withVPadding(20)
@@ -125,6 +125,7 @@ public class TradePanel extends BasePanel implements TradeView {
 		controller.onPositionTypeChange(PositionType.LONG);
 		controller.onEstimationTypeChange(EstimationType.fromString(EstimationType.getValues().get(0)));
 		controller.setPositionPanel(positionPanel);
+		controller.checkRisk();
 	}
 
 	@Override
@@ -190,11 +191,6 @@ public class TradePanel extends BasePanel implements TradeView {
 	@Override
 	public JButton limitButton() {
 		return limitBtn;
-	}
-
-	@Override
-	public PositionPanel getPositionPanel() {
-		return positionPanel;
 	}
 
 	@Override

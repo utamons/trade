@@ -13,20 +13,22 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.corn.trade.BaseWindow.SIMULATION_MODE;
 import static com.corn.trade.BaseWindow.STAGE;
 
 class IbkrConnectionHandler implements IConnectionHandler {
-	private static final org.slf4j.Logger         log                     =
+	private static final org.slf4j.Logger log =
 			LoggerFactory.getLogger(IbkrConnectionHandler.class);
-	private final        IConnectionConfiguration connectionConfiguration = STAGE ==
-	                                                                        Stage.DEV ?
-			new IConnectionConfiguration.PaperConnectionConfiguration() :
-			new IConnectionConfiguration.DefaultConnectionConfiguration();
-	private final        List<Trigger>            disconnectionListeners  = new ArrayList<>();
-	private              IbkrApiController        controller;
-	private final        ContractLookuper         lookuper                =
+
+	private final IConnectionConfiguration connectionConfiguration =
+			STAGE == Stage.DEV || SIMULATION_MODE ?
+					new IConnectionConfiguration.PaperConnectionConfiguration() :
+					new IConnectionConfiguration.DefaultConnectionConfiguration();
+	private final List<Trigger>            disconnectionListeners  = new ArrayList<>();
+	private       IbkrApiController        controller;
+	private final ContractLookuper         lookuper                =
 			contract -> com.ib.client.Util.lookupContract(controller(), contract);
-	private              List<String>             accountList;
+	private       List<String>             accountList;
 
 	/**
 	 * Initiates connection to TWS. It's an asynchronous process, so connection might not be ready immediately.

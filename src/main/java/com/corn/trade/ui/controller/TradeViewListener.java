@@ -18,4 +18,5 @@ public interface TradeViewListener {
 	void onLock();
 	void onLimit();
 	void onStopLimit();
+	void checkRisk();
 }
