@@ -85,7 +85,7 @@ public class TradeController implements TradeViewListener {
 			startTimeUpdater(exchange);
 		} catch (DBException e) {
 			Util.showWarningDlg(view.asComponent(), e.getMessage());
-			view.messagePanel().show(e.getMessage(), Color.RED);
+			view.messagePanel().error(e.getMessage());
 		}
 	}
 
@@ -121,7 +121,7 @@ public class TradeController implements TradeViewListener {
 			}
 
 			currentBroker = BrokerFactory.getBroker(exchange.getBroker(), assetName, exchange.getName(), () -> {
-				view.messagePanel().show(exchange.getBroker() + " disconnected.", Color.RED);
+				view.messagePanel().error(exchange.getBroker() + " disconnected.");
 				view.assetLookup().clear();
 				view.info().clear();
 			});
@@ -141,7 +141,7 @@ public class TradeController implements TradeViewListener {
 				view.assetLookup().setText(assetName); // because we cleared it on exchange change
 			}
 
-			view.messagePanel().show(brokerName + " is connected.");
+			view.messagePanel().info(brokerName + " is connected.");
 
 			tradeContextId = currentBroker.requestTradeContext(this::tradeContextListener);
 			if (pnlListenerId == 0) {
@@ -151,10 +151,10 @@ public class TradeController implements TradeViewListener {
 
 		} catch (DBException | BrokerException e) {
 			Util.showWarningDlg(view.asComponent(), e.getMessage());
-			view.messagePanel().show(e.getMessage(), Color.RED);
+			view.messagePanel().error(e.getMessage());
 			view.assetLookup().clear();
 		}
-		orderClean = false;
+			orderClean = false;
 		checkButtons();
 	}
 
@@ -228,11 +228,17 @@ public class TradeController implements TradeViewListener {
 		if (exchange == null) {
 			return false;
 		}
+		if (exchange.getName().equals("TEST")) {
+			return true;
+		}
 		ExchangeTime exchangeTime = new ExchangeTime(exchange);
 		return exchangeTime.withinTradingHours() && exchangeTime.withinWeekDays();
 	}
 
 	private boolean canOpenPosition() {
+		if (currentBroker == null) {
+			return false;
+		}
 		return !locked && orderClean && workTime() && !currentBroker.isOpenPosition();
 	}
 
@@ -288,7 +294,7 @@ public class TradeController implements TradeViewListener {
 			try {
 				tradeData = new TradeCalc(tradeData).calculate();
 			} catch (Exception e) {
-				view.messagePanel().show(e.getMessage(), Color.RED);
+				view.messagePanel().error(e.getMessage());
 				view.trafficLight().setRed();
 				goalWarning(false);
 				orderClean = false;
@@ -313,7 +319,7 @@ public class TradeController implements TradeViewListener {
 			// todo this is the place for asking RiskManager for permission to trade
 			if (tradeData.hasError()) {
 				view.trafficLight().setRed();
-				view.messagePanel().show(tradeData.getTradeError(), Color.RED.darker());
+				view.messagePanel().error(tradeData.getTradeError());
 				view.info().setBe(null);
 				view.info().setRisk(null);
 				view.info().setRR(null);
@@ -325,12 +331,12 @@ public class TradeController implements TradeViewListener {
 			} else if (goalToPass > maxRange) {
 				goalWarning(true);
 				view.trafficLight().setGreen();
-				view.messagePanel().show("Goal is too far", Color.ORANGE.darker());
+				view.messagePanel().warning("Goal is too far");
 				orderClean = !tradeContext.isPositionOpen();
 			} else {
 				goalWarning(false);
 				view.trafficLight().setGreen();
-				view.messagePanel().show("Good to go", Color.GREEN.darker());
+				view.messagePanel().info("Good to go");
 				orderClean = !tradeContext.isPositionOpen();
 			}
 
@@ -388,9 +394,9 @@ public class TradeController implements TradeViewListener {
 		TradeData order = tradeData.copy().withOrderStop(null).build();
 		try {
 			openPosition(order);
-			view.messagePanel().show("Limit order sent", Color.GREEN.darker());
+			view.messagePanel().success("Limit order sent");
 		} catch (BrokerException e) {
-			view.messagePanel().show(e.getMessage(), Color.RED);
+			view.messagePanel().error(e.getMessage());
 		}
 	}
 
@@ -422,9 +428,9 @@ public class TradeController implements TradeViewListener {
 		pauseButtons();
 		try {
 			openPosition(tradeData);
-			view.messagePanel().show("Stop-Limit order sent", Color.GREEN.darker());
+			view.messagePanel().success("Stop-Limit order sent");
 		} catch (BrokerException e) {
-			view.messagePanel().show(e.getMessage(), Color.RED);
+			view.messagePanel().error(e.getMessage());
 		}
 	}
 

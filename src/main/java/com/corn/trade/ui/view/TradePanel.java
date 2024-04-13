@@ -105,7 +105,7 @@ public class TradePanel extends BasePanel implements TradeView {
 		                                 .build();
 
 		messagePanel = new MessagePanel(20, 0);
-		messagePanel.show("Welcome to Trade!");
+		messagePanel.info("Welcome to Trade!");
 
 		panel.add(exchangeBox);
 		panel.add(assetLookup);
