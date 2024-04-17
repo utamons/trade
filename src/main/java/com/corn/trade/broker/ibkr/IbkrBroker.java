@@ -360,7 +360,7 @@ public class IbkrBroker extends Broker {
 
 	@Override
 	public void cleanAllOrders() {
-		ibkrOrderHelper.cleanAllOrders(contractDetails.contract());
+		ibkrOrderHelper.cleanAllOrdersForContract(contractDetails.contract());
 	}
 
 	@Override

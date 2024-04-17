@@ -150,11 +150,10 @@ class IbkrOrderHelper {
 		return new OrderBracketIds(String.valueOf(main.orderId()), String.valueOf(stopLoss.orderId()), null);
 	}
 
-	public void cleanAllOrders(Contract contract) {
+	public void cleanAllOrdersForContract(Contract contract) {
 		if (!ibkrConnectionHandler.isConnected()) {
 			throw new IbkrException("IBKR not connected");
 		}
-
 
 		log.info("Dropping all orders for {}", contract.symbol());
 
@@ -162,8 +161,8 @@ class IbkrOrderHelper {
 			final List<Order> orders = new ArrayList<>();
 
 			@Override
-			public void openOrder(Contract contract, Order order, OrderState orderState) {
-				if (contract.conid() == contract.conid()) {
+			public void openOrder(Contract orderContract, Order order, OrderState orderState) {
+				if (contract.conid() == orderContract.conid()) {
 					orders.add(order);
 				}
 			}
