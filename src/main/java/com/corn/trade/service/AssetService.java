@@ -7,15 +7,19 @@ import com.corn.trade.entity.Exchange;
 import com.corn.trade.jpa.AssetRepo;
 import com.corn.trade.jpa.DBException;
 import com.corn.trade.jpa.ExchangeRepo;
+import com.corn.trade.type.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
 
+import static com.corn.trade.BaseWindow.STAGE;
+
 /*
   The class is not intended to be shared across threads, it is not thread-safe!
  */
+@SuppressWarnings("LoggingSimilarMessage")
 public class AssetService extends BaseService {
 	private static final Logger       log       = LoggerFactory.getLogger(AssetService.class);
 	private final        ExchangeRepo exchangeRepo;
@@ -48,7 +52,10 @@ public class AssetService extends BaseService {
 	}
 
 	public List<String> getExchangeNames() {
-		return getExchanges().stream().map(Exchange::getName).toList();
+		return getExchanges().stream()
+		                     .map(Exchange::getName)
+				             .filter(name -> STAGE != Stage.PROD || !name.equals("TEST"))
+		                     .toList();
 	}
 
 	public Exchange getExchange(String exchangeName) throws DBException {
@@ -86,6 +93,7 @@ public class AssetService extends BaseService {
 
 				if (asset.isPresent()) {
 					log.debug("Asset {}/{} found in database.", assetName, confirmedExchangeName);
+
 					log.debug("finish");
 					commitTransaction();
 					return asset.get();

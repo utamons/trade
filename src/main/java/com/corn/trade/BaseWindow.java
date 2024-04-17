@@ -46,12 +46,17 @@ public abstract class BaseWindow {
 	protected final        JFrame  frame;
 
 	public BaseWindow(String[] args, String appName, Dimension size) {
-		STAGE = args.length > 0 && args[0].equals("-dev") ? Stage.DEV : Stage.PROD;
-		dbKey = STAGE == Stage.DEV ? "db_url_dev" : "db_url_prod";
+		loadProperties();
+
+		if (SIMULATION_MODE){
+			STAGE = Stage.SIMULATION;
+		} else {
+			STAGE = args.length > 0 && args[0].equals("-dev") ? Stage.DEV : Stage.PROD;
+		}
+
+		dbKey = STAGE == Stage.PROD ? "db_url_prod" : "db_url_dev";
 
 		LoggerSetup.configureLogging(STAGE);
-
-		loadProperties();
 
 		String title = getTitle(appName);
 

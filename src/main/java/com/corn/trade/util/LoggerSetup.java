@@ -25,7 +25,7 @@ public class LoggerSetup {
 		rollingFileAppender.setName("ROLLING");
 
 		// Set file path based on the environment
-		String logFilePath = stage == Stage.DEV ? "E://log//dev_trade.log" : "E://log//prod_trade.log";
+		String logFilePath = stage == Stage.PROD ? "E://log//prod_trade.log" : "E://log//dev_trade.log";
 		rollingFileAppender.setFile(logFilePath);
 
 		PatternLayoutEncoder encoder = new PatternLayoutEncoder();
@@ -39,7 +39,7 @@ public class LoggerSetup {
 		TimeBasedRollingPolicy<Object> rollingPolicy = new TimeBasedRollingPolicy<>();
 		rollingPolicy.setContext(loggerContext);
 		rollingPolicy.setParent(rollingFileAppender);
-		rollingPolicy.setFileNamePattern("E://log//" + (stage == Stage.DEV ? "dev_" : "prod_") + "trade.%d{yyyy-MM-dd}.log");
+		rollingPolicy.setFileNamePattern("E://log//" + (stage == Stage.PROD ? "prod_" : "dev_") + "trade.%d{yyyy-MM-dd}.log");
 		rollingPolicy.setMaxHistory(7);
 		rollingPolicy.start();
 
