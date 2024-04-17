@@ -20,6 +20,8 @@ public class TradeWindow extends BaseWindow {
 	}
 
 	public static void main(String[] args) {
+		Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> log.error("Uncaught exception in thread '{}'", thread.getName(), throwable));
+
 		SwingUtilities.invokeLater(() -> {
 			TradeWindow tradeWindow = new TradeWindow(args);
 			tradeWindow.display();

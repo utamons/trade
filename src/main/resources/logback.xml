@@ -6,29 +6,16 @@
         </encoder>
     </appender>
 
-    <!-- Rolling File Appender -->
-    <appender name="ROLLING" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>d://trade.log</file>
-        <encoder>
-            <pattern>%d{HH:mm:ss.SSS} %-5level: %msg%n</pattern>
-        </encoder>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>d://trade.%d{yyyy-MM-dd}.log</fileNamePattern>
-            <maxHistory>7</maxHistory>
-        </rollingPolicy>
-    </appender>
-
     <logger name="org.hibernate" level="INFO" additivity="false">
-        <appender-ref ref="ROLLING"/>
+        <appender-ref ref="STDOUT"/>
     </logger>
 
     <logger name="org.mariadb" level="INFO" additivity="false">
-        <appender-ref ref="ROLLING"/>
+        <appender-ref ref="STDOUT"/>
     </logger>
 
     <!-- Logger for com.corn.trade package -->
     <logger name="com.corn.trade" level="DEBUG" additivity="false">
-        <appender-ref ref="ROLLING"/>
         <appender-ref ref="STDOUT"/>
     </logger>
 

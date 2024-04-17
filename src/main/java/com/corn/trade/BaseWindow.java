@@ -4,6 +4,7 @@ import com.corn.trade.type.Stage;
 import com.corn.trade.ui.component.CustomTitleBar;
 import com.corn.trade.ui.component.ResizeListener;
 import com.corn.trade.util.LiquibaseRunner;
+import com.corn.trade.util.LoggerSetup;
 import com.github.weisj.darklaf.LafManager;
 import com.github.weisj.darklaf.theme.*;
 import com.github.weisj.darklaf.theme.event.ThemePreferenceChangeEvent;
@@ -21,7 +22,7 @@ import java.io.InputStream;
 import java.util.Properties;
 
 public abstract class BaseWindow {
-	protected static final String  version               = "2.0";
+	protected static final String  version               = "2.0.1";
 	protected static final int     RESIZE_EDGE           = 4;
 	protected static final int     FIELD_HEIGHT          = 40;
 	protected static final Theme   DARK_THEME            = new OneDarkTheme();
@@ -47,6 +48,8 @@ public abstract class BaseWindow {
 	public BaseWindow(String[] args, String appName, Dimension size) {
 		STAGE = args.length > 0 && args[0].equals("-dev") ? Stage.DEV : Stage.PROD;
 		dbKey = STAGE == Stage.DEV ? "db_url_dev" : "db_url_prod";
+
+		LoggerSetup.configureLogging(STAGE);
 
 		loadProperties();
 
