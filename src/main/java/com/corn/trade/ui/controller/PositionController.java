@@ -71,7 +71,7 @@ public class PositionController {
 	 */
 	public void updatePosition(String brokerName, TradeData tradeData, Position position) {
 		Broker broker = BrokerFactory.findBroker(brokerName)
-		                             .orElseThrow(() -> new IllegalArgumentException("Broker not found"));
+		                             .orElseThrow(() -> new IllegalArgumentException("Broker not found - "+brokerName+"!"));
 		String symbol = position.getSymbol();
 		// Get or create UI view for the position ============================================
 		PositionRow positionRow = positionRows.computeIfAbsent(symbol, view::addPosition);

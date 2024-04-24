@@ -42,6 +42,7 @@ public class BrokerFactory {
 		}
 
 		log.debug("Caching broker {}.", actualKey);
+		broker.setName(actualKey);
 		brokers.put(actualKey, broker);
 		return broker;
 	}
