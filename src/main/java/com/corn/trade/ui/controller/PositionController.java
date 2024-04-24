@@ -1,6 +1,7 @@
 package com.corn.trade.ui.controller;
 
 import com.corn.trade.broker.Broker;
+import com.corn.trade.broker.BrokerFactory;
 import com.corn.trade.model.Position;
 import com.corn.trade.model.TradeData;
 import com.corn.trade.service.TradeCalc;
@@ -64,28 +65,38 @@ public class PositionController {
 	/**
 	 * Updates position state in real time
 	 *
-	 * @param broker    - a broker object (provides broker's functionality)
+	 * @param brokerName - broker name
 	 * @param tradeData - current trade context
 	 * @param position  - current position data
 	 */
-	public void updatePosition(Broker broker, TradeData tradeData, Position position) {
+	public void updatePosition(String brokerName, TradeData tradeData, Position position) {
+		Broker broker = BrokerFactory.findBroker(brokerName)
+		                             .orElseThrow(() -> new IllegalArgumentException("Broker not found"));
 		String symbol = position.getSymbol();
 		// Get or create UI view for the position ============================================
 		PositionRow positionRow = positionRows.computeIfAbsent(symbol, view::addPosition);
+
+		long         qtt          = Math.abs(position.getQuantity()); // current quantity
+		double be    = tradeData.getBreakEven(); // break even price
+		double sl    = tradeData.getStopLoss(); // stop loss price
+		PositionType positionType = tradeData.getPositionType(); // Long or Short position
+		ActionType action = positionType == PositionType.LONG ? ActionType.SELL : ActionType.BUY;
+
 		if (!positions.containsKey(symbol)) {
 			// Initialize button listeners only once for the new position
 			initButtonListeners(broker, tradeData, symbol, positionRow);
+			positionRow.getButtonBE()
+			           .addActionListener(e -> broker.modifyStopLoss(qtt, be, action));
 		}
 
 		// Prepare data =================================================
-		PositionType positionType = tradeData.getPositionType(); // Long or Short position
+
 		Long         oldQtt       = oldQuantities.get(symbol); // old quantity from previous position state
-		long         qtt          = Math.abs(position.getQuantity()); // current quantity
+
 
 		double price = position.getMarketValue() / position.getQuantity(); // current price of the position
 		double goal  = tradeData.getGoal(); // goal price
-		double be    = tradeData.getBreakEven(); // break even price
-		double sl    = tradeData.getStopLoss(); // stop loss price
+
 		// distance from stop loss to goal
 		double dst           = Math.abs(price - sl) / Math.abs(goal - sl) * 100;
 		double unrealizedPnl = getUnrealizedPnl(position, qtt, price);
@@ -94,6 +105,7 @@ public class PositionController {
 		positions.put(symbol, position); // save current position data
 
 		// Update UI view =================================================
+		positionRow.setBe(be);
 		positionRow.setQtt(qtt + "/" + tradeData.getQuantity());
 		positionRow.setSl(sl);
 		positionRow.setGoal(goal);
@@ -120,8 +132,7 @@ public class PositionController {
 		if (qtt == 0) { // if position is closed
 			closePosition(broker, symbol);
 		} else if (oldQtt != null && qtt < oldQtt) { // adjust stop loss quantity
-			ActionType action = positionType == PositionType.LONG ? ActionType.SELL : ActionType.BUY;
-			broker.setStopLossQuantity(qtt, sl, action);
+			broker.modifyStopLoss(qtt, sl, action);
 		}
 	}
 
@@ -130,6 +141,7 @@ public class PositionController {
 		positionRows.remove(symbol);
 		positions.remove(symbol);
 		oldQuantities.remove(symbol);
+		log.debug("Position {} is closed for {}", symbol, broker.getName());
 		broker.cleanAllOrders(); // cancel all active orders remaining for this position
 	}
 

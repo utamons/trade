@@ -3,6 +3,7 @@ package com.corn.trade.util;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.ConsoleAppender;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
 import ch.qos.logback.core.util.StatusPrinter;
@@ -67,6 +68,21 @@ public class LoggerSetup {
 		hibernateLogger.addAppender(rollingFileAppender);
 		hibernateLogger.setLevel(INFO);
 		hibernateLogger.setAdditive(false);
+
+		ConsoleAppender<ILoggingEvent> consoleAppender = new ConsoleAppender<>();
+		consoleAppender.setContext(loggerContext);
+		consoleAppender.setEncoder(encoder);
+		consoleAppender.setName("CONSOLE");
+		consoleAppender.start();
+
+		// Attach the console appender to the trade logger
+		tradeLogger.addAppender(consoleAppender);
+
+		// Attach the console appender to the root logger
+		rootLogger.addAppender(consoleAppender);
+
+		// Attach the console appender to the mariadb logger
+		mariadbLogger.addAppender(consoleAppender);
 
 
 		// Optionally print the internal state

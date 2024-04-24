@@ -27,7 +27,7 @@ public class TradeWindow extends BaseWindow {
 			tradeWindow.display();
 		});
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-			System.out.println("Application is closing, releasing JPA resources...");
+			log.debug("Application is closing, releasing JPA resources...");
 			JpaUtil.close(); // Assuming JPAUtil.close() is a static method to close EntityManagerFactory
 		}));
 	}

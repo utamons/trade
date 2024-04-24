@@ -22,6 +22,10 @@ public class PositionRow extends JPanel {
 		posInfoRow.getLabel().setText(label);
 	}
 
+	public void setBe(Double be) {
+		posInfoRow.setBe(be);
+	}
+
 	public void setQtt(String qtt) {
 		posInfoRow.setQtt(qtt);
 	}
@@ -48,6 +52,10 @@ public class PositionRow extends JPanel {
 
 	public void setPlColor(Color color) {
 		posInfoRow.setPlColor(color);
+	}
+
+	public JButton getButtonBE() {
+		return buttonRow.getButtonBE();
 	}
 
 	public JButton getButton25() {

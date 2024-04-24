@@ -1,6 +1,5 @@
 package com.corn.trade.broker.ibkr;
 
-import com.corn.trade.TradeWindow;
 import com.corn.trade.broker.OrderBracketIds;
 import com.ib.client.*;
 import com.ib.client.Types.Action;
@@ -20,6 +19,26 @@ class IbkrOrderHelper {
 
 	public IbkrOrderHelper(IbkrConnectionHandler ibkrConnectionHandler) {
 		this.ibkrConnectionHandler = ibkrConnectionHandler;
+	}
+
+	private static Order prepareOrder(long quantity,
+	                                  Double stop,
+	                                  Double limit,
+	                                  Action action,
+	                                  OrderType orderType,
+	                                  boolean transmit) {
+		Order order = new Order();
+		order.action(action);
+		order.orderType(orderType);
+
+		Decimal quantityDecimal = Decimal.get(quantity);
+		order.totalQuantity(quantityDecimal);
+		order.lmtPrice(round(limit));
+		if (orderType == OrderType.STP || orderType == OrderType.STP_LMT) {
+			order.auxPrice(round(stop));
+		}
+		order.transmit(transmit);
+		return order;
 	}
 
 	public void placeOrder(ContractDetails contractDetails,
@@ -50,22 +69,7 @@ class IbkrOrderHelper {
 		         round(stop));
 	}
 
-	private static Order prepareOrder(long quantity, Double stop, Double limit, Action action, OrderType orderType, boolean transmit) {
-		Order order = new Order();
-		order.action(action);
-		order.orderType(orderType);
-
-		Decimal quantityDecimal = Decimal.get(quantity);
-		order.totalQuantity(quantityDecimal);
-		order.lmtPrice(round(limit));
-		if (orderType == OrderType.STP || orderType == OrderType.STP_LMT) {
-			order.auxPrice(round(stop));
-		}
-		order.transmit(transmit);
-		return order;
-	}
-
-	public void setStopLossQuantity(int orderId, Contract contract, long quantity, double stopLossPrice, Action action) {
+	public void modifyStopLoss(int orderId, Contract contract, long quantity, double stopLossPrice, Action action) {
 		if (!ibkrConnectionHandler.isConnected()) {
 			throw new IbkrException("IBKR not connected");
 		}
@@ -83,7 +87,7 @@ class IbkrOrderHelper {
 		                                         stopLoss,
 		                                         new IbkrOrderHandler(contract, stopLoss));
 
-		log.info("Decreased SL id {} {} {}", stopLoss.orderId(), contract.symbol(), stopLossPrice);
+		log.info("Modified SL id {} {} {} {}", stopLoss.orderId(),  contract.symbol(), action, stopLossPrice);
 	}
 
 	public OrderBracketIds placeOrderWithBracket(ContractDetails contractDetails,
@@ -170,14 +174,10 @@ class IbkrOrderHelper {
 			@Override
 			public void openOrderEnd() {
 				ibkrConnectionHandler.controller().removeLiveOrderHandler(this);
-				if (TradeWindow.SIMULATION_MODE) {
-					log.info("Simulation mode");
-				} else {
-					orders.forEach(order -> {
-						ibkrConnectionHandler.controller().cancelOrder(order.orderId(), "", null);
-						log.info("Dropping order {}", order.orderId());
-					});
-				}
+				orders.forEach(order -> {
+					ibkrConnectionHandler.controller().cancelOrder(order.orderId(), "", null);
+					log.info("Dropping order {}", order.orderId());
+				});
 			}
 
 			@Override

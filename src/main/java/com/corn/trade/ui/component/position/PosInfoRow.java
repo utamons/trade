@@ -7,7 +7,7 @@ import com.corn.trade.ui.component.InfoField;
 import static com.corn.trade.util.Util.fmt;
 
 public class PosInfoRow extends JPanel {
-	private final InfoField qttField, slField, goalField, dstField, plField;
+	private final InfoField qttField, slField, beField, goalField, dstField, plField;
 	private final JLabel label;
 
 	public PosInfoRow(String labelText, int fontSize, int padding, int hgap, int hSpacing) {
@@ -25,6 +25,7 @@ public class PosInfoRow extends JPanel {
 		labelPanel.add(label);
 
 
+		beField = new InfoField("BE", fontSize, 0, hSpacing, 30);
 		qttField = new InfoField("Qtt:", fontSize, 0, hSpacing, 30);
 		slField = new InfoField("Sl:", fontSize, 0, hSpacing, 30);
 		goalField = new InfoField("Gl:", fontSize, 0, hSpacing, 30);
@@ -36,19 +37,25 @@ public class PosInfoRow extends JPanel {
 		add(labelPanel, gbc);
 
 		gbc.gridx = 1;
-		add(qttField, gbc);
+		add(beField, gbc);
 		gbc.gridx = 2;
-		add(slField, gbc);
+		add(qttField, gbc);
 		gbc.gridx = 3;
-		add(goalField, gbc);
+		add(slField, gbc);
 		gbc.gridx = 4;
-		add(dstField, gbc);
+		add(goalField, gbc);
 		gbc.gridx = 5;
+		add(dstField, gbc);
+		gbc.gridx = 6;
 		add(plField, gbc);
 	}
 
 	public JLabel getLabel() {
 		return label;
+	}
+
+	public void setBe(Double be) {
+		beField.setInfoText(fmt(be));
 	}
 
 	public void setQtt(String qtt) {

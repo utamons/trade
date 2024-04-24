@@ -193,8 +193,8 @@ public class SimulationBroker extends Broker {
 	}
 
 	@Override
-	public void setStopLossQuantity(long quantity, double stopLossPrice, ActionType actionType) {
-		log.debug("Setting stop loss quantity to {} at price {}", quantity, stopLossPrice);
+	public void modifyStopLoss(long quantity, double stopLossPrice, ActionType actionType) {
+		log.debug("Modified stop loss to {} at price {}", quantity, stopLossPrice);
 	}
 
 	protected void closePosition(long tradeId, RiskManager riskManager) {

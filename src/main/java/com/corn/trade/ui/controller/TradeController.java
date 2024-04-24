@@ -407,24 +407,24 @@ public class TradeController implements TradeViewListener {
 		pauseButtons();
 		TradeData order = tradeData.copy().withOrderStop(null).build();
 		try {
-			openPosition(order);
+			openPosition(order, currentBroker.getName());
 			view.messagePanel().success("Limit order sent");
 		} catch (BrokerException e) {
 			view.messagePanel().error(e.getMessage());
 		}
 	}
 
-	private void openPosition(TradeData order) {
+	private void openPosition(TradeData tradeData, String brokerName) {
 		int id = currentBroker.addPositionListener((position) -> {
 			if (position.getQuantity() == 0) {
 				removePositionListener(position.getSymbol());
 			}
-			positionController.updatePosition(currentBroker, order, position);
+			positionController.updatePosition(brokerName, tradeData, position);
 		});
 		log.debug("Position listener added with id {}", id);
 		positionListenerIds.put(currentBroker.getAssetName(), id);
 
-		currentBroker.openPosition(order, riskManager);
+		currentBroker.openPosition(tradeData, riskManager);
 	}
 
 	private void removePositionListener(String assetName) {
@@ -441,7 +441,7 @@ public class TradeController implements TradeViewListener {
 		}
 		pauseButtons();
 		try {
-			openPosition(tradeData);
+			openPosition(tradeData, currentBroker.getName());
 			view.messagePanel().success("Stop-Limit order sent");
 		} catch (BrokerException e) {
 			view.messagePanel().error(e.getMessage());

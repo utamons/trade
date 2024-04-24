@@ -364,12 +364,12 @@ public class IbkrBroker extends Broker {
 	}
 
 	@Override
-	public void setStopLossQuantity(long quantity, double stopLossPrice, ActionType actionType) {
+	public void modifyStopLoss(long quantity, double stopLossPrice, ActionType actionType) {
 		Action action = actionType == ActionType.BUY ? Action.BUY : Action.SELL;
-		ibkrOrderHelper.setStopLossQuantity(Integer.parseInt(bracketIds.stopLossId()),
-		                                    contractDetails.contract(),
-		                                    quantity,
-		                                    stopLossPrice,
-		                                    action);
+		ibkrOrderHelper.modifyStopLoss(Integer.parseInt(bracketIds.stopLossId()),
+		                               contractDetails.contract(),
+		                               quantity,
+		                               stopLossPrice,
+		                               action);
 	}
 }

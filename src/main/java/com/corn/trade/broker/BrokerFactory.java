@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.Optional;
 
 public class BrokerFactory {
 	private static final Logger                  log     = LoggerFactory.getLogger(BrokerFactory.class);
@@ -43,6 +44,10 @@ public class BrokerFactory {
 		log.debug("Caching broker {}.", actualKey);
 		brokers.put(actualKey, broker);
 		return broker;
+	}
+
+	public static Optional<Broker> findBroker(String key) {
+		return Optional.ofNullable(brokers.get(key));
 	}
 
 	public static Broker instantiateBroker(String brokerName,
