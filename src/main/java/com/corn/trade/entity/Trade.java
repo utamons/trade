@@ -64,6 +64,9 @@ public class Trade {
 	@Column(name = "closed_at")
 	private LocalDateTime closedAt;
 
+	@Column(name = "break_even_price")
+	private BigDecimal breakEvenPrice;
+
 	public void setId(Long id) {
 		this.id = id;
 	}
@@ -192,5 +195,13 @@ public class Trade {
 
 	public LocalDateTime getClosedAt() {
 		return closedAt;
+	}
+
+	public void setBreakEvenPrice(BigDecimal breakEvenPrice) {
+		this.breakEvenPrice = breakEvenPrice;
+	}
+
+	public BigDecimal getBreakEvenPrice() {
+		return breakEvenPrice;
 	}
 }

@@ -18,6 +18,8 @@ import jakarta.persistence.PersistenceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDateTime;
+
 import static com.corn.trade.util.Util.toBigDecimal;
 
 /*
@@ -116,6 +118,7 @@ public class TradeService extends BaseService {
 			trade.setQuantity(tradeData.getQuantity());
 			trade.setInitialPrice(toBigDecimal(tradeData.getOrderLimit()));
 			trade.setStopLossPrice(toBigDecimal(tradeData.getStopLoss()));
+			trade.setBreakEvenPrice(toBigDecimal(tradeData.getBreakEven()));
 			trade.setGoal(toBigDecimal(tradeData.getGoal()));
 			trade.setStatus(TradeStatus.OPEN.name());
 			trade.setCreatedAt(exchangeTime.nowInExchangeTZ().toLocalDateTime());
@@ -135,7 +138,9 @@ public class TradeService extends BaseService {
 			trade.setStatus(status.name());
 			if (status == TradeStatus.CLOSED) {
 				ExchangeTime exchangeTime = new ExchangeTime(trade.getAsset().getExchange());
-				trade.setClosedAt(exchangeTime.nowInExchangeTZ().toLocalDateTime());
+				LocalDateTime localDateTime = exchangeTime.nowInExchangeTZ().toLocalDateTime();
+				trade.setClosedAt(localDateTime);
+				log.debug("Closing trade {} at {}", tradeId, localDateTime);
 			}
 			commitTransaction();
 			return trade;

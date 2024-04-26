@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -34,7 +35,9 @@ public class IbkrPositionSubscriber {
 	private void notifyListeners(int contractId, String account, Position position) {
 		Map<Integer, Consumer<Position>> contractGroup = listeners.get(getContractKey(contractId, account));
 		if (contractGroup != null) {
-			contractGroup.values().forEach(listener -> listener.accept(position));
+			// Listeners can remove themselves from the list on accept(), so we need to make a copy
+			List<Consumer<Position>> listeners = List.copyOf(contractGroup.values());
+			listeners.forEach(listener -> listener.accept(position));
 		}
 	}
 

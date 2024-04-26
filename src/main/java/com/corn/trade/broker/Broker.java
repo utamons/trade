@@ -141,7 +141,7 @@ public abstract class Broker {
 		                                   (mainExecution) -> {
 			                                   // We must check the main order status to be sure that the position is opened
 			                                   // And after that we can request for the new position updates
-			                                   if (mainExecution) {
+			                                   if (mainExecution && !openPosition) {
 				                                   try {
 					                                   Trade trade = tradeService.saveNewTrade(assetName, exchangeName, tradeData);
 					                                   requestPositionUpdates();
