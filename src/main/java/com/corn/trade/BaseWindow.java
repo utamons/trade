@@ -22,7 +22,7 @@ import java.io.InputStream;
 import java.util.Properties;
 
 public abstract class BaseWindow {
-	protected static final String  version               = "2.0.4";
+	protected static final String  version               = "2.0.5";
 	protected static final int     RESIZE_EDGE           = 4;
 	protected static final int     FIELD_HEIGHT          = 40;
 	protected static final Theme   DARK_THEME            = new OneDarkTheme();
@@ -46,15 +46,8 @@ public abstract class BaseWindow {
 	protected final        JFrame  frame;
 
 	public BaseWindow(String[] args, String appName, Dimension size) {
+		STAGE = args.length > 0 && args[0].equals("-dev") ? Stage.DEV : Stage.PROD;
 		loadProperties();
-
-		if (SIMULATION_MODE){
-			STAGE = Stage.SIMULATION;
-		} else {
-			STAGE = args.length > 0 && args[0].equals("-dev") ? Stage.DEV : Stage.PROD;
-		}
-
-		dbKey = STAGE == Stage.PROD ? "db_url_prod" : "db_url_dev";
 
 		LoggerSetup.configureLogging(STAGE);
 
@@ -89,6 +82,7 @@ public abstract class BaseWindow {
 		Properties configProps = new Properties();
 		try (InputStream input = new FileInputStream("D:\\bin\\trade.properties")) {
 			configProps.load(input);
+			dbKey = STAGE == Stage.PROD ? "db_url_prod" : "db_url_dev";
 
 			MAX_VOLUME = Integer.parseInt(configProps.getProperty("max_volume", "2000"));
 			MAX_RISK_REWARD_RATIO =
@@ -100,6 +94,11 @@ public abstract class BaseWindow {
 			DB_USER = configProps.getProperty("db_user", null);
 			DB_PASSWORD = configProps.getProperty("db_password", null);
 			SIMULATION_MODE = Boolean.parseBoolean(configProps.getProperty("simulation_mode", "false"));
+
+			if (SIMULATION_MODE){
+				STAGE = Stage.SIMULATION;
+			}
+
 			MAX_TRADES_PER_DAY = Long.parseLong(configProps.getProperty("max_trades_per_day", "3"));
 			MAX_DAILY_LOSS = Double.parseDouble(configProps.getProperty("max_daily_loss", "-30.0"));
 			MAX_WEEKLY_LOSS = Double.parseDouble(configProps.getProperty("max_weekly_loss", "-90.0"));
