@@ -82,6 +82,11 @@ public abstract class BaseWindow {
 		Properties configProps = new Properties();
 		try (InputStream input = new FileInputStream("D:\\bin\\trade.properties")) {
 			configProps.load(input);
+			SIMULATION_MODE = Boolean.parseBoolean(configProps.getProperty("simulation_mode", "false"));
+			if (SIMULATION_MODE){
+				STAGE = Stage.SIMULATION;
+			}
+
 			dbKey = STAGE == Stage.PROD ? "db_url_prod" : "db_url_dev";
 
 			MAX_VOLUME = Integer.parseInt(configProps.getProperty("max_volume", "2000"));
@@ -93,11 +98,6 @@ public abstract class BaseWindow {
 			DB_URL = configProps.getProperty(dbKey, null);
 			DB_USER = configProps.getProperty("db_user", null);
 			DB_PASSWORD = configProps.getProperty("db_password", null);
-			SIMULATION_MODE = Boolean.parseBoolean(configProps.getProperty("simulation_mode", "false"));
-
-			if (SIMULATION_MODE){
-				STAGE = Stage.SIMULATION;
-			}
 
 			MAX_TRADES_PER_DAY = Long.parseLong(configProps.getProperty("max_trades_per_day", "3"));
 			MAX_DAILY_LOSS = Double.parseDouble(configProps.getProperty("max_daily_loss", "-30.0"));
