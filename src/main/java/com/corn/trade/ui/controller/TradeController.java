@@ -193,6 +193,7 @@ public class TradeController implements TradeViewListener {
 			goal = view.goal().getValue();
 		}
 		orderClean = false;
+		goalWarning(false);
 		checkButtons();
 	}
 
@@ -203,6 +204,7 @@ public class TradeController implements TradeViewListener {
 		}
 		this.level = level;
 		orderClean = false;
+		goalWarning(false);
 		checkButtons();
 	}
 
@@ -210,6 +212,7 @@ public class TradeController implements TradeViewListener {
 	public void onTechStopLossChange(Double techStopLoss) {
 		this.techStopLoss = techStopLoss;
 		orderClean = false;
+		goalWarning(false);
 		checkButtons();
 	}
 
@@ -218,6 +221,7 @@ public class TradeController implements TradeViewListener {
 		this.goal = goal;
 		if (estimationType != EstimationType.MIN_GOAL) {
 			orderClean = false;
+			goalWarning(false);
 			checkButtons();
 		}
 	}
@@ -401,7 +405,9 @@ public class TradeController implements TradeViewListener {
 
 	@Override
 	public void onLimit() {
+		log.info("Limit order requested");
 		if (tradeData == null) {
+			log.debug("Trade data is null");
 			return;
 		}
 		pauseButtons();
@@ -436,7 +442,9 @@ public class TradeController implements TradeViewListener {
 
 	@Override
 	public void onStopLimit() {
+		log.info("Stop-Limit order requested");
 		if (tradeData == null) {
+			log.debug("Trade data is null");
 			return;
 		}
 		pauseButtons();

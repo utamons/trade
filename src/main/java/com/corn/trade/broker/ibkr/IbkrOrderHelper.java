@@ -52,7 +52,10 @@ class IbkrOrderHelper {
 			throw new IbkrException("IBKR not connected");
 		}
 
-		Order main = prepareOrder(quantity, stop, limit, action, orderType, true);
+		final Double _stopPrice = stop != null ? Math.abs(stop) : null;
+		final Double _limitPrice = limit != null ? Math.abs(limit) : null;
+
+		Order main = prepareOrder(quantity, _stopPrice, _limitPrice, action, orderType, true);
 
 		ibkrConnectionHandler.controller()
 		                     .placeOrModifyOrder(contractDetails.contract(),
@@ -64,9 +67,9 @@ class IbkrOrderHelper {
 		         main.orderId(),
 		         main.action(),
 		         contractDetails.contract().symbol(),
-		         round(limit),
+		         round(_limitPrice),
 		         quantity,
-		         round(stop));
+		         round(_stopPrice));
 	}
 
 	public void modifyStopLoss(int orderId, Contract contract, long quantity, double stopLossPrice, Action action) {
@@ -74,11 +77,13 @@ class IbkrOrderHelper {
 			throw new IbkrException("IBKR not connected");
 		}
 
+		final Double _stopPrice = Math.abs(stopLossPrice);
+
 		Order stopLoss = new Order();
 		stopLoss.orderId(orderId);
 		stopLoss.action(action);
 		stopLoss.orderType(OrderType.STP);
-		stopLoss.auxPrice(round(stopLossPrice));
+		stopLoss.auxPrice(round(_stopPrice));
 		stopLoss.totalQuantity(Decimal.get(quantity));
 		stopLoss.transmit(true);
 
@@ -87,7 +92,7 @@ class IbkrOrderHelper {
 		                                         stopLoss,
 		                                         new IbkrOrderHandler(contract, stopLoss));
 
-		log.info("Modified SL id {} {} {} {}", stopLoss.orderId(),  contract.symbol(), action, stopLossPrice);
+		log.info("Modified SL id {} {} {} {}", stopLoss.orderId(),  contract.symbol(), action, _stopPrice);
 	}
 
 	public OrderBracketIds placeOrderWithBracket(ContractDetails contractDetails,

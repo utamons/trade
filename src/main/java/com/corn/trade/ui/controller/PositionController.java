@@ -206,6 +206,7 @@ public class PositionController {
 	                                         PositionType positionType,
 	                                         long initialQtt) {
 		return e -> {
+			log.info("Closing position for {}", symbol);
 			if (locked.getOrDefault(symbol, false)) {
 				log.warn("Position {} is currently locked", symbol);
 				return;
