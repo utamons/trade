@@ -8,6 +8,8 @@ import com.corn.trade.model.PnL;
 import com.corn.trade.type.Stage;
 import jakarta.persistence.EntityManager;
 import liquibase.exception.DatabaseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -16,6 +18,7 @@ import java.time.temporal.TemporalAdjusters;
 import static com.corn.trade.BaseWindow.*;
 
 public class RiskManager {
+	private static final Logger log = LoggerFactory.getLogger(RiskManager.class);
 
 	private final PnlRepo   pnlRepo;
 	private final TradeRepo tradeRepo;
@@ -24,6 +27,8 @@ public class RiskManager {
 	private       String    riskError  = null;
 
 	public RiskManager() throws DatabaseException {
+		log.info("RiskManager initialized, MAX_DAILY_LOSS: {}, MAX_WEEKLY_LOSS: {}, MAX_MONTHLY_LOSS: {}, MAX_TRADES_PER_DAY: {}",
+				MAX_DAILY_LOSS, MAX_WEEKLY_LOSS, MAX_MONTHLY_LOSS, MAX_TRADES_PER_DAY);
 		this.pnlRepo = new PnlRepo();
 		this.tradeRepo = new TradeRepo();
 		initChecks();
