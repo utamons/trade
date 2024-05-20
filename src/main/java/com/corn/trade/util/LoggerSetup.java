@@ -2,6 +2,7 @@ package com.corn.trade.util;
 
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
 import ch.qos.logback.core.rolling.RollingFileAppender;
@@ -9,11 +10,9 @@ import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
 import ch.qos.logback.core.util.StatusPrinter;
 import com.corn.trade.type.Stage;
 import org.slf4j.LoggerFactory;
-import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 
 import static ch.qos.logback.classic.Level.DEBUG;
 import static ch.qos.logback.classic.Level.INFO;
-
 
 public class LoggerSetup {
 
@@ -29,15 +28,14 @@ public class LoggerSetup {
 		String logFilePath = stage == Stage.PROD ? "E://log//prod_trade.log" : "E://log//dev_trade.log";
 		rollingFileAppender.setFile(logFilePath);
 
-		PatternLayoutEncoder encoder = new PatternLayoutEncoder();
-		encoder.setContext(loggerContext);
-		encoder.setPattern("%d{HH:mm:ss.SSS} %-5level %logger{36}: %msg%n");
-		encoder.start();
+		PatternLayoutEncoder fileEncoder = new PatternLayoutEncoder();
+		fileEncoder.setContext(loggerContext);
+		fileEncoder.setPattern("%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{36}: %msg%n");
+		fileEncoder.start();
 
-		rollingFileAppender.setEncoder(encoder);
+		rollingFileAppender.setEncoder(fileEncoder);
 
-
-		TimeBasedRollingPolicy<Object> rollingPolicy = new TimeBasedRollingPolicy<>();
+		TimeBasedRollingPolicy<ILoggingEvent> rollingPolicy = new TimeBasedRollingPolicy<>();
 		rollingPolicy.setContext(loggerContext);
 		rollingPolicy.setParent(rollingFileAppender);
 		rollingPolicy.setFileNamePattern("E://log//" + (stage == Stage.PROD ? "prod_" : "dev_") + "trade.%d{yyyy-MM-dd}.log");
@@ -57,7 +55,7 @@ public class LoggerSetup {
 		Logger rootLogger = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
 		rootLogger.addAppender(rollingFileAppender);
 
-		//Attach the appender to the mariadb logger
+		// Attach the appender to the mariadb logger
 		Logger mariadbLogger = (Logger) LoggerFactory.getLogger("org.mariadb");
 		mariadbLogger.addAppender(rollingFileAppender);
 		mariadbLogger.setLevel(INFO);
@@ -69,9 +67,16 @@ public class LoggerSetup {
 		hibernateLogger.setLevel(INFO);
 		hibernateLogger.setAdditive(false);
 
+		// Console appender with a separate encoder
 		ConsoleAppender<ILoggingEvent> consoleAppender = new ConsoleAppender<>();
 		consoleAppender.setContext(loggerContext);
-		consoleAppender.setEncoder(encoder);
+
+		PatternLayoutEncoder consoleEncoder = new PatternLayoutEncoder();
+		consoleEncoder.setContext(loggerContext);
+		consoleEncoder.setPattern("%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{36}: %msg%n");
+		consoleEncoder.start();
+
+		consoleAppender.setEncoder(consoleEncoder);
 		consoleAppender.setName("CONSOLE");
 		consoleAppender.start();
 
@@ -84,9 +89,7 @@ public class LoggerSetup {
 		// Attach the console appender to the mariadb logger
 		mariadbLogger.addAppender(consoleAppender);
 
-
 		// Optionally print the internal state
 		StatusPrinter.print(loggerContext);
 	}
 }
-
