@@ -18,11 +18,11 @@ import java.util.function.Consumer;
 public class IbkrPositionSubscriber {
 	private final static Logger log = LoggerFactory.getLogger(IbkrPositionSubscriber.class);
 
-	private final Map<String, Map<Integer, Consumer<Position>>> listeners  = new ConcurrentHashMap<>();
-	private final Map<String, ApiController.IPnLSingleHandler>  handlers   = new HashMap<>();
-	private final IbkrConnectionHandler                         connectionHandler;
-	private       int                                           listenerId = 0;
-
+	private final Map<String, Map<Integer, Consumer<Position>>> listeners = new ConcurrentHashMap<>();
+	private final Map<String, ApiController.IPnLSingleHandler> handlers = new HashMap<>();
+	private final IbkrConnectionHandler connectionHandler;
+	private final Map<String, Boolean> initialState = new ConcurrentHashMap<>();
+	private int listenerId = 0;
 
 	IbkrPositionSubscriber(IbkrConnectionHandler connectionHandler) {
 		this.connectionHandler = connectionHandler;
@@ -76,6 +76,19 @@ public class IbkrPositionSubscriber {
 			                            .withMarketValue(value)
 			                            .withSymbol(symbol)
 			                            .build();
+
+			String key = getContractKey(contractId, account);
+			boolean wasInitiallyEmpty = initialState.getOrDefault(key, true);
+
+			// Check if the initial state is empty and skip notification if it is initially empty
+			if (wasInitiallyEmpty && pos.longValue() == 0) {
+				log.info("Skipping initial empty position notification for contractId: {}, account: {}", contractId, account);
+				return;
+			}
+
+			// Update the initial state
+			initialState.put(key, pos.longValue() == 0);
+
 			notifyListeners(contractId, account, position);
 		};
 
