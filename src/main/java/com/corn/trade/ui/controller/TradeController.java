@@ -53,6 +53,7 @@ import static com.corn.trade.util.Util.round;
 
 
 public class TradeController implements TradeViewListener {
+	public static final  double                      DEFAULT_STOP_LOSS   = 0.05;
 	public static final  int                         SEND_ORDER_DELAY    = 3000;
 	private static final Logger                      log                 = LoggerFactory.getLogger(TradeController.class);
 	private final        AssetService                assetService;
@@ -127,6 +128,7 @@ public class TradeController implements TradeViewListener {
 			view.goal().setValue(null);
 			view.level().setValue(null);
 			view.techSL().setValue(null);
+			view.techSL().setDefaultValue(null);
 			view.messagePanel().clear();
 			level = null;
 			techStopLoss = null;
@@ -191,6 +193,7 @@ public class TradeController implements TradeViewListener {
 		this.positionType = positionType;
 		view.techSL().setControlCheckBoxState(false);
 		view.techSL().setValue(null);
+		setDefaultStopLoss(level);
 		view.goal().setValue(null);
 		goal = null;
 		techStopLoss = null;
@@ -220,9 +223,16 @@ public class TradeController implements TradeViewListener {
 			return;
 		}
 		this.level = level;
+		setDefaultStopLoss(level);
 		orderClean = false;
 		goalWarning(false);
 		checkButtons();
+	}
+
+	private void setDefaultStopLoss(Double level) {
+		if (level != null) {
+			view.techSL().setDefaultValue(positionType.equals(PositionType.LONG) ? level - DEFAULT_STOP_LOSS : level + DEFAULT_STOP_LOSS);
+		}
 	}
 
 	@Override
@@ -405,6 +415,7 @@ public class TradeController implements TradeViewListener {
 		estimationType = tradeState.estimationType;
 
 		view.techSL().setControlCheckBoxState(tradeState.techStopLoss != null);
+		setDefaultStopLoss(level);
 	}
 
 	@Override
@@ -439,7 +450,7 @@ public class TradeController implements TradeViewListener {
 
 	private void openPosition(TradeData tradeData, String brokerName) {
 		int id = currentBroker.addPositionListener((position) -> {
-			if (!Objects.equals(positionListenerIds.get(position.getSymbol()),position.getListenerId())) {
+			if (!Objects.equals(positionListenerIds.get(position.getSymbol()), position.getListenerId())) {
 				log.warn("Listener id mismatch for symbol: {} expected: {} actual: {}", position.getSymbol(),
 				         positionListenerIds.get(position.getSymbol()), position.getListenerId());
 				return;

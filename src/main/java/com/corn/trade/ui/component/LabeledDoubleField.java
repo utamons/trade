@@ -29,17 +29,17 @@ import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public class LabeledDoubleField extends JPanel {
-	private static final Logger     log = LoggerFactory.getLogger(LabeledDoubleField.class);
-	private Timer blinkTimer;
-	private boolean isLightOn;
-
-	private Color currentLightColor;
-	private final        JTextField textField;
+	private static final Logger  log = LoggerFactory.getLogger(LabeledDoubleField.class);
+	private final JTextField textField;
 	private final JCheckBox  controlCheckBox;
 	private final Border     errorBorder;
 	private final JLabel     lightIndicator;
+	private              Timer   blinkTimer;
+	private              boolean isLightOn;
+	private       Color      currentLightColor;
 	private       Color      textFieldColor;
 	private       boolean    autoUpdate;
+	private       Double     defaultValue;
 
 	public LabeledDoubleField(String labelText,
 	                          int columns,
@@ -56,6 +56,17 @@ public class LabeledDoubleField extends JPanel {
 	                          boolean hasControlCheckBox,
 	                          Consumer<Double> consumer) {
 		this(labelText, columns, null, padding, height, hasControlCheckBox, consumer);
+	}
+
+	public LabeledDoubleField(String labelText,
+	                          int columns,
+	                          int padding,
+	                          int height,
+	                          boolean hasControlCheckBox,
+							  Double defaultValue,
+	                          Consumer<Double> consumer) {
+		this(labelText, columns, null, padding, height, hasControlCheckBox, consumer);
+		this.defaultValue = defaultValue;
 	}
 
 	// Constructor
@@ -118,6 +129,11 @@ public class LabeledDoubleField extends JPanel {
 			if (!isSelected) {
 				textField.setText("");
 				feedConsumer(consumer);
+			} else {
+				if (defaultValue != null) {
+					textField.setText(String.format("%.2f", defaultValue));
+					feedConsumer(consumer);
+				}
 			}
 		});
 
@@ -141,6 +157,10 @@ public class LabeledDoubleField extends JPanel {
 			textField.setEnabled(false);
 			textField.setText("");
 		}
+	}
+
+	public void setDefaultValue(Double defaultValue) {
+		this.defaultValue = defaultValue;
 	}
 
 	private void initializeBlinkTimer() {
