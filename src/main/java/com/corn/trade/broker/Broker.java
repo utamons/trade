@@ -8,10 +8,7 @@ import com.corn.trade.risk.RiskManager;
 import com.corn.trade.service.AssetService;
 import com.corn.trade.service.OrderService;
 import com.corn.trade.service.TradeService;
-import com.corn.trade.type.ActionType;
-import com.corn.trade.type.OrderType;
-import com.corn.trade.type.PositionType;
-import com.corn.trade.type.TradeStatus;
+import com.corn.trade.type.*;
 import com.corn.trade.util.ExchangeTime;
 import com.corn.trade.util.Trigger;
 import com.corn.trade.util.Util;
@@ -105,6 +102,8 @@ public abstract class Broker {
 
 	public abstract void removePositionListener(int id) throws BrokerException;
 
+	public abstract void removeAllPositionListeners() throws BrokerException;
+
 	protected abstract void requestPositionUpdates() throws BrokerException;
 
 	public abstract void requestPnLUpdates() throws BrokerException;
@@ -141,7 +140,7 @@ public abstract class Broker {
 		                                   (mainExecution) -> {
 			                                   // We must check the main order status to be sure that the position is opened
 			                                   // And after that we can request for the new position updates
-			                                   if (mainExecution && !openPosition) {
+			                                   if (mainExecution.equals(OrderStatus.FILLED) && !openPosition) {
 				                                   try {
 					                                   Trade trade = tradeService.saveNewTrade(assetName, exchangeName, tradeData);
 					                                   requestPositionUpdates();
@@ -159,6 +158,9 @@ public abstract class Broker {
 				                                   } catch (BrokerException e) {
 					                                   log.error("Error requesting position updates {}", e.getMessage());
 				                                   }
+			                                   } else if (mainExecution.equals(OrderStatus.CANCELLED) && !openPosition) {
+				                                   log.error("Main order cancelled, removing all position listeners");
+				                                   removeAllPositionListeners();
 			                                   }
 		                                   });
 	}
@@ -189,14 +191,14 @@ public abstract class Broker {
 	                                                      Double takeProfit,
 	                                                      PositionType positionType,
 	                                                      OrderType orderType,
-	                                                      Consumer<Boolean> mainExecutionListener) throws BrokerException;
+	                                                      Consumer<com.corn.trade.type.OrderStatus> mainExecutionListener) throws BrokerException;
 
 	public abstract void placeOrder(long quantity,
 	                                Double stop,
 	                                Double limit,
 	                                ActionType actionType,
 	                                OrderType orderType,
-	                                Consumer<Boolean> executionListener) throws BrokerException;
+	                                Consumer<com.corn.trade.type.OrderStatus> executionListener) throws BrokerException;
 
 
 	protected void notifyTradeContext() throws BrokerException {

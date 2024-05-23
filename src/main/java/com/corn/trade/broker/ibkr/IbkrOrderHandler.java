@@ -13,7 +13,7 @@ class IbkrOrderHandler implements ApiController.IOrderHandler {
 	public static final Logger            log = LoggerFactory.getLogger(IbkrOrderHandler.class);
 	private final       Contract          contract;
 	private final       Order             order;
-	private final       Consumer<Boolean> executionListener;
+	private final       Consumer<com.corn.trade.type.OrderStatus> executionListener;
 
 	public IbkrOrderHandler(Contract contract, Order order) {
 		this.contract = contract;
@@ -21,7 +21,7 @@ class IbkrOrderHandler implements ApiController.IOrderHandler {
 		this.executionListener = null;
 	}
 
-	public IbkrOrderHandler(Contract contract, Order order, Consumer<Boolean> executionListener) {
+	public IbkrOrderHandler(Contract contract, Order order, Consumer<com.corn.trade.type.OrderStatus> executionListener) {
 		this.contract = contract;
 		this.order = order;
 		this.executionListener = executionListener;
@@ -76,14 +76,7 @@ class IbkrOrderHandler implements ApiController.IOrderHandler {
 				whyHeld,
 				mktCapPrice);
 		if (executionListener != null) {
-			if (status == OrderStatus.Filled) {
-				executionListener.accept(true);
-			} else if (status == OrderStatus.Cancelled ||
-			           status == OrderStatus.ApiCancelled ||
-			           status == OrderStatus.Inactive ||
-			           status == OrderStatus.Unknown) {
-				executionListener.accept(false);
-			}
+			executionListener.accept(fromOrderStatus(status));
 		}
 	}
 

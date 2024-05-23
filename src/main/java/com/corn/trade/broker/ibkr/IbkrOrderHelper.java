@@ -47,7 +47,7 @@ class IbkrOrderHelper {
 	                       Double limit,
 	                       Action action,
 	                       OrderType orderType,
-	                       Consumer<Boolean> executionListener) {
+	                       Consumer<com.corn.trade.type.OrderStatus> executionListener) {
 		if (!ibkrConnectionHandler.isConnected()) {
 			throw new IbkrException("IBKR not connected");
 		}
@@ -102,7 +102,7 @@ class IbkrOrderHelper {
 	                                             Double stopLossPrice,
 	                                             Double takeProfitPrice,
 	                                             Action action,
-	                                             OrderType orderType, Consumer<Boolean> mainExecutionListener) {
+	                                             OrderType orderType, Consumer<com.corn.trade.type.OrderStatus> mainExecutionListener) {
 		if (!ibkrConnectionHandler.isConnected()) {
 			throw new IbkrException("IBKR not connected");
 		}

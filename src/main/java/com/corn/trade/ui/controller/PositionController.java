@@ -6,6 +6,7 @@ import com.corn.trade.model.Position;
 import com.corn.trade.model.TradeData;
 import com.corn.trade.service.TradeCalc;
 import com.corn.trade.type.ActionType;
+import com.corn.trade.type.OrderStatus;
 import com.corn.trade.type.OrderType;
 import com.corn.trade.type.PositionType;
 import com.corn.trade.ui.component.position.PositionRow;
@@ -228,9 +229,9 @@ public class PositionController {
 	}
 
 	// Get order execution handler for the position
-	private Consumer<Boolean> getOrderExecutionHandler(String symbol, long orderQuantity, long initialQuantity) {
+	private Consumer<com.corn.trade.type.OrderStatus> getOrderExecutionHandler(String symbol, long orderQuantity, long initialQuantity) {
 		return executed -> {
-			if (executed) {
+			if (executed.equals(OrderStatus.FILLED)) {
 				Position position = positions.get(symbol);
 				if (position != null) {
 					long newQuantity = position.getQuantity() - orderQuantity;

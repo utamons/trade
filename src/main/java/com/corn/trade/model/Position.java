@@ -4,6 +4,7 @@ import java.util.Objects;
 
 @SuppressWarnings("unused")
 public class Position {
+	private final Integer listenerId;
 	private final String symbol;
 	private final long quantity;
 	private final Double averagePrice;
@@ -11,13 +12,19 @@ public class Position {
 	private final Double unrealizedPnl;
 	private final Double realizedPnl;
 
-	private Position(String symbol, long quantity, Double averagePrice, Double marketValue, Double unrealizedPnl, Double realizedPnl) {
+	private Position(Integer listenerId,
+	                 String symbol, long quantity, Double averagePrice, Double marketValue, Double unrealizedPnl, Double realizedPnl) {
+		this.listenerId = listenerId;
 		this.symbol = symbol;
 		this.quantity = quantity;
 		this.averagePrice = averagePrice;
 		this.marketValue = marketValue;
 		this.unrealizedPnl = unrealizedPnl;
 		this.realizedPnl = realizedPnl;
+	}
+
+	public Integer getListenerId() {
+		return listenerId;
 	}
 
 	public String getSymbol() {
@@ -60,11 +67,13 @@ public class Position {
 		private Double marketValue;
 		private Double unrealizedPnl;
 		private Double realizedPnl;
+		private Integer listenerId;
 
 		public Builder() {
 		}
 
 		private Builder(Position other) {
+			this.listenerId = other.listenerId;
 			this.symbol = other.symbol;
 			this.quantity = other.quantity;
 			this.averagePrice = other.averagePrice;
@@ -73,6 +82,10 @@ public class Position {
 			this.realizedPnl = other.realizedPnl;
 		}
 
+		public Builder withListenerId(Integer listenerId) {
+			this.listenerId = listenerId;
+			return this;
+		}
 
 		public Builder withSymbol(String symbol) {
 			this.symbol = symbol;
@@ -105,7 +118,7 @@ public class Position {
 		}
 
 		public Position build() {
-			return new Position(symbol, quantity, averagePrice, marketValue, unrealizedPnl, realizedPnl);
+			return new Position(listenerId, symbol, quantity, averagePrice, marketValue, unrealizedPnl, realizedPnl);
 		}
 	}
 

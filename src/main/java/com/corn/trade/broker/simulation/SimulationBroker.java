@@ -9,6 +9,7 @@ import com.corn.trade.model.PnL;
 import com.corn.trade.model.Position;
 import com.corn.trade.risk.RiskManager;
 import com.corn.trade.type.ActionType;
+import com.corn.trade.type.OrderStatus;
 import com.corn.trade.type.OrderType;
 import com.corn.trade.type.PositionType;
 import com.corn.trade.util.Trigger;
@@ -111,6 +112,13 @@ public class SimulationBroker extends Broker {
 	}
 
 	@Override
+	public void removeAllPositionListeners() throws BrokerException {
+		log.debug("removeAllPositionListeners :Removing all position listeners");
+		positionTimer.stop();
+		positionListeners.clear();
+	}
+
+	@Override
 	protected synchronized void requestPositionUpdates() throws BrokerException {
 		positionTimer.start();
 	}
@@ -167,11 +175,11 @@ public class SimulationBroker extends Broker {
 	                                             Double takeProfit,
 	                                             PositionType positionType,
 	                                             OrderType orderType,
-	                                             Consumer<Boolean> mainExecutionListener) throws BrokerException {
+	                                             Consumer<com.corn.trade.type.OrderStatus> mainExecutionListener) throws BrokerException {
 		startPrice = price;
 		quantity = qtt;
 		this.positionType = positionType;
-		mainExecutionListener.accept(true);
+		mainExecutionListener.accept(com.corn.trade.type.OrderStatus.FILLED);
 		return new OrderBracketIds("1", "2", "3");
 	}
 
@@ -181,10 +189,10 @@ public class SimulationBroker extends Broker {
 	                       Double limit,
 	                       ActionType actionType,
 	                       OrderType orderType,
-	                       Consumer<Boolean> executionListener) throws BrokerException {
+	                       Consumer<com.corn.trade.type.OrderStatus> executionListener) throws BrokerException {
 		log.debug("Placing order with quantity {} at price {} ", quantity, price);
 		this.quantity -= quantity;
-		executionListener.accept(true);
+		executionListener.accept(OrderStatus.FILLED);
 	}
 
 	@Override

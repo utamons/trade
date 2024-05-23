@@ -422,6 +422,11 @@ public class TradeController implements TradeViewListener {
 
 	private void openPosition(TradeData tradeData, String brokerName) {
 		int id = currentBroker.addPositionListener((position) -> {
+			if (!Objects.equals(positionListenerIds.get(position.getSymbol()),position.getListenerId())) {
+				log.warn("Listener id mismatch for symbol: {} expected: {} actual: {}", position.getSymbol(),
+				         positionListenerIds.get(position.getSymbol()), position.getListenerId());
+				return;
+			}
 			if (position.getQuantity() == 0) {
 				removePositionListener(position.getSymbol());
 			}
@@ -437,6 +442,7 @@ public class TradeController implements TradeViewListener {
 		if (positionListenerIds.containsKey(assetName)) {
 			log.debug("Removing position listener with id {}", positionListenerIds.get(assetName));
 			currentBroker.removePositionListener(positionListenerIds.get(assetName));
+			positionListenerIds.remove(assetName);
 		}
 	}
 

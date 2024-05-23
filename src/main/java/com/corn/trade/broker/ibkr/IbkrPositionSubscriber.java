@@ -6,8 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
@@ -36,8 +36,12 @@ public class IbkrPositionSubscriber {
 		Map<Integer, Consumer<Position>> contractGroup = listeners.get(getContractKey(contractId, account));
 		if (contractGroup != null) {
 			// Listeners can remove themselves from the list on accept(), so we need to make a copy
-			List<Consumer<Position>> listeners = List.copyOf(contractGroup.values());
-			listeners.forEach(listener -> listener.accept(position));
+			Set<Map.Entry<Integer, Consumer<Position>>> listeners = Set.copyOf(contractGroup.entrySet());
+			listeners.forEach(listener -> {
+				// Include the listener id in the position for debugging purposes
+				Position positionCopy = position.copy().withListenerId(listener.getKey()).build();
+				listener.getValue().accept(positionCopy);
+			});
 		}
 	}
 
@@ -45,20 +49,39 @@ public class IbkrPositionSubscriber {
 		Map<Integer, Consumer<Position>> contractGroup =
 				this.listeners.computeIfAbsent(getContractKey(contractId, account), k -> new ConcurrentHashMap<>());
 		contractGroup.put(++listenerId, listener);
+		log.debug("Added listener with id: {} for contractId: {}, account: {}", listenerId, contractId, account);
 		return listenerId;
 	}
 
 	public synchronized void removeListener(int contractId, String account, int listenerId) {
-		Map<Integer, Consumer<Position>> contractGroup = this.listeners.get(getContractKey(contractId, account));
+		log.debug("Removing listener with id: {} for contractId: {}, account: {}", listenerId, contractId, account);
+		Map<Integer, Consumer<Position>> contractGroup = listeners.get(getContractKey(contractId, account));
 		if (contractGroup == null) {
+			log.warn("Cannot remove listener with id: {} No listeners group found for contractId: {}, account: {}", listenerId, contractId, account);
 			return;
 		}
 
-		contractGroup.remove(listenerId);
+		Consumer<Position> listener = contractGroup.remove(listenerId);
+		if (listener == null) {
+			log.warn("Cannot remove listener with id: {} No listener found in the group for contractId: {}, account: {}", listenerId, contractId, account);
+			return;
+		}
 
 		if (contractGroup.isEmpty()) {
 			listeners.remove(getContractKey(contractId, account));
 			log.warn("No more listeners for contractId: {}, account: {}", contractId, account);
+		} else {
+			log.debug("Remaining listeners for contractId: {}, account: {}", contractId, account);
+			contractGroup.forEach((key, value) -> log.debug("Listener id: {}", key));
+		}
+	}
+
+	public void removeAllListeners(int contractId, String account) {
+		Map<Integer, Consumer<Position>> contractGroup = listeners.remove(getContractKey(contractId, account));
+		if (contractGroup != null) {
+			log.debug("Removed all listeners for contractId: {}, account: {}", contractId, account);
+		} else {
+			log.debug("No listeners group found for contractId: {}, account: {}", contractId, account);
 		}
 	}
 

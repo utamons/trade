@@ -210,6 +210,11 @@ public class IbkrBroker extends Broker {
 	}
 
 	@Override
+	public void removeAllPositionListeners() throws BrokerException {
+		positionSubscriber.removeAllListeners(contractDetails.contract().conid(), getAccount());
+	}
+
+	@Override
 	protected void requestPositionUpdates() throws BrokerException {
 		positionSubscriber.subscribe(assetName, contractDetails.contract().conid(), getAccount());
 	}
@@ -320,7 +325,7 @@ public class IbkrBroker extends Broker {
 	                                             Double takeProfit,
 	                                             PositionType positionType,
 	                                             com.corn.trade.type.OrderType tOrderType,
-	                                             Consumer<Boolean> mainExecutionListener) throws BrokerException {
+	                                             Consumer<com.corn.trade.type.OrderStatus> mainExecutionListener) throws BrokerException {
 		Action action = positionType == PositionType.LONG ? Action.BUY : Action.SELL;
 		try {
 			return ibkrOrderHelper.placeOrderWithBracket(contractDetails,
@@ -343,7 +348,7 @@ public class IbkrBroker extends Broker {
 	                       Double limit,
 	                       ActionType actionType,
 	                       com.corn.trade.type.OrderType tOrderType,
-	                       Consumer<Boolean> executionListener) throws BrokerException {
+	                       Consumer<com.corn.trade.type.OrderStatus> executionListener) throws BrokerException {
 		Action action = actionType == ActionType.BUY ? Action.BUY : Action.SELL;
 		try {
 			ibkrOrderHelper.placeOrder(contractDetails,
