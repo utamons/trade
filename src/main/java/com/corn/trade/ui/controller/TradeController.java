@@ -58,9 +58,9 @@ public class TradeController implements TradeViewListener {
 	private static final Logger                      log                 = LoggerFactory.getLogger(TradeController.class);
 	private final        AssetService                assetService;
 	private final        HashMap<String, TradeState> tradeStateMap       = new HashMap<>();
-	private final        Timer                       lockButtonsTimer;
-	private final        Map<String, Integer>        positionListenerIds = new HashMap<>();
-	private final        RiskManager                 riskManager;
+	private final        Timer                         lockButtonsTimer;
+	private final        Map<String, PositionListener> positionListeners = new HashMap<>();
+	private final        RiskManager                   riskManager;
 	private              TradeView                   view;
 	private              Double                      level;
 	private              Double                      techStopLoss;
@@ -450,9 +450,9 @@ public class TradeController implements TradeViewListener {
 
 	private void openPosition(TradeData tradeData, String brokerName) {
 		int id = currentBroker.addPositionListener((position) -> {
-			if (!Objects.equals(positionListenerIds.get(position.getSymbol()), position.getListenerId())) {
+			if (!Objects.equals(positionListeners.get(position.getSymbol()).id, position.getListenerId())) {
 				log.warn("Listener id mismatch for symbol: {} expected: {} actual: {}", position.getSymbol(),
-				         positionListenerIds.get(position.getSymbol()), position.getListenerId());
+				         positionListeners.get(position.getSymbol()), position.getListenerId());
 				return;
 			}
 			if (position.getQuantity() == 0) {
@@ -461,16 +461,19 @@ public class TradeController implements TradeViewListener {
 			positionController.updatePosition(brokerName, tradeData, position);
 		});
 		log.debug("Position listener added with id {}", id);
-		positionListenerIds.put(currentBroker.getAssetName(), id);
+		positionListeners.put(currentBroker.getAssetName(), new PositionListener(id, currentBroker));
 
 		currentBroker.openPosition(tradeData, riskManager);
 	}
 
 	private void removePositionListener(String assetName) {
-		if (positionListenerIds.containsKey(assetName)) {
-			log.debug("Removing position listener with id {}", positionListenerIds.get(assetName));
-			currentBroker.removePositionListener(positionListenerIds.get(assetName));
-			positionListenerIds.remove(assetName);
+		if (positionListeners.containsKey(assetName)) {
+			PositionListener positionListener = positionListeners.get(assetName);
+			log.debug("Removing position listener with id {}", positionListener.id);
+			positionListener.broker.removePositionListener(positionListener.id);
+			positionListeners.remove(assetName);
+		} else {
+			log.warn("No position listener found for asset {}", assetName);
 		}
 	}
 
@@ -510,5 +513,8 @@ public class TradeController implements TradeViewListener {
 	                          Double level,
 	                          Double techStopLoss,
 	                          Double goal) {}
+
+	private record PositionListener(int id, Broker broker) {
+	}
 }
 
