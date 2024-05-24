@@ -39,7 +39,7 @@ import java.io.InputStream;
 import java.util.Properties;
 
 public abstract class BaseWindow {
-	protected static final String  version               = "2.0.8";
+	protected static final String  version               = "2.0.9";
 	protected static final int     RESIZE_EDGE           = 4;
 	protected static final int     FIELD_HEIGHT          = 40;
 	protected static final Theme   DARK_THEME            = new OneDarkTheme();
@@ -60,6 +60,7 @@ public abstract class BaseWindow {
 	public static          double  MAX_DAILY_LOSS        = -30.0;
 	public static          double  MAX_WEEKLY_LOSS       = -90.0;
 	public static          double  MAX_MONTHLY_LOSS      = -300.0;
+	public static          double  DEFAULT_STOP_LOSS_PERCENTAGE = 4;
 	protected final        JFrame  frame;
 
 	public BaseWindow(String[] args, String appName, Dimension size) {
@@ -120,6 +121,7 @@ public abstract class BaseWindow {
 			MAX_DAILY_LOSS = Double.parseDouble(configProps.getProperty("max_daily_loss", "-30.0"));
 			MAX_WEEKLY_LOSS = Double.parseDouble(configProps.getProperty("max_weekly_loss", "-90.0"));
 			MAX_MONTHLY_LOSS = Double.parseDouble(configProps.getProperty("max_monthly_loss", "-300.0"));
+			DEFAULT_STOP_LOSS_PERCENTAGE = Double.parseDouble(configProps.getProperty("default_stop_loss_percentage", "4"));
 
 		} catch (IOException ex) {
 			log.error("Error loading properties file: {}, {}", "D:\\bin\\trade.properties", ex.getMessage());

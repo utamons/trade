@@ -17,6 +17,8 @@
  */
 package com.corn.trade.model;
 
+import static com.corn.trade.BaseWindow.DEFAULT_STOP_LOSS_PERCENTAGE;
+
 @SuppressWarnings("unused")
 public class ExtendedTradeContext {
 	private final Double ask;
@@ -87,6 +89,14 @@ public class ExtendedTradeContext {
 
 	public Double getMaxRangeLeftForPos() {
 		return maxRangeLeftForPos;
+	}
+
+	public double getDefaultStopLoss() {
+		if (adr == null) {
+			 return 0.05;
+		} else {
+			return adr / 100 * DEFAULT_STOP_LOSS_PERCENTAGE;
+		}
 	}
 
 	public static final class ExtendedTradeContextBuilder {

@@ -53,7 +53,7 @@ import static com.corn.trade.util.Util.round;
 
 
 public class TradeController implements TradeViewListener {
-	public static final  double                      DEFAULT_STOP_LOSS   = 0.05;
+	public               double                      DEFAULT_STOP_LOSS = 0.05;
 	public static final  int                         SEND_ORDER_DELAY    = 3000;
 	private static final Logger                      log                 = LoggerFactory.getLogger(TradeController.class);
 	private final        AssetService                assetService;
@@ -314,6 +314,7 @@ public class TradeController implements TradeViewListener {
 		double maxRangeLeftForPos   = ctx.getMaxRangeLeftForPos();
 		double price                = tradeContext.getPrice();
 		double slippage             = ctx.getSlippage();
+		DEFAULT_STOP_LOSS           = round(ctx.getDefaultStopLoss());
 
 		view.info().setPrice(fmt(price));
 		view.info().setMaxRangePassed(fmt(maxRangePassedForPos));
