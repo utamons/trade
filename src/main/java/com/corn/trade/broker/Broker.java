@@ -138,6 +138,7 @@ public abstract class Broker {
 		TradeService tradeService = new TradeService();
 		try {
 			if (tradeService.getOpenTrade(assetName, exchangeName) != null) {
+				log.error("There is already an open position for {}", assetName);
 				throw new BrokerException("There is already an open position for this asset.");
 			}
 		} catch (DBException e) {

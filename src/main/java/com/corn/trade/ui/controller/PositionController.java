@@ -240,8 +240,9 @@ public class PositionController {
 
 			double     price  = positions.get(symbol).getMarketValue() / Math.abs(positions.get(symbol).getQuantity());
 			ActionType action = positionType == PositionType.LONG ? ActionType.SELL : ActionType.BUY;
+			double delta = positionType == PositionType.LONG ? -0.05 : 0.05;
 
-			broker.placeOrder(qtt, null, price, action, OrderType.LMT, getOrderExecutionHandler(symbol, qtt, initialQtt));
+			broker.placeOrder(qtt, null, price + delta, action, OrderType.LMT, getOrderExecutionHandler(symbol, qtt, initialQtt));
 		};
 	}
 
