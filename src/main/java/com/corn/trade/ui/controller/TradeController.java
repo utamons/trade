@@ -453,7 +453,7 @@ public class TradeController implements TradeViewListener {
 		int id = currentBroker.addPositionListener((position) -> {
 			if (!Objects.equals(positionListeners.get(position.getSymbol()).id, position.getListenerId())) {
 				log.warn("Listener id mismatch for symbol: {} expected: {} actual: {}", position.getSymbol(),
-				         positionListeners.get(position.getSymbol()), position.getListenerId());
+				         positionListeners.get(position.getSymbol()).id(), position.getListenerId());
 				return;
 			}
 			if (position.getQuantity() == 0) {

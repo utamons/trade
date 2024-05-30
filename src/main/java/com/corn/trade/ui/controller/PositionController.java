@@ -240,7 +240,7 @@ public class PositionController {
 
 			double     price  = positions.get(symbol).getMarketValue() / Math.abs(positions.get(symbol).getQuantity());
 			ActionType action = positionType == PositionType.LONG ? ActionType.SELL : ActionType.BUY;
-			double delta = positionType == PositionType.LONG ? -0.05 : 0.05;
+			double delta = positionType == PositionType.LONG ? -0.1 : 0.1;
 
 			broker.placeOrder(qtt, null, price + delta, action, OrderType.LMT, getOrderExecutionHandler(symbol, qtt, initialQtt));
 		};
@@ -249,13 +249,13 @@ public class PositionController {
 	// Get order execution handler for the position
 	private Consumer<com.corn.trade.type.OrderStatus> getOrderExecutionHandler(String symbol, long orderQuantity, long initialQuantity) {
 		return executed -> {
-			if (executed.equals(OrderStatus.FILLED)) {
+			if (executed.equals(OrderStatus.FILLED) && positions.containsKey(symbol)) {
 				Position position = positions.get(symbol);
 				if (position != null) {
 					long newQuantity = position.getQuantity() - orderQuantity;
 					updateButtonStates(positionRows.get(symbol), initialQuantity, newQuantity);
 				}
-			} else {
+			} else if (positions.containsKey(symbol)) {
 				updateButtonStates(positionRows.get(symbol), initialQuantity,
 				                   Math.abs(positions.get(symbol).getQuantity()));
 			}
