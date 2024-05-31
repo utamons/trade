@@ -17,7 +17,10 @@
  */
 package com.corn.trade;
 
+import com.corn.trade.entity.Trade;
 import com.corn.trade.jpa.JpaUtil;
+import com.corn.trade.jpa.TradeRepo;
+import com.corn.trade.type.TradeStatus;
 import com.corn.trade.ui.view.TradePanel;
 import com.corn.trade.ui.controller.TradeController;
 import com.corn.trade.util.Util;
@@ -26,11 +29,13 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
 
 public class TradeWindow extends BaseWindow {
 	private static final  int    PREF_HEIGHT  = 850;
 	private static final  int    PREF_WIDTH   = 450;
-	private static final Logger log          = LoggerFactory.getLogger(TradeWindow.class);
+	private static final Logger    log       = LoggerFactory.getLogger(TradeWindow.class);
+	private final        TradeRepo tradeRepo = new TradeRepo();
 
 	public TradeWindow(String[] args) {
 		super(args, "Trade", new Dimension(PREF_WIDTH, PREF_HEIGHT));
@@ -42,12 +47,70 @@ public class TradeWindow extends BaseWindow {
 		SwingUtilities.invokeLater(() -> {
 			TradeWindow tradeWindow = new TradeWindow(args);
 			tradeWindow.display();
+			tradeWindow.checkOpenTrades();
 		});
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 			log.debug("Application is closing, releasing JPA resources...");
 			JpaUtil.close(); // Assuming JPAUtil.close() is a static method to close EntityManagerFactory
 		}));
 	}
+
+	private void checkOpenTrades() {
+		java.util.List<Trade> openTrades = tradeRepo.findAllOpen();
+
+		if (!openTrades.isEmpty()) {
+			showOpenTradesWarning(openTrades);
+		}
+	}
+
+	private void showOpenTradesWarning(java.util.List<Trade> openTrades) {
+		String message = "You have " + openTrades.size() + " trade(s) open:";
+		JDialog dialog = new JDialog(this.frame, "Warning", true);
+		dialog.setLayout(new BorderLayout());
+
+		// Create a main panel with padding
+		JPanel mainPanel = new JPanel();
+		mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+		mainPanel.setLayout(new BorderLayout(10, 10));
+
+		JLabel messageLabel = new JLabel(message);
+		mainPanel.add(messageLabel, BorderLayout.NORTH);
+
+		List<String> assetInfo = openTrades.stream()
+		                         .map(trade -> trade.getAsset().getName() + " - " + trade.getCreatedAt())
+		                         .toList();
+
+		String assetListHtml = "<html>" + String.join("<br>", assetInfo) + "</html>";
+		JLabel assetListLabel = new JLabel(assetListHtml);
+		JScrollPane scrollPane = new JScrollPane(assetListLabel);
+		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		mainPanel.add(scrollPane, BorderLayout.CENTER);
+
+		JPanel buttonPanel = new JPanel();
+		JButton closeAllButton = new JButton("Close all");
+		JButton cancelButton = new JButton("Cancel");
+
+		closeAllButton.addActionListener(e -> {
+			openTrades.forEach(trade -> {
+				trade.setStatus(TradeStatus.CLOSED.name());
+				tradeRepo.update(trade);
+			});
+			dialog.dispose();
+		});
+
+		cancelButton.addActionListener(e -> dialog.dispose());
+
+		buttonPanel.add(closeAllButton);
+		buttonPanel.add(cancelButton);
+
+		mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+		dialog.add(mainPanel, BorderLayout.CENTER);
+		dialog.setSize(300, 200);
+		dialog.setLocationRelativeTo(this.frame);
+		dialog.setVisible(true);
+	}
+
 
 	@Override
 	protected void initializeComponents() {

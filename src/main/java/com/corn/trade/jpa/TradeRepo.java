@@ -53,4 +53,10 @@ public class TradeRepo extends JpaRepo<Trade, Long> {
 		                                          .setParameter("status", TradeStatus.CLOSED.name())
 		                                          .getSingleResult());
 	}
+
+	public List<Trade> findAllOpen() {
+		return executeInsideEntityManager(em -> em.createQuery("select a from Trade a where a.status = :status", Trade.class)
+		                                        .setParameter("status", TradeStatus.OPEN.name())
+		                                        .getResultList());
+	}
 }
