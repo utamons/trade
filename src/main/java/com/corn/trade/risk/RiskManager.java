@@ -70,6 +70,9 @@ public class RiskManager {
 		if (daily <= MAX_DAILY_LOSS) {
 			canTrade = false;
 			riskError = "Daily loss limit reached";
+		} else {
+			canTrade = true;
+			riskError = null;
 		}
 	}
 
@@ -114,7 +117,7 @@ public class RiskManager {
 
 
 	public boolean canTrade() {
-		return STAGE == Stage.DEV || SIMULATION_MODE || canTrade;
+		return STAGE == Stage.DEV || canTrade;
 	}
 
 	public String getRiskError() {
