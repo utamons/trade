@@ -70,6 +70,12 @@ public class RiskManager {
 		if (daily <= MAX_DAILY_LOSS) {
 			canTrade = false;
 			riskError = "Daily loss limit reached";
+		} else if (daily <= MAX_WEEKLY_LOSS ) {
+			canTrade = false;
+			riskError = "Weekly loss limit reached";
+		} else if (daily <= MAX_MONTHLY_LOSS) {
+			canTrade = false;
+			riskError = "Monthly loss limit reached";
 		} else {
 			canTrade = true;
 			riskError = null;
