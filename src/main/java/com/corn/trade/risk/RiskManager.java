@@ -70,10 +70,10 @@ public class RiskManager {
 		if (daily <= MAX_DAILY_LOSS) {
 			canTrade = false;
 			riskError = "Daily loss limit reached";
-		} else if (daily <= MAX_WEEKLY_LOSS ) {
+		} else if (daily <= MAX_WEEKLY_LOSS && !SIMULATION_MODE) {
 			canTrade = false;
 			riskError = "Weekly loss limit reached";
-		} else if (daily <= MAX_MONTHLY_LOSS) {
+		} else if (daily <= MAX_MONTHLY_LOSS && !SIMULATION_MODE) {
 			canTrade = false;
 			riskError = "Monthly loss limit reached";
 		} else {
@@ -104,7 +104,7 @@ public class RiskManager {
 		}
 
 		Double weekly = pnlRepo.countForDateRange(startOfWeek, today);
-		if (weekly != null && weekly <= MAX_WEEKLY_LOSS) {
+		if (weekly != null && weekly <= MAX_WEEKLY_LOSS && !SIMULATION_MODE) {
 			canTrade = false;
 			riskError = "Weekly loss limit reached";
 			return;
@@ -112,7 +112,7 @@ public class RiskManager {
 
 
 		Double monthly = pnlRepo.countForDateRange(startOfMonth, today);
-		if (monthly != null && monthly <= MAX_MONTHLY_LOSS) {
+		if (monthly != null && monthly <= MAX_MONTHLY_LOSS && !SIMULATION_MODE) {
 			canTrade = false;
 			riskError = "Monthly loss limit reached";
 			return;
