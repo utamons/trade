@@ -112,7 +112,7 @@ public class PositionController {
 		Long         oldQtt       = oldQuantities.get(symbol); // old quantity from previous position state
 
 
-		double price = position.getMarketValue() / position.getQuantity(); // current price of the position
+		double price = Math.abs(position.getMarketValue() / position.getQuantity()); // current price of the position
 		double goal  = tradeData.getGoal(); // goal price
 
 		// distance from stop loss to goal
@@ -238,9 +238,12 @@ public class PositionController {
 			                                       initialQtt,
 			                                       Math.abs(positions.get(symbol).getQuantity()));
 
-			double     price  = positions.get(symbol).getMarketValue() / Math.abs(positions.get(symbol).getQuantity());
+			double     price  = Math.abs(positions.get(symbol).getMarketValue() / positions.get(symbol).getQuantity());
+			log.info("Calculated price for {} = {}", qtt, price);
+
 			ActionType action = positionType == PositionType.LONG ? ActionType.SELL : ActionType.BUY;
 			double delta = positionType == PositionType.LONG ? -0.1 : 0.1;
+			log.info("Position for {} is {}, delta = {}, limit price = {}",symbol, positionType, delta, price + delta);
 
 			broker.placeOrder(qtt, null, price + delta, action, OrderType.LMT, getOrderExecutionHandler(symbol, qtt, initialQtt));
 		};
