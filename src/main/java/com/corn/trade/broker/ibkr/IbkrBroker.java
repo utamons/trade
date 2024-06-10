@@ -138,7 +138,7 @@ public class IbkrBroker extends Broker {
 				}
 				try {
 					notifyTradeContext();
-				} catch (BrokerException e) {
+				} catch (Exception e) {
 					log.error("{}", e.getMessage());
 				}
 			}

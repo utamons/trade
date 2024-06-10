@@ -33,10 +33,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import static com.corn.trade.util.Util.round;
@@ -45,7 +45,7 @@ public abstract class Broker {
 	public static final    int                                  BARS_FOR_ADR      = 10;
 	protected static final int                                  ADR_BARS         = 20;
 	protected static final Logger                               log              = LoggerFactory.getLogger(Broker.class);
-	protected final        Map<Integer, Consumer<TradeContext>> contextListeners = new HashMap<>();
+	protected final        Map<Integer, Consumer<TradeContext>> contextListeners = new ConcurrentHashMap<>();
 	protected              List<Bar>                            adrBarList        = new java.util.ArrayList<>();
 	protected              String                               exchangeName;
 	protected              Double                               adr;
@@ -219,14 +219,14 @@ public abstract class Broker {
 	                                Consumer<com.corn.trade.type.OrderStatus> executionListener) throws BrokerException;
 
 
-	protected void notifyTradeContext() throws BrokerException {
+	protected void notifyTradeContext() {
 		calculateFilteredAdr();
 		if (contextListeners.isEmpty()) return;
 		TradeContext context = createTradeContext();
 		contextListeners.values().forEach(listener -> listener.accept(context));
 	}
 
-	private void calculateFilteredAdr() throws BrokerException {
+	private void calculateFilteredAdr() {
 		if (adr != null) return;
 		if (adrBarList.isEmpty()) {
 			throw new BrokerException("No ADR data available.");
