@@ -439,6 +439,10 @@ public class TradeController implements TradeViewListener {
 			log.debug("Trade data is null");
 			return;
 		}
+		if (tradeData.tooFar()) {
+			view.messagePanel().error("Limit price is too far from the current price");
+			return;
+		}
 		pauseButtons();
 		TradeData order = tradeData.copy().withOrderStop(null).build();
 		try {

@@ -212,6 +212,15 @@ public class TradeData {
 		                     outputExpected, gain, riskRewardRatioPercent, risk, riskPercent);
 	}
 
+	public boolean tooFar() {
+		if (price == null || orderLimit == null) {
+			return false;
+		}
+		double difference = Math.abs(price - orderLimit);
+		double threshold = price * 0.01;
+		return difference > threshold;
+	}
+
 	public static class Builder {
 		private PositionType   positionType;
 		private EstimationType estimationType;
