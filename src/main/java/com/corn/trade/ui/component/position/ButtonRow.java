@@ -20,6 +20,8 @@ package com.corn.trade.ui.component.position;
 import javax.swing.*;
 import java.awt.*;
 
+import static com.corn.trade.util.Util.unbindEnterKey;
+
 @SuppressWarnings("unused")
 class ButtonRow extends JPanel {
 	private final JButton buttonBE, button25, button50, button75, button100;
@@ -49,6 +51,12 @@ class ButtonRow extends JPanel {
 		add(button50);
 		add(button75);
 		add(button100);
+
+		unbindEnterKey(buttonBE);
+		unbindEnterKey(button25);
+		unbindEnterKey(button50);
+		unbindEnterKey(button75);
+		unbindEnterKey(button100);
 	}
 
 	// Getter methods if needed

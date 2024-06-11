@@ -24,6 +24,11 @@ import java.math.RoundingMode;
 
 public class Util {
 
+	public static void unbindEnterKey(JButton button) {
+		InputMap inputMap = button.getInputMap(JComponent.WHEN_FOCUSED);
+		inputMap.put(KeyStroke.getKeyStroke("ENTER"), "none");
+	}
+
 	public static void showErrorDlg(Component frame, String error, boolean errorEnabled) {
 		if (errorEnabled)
 			JOptionPane.showMessageDialog(frame, error, "Error", JOptionPane.ERROR_MESSAGE);

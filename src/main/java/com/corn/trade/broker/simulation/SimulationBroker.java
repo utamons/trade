@@ -78,7 +78,7 @@ public class SimulationBroker extends Broker {
 			                            .withMarketValue(quantity * price)
 			                            .withUnrealizedPnl(unRealizedPnl)
 			                            .build();
-			positionListeners.values().forEach(pl -> pl.accept(position));
+			positionListeners.forEach((key, value) -> value.accept(position.copy().withListenerId(key).build()));
 		});
 	}
 

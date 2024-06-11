@@ -27,6 +27,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
+import static com.corn.trade.util.Util.unbindEnterKey;
+
 public class TradePanel extends BasePanel implements TradeView {
 
 	public static final int                TEXT_FIELD_SIZE = 10;
@@ -97,14 +99,17 @@ public class TradePanel extends BasePanel implements TradeView {
 
 		lockBtn = new JButton("Lock");
 		lockBtn.addActionListener(e -> controller.onLock());
+		unbindEnterKey(lockBtn);
 
 		stopLimitBtn = new JButton("Stop-Limit");
 		stopLimitBtn.addActionListener(e -> controller.onStopLimit());
 		stopLimitBtn.setEnabled(false);
+		unbindEnterKey(stopLimitBtn);
 
 		limitBtn = new JButton("Limit");
 		limitBtn.addActionListener(e -> controller.onLimit());
 		limitBtn.setEnabled(false);
+		unbindEnterKey(limitBtn);
 
 		orderPanel.add(lockBtn);
 		orderPanel.add(trafficLight);
