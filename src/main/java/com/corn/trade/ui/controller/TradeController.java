@@ -443,6 +443,10 @@ public class TradeController implements TradeViewListener {
 			view.messagePanel().error("Limit price is too far from the current price");
 			return;
 		}
+		if (tradeData.isStopLossHit()) {
+			view.messagePanel().error("Stop loss is hit");
+			return;
+		}
 		pauseButtons();
 		TradeData order = tradeData.copy().withOrderStop(null).build();
 		try {

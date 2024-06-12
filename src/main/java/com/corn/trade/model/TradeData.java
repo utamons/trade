@@ -214,11 +214,22 @@ public class TradeData {
 
 	public boolean tooFar() {
 		if (price == null || orderLimit == null) {
-			return false;
+			return false; // Or handle it as an error case
 		}
+
 		double difference = Math.abs(price - orderLimit);
 		double threshold = price * 0.01;
 		return difference > threshold;
+	}
+
+	public boolean isStopLossHit() {
+		double effectiveStopLoss = getEffectiveStopLoss();
+		return (positionType == PositionType.LONG && price <= effectiveStopLoss) ||
+		    (positionType == PositionType.SHORT && price >= effectiveStopLoss);
+	}
+
+	private double getEffectiveStopLoss() {
+		return techStopLoss != null ? techStopLoss : stopLoss;
 	}
 
 	public static class Builder {
