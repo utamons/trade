@@ -191,9 +191,7 @@ public class TradeController implements TradeViewListener {
 	@Override
 	public void onPositionTypeChange(PositionType positionType) {
 		this.positionType = positionType;
-		view.techSL().setControlCheckBoxState(false);
-		view.techSL().setValue(null);
-		setDefaultStopLoss(level);
+		setDefaultStopLoss(level, true);
 		view.goal().setValue(null);
 		goal = null;
 		techStopLoss = null;
@@ -223,15 +221,20 @@ public class TradeController implements TradeViewListener {
 			return;
 		}
 		this.level = level;
-		setDefaultStopLoss(level);
+		setDefaultStopLoss(level,true);
 		orderClean = false;
 		goalWarning(false);
 		checkButtons();
 	}
 
-	private void setDefaultStopLoss(Double level) {
+	private void setDefaultStopLoss(Double level, boolean activate) {
 		if (level != null) {
-			view.techSL().setDefaultValue(positionType.equals(PositionType.LONG) ? level - DEFAULT_STOP_LOSS : level + DEFAULT_STOP_LOSS);
+			double stopLoss = positionType.equals(PositionType.LONG) ? level - DEFAULT_STOP_LOSS : level + DEFAULT_STOP_LOSS;
+			view.techSL().setDefaultValue(stopLoss);
+			if (activate) {
+				view.techSL().setValue(stopLoss);
+				view.techSL().setControlCheckBoxState(true);
+			}
 		}
 	}
 
@@ -416,7 +419,7 @@ public class TradeController implements TradeViewListener {
 		estimationType = tradeState.estimationType;
 
 		view.techSL().setControlCheckBoxState(tradeState.techStopLoss != null);
-		setDefaultStopLoss(level);
+		setDefaultStopLoss(level, false);
 	}
 
 	@Override
