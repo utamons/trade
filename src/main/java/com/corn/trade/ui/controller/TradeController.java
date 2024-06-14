@@ -234,6 +234,7 @@ public class TradeController implements TradeViewListener {
 			if (activate) {
 				view.techSL().setValue(stopLoss);
 				view.techSL().setControlCheckBoxState(true);
+				this.techStopLoss = stopLoss;
 			}
 		}
 	}
