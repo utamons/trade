@@ -55,7 +55,7 @@ public class LoggerSetup {
 		TimeBasedRollingPolicy<ILoggingEvent> rollingPolicy = new TimeBasedRollingPolicy<>();
 		rollingPolicy.setContext(loggerContext);
 		rollingPolicy.setParent(rollingFileAppender);
-		rollingPolicy.setFileNamePattern("E://log//" + (stage == Stage.PROD ? "prod_" : "dev_") + "trade.%d{yyyy-MM-dd}.log");
+		rollingPolicy.setFileNamePattern("E://log//" + (stage == Stage.PROD ? "prod_" : "dev_") + "trade.%d.log");
 		rollingPolicy.setMaxHistory(7);
 		rollingPolicy.start();
 
