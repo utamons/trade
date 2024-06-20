@@ -463,6 +463,10 @@ public class TradeController implements TradeViewListener {
 
 	private void openPosition(TradeData tradeData, String brokerName) {
 		int id = currentBroker.addPositionListener((position) -> {
+			if (positionListeners.get(position.getSymbol()) == null) {
+				log.warn("No position listener found for symbol: {} (we haven't had time to add yet?)", position.getSymbol());
+				return;
+			}
 			if (!Objects.equals(positionListeners.get(position.getSymbol()).id, position.getListenerId())) {
 				log.warn("Listener id mismatch for symbol: {} expected: {} actual: {}", position.getSymbol(),
 				         positionListeners.get(position.getSymbol()).id(), position.getListenerId());
