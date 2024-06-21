@@ -126,6 +126,13 @@ class IbkrOrderHelper {
 
 		Order main = prepareOrder(quantity, stop, limit, action, orderType, false);
 
+		Order takeProfit = new Order();
+		takeProfit.action(action == Action.SELL ? Action.BUY : Action.SELL);
+		takeProfit.orderType(OrderType.LMT);
+		takeProfit.totalQuantity(Decimal.get(quantity));
+		takeProfit.lmtPrice(round(takeProfitPrice));
+		takeProfit.transmit(false);
+
 		Order stopLoss = new Order();
 		stopLoss.action(action == Action.SELL ? Action.BUY : Action.SELL);
 		stopLoss.orderType(OrderType.STP);
@@ -163,7 +170,16 @@ class IbkrOrderHelper {
 			         round(takeProfitPrice));
 		}
 
+		takeProfit.parentId(main.orderId());
 		stopLoss.parentId(main.orderId());
+
+		ibkrConnectionHandler.controller()
+		                     .placeOrModifyOrder(contractDetails.contract(),
+		                                         takeProfit,
+		                                         new IbkrOrderHandler(contractDetails.contract(),
+		                                                              takeProfit));
+
+		log.info("Placed TP id {} {} {}", takeProfit.orderId(), contractDetails.contract().symbol(), takeProfitPrice);
 
 		ibkrConnectionHandler.controller()
 		                     .placeOrModifyOrder(contractDetails.contract(),
@@ -173,7 +189,7 @@ class IbkrOrderHelper {
 
 		log.info("Placed SL id {} {} {}", stopLoss.orderId(), contractDetails.contract().symbol(), stopLossPrice);
 
-		return new OrderBracketIds(String.valueOf(main.orderId()), String.valueOf(stopLoss.orderId()), null);
+		return new OrderBracketIds(String.valueOf(main.orderId()), String.valueOf(stopLoss.orderId()), String.valueOf(takeProfit.orderId()));
 	}
 
 	public void cleanAllOrdersForContract(Contract contract) {
