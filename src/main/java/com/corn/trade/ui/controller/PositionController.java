@@ -38,6 +38,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import static java.lang.Math.abs;
+
 /**
  * Controller for position view. Supports many positions tracking at once.
  */
@@ -63,7 +65,8 @@ public class PositionController {
 	}
 
 	private static boolean isBefore(PositionType positionType, double price, double aPoint) {
-		return (positionType == PositionType.LONG && price < aPoint) || (positionType == PositionType.SHORT && price > aPoint);
+		return (positionType == PositionType.LONG && price < aPoint) ||
+		       (positionType == PositionType.SHORT && price > aPoint);
 	}
 
 	private static double getUnrealizedPnl(Position position, long qtt, double price) {
@@ -84,21 +87,23 @@ public class PositionController {
 	 * Updates position state in real time
 	 *
 	 * @param brokerName - broker name
-	 * @param tradeData - current trade context
-	 * @param position  - current position data
+	 * @param tradeData  - current trade context
+	 * @param position   - current position data
 	 */
 	public void updatePosition(String brokerName, TradeData tradeData, Position position) {
 		Broker broker = BrokerFactory.findBroker(brokerName)
-		                             .orElseThrow(() -> new IllegalArgumentException("Broker not found - "+brokerName+"!"));
+		                             .orElseThrow(() -> new IllegalArgumentException("Broker not found - " +
+		                                                                             brokerName +
+		                                                                             "!"));
 		String symbol = position.getSymbol();
 		// Get or create UI view for the position ============================================
 		PositionRow positionRow = positionRows.computeIfAbsent(symbol, view::addPosition);
 
-		long         qtt          = Math.abs(position.getQuantity()); // current quantity
-		double be    = tradeData.getBreakEven(); // break even price
-		double sl    = tradeData.getStopLoss(); // stop loss price
+		long         qtt          = abs(position.getQuantity()); // current quantity
+		double       be           = tradeData.getBreakEven(); // break even price
+		double       sl           = tradeData.getStopLoss(); // stop loss price
 		PositionType positionType = tradeData.getPositionType(); // Long or Short position
-		ActionType action = positionType == PositionType.LONG ? ActionType.SELL : ActionType.BUY;
+		ActionType   action       = positionType == PositionType.LONG ? ActionType.SELL : ActionType.BUY;
 
 		if (!positions.containsKey(symbol)) {
 			// Initialize button listeners only once for the new position
@@ -109,14 +114,14 @@ public class PositionController {
 
 		// Prepare data =================================================
 
-		Long         oldQtt       = oldQuantities.get(symbol); // old quantity from previous position state
+		Long oldQtt = oldQuantities.get(symbol); // old quantity from previous position state
 
 
-		double price = Math.abs(position.getMarketValue() / position.getQuantity()); // current price of the position
+		double price = abs(position.getMarketValue() / position.getQuantity()); // current price of the position
 		double goal  = tradeData.getGoal(); // goal price
 
 		// distance from stop loss to goal
-		double dst           = Math.abs(price - sl) / Math.abs(goal - sl) * 100;
+		double dst           = abs(price - sl) / abs(goal - sl) * 100;
 		double unrealizedPnl = getUnrealizedPnl(position, qtt, price);
 
 		oldQuantities.put(symbol, qtt); // save current quantity for future comparison
@@ -236,31 +241,36 @@ public class PositionController {
 			long qtt = calculateQuantityForClosure(source,
 			                                       positionRow,
 			                                       initialQtt,
-			                                       Math.abs(positions.get(symbol).getQuantity()));
+			                                       abs(positions.get(symbol).getQuantity()));
 
-			double     price  = Math.abs(positions.get(symbol).getMarketValue() / positions.get(symbol).getQuantity());
+			double price = abs(positions.get(symbol).getMarketValue() / positions.get(symbol).getQuantity());
 			log.info("Calculated price for {} = {}", qtt, price);
 
 			ActionType action = positionType == PositionType.LONG ? ActionType.SELL : ActionType.BUY;
-			double delta = positionType == PositionType.LONG ? -0.1 : 0.1;
-			log.info("Position for {} is {}, delta = {}, limit price = {}",symbol, positionType, delta, price + delta);
+			double     delta  = positionType == PositionType.LONG ? -0.1 : 0.1;
+			log.info("Position for {} is {}, delta = {}, limit price = {}", symbol, positionType, delta, price + delta);
 
-			broker.placeOrder(qtt, null, price + delta, action, OrderType.LMT, getOrderExecutionHandler(symbol, qtt, initialQtt));
+			broker.placeOrder(qtt,
+			                  null,
+			                  price + delta,
+			                  action,
+			                  OrderType.LMT,
+			                  getOrderExecutionHandler(symbol, qtt, initialQtt));
 		};
 	}
 
 	// Get order execution handler for the position
-	private Consumer<com.corn.trade.type.OrderStatus> getOrderExecutionHandler(String symbol, long orderQuantity, long initialQuantity) {
+	private Consumer<com.corn.trade.type.OrderStatus> getOrderExecutionHandler(String symbol,
+	                                                                           long orderQuantity,
+	                                                                           long initialQuantity) {
 		return executed -> {
 			if (executed.equals(OrderStatus.FILLED) && positions.containsKey(symbol)) {
-				Position position = positions.get(symbol);
-				if (position != null) {
-					long newQuantity = position.getQuantity() - orderQuantity;
-					updateButtonStates(positionRows.get(symbol), initialQuantity, newQuantity);
-				}
+				Position position    = positions.get(symbol);
+				long     newQuantity = abs(position.getQuantity()) - abs(orderQuantity);
+				updateButtonStates(positionRows.get(symbol), initialQuantity, newQuantity);
 			} else if (positions.containsKey(symbol)) {
 				updateButtonStates(positionRows.get(symbol), initialQuantity,
-				                   Math.abs(positions.get(symbol).getQuantity()));
+				                   abs(positions.get(symbol).getQuantity()));
 			}
 			locked.remove(symbol);
 		};
