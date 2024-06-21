@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import static com.corn.trade.BaseWindow.MAX_RISK_REWARD_RATIO;
 import static java.lang.Math.abs;
 
 /**
@@ -140,7 +141,7 @@ public class PositionController {
 
 		if (isBefore(positionType, price, be)) {
 			positionRow.setPlColor(Color.RED.darker());
-		} else if (unrealizedPnl >= 0 && rr < 3) {
+		} else if (unrealizedPnl >= 0 && rr <= (1/MAX_RISK_REWARD_RATIO)) {
 			positionRow.setPlColor(Color.CYAN.darker());
 		} else {
 			positionRow.setPlColor(Color.GREEN.darker());

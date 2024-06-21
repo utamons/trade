@@ -21,6 +21,7 @@ import javax.swing.*;
 import java.awt.*;
 import com.corn.trade.ui.component.InfoField;
 
+import static com.corn.trade.BaseWindow.MAX_RISK_REWARD_RATIO;
 import static com.corn.trade.util.Util.fmt;
 
 public class PosInfoRow extends JPanel {
@@ -93,7 +94,7 @@ public class PosInfoRow extends JPanel {
 			rrField.setInfoFieldColor(Color.RED.darker());
 		else if (rr > 0 && rr <= 1)
 			rrField.setInfoFieldColor(Color.ORANGE);
-		else if (rr > 1 && rr <= 3)
+		else if (rr > 1 && rr <= (1/MAX_RISK_REWARD_RATIO))
 			rrField.setInfoFieldColor(Color.CYAN.darker());
 		else
 			rrField.setInfoFieldColor(Color.GREEN.darker());
@@ -101,10 +102,6 @@ public class PosInfoRow extends JPanel {
 
 	public void setPl(Double pl) {
 		plField.setInfoText(fmt(pl));
-	}
-
-	public void setPsColor(Color color) {
-		rrField.setInfoFieldColor(color);
 	}
 
 	public void setPlColor(Color color) {
