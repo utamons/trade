@@ -99,7 +99,7 @@ public class TradeCalc {
 		}
 		if (tradeData.getEstimationType() != EstimationType.MIN_GOAL &&
 		    tradeData.getPowerReserve() == null &&
-		    tradeData.getGoal() == null) {
+		    tradeData.getTarget() == null) {
 			throw new IllegalArgumentException("Goal or Power reserve is required");
 		}
 		// Validate non-null double fields and ensure they are not less than zero
@@ -112,7 +112,7 @@ public class TradeCalc {
 		if (tradeData.getPowerReserve() != null && tradeData.getPowerReserve() < 0) {
 			throw new IllegalArgumentException("Power reserve cannot be less than zero.");
 		}
-		if (tradeData.getGoal() != null && tradeData.getGoal() < 0) {
+		if (tradeData.getTarget() != null && tradeData.getTarget() < 0) {
 			throw new IllegalArgumentException("Goal cannot be less than zero.");
 		}
 		if (tradeData.getTechStopLoss() != null && tradeData.getTechStopLoss() < 0) {
@@ -137,22 +137,22 @@ public class TradeCalc {
 
 		// Goal validation based on PositionType
 		if (tradeData.getEstimationType() != EstimationType.MIN_GOAL &&
-		    tradeData.getGoal() != null &&
+		    tradeData.getTarget() != null &&
 		    tradeData.getPrice() != null) {
-			if (tradeData.getPositionType() == PositionType.LONG && tradeData.getGoal() <= tradeData.getPrice()) {
+			if (tradeData.getPositionType() == PositionType.LONG && tradeData.getTarget() <= tradeData.getPrice()) {
 				throw new IllegalArgumentException("Goal must be greater than price!");
-			} else if (tradeData.getPositionType() == PositionType.SHORT && tradeData.getGoal() >= tradeData.getPrice()) {
+			} else if (tradeData.getPositionType() == PositionType.SHORT && tradeData.getTarget() >= tradeData.getPrice()) {
 				throw new IllegalArgumentException("Goal must be less than price!");
 			}
 		}
 
 		// Goal and Level relationship validation
 		if (tradeData.getEstimationType() != EstimationType.MIN_GOAL &&
-		    tradeData.getGoal() != null &&
+		    tradeData.getTarget() != null &&
 		    tradeData.getLevel() != null) {
-			if (tradeData.getPositionType() == PositionType.LONG && tradeData.getGoal() <= tradeData.getLevel()) {
+			if (tradeData.getPositionType() == PositionType.LONG && tradeData.getTarget() <= tradeData.getLevel()) {
 				throw new IllegalArgumentException("Goal must be greater than level!");
-			} else if (tradeData.getPositionType() == PositionType.SHORT && tradeData.getGoal() >= tradeData.getLevel()) {
+			} else if (tradeData.getPositionType() == PositionType.SHORT && tradeData.getTarget() >= tradeData.getLevel()) {
 				throw new IllegalArgumentException("Goal must be less than level!");
 			}
 		}
@@ -173,10 +173,10 @@ public class TradeCalc {
 			if (tradeData.getPowerReserve() != null) {
 				// Calculate and set goal
 				Double calculatedGoal = calculateGoal(tradeData, tradeData.getPowerReserve());
-				builder.withGoal(calculatedGoal);
-			} else if (tradeData.getGoal() != null && tradeData.getPowerReserve() == null) {
+				builder.withTarget(calculatedGoal);
+			} else if (tradeData.getTarget() != null && tradeData.getPowerReserve() == null) {
 				// Calculate and set powerReserve
-				Double calculatedPowerReserve = calculatePowerReserve(tradeData, tradeData.getGoal());
+				Double calculatedPowerReserve = calculatePowerReserve(tradeData, tradeData.getTarget());
 				builder.withPowerReserve(calculatedPowerReserve);
 			}
 		} else {
@@ -184,7 +184,7 @@ public class TradeCalc {
 			double minPowerReserve = getMinPowerReserve(tradeData);
 			builder.withPowerReserve(minPowerReserve);
 			Double calculatedGoal = calculateGoal(tradeData, minPowerReserve);
-			builder.withGoal(calculatedGoal);
+			builder.withTarget(calculatedGoal);
 		}
 
 		return builder.build();
@@ -256,7 +256,7 @@ public class TradeCalc {
 		else orderStop = reference;
 
 		orderLimit = orderStop + (isLong() ? tradeData.getSlippage() : -tradeData.getSlippage());
-		takeProfit = tradeData.getGoal();
+		takeProfit = tradeData.getTarget();
 
 		do {
 			breakEven = getBreakEven(orderLimit);

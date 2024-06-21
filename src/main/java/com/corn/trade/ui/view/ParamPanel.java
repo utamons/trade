@@ -114,7 +114,7 @@ public class ParamPanel extends JPanel {
 			                               .withLevel(level.getValue())
 			                               .withTechStopLoss(techStop.getValue())
 			                               .withSlippage(slippage.getValue())
-			                               .withGoal(goal.getValue())
+			                               .withTarget(goal.getValue())
 			                               .withLuft(ORDER_LUFT)
 			                               .build();
 
@@ -143,7 +143,7 @@ public class ParamPanel extends JPanel {
 		positionBox.setSelectedItem(tradeData.getPositionType().toString());
 		estimationBox.setSelectedItem(tradeData.getEstimationType().toString());
 		level.setValue(tradeData.getLevel());
-		goal.setValue(tradeData.getGoal());
+		goal.setValue(tradeData.getTarget());
 		slippage.setValue(tradeData.getSlippage());
 		powerReserve.setValue(tradeData.getPowerReserve());
 		price.setValue(tradeData.getPrice());

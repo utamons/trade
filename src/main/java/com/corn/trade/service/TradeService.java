@@ -136,7 +136,7 @@ public class TradeService extends BaseService {
 			trade.setInitialPrice(toBigDecimal(tradeData.getOrderLimit()));
 			trade.setStopLossPrice(toBigDecimal(tradeData.getStopLoss()));
 			trade.setBreakEvenPrice(toBigDecimal(tradeData.getBreakEven()));
-			trade.setGoal(toBigDecimal(tradeData.getGoal()));
+			trade.setGoal(toBigDecimal(tradeData.getTarget()));
 			trade.setStatus(TradeStatus.OPEN.name());
 			trade.setCreatedAt(exchangeTime.nowInExchangeTZ().toLocalDateTime());
 			tradeRepo.save(trade);

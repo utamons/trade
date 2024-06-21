@@ -117,11 +117,14 @@ public class PositionController {
 		Long oldQtt = oldQuantities.get(symbol); // old quantity from previous position state
 
 
-		double price = abs(position.getMarketValue() / position.getQuantity()); // current price of the position
-		double goal  = tradeData.getGoal(); // goal price
+		double price  = abs(position.getMarketValue() / position.getQuantity()); // current price of the position
+		double target = tradeData.getTarget(); // target price
 
-		// distance from stop loss to goal
-		double dst           = abs(price - sl) / abs(goal - sl) * 100;
+		// R/R coefficient
+		double rr = abs(price - be) / abs(be - sl);
+		if (isBefore(positionType, price, be))
+			rr = -rr;
+
 		double unrealizedPnl = getUnrealizedPnl(position, qtt, price);
 
 		oldQuantities.put(symbol, qtt); // save current quantity for future comparison
@@ -131,24 +134,16 @@ public class PositionController {
 		positionRow.setBe(be);
 		positionRow.setQtt(qtt + "/" + tradeData.getQuantity());
 		positionRow.setSl(sl);
-		positionRow.setGoal(goal);
-		positionRow.setDst(dst);
+		positionRow.setTarget(target);
+		positionRow.setRR(rr);
 		positionRow.setPl(unrealizedPnl);
 
-		if (unrealizedPnl >= 0 && isBefore(positionType, price, be)) {
-			positionRow.setPlColor(Color.ORANGE.darker());
-		} else if (unrealizedPnl >= 0) {
-			positionRow.setPlColor(Color.GREEN.darker());
-		} else {
-			positionRow.setPlColor(Color.RED.darker());
-		}
-
 		if (isBefore(positionType, price, be)) {
-			positionRow.setPsColor(Color.RED.darker());
-		} else if (isBefore(positionType, price, goal)) {
-			positionRow.setPsColor(Color.ORANGE.darker());
+			positionRow.setPlColor(Color.RED.darker());
+		} else if (unrealizedPnl >= 0 && rr < 3) {
+			positionRow.setPlColor(Color.CYAN.darker());
 		} else {
-			positionRow.setPsColor(Color.GREEN.darker());
+			positionRow.setPlColor(Color.GREEN.darker());
 		}
 
 		// Process data =================================================

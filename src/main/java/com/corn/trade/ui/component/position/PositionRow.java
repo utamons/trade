@@ -51,20 +51,16 @@ public class PositionRow extends JPanel {
 		posInfoRow.setSl(sl);
 	}
 
-	public void setGoal(Double goal) {
-		posInfoRow.setGoal(goal);
+	public void setTarget(Double target) {
+		posInfoRow.setTarget(target);
 	}
 
-	public void setDst(Double dst) {
-		posInfoRow.setDst(dst);
+	public void setRR(Double dst) {
+		posInfoRow.setRr(dst);
 	}
 
 	public void setPl(Double pl) {
 		posInfoRow.setPl(pl);
-	}
-
-	public void setPsColor(Color color) {
-		posInfoRow.setPsColor(color);
 	}
 
 	public void setPlColor(Color color) {

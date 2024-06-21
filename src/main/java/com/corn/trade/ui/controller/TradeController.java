@@ -335,7 +335,7 @@ public class TradeController implements TradeViewListener {
 			                     .withLevel(level)
 			                     .withTechStopLoss(techStopLoss)
 			                     .withSlippage(slippage)
-			                     .withGoal(goal)
+			                     .withTarget(goal)
 			                     .withLuft(ORDER_LUFT)
 			                     .build();
 			try {
@@ -356,11 +356,11 @@ public class TradeController implements TradeViewListener {
 			view.info().setOut(fmt(tradeData.getOutputExpected()) + " (" + fmt(tradeData.getGain()) + "%)");
 
 			if (estimationType == EstimationType.MIN_GOAL) {
-				view.goal().setValue(tradeData.getGoal());
+				view.goal().setValue(tradeData.getTarget());
 			}
 
-			double goalFromHigh = high - tradeData.getGoal();
-			double goalFromLow  = tradeData.getGoal() - low;
+			double goalFromHigh = high - tradeData.getTarget();
+			double goalFromLow  = tradeData.getTarget() - low;
 			double goalToPass   = positionType == PositionType.LONG ? goalFromLow : goalFromHigh;
 
 			if (!riskManager.canTrade()) {

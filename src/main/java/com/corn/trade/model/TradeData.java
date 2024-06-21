@@ -29,9 +29,9 @@ public class TradeData {
 	private final Double         level;
 	private final Double         techStopLoss;
 	private final Double         slippage;
-	private final Double         goal;
+	private final Double         target;
 	private final Double         luft;
-	private final long            quantity;
+	private final long           quantity;
 	private final Double         orderLimit;
 	private final Double         orderStop;
 	private final Double         stopLoss;
@@ -52,7 +52,7 @@ public class TradeData {
 		this.level = builder.level;
 		this.techStopLoss = builder.techStopLoss;
 		this.slippage = builder.slippage;
-		this.goal = builder.goal;
+		this.target = builder.goal;
 		this.luft = builder.luft;
 		this.quantity = builder.quantity;
 		this.orderLimit = builder.orderLimit;
@@ -100,8 +100,8 @@ public class TradeData {
 		return slippage;
 	}
 
-	public Double getGoal() {
-		return goal;
+	public Double getTarget() {
+		return target;
 	}
 
 	public Double getLuft() {
@@ -169,7 +169,7 @@ public class TradeData {
 				.withLevel(this.level)
 				.withTechStopLoss(this.techStopLoss)
 				.withSlippage(this.slippage)
-				.withGoal(this.goal)
+				.withTarget(this.target)
 				.withLuft(this.luft)
 				.withPositionType(this.positionType)
 				.withEstimationType(this.estimationType)
@@ -194,7 +194,7 @@ public class TradeData {
 				                     %s, %s,
 				                     Lvl: %.2f, Goal: %.2f, Pwr: %.2f, Price: %.2f, Slpg: %.2f""",
 		                     positionType, estimationType,
-		                     level, goal, powerReserve, price, slippage);
+		                     level, target, powerReserve, price, slippage);
 	}
 
 	@Override
@@ -207,7 +207,7 @@ public class TradeData {
 				                     Out: %.2f, %.2f%%
 				                     R/R - %.2f%%, Risk - %.2f, %.2f%%""",
 		                     positionType, estimationType,
-		                     level, goal, (powerReserve/level*100), powerReserve, price, slippage,
+		                     level, target, (powerReserve / level * 100), powerReserve, price, slippage,
 		                     quantity, stopLoss, breakEven, takeProfit, orderStop, orderLimit,
 		                     outputExpected, gain, riskRewardRatioPercent, risk, riskPercent);
 	}
@@ -218,14 +218,14 @@ public class TradeData {
 		}
 
 		double difference = Math.abs(price - orderLimit);
-		double threshold = price * 0.01;
+		double threshold  = price * 0.01;
 		return difference > threshold;
 	}
 
 	public boolean isStopLossHit() {
 		double effectiveStopLoss = getEffectiveStopLoss();
 		return (positionType == PositionType.LONG && price <= effectiveStopLoss) ||
-		    (positionType == PositionType.SHORT && price >= effectiveStopLoss);
+		       (positionType == PositionType.SHORT && price >= effectiveStopLoss);
 	}
 
 	private double getEffectiveStopLoss() {
@@ -242,7 +242,7 @@ public class TradeData {
 		private Double         slippage;
 		private Double         goal;
 		private Double         luft;
-		private long            quantity;
+		private long           quantity;
 		private Double         orderLimit;
 		private Double         orderStop;
 		private Double         stopLoss;
@@ -354,7 +354,7 @@ public class TradeData {
 			return this;
 		}
 
-		public Builder withGoal(Double goal) {
+		public Builder withTarget(Double goal) {
 			this.goal = goal;
 			return this;
 		}
