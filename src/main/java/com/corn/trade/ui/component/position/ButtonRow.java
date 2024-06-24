@@ -79,4 +79,12 @@ class ButtonRow extends JPanel {
 	public JButton getButton100() {
 		return button100;
 	}
+
+	public void setBeLabel(String beLabel) {
+		if (buttonBE.isEnabled())
+			buttonBE.setText(beLabel);
+		else {
+			buttonBE.setText("BE");
+		}
+	}
 }

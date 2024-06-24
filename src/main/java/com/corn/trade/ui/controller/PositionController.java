@@ -38,7 +38,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import static com.corn.trade.BaseWindow.MAX_RISK_REWARD_RATIO;
 import static java.lang.Math.abs;
 
 /**
@@ -63,6 +62,10 @@ public class PositionController {
 		positionRow.getButton75().setEnabled(false);
 		positionRow.getButton50().setEnabled(false);
 		positionRow.getButton25().setEnabled(false);
+	}
+
+	private static void lockBeButton(PositionRow positionRow) {
+		positionRow.getButtonBE().setEnabled(false);
 	}
 
 	private static boolean isBefore(PositionType positionType, double price, double aPoint) {
@@ -110,7 +113,7 @@ public class PositionController {
 			// Initialize button listeners only once for the new position
 			initButtonListeners(broker, tradeData, symbol, positionRow);
 			positionRow.getButtonBE()
-			           .addActionListener(e -> broker.modifyStopLoss(qtt, be, action));
+			           .addActionListener(e -> sellToBreakEven(broker, symbol, tradeData));
 		}
 
 		// Prepare data =================================================
@@ -131,6 +134,7 @@ public class PositionController {
 		oldQuantities.put(symbol, qtt); // save current quantity for future comparison
 		positions.put(symbol, position); // save current position data
 
+
 		// Update UI view =================================================
 		positionRow.setBe(be);
 		positionRow.setQtt(qtt + "/" + tradeData.getQuantity());
@@ -140,10 +144,14 @@ public class PositionController {
 		positionRow.setPl(unrealizedPnl);
 
 		if (isBefore(positionType, price, be)) {
+			positionRow.setBeLabel("BE");
 			positionRow.setPlColor(Color.RED.darker());
-		} else if (unrealizedPnl >= 0 && rr <= (1/MAX_RISK_REWARD_RATIO)) {
+		} else if (unrealizedPnl >= 0 && price < target) {
+			double beLoss = getBeLossPercent(symbol, tradeData);
+			positionRow.setBeLabel("BE(" + String.format("%.2f", beLoss)+")");
 			positionRow.setPlColor(Color.CYAN.darker());
 		} else {
+			positionRow.setBeLabel("BE");
 			positionRow.setPlColor(Color.GREEN.darker());
 		}
 
@@ -152,7 +160,70 @@ public class PositionController {
 			closePosition(broker, symbol);
 		} else if (oldQtt != null && qtt < oldQtt) { // adjust stop loss quantity
 			broker.modifyStopLoss(qtt, sl, action);
+			broker.modifyTakeProfit(qtt, target, action);
 		}
+	}
+
+	private double getBeLossPercent(String symbol, TradeData tradeData) {
+		Position position = positions.get(symbol);
+		double price = abs(position.getMarketValue() / position.getQuantity());
+
+		long qtt = TradeCalc.calculateSharesToBE(
+				tradeData.getPrice(),
+				abs(tradeData.getQuantity()),
+				tradeData.getTechStopLoss() != null ? tradeData.getTechStopLoss() : tradeData.getStopLoss(),
+				price);
+
+		long initialQtt = tradeData.getQuantity();
+		long remainingQtt = initialQtt - qtt;
+
+		double currentProfit = abs(price - tradeData.getPrice()) * qtt;
+		currentProfit = currentProfit - TradeCalc.estimatedCommissionIbkrUSD(qtt, price) - TradeCalc.getTax(currentProfit);
+
+		double profitDelta = abs(tradeData.getTakeProfit() - tradeData.getPrice());
+
+		double expectedProfit = profitDelta * initialQtt;
+		expectedProfit = expectedProfit - TradeCalc.estimatedCommissionIbkrUSD(initialQtt, tradeData.getPrice()) - TradeCalc.getTax(expectedProfit);
+		expectedProfit = expectedProfit - TradeCalc.estimatedCommissionIbkrUSD(initialQtt, tradeData.getTakeProfit());
+
+		double remainingProfit = profitDelta * remainingQtt;
+		remainingProfit = remainingProfit - TradeCalc.estimatedCommissionIbkrUSD(remainingQtt, tradeData.getTakeProfit()) - TradeCalc.getTax(remainingProfit);
+		remainingProfit = remainingProfit - TradeCalc.estimatedCommissionIbkrUSD(initialQtt, tradeData.getPrice()) + currentProfit;
+
+		return 100.0 - remainingProfit / expectedProfit * 100.0;
+	}
+
+	private void sellToBreakEven(Broker broker, String symbol, TradeData tradeData) {
+		if (locked.getOrDefault(symbol, false)) {
+			log.warn("Position {} is currently locked", symbol);
+			return;
+		}
+		locked.put(symbol, true); // lock the position to prevent multiple closures at once
+		lockAllButtons(positionRows.get(symbol));
+		Position position = positions.get(symbol);
+
+		double price = abs(position.getMarketValue() / position.getQuantity());
+		PositionType positionType = tradeData.getPositionType();
+
+		long qtt = TradeCalc.calculateSharesToBE(
+				tradeData.getPrice(),
+				abs(tradeData.getQuantity()),
+				tradeData.getTechStopLoss() != null ? tradeData.getTechStopLoss() : tradeData.getStopLoss(),
+				price);
+
+		ActionType action = positionType == PositionType.LONG ? ActionType.SELL : ActionType.BUY;
+		double     delta  = positionType == PositionType.LONG ? -0.1 : 0.1;
+		log.info("Selling to break even for {}", symbol);
+
+		broker.placeOrder(qtt,
+		                  null,
+		                  price + delta,
+		                  action,
+		                  OrderType.LMT,
+		                  executed -> {
+			                    lockBeButton(positionRows.get(symbol));
+								getOrderExecutionHandler(symbol, qtt, abs(position.getQuantity())).accept(executed);
+		                  });
 	}
 
 	private void closePosition(Broker broker, String symbol) {
@@ -212,7 +283,7 @@ public class PositionController {
 		double percentLeft = (double) currentQuantity / initialQuantity * 100;
 
 		// enable only the buttons that remain within the current quantity
-		positionRow.getButton100().setEnabled(percentLeft >= 100);
+		positionRow.getButton100().setEnabled(true); // always enable 100% button
 		positionRow.getButton75().setEnabled(percentLeft >= 75);
 		positionRow.getButton50().setEnabled(percentLeft >= 50);
 		positionRow.getButton25().setEnabled(percentLeft >= 25);
@@ -276,13 +347,13 @@ public class PositionController {
 	// It's either percentage of the initial quantity or the current quantity if this is the last closure
 	private long calculateQuantityForClosure(JButton source, PositionRow positionRow, long initialQtt, long currentQtt) {
 		log.debug("Calculating quantity for closure, initial quantity: {}, current quantity: {}", initialQtt, currentQtt);
-		if (source == positionRow.getButton75() && currentQtt == initialQtt) {
+		if (source == positionRow.getButton75() && currentQtt > initialQtt * 0.75) {
 			return (long) (initialQtt * 0.75);
 		}
-		if (source == positionRow.getButton50() && currentQtt >= initialQtt * 0.75) {
+		if (source == positionRow.getButton50() && currentQtt > initialQtt * 0.5) {
 			return (long) (initialQtt * 0.5);
 		}
-		if (source == positionRow.getButton25() && currentQtt >= initialQtt * 0.5) {
+		if (source == positionRow.getButton25() && currentQtt > initialQtt * 0.25) {
 			return (long) (initialQtt * 0.25);
 		}
 		return currentQtt;

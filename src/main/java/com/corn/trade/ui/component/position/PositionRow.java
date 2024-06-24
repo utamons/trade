@@ -43,6 +43,10 @@ public class PositionRow extends JPanel {
 		posInfoRow.setBe(be);
 	}
 
+	public void setBeLabel(String beLabel) {
+		buttonRow.setBeLabel(beLabel);
+	}
+
 	public void setQtt(String qtt) {
 		posInfoRow.setQtt(qtt);
 	}
