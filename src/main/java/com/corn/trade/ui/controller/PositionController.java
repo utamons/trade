@@ -146,7 +146,7 @@ public class PositionController {
 		if (isBefore(positionType, price, be)) {
 			positionRow.setBeLabel("BE");
 			positionRow.setPlColor(Color.RED.darker());
-		} else if (unrealizedPnl >= 0 && price < target) {
+		} else if (unrealizedPnl >= 0 && (positionType == PositionType.LONG && price < target) || (positionType == PositionType.SHORT && price > target)) {
 			double beLoss = getBeLossPercent(symbol, tradeData);
 			positionRow.setBeLabel("BE(" + String.format("%.2f", beLoss)+")");
 			positionRow.setPlColor(Color.CYAN.darker());
