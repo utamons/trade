@@ -222,6 +222,31 @@ public class TradeCalc {
 		return sum * 0.1; // ИПН
 	}
 
+	public static long calculateSharesToBE(double initialPrice, long quantity, double stopLossPrice, double currentPrice) {
+		double purchaseCommission = estimatedCommissionIbkrUSD(quantity, initialPrice);
+
+		long sharesToSell = 0;
+
+		for (long i=quantity; i>0; i--) {
+			double profit          = abs(initialPrice - currentPrice) * i;
+			double commission      = estimatedCommissionIbkrUSD(i, currentPrice);
+			double taxes           = getTax(profit);
+			double net             = profit - taxes - commission;
+
+			long remaining 	   = quantity - i;
+			double lossCommission = estimatedCommissionIbkrUSD(remaining, stopLossPrice);
+			double loss     = abs(stopLossPrice - initialPrice) * remaining + lossCommission + purchaseCommission;
+
+			if (net <= loss) {
+				sharesToSell = i + 1;
+				break;
+			}
+
+		}
+
+		return sharesToSell == 0 ? quantity : sharesToSell;
+	}
+
 	public static double estimatedCommissionIbkrUSD(long quantity, double price) {
 		double max    = quantity * price / 100.0;
 		double min    = quantity * 0.005;
@@ -347,5 +372,16 @@ public class TradeCalc {
 
 	private double slippage() {
 		return tradeData.getSlippage();
+	}
+
+	public static void main(String[] args) {
+		double purchasePrice = 9.96;
+		long totalShares = 119;
+		double stopLossPrice = 10.05;
+		double takeProfitPrice = 9.52;
+		double breakEvenPrice = 9.94;
+		double currentPrice = breakEvenPrice - abs(takeProfitPrice - breakEvenPrice)/3 * 2;
+		long shares = calculateSharesToBE(purchasePrice, totalShares, stopLossPrice, currentPrice);
+		System.out.println(shares);
 	}
 }
