@@ -112,6 +112,29 @@ class IbkrOrderHelper {
 		log.info("Modified SL id {} {} {} {}", stopLoss.orderId(),  contract.symbol(), action, _stopPrice);
 	}
 
+	public void modifyTakeProfit(int orderId, Contract contract, long quantity, double takeProfitPrice, Action action) {
+		if (!ibkrConnectionHandler.isConnected()) {
+			throw new IbkrException("IBKR not connected");
+		}
+
+		final Double _takeProfitPrice = Math.abs(takeProfitPrice);
+
+		Order takeProfit = new Order();
+		takeProfit.orderId(orderId);
+		takeProfit.action(action);
+		takeProfit.orderType(OrderType.LMT);
+		takeProfit.lmtPrice(round(_takeProfitPrice));
+		takeProfit.totalQuantity(Decimal.get(quantity));
+		takeProfit.transmit(true);
+
+		ibkrConnectionHandler.controller()
+		                     .placeOrModifyOrder(contract,
+		                                         takeProfit,
+		                                         new IbkrOrderHandler(contract, takeProfit));
+
+		log.info("Modified TP id {} {} {} {}", takeProfit.orderId(), contract.symbol(), action, _takeProfitPrice);
+	}
+
 	public OrderBracketIds placeOrderWithBracket(ContractDetails contractDetails,
 	                                             long quantity,
 	                                             Double stop,

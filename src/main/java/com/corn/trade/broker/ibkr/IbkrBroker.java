@@ -394,4 +394,14 @@ public class IbkrBroker extends Broker {
 		                               stopLossPrice,
 		                               action);
 	}
+
+	@Override
+	public void modifyTakeProfit(long quantity, double takeProfitPrice, ActionType actionType) {
+		Action action = actionType == ActionType.BUY ? Action.BUY : Action.SELL;
+		ibkrOrderHelper.modifyTakeProfit(Integer.parseInt(bracketIds.takeProfitId()),
+		                                 contractDetails.contract(),
+		                                 quantity,
+		                                 takeProfitPrice,
+		                                 action);
+	}
 }

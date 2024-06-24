@@ -222,6 +222,11 @@ public class SimulationBroker extends Broker {
 		log.debug("Modified stop loss to {} at price {}", quantity, stopLossPrice);
 	}
 
+	@Override
+	public void modifyTakeProfit(long quantity, double takeProfitPrice, ActionType actionType) {
+		log.debug("Modified take profit to {} at price {}", quantity, takeProfitPrice);
+	}
+
 	protected void closePosition(long tradeId, RiskManager riskManager) {
 		super.closePosition(tradeId, riskManager);
 		realizedPnl += unRealizedPnl;

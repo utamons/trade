@@ -290,4 +290,6 @@ public abstract class Broker {
 	public abstract void cleanAllOrders();
 
 	public abstract void modifyStopLoss(long quantity, double stopLossPrice, ActionType actionType);
+
+	public abstract void modifyTakeProfit(long quantity, double takeProfitPrice, ActionType actionType);
 }
