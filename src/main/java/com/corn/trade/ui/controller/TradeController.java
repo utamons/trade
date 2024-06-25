@@ -53,33 +53,37 @@ import static com.corn.trade.util.Util.round;
 
 
 public class TradeController implements TradeViewListener {
-	public               double                      DEFAULT_STOP_LOSS = 0.05;
-	public static final  int                         SEND_ORDER_DELAY    = 3000;
-	private static final Logger                      log                 = LoggerFactory.getLogger(TradeController.class);
-	private final        AssetService                assetService;
-	private final        HashMap<String, TradeState> tradeStateMap       = new HashMap<>();
+	public static final  int                           SEND_ORDER_DELAY  = 3000;
+	private static final Logger                        log               = LoggerFactory.getLogger(TradeController.class);
+	private final        AssetService                  assetService;
+	private final        HashMap<String, TradeState>   tradeStateMap     = new HashMap<>();
 	private final        Timer                         lockButtonsTimer;
 	private final        Map<String, PositionListener> positionListeners = new HashMap<>();
 	private final        RiskManager                   riskManager;
-	private              TradeView                   view;
-	private              Double                      level;
-	private              Double                      techStopLoss;
-	private              Double                      goal;
-	private              PositionType                positionType;
-	private              EstimationType              estimationType;
-	private              Exchange                    exchange;
-	private              Broker                      currentBroker;
-	private              Timer                       timeUpdater         = null;
-	private              int                         tradeContextId      = 0;
-	private              boolean                     locked              = false;
-	private              boolean                     orderClean          = false;
-	private              TradeData                   tradeData;
-	private              PositionController          positionController;
-	private              int                         pnlListenerId       = 0;
+	public               double                        DEFAULT_STOP_LOSS = 0.05;
+	private              TradeView                     view;
+	private              Double                        level;
+	private              Double                        techStopLoss;
+	private              Double                        goal;
+	private              PositionType                  positionType;
+	private              EstimationType                estimationType;
+	private              Exchange                      exchange;
+	private              Broker                        currentBroker;
+	private              Timer                         timeUpdater       = null;
+	private              int                           tradeContextId    = 0;
+	private              boolean                       locked            = false;
+	private              boolean                       orderClean        = false;
+	private              TradeData                     tradeData;
+	private              PositionController            positionController;
+	private              int                           pnlListenerId     = 0;
+	private              boolean                       lockedOrders      = false;
 
 	public TradeController() throws DatabaseException {
 		this.assetService = new AssetService();
-		lockButtonsTimer = new Timer(SEND_ORDER_DELAY, e -> checkButtons());
+		lockButtonsTimer = new Timer(SEND_ORDER_DELAY, e -> {
+			lockedOrders = false;
+			checkButtons();
+		});
 		lockButtonsTimer.setRepeats(false);
 		riskManager = new RiskManager();
 	}
@@ -221,7 +225,7 @@ public class TradeController implements TradeViewListener {
 			return;
 		}
 		this.level = level;
-		setDefaultStopLoss(level,true);
+		setDefaultStopLoss(level, true);
 		orderClean = false;
 		goalWarning(false);
 		checkButtons();
@@ -229,7 +233,8 @@ public class TradeController implements TradeViewListener {
 
 	private void setDefaultStopLoss(Double level, boolean activate) {
 		if (level != null) {
-			double stopLoss = positionType.equals(PositionType.LONG) ? level - DEFAULT_STOP_LOSS : level + DEFAULT_STOP_LOSS;
+			double stopLoss = positionType.equals(PositionType.LONG) ? level - DEFAULT_STOP_LOSS :
+					level + DEFAULT_STOP_LOSS;
 			view.techSL().setDefaultValue(stopLoss);
 			if (activate) {
 				view.techSL().setValue(stopLoss);
@@ -318,7 +323,7 @@ public class TradeController implements TradeViewListener {
 		double maxRangeLeftForPos   = ctx.getMaxRangeLeftForPos();
 		double price                = tradeContext.getPrice();
 		double slippage             = ctx.getSlippage();
-		DEFAULT_STOP_LOSS           = round(ctx.getDefaultStopLoss());
+		DEFAULT_STOP_LOSS = round(ctx.getDefaultStopLoss());
 
 		view.info().setPrice(fmt(price));
 		view.info().setMaxRangePassed(fmt(maxRangePassedForPos));
@@ -438,6 +443,10 @@ public class TradeController implements TradeViewListener {
 
 	@Override
 	public void onLimit() {
+		if (lockedOrders) {
+			view.messagePanel().error("Orders are locked");
+			return;
+		}
 		log.info("Limit order requested");
 		if (tradeData == null) {
 			log.debug("Trade data is null");
@@ -464,7 +473,8 @@ public class TradeController implements TradeViewListener {
 	private void openPosition(TradeData tradeData, String brokerName) {
 		int id = currentBroker.addPositionListener((position) -> {
 			if (positionListeners.get(position.getSymbol()) == null) {
-				log.warn("No position listener found for symbol: {} (we haven't had time to add yet?)", position.getSymbol());
+				log.warn("No position listener found for symbol: {} (we haven't had time to add yet?)",
+				         position.getSymbol());
 				return;
 			}
 			if (!Objects.equals(positionListeners.get(position.getSymbol()).id, position.getListenerId())) {
@@ -496,6 +506,10 @@ public class TradeController implements TradeViewListener {
 
 	@Override
 	public void onStopLimit() {
+		if (lockedOrders) {
+			view.messagePanel().error("Orders are locked");
+			return;
+		}
 		log.info("Stop-Limit order requested");
 		if (tradeData == null) {
 			log.debug("Trade data is null");
@@ -519,6 +533,7 @@ public class TradeController implements TradeViewListener {
 	}
 
 	private void pauseButtons() {
+		lockedOrders = true;
 		view.stopLimitButton().setEnabled(false);
 		view.limitButton().setEnabled(false);
 		lockButtonsTimer.start();
