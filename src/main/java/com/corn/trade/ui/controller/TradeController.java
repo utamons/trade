@@ -368,9 +368,12 @@ public class TradeController implements TradeViewListener {
 			double goalFromLow  = tradeData.getTarget() - low;
 			double goalToPass   = positionType == PositionType.LONG ? goalFromLow : goalFromHigh;
 
-			if (!riskManager.canTrade()) {
+			if (!riskManager.canTrade(tradeData.getRisk())) {
 				view.trafficLight().setRed();
 				view.messagePanel().error(riskManager.getRiskError());
+				orderClean = false;
+				checkButtons();
+				return;
 			}
 			if (tradeData.hasError()) {
 				view.trafficLight().setRed();
@@ -471,6 +474,14 @@ public class TradeController implements TradeViewListener {
 	}
 
 	private void openPosition(TradeData tradeData, String brokerName) {
+		if (riskManager.canTrade(tradeData.getRisk())) {
+			view.trafficLight().setGreen();
+		} else {
+			view.trafficLight().setRed();
+			view.messagePanel().error(riskManager.getRiskError());
+			return;
+		}
+
 		int id = currentBroker.addPositionListener((position) -> {
 			if (positionListeners.get(position.getSymbol()) == null) {
 				log.warn("No position listener found for symbol: {} (we haven't had time to add yet?)",
@@ -483,22 +494,24 @@ public class TradeController implements TradeViewListener {
 				return;
 			}
 			if (position.getQuantity() == 0) {
-				removePositionListener(position.getSymbol());
+				removePositionListener(position.getSymbol(), tradeData);
 			}
 			positionController.updatePosition(brokerName, tradeData, position);
 		});
 		log.debug("Position listener added with id {}", id);
 		positionListeners.put(currentBroker.getAssetName(), new PositionListener(id, currentBroker));
+		riskManager.updateOpenRisk(tradeData.getRisk());
 
 		currentBroker.openPosition(tradeData, riskManager);
 	}
 
-	private void removePositionListener(String assetName) {
+	private void removePositionListener(String assetName, TradeData tradeData) {
 		if (positionListeners.containsKey(assetName)) {
 			PositionListener positionListener = positionListeners.get(assetName);
 			log.debug("Removing position listener with id {}", positionListener.id);
 			positionListener.broker.removePositionListener(positionListener.id);
 			positionListeners.remove(assetName);
+			riskManager.updateOpenRisk(-tradeData.getRisk());
 		} else {
 			log.warn("No position listener found for asset {}", assetName);
 		}

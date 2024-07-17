@@ -40,6 +40,7 @@ public class RiskManager {
 	private final PnlRepo   pnlRepo;
 	private final TradeRepo tradeRepo;
 	private       double    daily      = 0.0;
+	private 	  double    openRisk   = 0.0;
 	private       boolean   canTrade   = false;
 	private       String    riskError  = null;
 
@@ -52,7 +53,8 @@ public class RiskManager {
 	}
 
 	public void updatePnL(PnL pnl) throws DatabaseException {
-		daily = pnl.daily();
+		daily = pnl.realized() - openRisk;
+		log.info("Daily PnL updated: {} (realized: {}, open risk {})", daily, pnl.realized(), openRisk);
 		EntityManager em = JpaUtil.getEntityManager();
 		pnlRepo.withEntityManager(em);
 		em.getTransaction().begin();
@@ -80,6 +82,20 @@ public class RiskManager {
 			canTrade = true;
 			riskError = null;
 		}
+	}
+
+	public void updateOpenRisk(double openRisk) {
+		this.openRisk += openRisk;
+		log.info("Open risk updated: {}", this.openRisk);
+	}
+
+	public boolean canTrade(double risk) {
+		if (daily - risk < MAX_DAILY_LOSS) {
+			riskError = "Daily loss limit reached";
+			return false;
+		}
+		riskError = null;
+		return true;
 	}
 
 	private void initChecks() throws DatabaseException {
