@@ -31,30 +31,42 @@ import org.slf4j.LoggerFactory;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.corn.trade.BaseWindow.*;
+import static com.corn.trade.util.Util.fmt;
 
 public class RiskManager {
 	private static final Logger log = LoggerFactory.getLogger(RiskManager.class);
 
-	private final PnlRepo   pnlRepo;
-	private final TradeRepo tradeRepo;
-	private       double    daily      = 0.0;
-	private 	  double    openRisk   = 0.0;
-	private       boolean   canTrade   = false;
-	private       String    riskError  = null;
+	private final PnlRepo             pnlRepo;
+	private final TradeRepo           tradeRepo;
+	private final Map<String, Double> openRiskMap = new ConcurrentHashMap<>();
+	private       double              daily       = 0.0;
+	private 	  double              dailyOld    = 0.0;
+	private       boolean             canTrade    = false;
+	private       String              riskError   = null;
 
 	public RiskManager() throws DatabaseException {
-		log.info("RiskManager initialized, MAX_DAILY_LOSS: {}, MAX_WEEKLY_LOSS: {}, MAX_MONTHLY_LOSS: {}, MAX_TRADES_PER_DAY: {}",
-				MAX_DAILY_LOSS, MAX_WEEKLY_LOSS, MAX_MONTHLY_LOSS, MAX_TRADES_PER_DAY);
+		log.info(
+				"RiskManager initialized, MAX_DAILY_LOSS: {}, MAX_WEEKLY_LOSS: {}, MAX_MONTHLY_LOSS: {}, " +
+				"MAX_TRADES_PER_DAY: {}",
+				MAX_DAILY_LOSS,
+				MAX_WEEKLY_LOSS,
+				MAX_MONTHLY_LOSS,
+				MAX_TRADES_PER_DAY);
 		this.pnlRepo = new PnlRepo();
 		this.tradeRepo = new TradeRepo();
 		initChecks();
 	}
 
 	public void updatePnL(PnL pnl) throws DatabaseException {
-		daily = pnl.realized() - openRisk;
-		log.info("Daily PnL updated: {} (realized: {}, open risk {})", daily, pnl.realized(), openRisk);
+		daily = pnl.realized() - getOpenRisk();
+		if (daily != dailyOld) {
+			log.info("Daily PnL updated: {} -> {}, open risk {}", fmt(dailyOld), fmt(daily), fmt(getOpenRisk()));
+			dailyOld = daily;
+		}
 		EntityManager em = JpaUtil.getEntityManager();
 		pnlRepo.withEntityManager(em);
 		em.getTransaction().begin();
@@ -72,6 +84,7 @@ public class RiskManager {
 		if (daily <= MAX_DAILY_LOSS) {
 			canTrade = false;
 			riskError = "Daily loss limit reached";
+			log.info("Daily loss limit reached - {}", daily);
 		} else if (daily <= MAX_WEEKLY_LOSS && !SIMULATION_MODE) {
 			canTrade = false;
 			riskError = "Weekly loss limit reached";
@@ -84,9 +97,26 @@ public class RiskManager {
 		}
 	}
 
-	public void updateOpenRisk(double openRisk) {
-		this.openRisk += openRisk;
-		log.info("Open risk updated: {}", this.openRisk);
+	public void addOpenRisk(String symbol, double openRisk) {
+		if (openRiskMap.containsKey(symbol)) {
+			return;
+		}
+		this.openRiskMap.put(symbol, openRisk);
+		log.info("Open risk added for: {} {}", symbol, fmt(openRisk));
+	}
+
+	public void removeOpenRisk(String symbol) {
+		if (!openRiskMap.containsKey(symbol)) {
+			log.warn("Open risk not found for: {}", symbol);
+			return;
+		}
+		daily += openRiskMap.get(symbol);
+		this.openRiskMap.remove(symbol);
+		log.info("Open risk removed for: {}", symbol);
+	}
+
+	public double getOpenRisk() {
+		return openRiskMap.values().stream().mapToDouble(Double::doubleValue).sum();
 	}
 
 	public boolean canTrade(double risk) {

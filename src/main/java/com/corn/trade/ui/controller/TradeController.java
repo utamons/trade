@@ -494,24 +494,25 @@ public class TradeController implements TradeViewListener {
 				return;
 			}
 			if (position.getQuantity() == 0) {
-				removePositionListener(position.getSymbol(), tradeData);
+				removePositionListener(position.getSymbol());
+			} else {
+				riskManager.addOpenRisk(position.getSymbol(), tradeData.getRisk());
 			}
 			positionController.updatePosition(brokerName, tradeData, position);
 		});
 		log.debug("Position listener added with id {}", id);
 		positionListeners.put(currentBroker.getAssetName(), new PositionListener(id, currentBroker));
-		riskManager.updateOpenRisk(tradeData.getRisk());
 
 		currentBroker.openPosition(tradeData, riskManager);
 	}
 
-	private void removePositionListener(String assetName, TradeData tradeData) {
+	private void removePositionListener(String assetName) {
 		if (positionListeners.containsKey(assetName)) {
 			PositionListener positionListener = positionListeners.get(assetName);
 			log.debug("Removing position listener with id {}", positionListener.id);
 			positionListener.broker.removePositionListener(positionListener.id);
 			positionListeners.remove(assetName);
-			riskManager.updateOpenRisk(-tradeData.getRisk());
+			riskManager.removeOpenRisk(assetName);
 		} else {
 			log.warn("No position listener found for asset {}", assetName);
 		}
