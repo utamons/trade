@@ -50,6 +50,7 @@ public class PositionController {
 	private final        Map<String, Position>    positions;
 	private final        Map<String, Long>        oldQuantities = new HashMap<>();
 	private final        Map<String, Boolean>     locked        = new HashMap<>();
+	private final        Map<String, Boolean>     soldBE        = new HashMap<>();
 
 	public PositionController(PositionView view) {
 		this.view = view;
@@ -64,7 +65,21 @@ public class PositionController {
 	}
 
 	private static void lockSellBeButton(PositionRow positionRow) {
+		if (!positionRow.getButtonSellBE().isEnabled())
+			return;
+		log.info("Locking sell BE button");
 		positionRow.getButtonSellBE().setEnabled(false);
+	}
+
+	private void unlockSellBeButton(PositionRow positionRow, String symbol) {
+		if (soldBE.getOrDefault(symbol, false) )
+			return;
+		if (positionRow.getButtonSellBE().isEnabled())
+			return;
+		boolean sold = soldBE.getOrDefault(symbol, false);
+		boolean enabled = positionRow.getButtonSellBE().isEnabled();
+		log.info("Unlocking sell BE button, sold {}, enabled {}", sold, enabled);
+		positionRow.getButtonSellBE().setEnabled(true);
 	}
 
 	private static boolean isBefore(PositionType positionType, double price, double aPoint) {
@@ -147,13 +162,22 @@ public class PositionController {
 		if (isBefore(positionType, price, be)) {
 			positionRow.setBeLabel("S_BE");
 			positionRow.setPlColor(Color.RED.darker());
+			lockSellBeButton(positionRow);
 		} else if (unrealizedPnl >= 0 && (positionType == PositionType.LONG && price < target) || (positionType == PositionType.SHORT && price > target)) {
 			double beLoss = getBeLossPercent(symbol, tradeData);
-			positionRow.setBeLabel("(" + String.format("%.2f", beLoss)+")");
-			positionRow.setPlColor(Color.CYAN.darker());
+			if (beLoss <= 33.33) {
+				positionRow.setBeLabel("(" + String.format("%.2f", beLoss)+")");
+				positionRow.setPlColor(Color.CYAN.darker());
+				unlockSellBeButton(positionRow, symbol);
+			} else {
+				positionRow.setBeLabel("S_BE");
+				positionRow.setPlColor(Color.GREEN.darker());
+				lockSellBeButton(positionRow);
+			}
 		} else {
 			positionRow.setBeLabel("S_BE");
 			positionRow.setPlColor(Color.GREEN.darker());
+			lockSellBeButton(positionRow);
 		}
 
 		// Process data =================================================
@@ -222,6 +246,7 @@ public class PositionController {
 		                  OrderType.LMT,
 		                  executed -> {
 			                    lockSellBeButton(positionRows.get(symbol));
+								soldBE.put(symbol, true);
 								getOrderExecutionHandler(symbol, qtt, abs(position.getQuantity())).accept(executed);
 		                  });
 	}

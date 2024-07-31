@@ -43,7 +43,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 public class SimulationBroker extends Broker {
-	private static final long                             TRADE_CONTEXT_UPDATE_INTERVAL = 2000;
+	private static final long                             TRADE_CONTEXT_UPDATE_INTERVAL = 1000;
 	private static final long                             POSITION_UPDATE_INTERVAL      = 1000;
 	private final        Logger                           log                           =
 			LoggerFactory.getLogger(SimulationBroker.class);
