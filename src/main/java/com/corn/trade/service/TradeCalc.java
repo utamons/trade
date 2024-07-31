@@ -24,11 +24,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.corn.trade.BaseWindow.*;
+import static com.corn.trade.util.Util.fmt;
 import static com.corn.trade.util.Util.round;
 import static java.lang.Math.abs;
 
 public class TradeCalc {
-	private final Logger log = LoggerFactory.getLogger(TradeCalc.class);
+	private final static Logger log = LoggerFactory.getLogger(TradeCalc.class);
 
 	private final TradeData tradeData;
 	private       double    reference;
@@ -375,13 +376,32 @@ public class TradeCalc {
 	}
 
 	public static void main(String[] args) {
-		double purchasePrice = 9.96;
-		long totalShares = 119;
-		double stopLossPrice = 10.05;
-		double takeProfitPrice = 9.52;
-		double breakEvenPrice = 9.94;
-		double currentPrice = breakEvenPrice - abs(takeProfitPrice - breakEvenPrice)/3 * 2;
+		double purchasePrice = 20.61;
+		long totalShares = 76;
+		double stopLossPrice = 20.76;
+		double takeProfitPrice = 19.92;
+		double breakEvenPrice = 20.58;
+		double currentPrice = 20.13;
 		long shares = calculateSharesToBE(purchasePrice, totalShares, stopLossPrice, currentPrice);
-		System.out.println(shares);
+
+		long remainingQtt = totalShares - shares;
+
+		double currentProfit = abs(currentPrice - purchasePrice) * shares;
+		currentProfit = currentProfit - TradeCalc.estimatedCommissionIbkrUSD(shares, currentPrice) - TradeCalc.getTax(currentProfit);
+
+		double profitDelta = abs(takeProfitPrice - purchasePrice);
+
+		double expectedProfit = profitDelta * totalShares;
+		expectedProfit = expectedProfit - TradeCalc.estimatedCommissionIbkrUSD(totalShares, purchasePrice) - TradeCalc.getTax(expectedProfit);
+		expectedProfit = expectedProfit - TradeCalc.estimatedCommissionIbkrUSD(totalShares, takeProfitPrice);
+
+		double remainingProfit = profitDelta * remainingQtt;
+		remainingProfit = remainingProfit - TradeCalc.estimatedCommissionIbkrUSD(remainingQtt, takeProfitPrice) - TradeCalc.getTax(remainingProfit);
+		remainingProfit = remainingProfit - TradeCalc.estimatedCommissionIbkrUSD(totalShares, purchasePrice) + currentProfit;
+
+		String risk = fmt((breakEvenPrice - stopLossPrice) * (totalShares-shares));
+		String percentage = fmt(100.0 - remainingProfit / expectedProfit * 100.0) + "%";
+
+		log.info("Shares: {}, risk: {}, sold profit: {}, expected profit: {}, remaining profit: {}, percentage: {}", shares, risk, fmt(currentProfit), fmt(expectedProfit), fmt(remainingProfit), percentage);
 	}
 }

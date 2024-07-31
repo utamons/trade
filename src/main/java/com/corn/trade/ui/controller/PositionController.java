@@ -212,12 +212,11 @@ public class PositionController {
 				price);
 
 		ActionType action = positionType == PositionType.LONG ? ActionType.SELL : ActionType.BUY;
-		double     delta  = positionType == PositionType.LONG ? -0.1 : 0.1;
 		log.info("Selling to break even for {}", symbol);
 
 		broker.placeOrder(qtt,
 		                  null,
-		                  price + delta,
+		                  price,
 		                  action,
 		                  OrderType.LMT,
 		                  executed -> {
