@@ -24,7 +24,7 @@ import static com.corn.trade.util.Util.unbindEnterKey;
 
 @SuppressWarnings("unused")
 class ButtonRow extends JPanel {
-	private final JButton buttonBE, button25, button50, button75, button100;
+	private final JButton buttonSellBE, buttonBE, button50, button75, button100;
 
 	public ButtonRow(int fontSize, int padding, int hgap) {
 		// Set the layout for evenly spaced buttons
@@ -32,40 +32,40 @@ class ButtonRow extends JPanel {
 		setBorder(BorderFactory.createEmptyBorder(0, padding, padding, padding));
 
 		// Initialize buttons
+		buttonSellBE = new JButton("S_BE");
 		buttonBE = new JButton("BE");
-		button25 = new JButton("25");
 		button50 = new JButton("50");
 		button75 = new JButton("75");
 		button100 = new JButton("100");
 
 		// Set the font size for the buttons
+		buttonSellBE.setFont(new Font(buttonSellBE.getFont().getName(), Font.PLAIN, fontSize));
 		buttonBE.setFont(new Font(buttonBE.getFont().getName(), Font.PLAIN, fontSize));
-		button25.setFont(new Font(button25.getFont().getName(), Font.PLAIN, fontSize));
 		button50.setFont(new Font(button50.getFont().getName(), Font.PLAIN, fontSize));
 		button75.setFont(new Font(button75.getFont().getName(), Font.PLAIN, fontSize));
 		button100.setFont(new Font(button100.getFont().getName(), Font.PLAIN, fontSize));
 
 		// Add buttons to the panel
+		add(buttonSellBE);
 		add(buttonBE);
-		add(button25);
 		add(button50);
 		add(button75);
 		add(button100);
 
+		unbindEnterKey(buttonSellBE);
 		unbindEnterKey(buttonBE);
-		unbindEnterKey(button25);
 		unbindEnterKey(button50);
 		unbindEnterKey(button75);
 		unbindEnterKey(button100);
 	}
 
 	// Getter methods if needed
-	public JButton getButtonBE() {
-		return buttonBE;
+	public JButton getButtonSellBE() {
+		return buttonSellBE;
 	}
 
-	public JButton getButton25() {
-		return button25;
+	public JButton getButtonBE() {
+		return buttonBE;
 	}
 
 	public JButton getButton50() {
@@ -81,10 +81,10 @@ class ButtonRow extends JPanel {
 	}
 
 	public void setBeLabel(String beLabel) {
-		if (buttonBE.isEnabled())
-			buttonBE.setText(beLabel);
+		if (buttonSellBE.isEnabled())
+			buttonSellBE.setText(beLabel);
 		else {
-			buttonBE.setText("BE");
+			buttonSellBE.setText("S_BE");
 		}
 	}
 }

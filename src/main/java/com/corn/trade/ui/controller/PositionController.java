@@ -61,11 +61,10 @@ public class PositionController {
 		positionRow.getButton100().setEnabled(false);
 		positionRow.getButton75().setEnabled(false);
 		positionRow.getButton50().setEnabled(false);
-		positionRow.getButton25().setEnabled(false);
 	}
 
-	private static void lockBeButton(PositionRow positionRow) {
-		positionRow.getButtonBE().setEnabled(false);
+	private static void lockSellBeButton(PositionRow positionRow) {
+		positionRow.getButtonSellBE().setEnabled(false);
 	}
 
 	private static boolean isBefore(PositionType positionType, double price, double aPoint) {
@@ -113,6 +112,8 @@ public class PositionController {
 			// Initialize button listeners only once for the new position
 			initButtonListeners(broker, tradeData, symbol, positionRow);
 			positionRow.getButtonBE()
+			           .addActionListener(e -> broker.modifyStopLoss(qtt, be, action));
+			positionRow.getButtonSellBE()
 			           .addActionListener(e -> sellToBreakEven(broker, symbol, tradeData));
 		}
 
@@ -144,14 +145,14 @@ public class PositionController {
 		positionRow.setPl(unrealizedPnl);
 
 		if (isBefore(positionType, price, be)) {
-			positionRow.setBeLabel("BE");
+			positionRow.setBeLabel("S_BE");
 			positionRow.setPlColor(Color.RED.darker());
 		} else if (unrealizedPnl >= 0 && (positionType == PositionType.LONG && price < target) || (positionType == PositionType.SHORT && price > target)) {
 			double beLoss = getBeLossPercent(symbol, tradeData);
-			positionRow.setBeLabel("BE(" + String.format("%.2f", beLoss)+")");
+			positionRow.setBeLabel("(" + String.format("%.2f", beLoss)+")");
 			positionRow.setPlColor(Color.CYAN.darker());
 		} else {
-			positionRow.setBeLabel("BE");
+			positionRow.setBeLabel("S_BE");
 			positionRow.setPlColor(Color.GREEN.darker());
 		}
 
@@ -220,7 +221,7 @@ public class PositionController {
 		                  action,
 		                  OrderType.LMT,
 		                  executed -> {
-			                    lockBeButton(positionRows.get(symbol));
+			                    lockSellBeButton(positionRows.get(symbol));
 								getOrderExecutionHandler(symbol, qtt, abs(position.getQuantity())).accept(executed);
 		                  });
 	}
@@ -244,8 +245,8 @@ public class PositionController {
 		if (positionRow.getButton50().getActionListeners().length != 0) {
 			positionRow.getButton50().removeActionListener(positionRow.getButton50().getActionListeners()[0]);
 		}
-		if (positionRow.getButton25().getActionListeners().length != 0) {
-			positionRow.getButton25().removeActionListener(positionRow.getButton25().getActionListeners()[0]);
+		if (positionRow.getButtonBE().getActionListeners().length != 0) {
+			positionRow.getButtonBE().removeActionListener(positionRow.getButtonBE().getActionListeners()[0]);
 		}
 	}
 
@@ -269,12 +270,6 @@ public class PositionController {
 		                                                broker,
 		                                                tradeData.getPositionType(),
 		                                                tradeData.getQuantity()));
-		positionRow.getButton25()
-		           .addActionListener(getActionListener(symbol,
-		                                                positionRow,
-		                                                broker,
-		                                                tradeData.getPositionType(),
-		                                                tradeData.getQuantity()));
 	}
 
 	// Update button states based on the current quantity
@@ -285,7 +280,6 @@ public class PositionController {
 		positionRow.getButton100().setEnabled(true); // always enable 100% button
 		positionRow.getButton75().setEnabled(percentLeft >= 75);
 		positionRow.getButton50().setEnabled(percentLeft >= 50);
-		positionRow.getButton25().setEnabled(percentLeft >= 25);
 	}
 
 	// Get action listener for the button
@@ -351,9 +345,6 @@ public class PositionController {
 		}
 		if (source == positionRow.getButton50() && currentQtt > initialQtt * 0.5) {
 			return (long) (initialQtt * 0.5);
-		}
-		if (source == positionRow.getButton25() && currentQtt > initialQtt * 0.25) {
-			return (long) (initialQtt * 0.25);
 		}
 		return currentQtt;
 	}

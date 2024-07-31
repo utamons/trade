@@ -71,12 +71,12 @@ public class PositionRow extends JPanel {
 		posInfoRow.setPlColor(color);
 	}
 
-	public JButton getButtonBE() {
-		return buttonRow.getButtonBE();
+	public JButton getButtonSellBE() {
+		return buttonRow.getButtonSellBE();
 	}
 
-	public JButton getButton25() {
-		return buttonRow.getButton25();
+	public JButton getButtonBE() {
+		return buttonRow.getButtonBE();
 	}
 
 	public JButton getButton50() {
