@@ -83,8 +83,8 @@ public class PositionRow extends JPanel {
 		return buttonRow.getButton50();
 	}
 
-	public JButton getButton75() {
-		return buttonRow.getButton75();
+	public JButton getButton25() {
+		return buttonRow.getButton25();
 	}
 
 	public JButton getButton100() {

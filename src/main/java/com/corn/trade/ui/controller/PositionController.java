@@ -60,7 +60,7 @@ public class PositionController {
 
 	private static void lockAllButtons(PositionRow positionRow) {
 		positionRow.getButton100().setEnabled(false);
-		positionRow.getButton75().setEnabled(false);
+		positionRow.getButton25().setEnabled(false);
 		positionRow.getButton50().setEnabled(false);
 	}
 
@@ -264,8 +264,8 @@ public class PositionController {
 		if (positionRow.getButton100().getActionListeners().length != 0) {
 			positionRow.getButton100().removeActionListener(positionRow.getButton100().getActionListeners()[0]);
 		}
-		if (positionRow.getButton75().getActionListeners().length != 0) {
-			positionRow.getButton75().removeActionListener(positionRow.getButton75().getActionListeners()[0]);
+		if (positionRow.getButton25().getActionListeners().length != 0) {
+			positionRow.getButton25().removeActionListener(positionRow.getButton25().getActionListeners()[0]);
 		}
 		if (positionRow.getButton50().getActionListeners().length != 0) {
 			positionRow.getButton50().removeActionListener(positionRow.getButton50().getActionListeners()[0]);
@@ -283,7 +283,7 @@ public class PositionController {
 		                                                broker,
 		                                                tradeData.getPositionType(),
 		                                                tradeData.getQuantity()));
-		positionRow.getButton75()
+		positionRow.getButton25()
 		           .addActionListener(getActionListener(symbol,
 		                                                positionRow,
 		                                                broker,
@@ -303,8 +303,8 @@ public class PositionController {
 
 		// enable only the buttons that remain within the current quantity
 		positionRow.getButton100().setEnabled(true); // always enable 100% button
-		positionRow.getButton75().setEnabled(percentLeft >= 75);
 		positionRow.getButton50().setEnabled(percentLeft >= 50);
+		positionRow.getButton25().setEnabled(percentLeft >= 25);
 	}
 
 	// Get action listener for the button
@@ -365,8 +365,8 @@ public class PositionController {
 	// It's either percentage of the initial quantity or the current quantity if this is the last closure
 	private long calculateQuantityForClosure(JButton source, PositionRow positionRow, long initialQtt, long currentQtt) {
 		log.debug("Calculating quantity for closure, initial quantity: {}, current quantity: {}", initialQtt, currentQtt);
-		if (source == positionRow.getButton75() && currentQtt > initialQtt * 0.75) {
-			return (long) (initialQtt * 0.75);
+		if (source == positionRow.getButton25() && currentQtt > initialQtt * 0.25) {
+			return (long) (initialQtt * 0.25);
 		}
 		if (source == positionRow.getButton50() && currentQtt > initialQtt * 0.5) {
 			return (long) (initialQtt * 0.5);

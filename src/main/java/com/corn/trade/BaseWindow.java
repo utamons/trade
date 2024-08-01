@@ -39,7 +39,7 @@ import java.io.InputStream;
 import java.util.Properties;
 
 public abstract class BaseWindow {
-	protected static final String  version               = "2.0.24";
+	protected static final String  version               = "2.0.25";
 	protected static final int     RESIZE_EDGE           = 4;
 	protected static final int     FIELD_HEIGHT          = 40;
 	protected static final Theme   DARK_THEME            = new OneDarkTheme();
