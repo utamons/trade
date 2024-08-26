@@ -20,10 +20,7 @@ package com.corn.trade.broker.simulation;
 import com.corn.trade.broker.Broker;
 import com.corn.trade.broker.BrokerException;
 import com.corn.trade.broker.OrderBracketIds;
-import com.corn.trade.model.Bar;
-import com.corn.trade.model.ExecutionData;
-import com.corn.trade.model.PnL;
-import com.corn.trade.model.Position;
+import com.corn.trade.model.*;
 import com.corn.trade.risk.RiskManager;
 import com.corn.trade.type.ActionType;
 import com.corn.trade.type.OrderStatus;
@@ -49,6 +46,7 @@ public class SimulationBroker extends Broker {
 			LoggerFactory.getLogger(SimulationBroker.class);
 	private final        Map<Integer, Consumer<PnL>>      pnlListeners                  = new HashMap<>();
 	private final        Map<Integer, Consumer<Position>> positionListeners             = new ConcurrentHashMap<>();
+	private final        Map<Integer, Consumer<AccountUpdate>> accountListeners = new ConcurrentHashMap<>();
 	private final        java.util.Timer                  tradeContextTimer;
 
 	private final Timer                 positionTimer;
@@ -79,6 +77,7 @@ public class SimulationBroker extends Broker {
 			                            .withUnrealizedPnl(unRealizedPnl)
 			                            .build();
 			positionListeners.forEach((key, value) -> value.accept(position.copy().withListenerId(key).build()));
+			accountListeners.forEach((key, value) -> value.accept(new AccountUpdate("Test", "AvailableFunds", "100000.00", null)));
 		});
 	}
 
@@ -105,6 +104,12 @@ public class SimulationBroker extends Broker {
 	@Override
 	public synchronized int addPositionListener(Consumer<Position> positionListener) throws BrokerException {
 		positionListeners.put(++positionListenerId, positionListener);
+		return positionListenerId;
+	}
+
+	@Override
+	public synchronized int addAccountListener(Consumer<AccountUpdate> accountListener) throws BrokerException {
+		accountListeners.put(++positionListenerId, accountListener);
 		return positionListenerId;
 	}
 
@@ -143,6 +148,11 @@ public class SimulationBroker extends Broker {
 	@Override
 	public void requestPnLUpdates() throws BrokerException {
 		log.debug("Requesting PnL updates");
+	}
+
+	@Override
+	public void requestAccountUpdates() throws BrokerException {
+		log.debug("Requesting account updates");
 	}
 
 	@Override

@@ -115,6 +115,8 @@ public abstract class Broker {
 
 	public abstract int addPnListener(Consumer<PnL> pnlListener) throws BrokerException;
 
+	public abstract int addAccountListener(Consumer<AccountUpdate> accountListener) throws BrokerException;
+
 	public abstract int addPositionListener(Consumer<Position> positionListener) throws BrokerException;
 
 	public abstract void removePositionListener(int id) throws BrokerException;
@@ -124,6 +126,8 @@ public abstract class Broker {
 	protected abstract void requestPositionUpdates() throws BrokerException;
 
 	public abstract void requestPnLUpdates() throws BrokerException;
+
+	public abstract void requestAccountUpdates() throws BrokerException;
 
 	protected abstract void requestAdr() throws BrokerException;
 

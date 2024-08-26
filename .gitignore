@@ -38,3 +38,4 @@ build/
 
 ### draw.io ###
 *.drawio.bkp
+/backup.sql

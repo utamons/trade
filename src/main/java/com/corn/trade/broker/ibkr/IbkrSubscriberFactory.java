@@ -20,6 +20,7 @@ package com.corn.trade.broker.ibkr;
 public class IbkrSubscriberFactory {
 	private static       IbkrPositionSubscriber positionSubscriber;
 	private static       IbkrPnLSubscriber      pnlSubscriber;
+	private static       IbkrAccountSubscriber   accountSubscriber;
 
 
 	static synchronized IbkrPositionSubscriber getPositionSubscriber() {
@@ -36,5 +37,13 @@ public class IbkrSubscriberFactory {
 			pnlSubscriber = new IbkrPnLSubscriber(connectionHandler);
 		}
 		return pnlSubscriber;
+	}
+
+	static synchronized IbkrAccountSubscriber getAccountSubscriber() {
+		if (accountSubscriber == null) {
+			IbkrConnectionHandler connectionHandler = IbkrConnectionHandlerFactory.getConnectionHandler();
+			accountSubscriber = new IbkrAccountSubscriber(connectionHandler);
+		}
+		return accountSubscriber;
 	}
 }

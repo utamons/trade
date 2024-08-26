@@ -23,6 +23,8 @@ import com.corn.trade.type.PositionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Objects;
+
 import static com.corn.trade.BaseWindow.*;
 import static com.corn.trade.util.Util.fmt;
 import static com.corn.trade.util.Util.round;
@@ -39,6 +41,7 @@ public class TradeCalc {
 	private       double    stopLoss;
 	private       double    takeProfit;
 	private       double    breakEven;
+	private       double    maxVolume;
 
 	private double risk;
 	private double outputExpected;
@@ -47,7 +50,8 @@ public class TradeCalc {
 	private double riskRewardRatioPercent;
 	private String tradeError;
 
-	public TradeCalc(TradeData tradeData) {
+	public TradeCalc(TradeData tradeData, Double maxVolume) {
+		this.maxVolume = Objects.requireNonNullElseGet(maxVolume, () -> MAX_VOLUME);
 		this.tradeData = complement(validate(tradeData));
 	}
 
@@ -84,7 +88,7 @@ public class TradeCalc {
 		do {
 			minPowerReserve = round(minPowerReserve + 0.01);
 			temp = temp.copy().withPowerReserve(minPowerReserve).build();
-			TradeCalc tradeCalc = new TradeCalc(temp);
+			TradeCalc tradeCalc = new TradeCalc(temp, maxVolume);
 			temp = tradeCalc.calculate();
 		} while (temp.getTradeError() != null &&
 		         minPowerReserve / temp.getPrice() < 0.5); // 50% of price is a reasonable maximum
@@ -277,6 +281,10 @@ public class TradeCalc {
 		tradeError = null;
 		// fill order
 		if (quantity == 0) quantity = maxQuantity();
+		if (quantity == 0) {
+			tradeError = "Not enough capital";
+			return;
+		}
 		if (reference == tradeData.getLevel())
 			orderStop = reference + (isLong() ? tradeData.getLuft() : -tradeData.getLuft());
 		else orderStop = reference;
@@ -335,7 +343,7 @@ public class TradeCalc {
 		outputExpected = reward;
 		gain = outputExpected / (orderLimit * quantity) * 100;
 		riskRewardRatioPercent = risk / outputExpected * 100;
-		riskPercent = risk / MAX_VOLUME * 100;
+		riskPercent = risk / maxVolume * 100;
 	}
 
 	private String areRiskLimitsFailed() {
@@ -368,7 +376,7 @@ public class TradeCalc {
 	}
 
 	private int maxQuantity() {
-		return (int) (MAX_VOLUME / reference);
+		return (int) (maxVolume / reference);
 	}
 
 	private double slippage() {

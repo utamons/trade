@@ -213,6 +213,12 @@ public class IbkrBroker extends Broker {
 		return pnlSubscriber.addListener(getAccount(), pnlListener);
 	}
 
+	@Override
+	public int addAccountListener(Consumer<com.corn.trade.model.AccountUpdate> accountListener) throws BrokerException {
+		IbkrAccountSubscriber accountSubscriber = IbkrSubscriberFactory.getAccountSubscriber();
+		return accountSubscriber.addListener(getAccount(), accountListener);
+	}
+
 	private String getAccount() throws BrokerException {
 		List<String> accounts = ibkrConnectionHandler.getAccountList();
 		if (accounts.size() != 1) {
@@ -242,6 +248,12 @@ public class IbkrBroker extends Broker {
 			pnlSubscriber = IbkrSubscriberFactory.getPnlSubscriber();
 		}
 		pnlSubscriber.subscribe(getAccount());
+	}
+
+	@Override
+	public void requestAccountUpdates() throws BrokerException {
+		IbkrAccountSubscriber accountSubscriber = IbkrSubscriberFactory.getAccountSubscriber();
+		accountSubscriber.subscribe(getAccount());
 	}
 
 	@Override

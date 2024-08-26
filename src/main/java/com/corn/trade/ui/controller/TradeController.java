@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import static com.corn.trade.BaseWindow.MAX_VOLUME;
 import static com.corn.trade.BaseWindow.ORDER_LUFT;
 import static com.corn.trade.util.Util.fmt;
 import static com.corn.trade.util.Util.round;
@@ -76,7 +77,9 @@ public class TradeController implements TradeViewListener {
 	private              TradeData                     tradeData;
 	private              PositionController            positionController;
 	private              int                           pnlListenerId     = 0;
+	private              int						   accountListenerId     = 0;
 	private              boolean                       lockedOrders      = false;
+	private              double                        cash = 0.0;
 
 	public TradeController() throws DatabaseException {
 		this.assetService = new AssetService();
@@ -181,6 +184,15 @@ public class TradeController implements TradeViewListener {
 					}
 				});
 				currentBroker.requestPnLUpdates();
+			}
+			if (accountListenerId == 0) {
+				accountListenerId = currentBroker.addAccountListener(account -> {
+					if (account.key().equals("AvailableFunds")) {
+						view.info().setCash(account.value());
+						cash = Double.parseDouble(account.value());
+					}
+				});
+				currentBroker.requestAccountUpdates();
 			}
 
 		} catch (DBException | BrokerException e) {
@@ -329,6 +341,7 @@ public class TradeController implements TradeViewListener {
 		view.info().setMaxRangePassed(fmt(maxRangePassedForPos));
 		view.info().setMaxRangeLeft(fmt(maxRangeLeftForPos < 0 ? 0 : maxRangeLeftForPos));
 		view.info().setSpread(fmt(spread));
+		view.info().setAdr(fmt(ctx.getAdr()));
 
 		if (level != null) {
 			tradeData = TradeData.aTradeData()
@@ -344,7 +357,7 @@ public class TradeController implements TradeViewListener {
 			                     .withLuft(ORDER_LUFT)
 			                     .build();
 			try {
-				tradeData = new TradeCalc(tradeData).calculate();
+				tradeData = new TradeCalc(tradeData, Math.min(MAX_VOLUME, cash)).calculate();
 			} catch (Exception e) {
 				view.messagePanel().error(e.getMessage());
 				view.trafficLight().setRed();
@@ -355,8 +368,7 @@ public class TradeController implements TradeViewListener {
 
 			view.info().setBe(fmt(tradeData.getBreakEven()));
 			view.info().setRisk(fmt(tradeData.getRisk()) + " (" + fmt(tradeData.getRiskPercent()) + "%)");
-			view.info().setRR(fmt(tradeData.getRiskRewardRatioPercent()));
-			view.info().setSl(fmt(tradeData.getStopLoss()));
+			view.info().setQtt(String.valueOf(tradeData.getQuantity()));
 			view.info().setTp(fmt(tradeData.getTakeProfit()));
 			view.info().setOut(fmt(tradeData.getOutputExpected()) + " (" + fmt(tradeData.getGain()) + "%)");
 
@@ -380,8 +392,8 @@ public class TradeController implements TradeViewListener {
 				view.messagePanel().error(tradeData.getTradeError());
 				view.info().setBe(null);
 				view.info().setRisk(null);
-				view.info().setRR(null);
-				view.info().setSl(null);
+				view.info().setQtt(null);
+				view.info().setAdr(null);
 				view.info().setTp(null);
 				view.info().setOut(null);
 				goalWarning(false);

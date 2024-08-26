@@ -22,29 +22,33 @@ import java.awt.*;
 
 public class InfoPanel extends JPanel {
 
-	private final InfoField price, spread, time, maxRangePassed, pl, maxRangeLeft, sl, be, tp, out, rr, risk;
+	private final InfoField cash, price, spread, time, maxRangePassed, pl, maxRangeLeft, adr, be, tp, out, qtt, risk;
 
 	private InfoPanel(int fontSize, int vPadding, int hPadding, int vgap, int hgap, int hSpacing) {
 		// Set the component layout
-		setLayout(new GridLayout(6, 2, hgap, vgap));
+		setLayout(new GridLayout(7, 2, hgap, vgap));
 		setBorder(BorderFactory.createEmptyBorder(vPadding, hPadding, vPadding, hPadding));
 		//setBackground(Color.LIGHT_GRAY);
 
+		cash = new InfoField("Cash:", fontSize, 0, hSpacing, 30);
 		price = new InfoField("Price:", fontSize, 0, hSpacing, 30);
 		spread = new InfoField("Spread:", fontSize, 0, hSpacing, 30);
 		time = new InfoField("Time:", fontSize, 0, hSpacing, 30);
 		pl = new InfoField("P/L(daily):", fontSize, 0, hSpacing, 30);
 		maxRangePassed = new InfoField("MR(pass):", fontSize, 0, hSpacing, 30);
 		maxRangeLeft = new InfoField("MR(left):", fontSize, 0, hSpacing, 30);
-		sl = new InfoField("SL:", fontSize, 0, hSpacing, 30);
+		adr = new InfoField("ADR:", fontSize, 0, hSpacing, 30);
 		be = new InfoField("BE:", fontSize, 0, hSpacing, 30);
 		tp = new InfoField("TP:", fontSize, 0, hSpacing, 30);
 		out = new InfoField("Out:", fontSize, 0, hSpacing, 30);
-		rr = new InfoField("R/R:", fontSize, 0, hSpacing, 30);
+		qtt = new InfoField("Qtt:", fontSize, 0, hSpacing, 30);
 		risk = new InfoField("Risk:", fontSize, 0, hSpacing, 30);
 
 		add(time);
 		add(pl);
+
+		add(cash);
+		add(adr);
 
 		add(maxRangePassed);
 		add(maxRangeLeft);
@@ -52,13 +56,12 @@ public class InfoPanel extends JPanel {
 		add(price);
 		add(spread);
 
-		add(sl);
 		add(be);
-
 		add(tp);
+
+		add(qtt);
 		add(out);
 
-		add(rr);
 		add(risk);
 	}
 
@@ -66,8 +69,8 @@ public class InfoPanel extends JPanel {
 		this.risk.setInfoText(risk);
 	}
 
-	public void setRR(String rr) {
-		this.rr.setInfoText(rr,true);
+	public void setQtt(String qtt) {
+		this.qtt.setInfoText(qtt, true);
 	}
 
 	public void setOut(String out) {
@@ -82,8 +85,12 @@ public class InfoPanel extends JPanel {
 		this.be.setInfoText(be);
 	}
 
-	public void setSl(String sl) {
-		this.sl.setInfoText(sl);
+	public void setAdr(String adr) {
+		this.adr.setInfoText(adr);
+	}
+
+	public void setCash(String cash) {
+		this.cash.setInfoText(cash);
 	}
 
 	public void setPrice(String price) {
@@ -129,11 +136,11 @@ public class InfoPanel extends JPanel {
 		time.clear();
 		maxRangePassed.clear();
 		maxRangeLeft.clear();
-		sl.clear();
+		adr.clear();
 		be.clear();
 		tp.clear();
 		out.clear();
-		rr.clear();
+		qtt.clear();
 		risk.clear();
 	}
 
