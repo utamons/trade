@@ -70,7 +70,7 @@ public class InfoPanel extends JPanel {
 	}
 
 	public void setQtt(String qtt) {
-		this.qtt.setInfoText(qtt, true);
+		this.qtt.setInfoText(qtt);
 	}
 
 	public void setOut(String out) {

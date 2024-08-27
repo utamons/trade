@@ -205,10 +205,11 @@ public class TradeCalc {
 	}
 
 	private Double calculateGoal(TradeData tradeData, Double powerReserve) {
+		final double refPoint = tradeData.getPositionType() == PositionType.LONG ? Math.max(tradeData.getPrice(), tradeData.getLevel()) : Math.min(tradeData.getPrice(), tradeData.getLevel());
 		if (tradeData.getPositionType() == PositionType.LONG) {
-			return reference + powerReserve;
+			return refPoint + powerReserve;
 		} else if (tradeData.getPositionType() == PositionType.SHORT) {
-			return reference - powerReserve;
+			return refPoint - powerReserve;
 		}
 		return null;
 	}

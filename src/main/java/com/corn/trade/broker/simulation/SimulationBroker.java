@@ -50,6 +50,7 @@ public class SimulationBroker extends Broker {
 	private final        java.util.Timer                  tradeContextTimer;
 
 	private final Timer                 positionTimer;
+	private final Timer                 accountTimer;
 	private final TradeContextGenerator tradeContextGenerator;
 	private       int                   pnlListenerId      = 0;
 	private       int                   positionListenerId = 0;
@@ -65,6 +66,7 @@ public class SimulationBroker extends Broker {
 		tradeContextGenerator = new TradeContextGenerator(false);
 		tradeContextTimer = new java.util.Timer("tradeContextTimer", false);
 
+		accountTimer = new Timer(1000, e -> accountListeners.forEach((key, value) -> value.accept(new AccountUpdate("Test", "AvailableFunds", "100000.00", null))));
 
 		positionTimer = new Timer((int) POSITION_UPDATE_INTERVAL, e -> {
 			if (quantity > 0) {
@@ -77,7 +79,6 @@ public class SimulationBroker extends Broker {
 			                            .withUnrealizedPnl(unRealizedPnl)
 			                            .build();
 			positionListeners.forEach((key, value) -> value.accept(position.copy().withListenerId(key).build()));
-			accountListeners.forEach((key, value) -> value.accept(new AccountUpdate("Test", "AvailableFunds", "100000.00", null)));
 		});
 	}
 
@@ -153,6 +154,7 @@ public class SimulationBroker extends Broker {
 	@Override
 	public void requestAccountUpdates() throws BrokerException {
 		log.debug("Requesting account updates");
+		accountTimer.start();
 	}
 
 	@Override
