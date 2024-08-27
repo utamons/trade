@@ -350,7 +350,6 @@ public class TradeController implements TradeViewListener {
 			                     .withPowerReserve(powerReserve())
 			                     .withPrice(price)
 			                     .withLevel(level)
-			                     .withLevel(level)
 			                     .withTechStopLoss(techStopLoss)
 			                     .withSlippage(slippage)
 			                     .withTarget(goal)

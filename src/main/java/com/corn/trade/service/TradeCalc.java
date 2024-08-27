@@ -196,12 +196,12 @@ public class TradeCalc {
 	}
 
 	private double getReferencePoint(TradeData tradeData) {
-		if (tradeData.getPositionType() == PositionType.LONG) {
+		/*if (tradeData.getPositionType() == PositionType.LONG) {
 			return Math.max(tradeData.getPrice(), tradeData.getLevel());
 		} else if (tradeData.getPositionType() == PositionType.SHORT) {
 			return Math.min(tradeData.getPrice(), tradeData.getLevel());
-		}
-		return 0.0;
+		}*/
+		return tradeData.getLevel();
 	}
 
 	private Double calculateGoal(TradeData tradeData, Double powerReserve) {
