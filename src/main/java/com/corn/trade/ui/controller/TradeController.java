@@ -323,7 +323,7 @@ public class TradeController implements TradeViewListener {
 
 	private void tradeContextListener(TradeContext tradeContext) {
 		TradeService         tradeService = new TradeService();
-		ExtendedTradeContext ctx          = tradeService.getExtendedTradeContext(tradeContext, positionType);
+		ExtendedTradeContext ctx          = tradeService.getExtendedTradeContext(tradeContext, positionType, exchange);
 
 		if (ctx == null) return;
 
@@ -400,9 +400,9 @@ public class TradeController implements TradeViewListener {
 				orderClean = false;
 			} else if (goalToPass > maxRange) {
 				goalWarning(true);
-				view.trafficLight().setGreen();
-				view.messagePanel().warning("Goal is too far");
-				orderClean = true;
+				view.trafficLight().setRed();
+				view.messagePanel().error("Goal is too far");
+				orderClean = false;
 			} else {
 				goalWarning(false);
 				view.trafficLight().setGreen();

@@ -40,6 +40,10 @@ public class ExchangeTime {
 		return ZonedDateTime.now(ZoneId.of(timeZone));
 	}
 
+	public boolean isBeforeHour(int hour) {
+		return nowInExchangeTZ().toLocalTime().getHour() <= hour;
+	}
+
 	public String getNowTime(String timeFormat) {
 		return nowInExchangeTZ().format(DateTimeFormatter.ofPattern(timeFormat));
 	}

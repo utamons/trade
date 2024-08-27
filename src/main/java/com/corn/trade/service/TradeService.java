@@ -44,7 +44,9 @@ import static com.corn.trade.util.Util.toBigDecimal;
  */
 public class TradeService extends BaseService {
 
-	private static final Logger       log = LoggerFactory.getLogger(TradeService.class);
+	private static final Logger log = LoggerFactory.getLogger(TradeService.class);
+	public static final double MAX_RANGE_COEFF_BEFORE_12 = 0.7;
+	public static final double MAX_RANGE_COEFF_AFTER_12  = 0.4;
 	private final        TradeRepo    tradeRepo;
 	private final        AssetRepo    assetRepo;
 	private final        ExchangeRepo exchangeRepo;
@@ -58,13 +60,14 @@ public class TradeService extends BaseService {
 		addRepo(exchangeRepo);
 	}
 
-	public ExtendedTradeContext getExtendedTradeContext(TradeContext tradeContext, PositionType positionType) {
+	public ExtendedTradeContext getExtendedTradeContext(TradeContext tradeContext, PositionType positionType, Exchange exchange) {
 		Double ask   = tradeContext.getAsk();
 		Double bid   = tradeContext.getBid();
 		Double price = tradeContext.getPrice();
 		Double high  = tradeContext.getDayHigh();
 		Double low   = tradeContext.getDayLow();
 		Double adr   = tradeContext.getAdr();
+		ExchangeTime exchangeTime = new ExchangeTime(exchange);
 
 		if (price == null || high == null || low == null || adr == null || ask == null || bid == null) {
 			return null;
@@ -80,6 +83,11 @@ public class TradeService extends BaseService {
 
 		// Ideally all goals should be within this range
 		double maxRange = adrUsed > 100 ? range : adr;
+		if (exchangeTime.isBeforeHour(12)) {
+			maxRange = maxRange * MAX_RANGE_COEFF_BEFORE_12;
+		} else {
+			maxRange = maxRange * MAX_RANGE_COEFF_AFTER_12;
+		}
 
 		double fromHigh             = high - price;
 		double fromLow              = price - low;
