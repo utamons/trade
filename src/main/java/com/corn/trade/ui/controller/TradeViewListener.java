@@ -36,4 +36,5 @@ public interface TradeViewListener {
 	void onLimit();
 	void onStopLimit();
 	void checkRisk();
+	void onQttChange(Double qtt);
 }

@@ -47,8 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static com.corn.trade.BaseWindow.MAX_VOLUME;
-import static com.corn.trade.BaseWindow.ORDER_LUFT;
+import static com.corn.trade.BaseWindow.*;
 import static com.corn.trade.util.Util.fmt;
 import static com.corn.trade.util.Util.round;
 
@@ -64,6 +63,7 @@ public class TradeController implements TradeViewListener {
 	public               double                        DEFAULT_STOP_LOSS = 0.05;
 	private              TradeView                     view;
 	private              Double                        level;
+	private 			 Double                        quantity;
 	private              Double                        techStopLoss;
 	private              Double                        goal;
 	private              PositionType                  positionType;
@@ -136,6 +136,7 @@ public class TradeController implements TradeViewListener {
 			view.level().setValue(null);
 			view.techSL().setValue(null);
 			view.techSL().setDefaultValue(null);
+			view.qtt().setValue(null);
 			view.messagePanel().clear();
 			level = null;
 			techStopLoss = null;
@@ -218,11 +219,23 @@ public class TradeController implements TradeViewListener {
 	@Override
 	public void onEstimationTypeChange(EstimationType estimationType) {
 		this.estimationType = estimationType;
+
 		if (estimationType == EstimationType.MIN_GOAL) {
+			view.limitButton().setText("Limit");
 			view.goal().setEditable(false);
+			view.qtt().setValue(null);
+			view.qtt().setEditable(false);
+			view.goal().setValue(null);
+			goal = null;
+		} else if (estimationType == EstimationType.MARKET) {
+			view.limitButton().setText("Market");
+			view.goal().setEditable(false);
+			view.qtt().setEditable(true);
 			view.goal().setValue(null);
 			goal = null;
 		} else {
+			view.limitButton().setText("Limit");
+			view.qtt().setEditable(false);
 			view.goal().setEditable(true);
 			goal = view.goal().getValue();
 		}
@@ -343,7 +356,7 @@ public class TradeController implements TradeViewListener {
 		view.info().setSpread(fmt(spread));
 		view.info().setAdr(fmt(ctx.getAdr()));
 
-		if (level != null) {
+		if (level != null && estimationType != EstimationType.MARKET) {
 			tradeData = TradeData.aTradeData()
 			                     .withEstimationType(estimationType)
 			                     .withPositionType(positionType)
@@ -365,6 +378,7 @@ public class TradeController implements TradeViewListener {
 				return;
 			}
 
+			view.qtt().setValue(Long.valueOf(tradeData.getQuantity()).doubleValue());
 			view.info().setBe(fmt(tradeData.getBreakEven()));
 			view.info().setRisk(fmt(tradeData.getRisk()) + " (" + fmt(tradeData.getRiskPercent()) + "%)");
 			view.info().setQtt(String.valueOf(tradeData.getQuantity()));
@@ -410,7 +424,42 @@ public class TradeController implements TradeViewListener {
 			}
 
 			checkButtons();
+		} else if (estimationType == EstimationType.MARKET) {
+			if (quantity != null) {
+				techStopLoss = calculateTechStopLossForMarket(price);
+				view.techSL().setValue(techStopLoss);
+				double risk = Math.abs(price - techStopLoss) * quantity;
+				view.info().setRisk(fmt(risk) + " (" + fmt(risk / cash * 100) + "%)");
+				tradeData = TradeData.aTradeData()
+						             .withRisk(risk)
+						             .withOrderLimit(price)
+						             .withBreakEven(price)
+						             .withTarget(price)
+				                     .withPrice(price)
+						             .withQuantity(quantity.longValue())
+						             .withMarket(true)
+				                     .withPositionType(positionType)
+						             .withStopLoss(techStopLoss)
+				                     .withTechStopLoss(techStopLoss)
+				                     .build();
+				orderClean = true;
+				goalWarning(false);
+				view.trafficLight().setGreen();
+				view.messagePanel().info("Good to go");
+				checkButtons();
+			} else {
+				orderClean = false;
+				goalWarning(false);
+				view.trafficLight().setRed();
+				view.messagePanel().error("Quantity is required for market order");
+				checkButtons();
+			}
 		}
+	}
+
+	private Double calculateTechStopLossForMarket(double price) {
+		double stopLoss = positionType.equals(PositionType.LONG) ? price - price / 100.0 * MAX_RISK_PERCENT : price + price / 100.0 * MAX_RISK_PERCENT;
+		return round(stopLoss);
 	}
 
 	private void saveTradeState() {
@@ -461,12 +510,20 @@ public class TradeController implements TradeViewListener {
 			view.messagePanel().error("Orders are locked");
 			return;
 		}
-		log.info("Limit order requested");
+		if (estimationType == EstimationType.MARKET) {
+			log.info("Market order requested");
+		} else {
+			log.info("Limit order requested");
+		}
+		if (estimationType == EstimationType.MARKET && view.qtt().getValue() == null) {
+			view.messagePanel().error("Quantity is required for market order");
+			return;
+		}
 		if (tradeData == null) {
 			log.debug("Trade data is null");
 			return;
 		}
-		if (tradeData.tooFar()) {
+		if (tradeData.tooFar() && estimationType != EstimationType.MARKET) {
 			view.messagePanel().error("Limit price is too far from the current price");
 			return;
 		}
@@ -478,7 +535,12 @@ public class TradeController implements TradeViewListener {
 		TradeData order = tradeData.copy().withOrderStop(null).build();
 		try {
 			openPosition(order, currentBroker.getName());
-			view.messagePanel().success("Limit order sent");
+			if (estimationType == EstimationType.MARKET) {
+				view.messagePanel().success("Market order sent");
+			} else {
+				view.messagePanel().success("Limit order sent");
+			}
+
 		} catch (BrokerException e) {
 			view.messagePanel().error(e.getMessage());
 		}
@@ -555,6 +617,13 @@ public class TradeController implements TradeViewListener {
 			view.trafficLight().setRed();
 			view.messagePanel().error(riskManager.getRiskError());
 		}
+	}
+
+	@Override
+	public void onQttChange(Double qtt) {
+		this.quantity = qtt;
+		orderClean = false;
+		checkButtons();
 	}
 
 	private void pauseButtons() {

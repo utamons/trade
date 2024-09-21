@@ -50,7 +50,9 @@ class IbkrOrderHelper {
 
 		Decimal quantityDecimal = Decimal.get(quantity);
 		order.totalQuantity(quantityDecimal);
-		order.lmtPrice(round(limit));
+		if (orderType == OrderType.LMT || orderType == OrderType.STP_LMT) {
+			order.lmtPrice(round(limit));
+		}
 		if (orderType == OrderType.STP || orderType == OrderType.STP_LMT) {
 			order.auxPrice(round(stop));
 		}
@@ -149,12 +151,16 @@ class IbkrOrderHelper {
 
 		Order main = prepareOrder(quantity, stop, limit, action, orderType, false);
 
-		Order takeProfit = new Order();
-		takeProfit.action(action == Action.SELL ? Action.BUY : Action.SELL);
-		takeProfit.orderType(OrderType.LMT);
-		takeProfit.totalQuantity(Decimal.get(quantity));
-		takeProfit.lmtPrice(round(takeProfitPrice));
-		takeProfit.transmit(false);
+		Order takeProfit = null;
+
+		if (takeProfitPrice != null) {
+			takeProfit = new Order();
+			takeProfit.action(action == Action.SELL ? Action.BUY : Action.SELL);
+			takeProfit.orderType(OrderType.LMT);
+			takeProfit.totalQuantity(Decimal.get(quantity));
+			takeProfit.lmtPrice(round(takeProfitPrice));
+			takeProfit.transmit(false);
+		}
 
 		Order stopLoss = new Order();
 		stopLoss.action(action == Action.SELL ? Action.BUY : Action.SELL);
@@ -182,7 +188,7 @@ class IbkrOrderHelper {
 			         quantity,
 			         round(stopLossPrice),
 			         round(takeProfitPrice));
-		} else {
+		} else if (orderType == OrderType.LMT) {
 			log.info("Placed main {} {} {}, LMT: {}, QTT: {}, SL: {}, TP: {}",
 			         main.orderId(),
 			         main.action(),
@@ -191,18 +197,28 @@ class IbkrOrderHelper {
 			         quantity,
 			         round(stopLossPrice),
 			         round(takeProfitPrice));
+		} else if (orderType == OrderType.MKT) {
+			log.info("Placed market main {} {} {}, QTT: {}, SL: {}, TP: {}",
+			         main.orderId(),
+			         main.action(),
+			         contractDetails.contract().symbol(),
+			         quantity,
+			         round(stopLossPrice),
+			         round(takeProfitPrice));
 		}
 
-		takeProfit.parentId(main.orderId());
+		if (takeProfit != null) {
+			takeProfit.parentId(main.orderId());
+			ibkrConnectionHandler.controller()
+			                     .placeOrModifyOrder(contractDetails.contract(),
+			                                         takeProfit,
+			                                         new IbkrOrderHandler(contractDetails.contract(),
+			                                                              takeProfit));
+
+			log.info("Placed TP id {} {} {}", takeProfit.orderId(), contractDetails.contract().symbol(), takeProfitPrice);
+		}
+
 		stopLoss.parentId(main.orderId());
-
-		ibkrConnectionHandler.controller()
-		                     .placeOrModifyOrder(contractDetails.contract(),
-		                                         takeProfit,
-		                                         new IbkrOrderHandler(contractDetails.contract(),
-		                                                              takeProfit));
-
-		log.info("Placed TP id {} {} {}", takeProfit.orderId(), contractDetails.contract().symbol(), takeProfitPrice);
 
 		ibkrConnectionHandler.controller()
 		                     .placeOrModifyOrder(contractDetails.contract(),
@@ -212,7 +228,10 @@ class IbkrOrderHelper {
 
 		log.info("Placed SL id {} {} {}", stopLoss.orderId(), contractDetails.contract().symbol(), stopLossPrice);
 
-		return new OrderBracketIds(String.valueOf(main.orderId()), String.valueOf(stopLoss.orderId()), String.valueOf(takeProfit.orderId()));
+		return new OrderBracketIds(
+				String.valueOf(main.orderId()),
+				String.valueOf(stopLoss.orderId()),
+				takeProfit == null? null : String.valueOf(takeProfit.orderId()));
 	}
 
 	public void cleanAllOrdersForContract(Contract contract) {

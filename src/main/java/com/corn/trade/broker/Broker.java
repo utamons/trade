@@ -150,7 +150,12 @@ public abstract class Broker {
 		}
 
 		// Place orders
-		OrderType orderType = tradeData.getOrderStop() == null ? OrderType.LMT : OrderType.STP_LMT;
+		OrderType orderType;
+		if (tradeData.isMarket()) {
+			orderType = OrderType.MKT;
+		} else {
+			orderType = tradeData.getOrderStop() == null ? OrderType.LMT : OrderType.STP_LMT;
+		}
 		bracketIds = placeOrderWithBracket(tradeData.getQuantity(),
 		                                   tradeData.getOrderStop(),
 		                                   tradeData.getOrderLimit(),

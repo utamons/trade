@@ -39,6 +39,7 @@ public class TradePanel extends BasePanel implements TradeView {
 	private final       LabeledDoubleField goal;
 	private final       LabeledDoubleField level;
 	private final       LabeledDoubleField techSL;
+	private final       LabeledDoubleField qtt;
 	private final       TrafficLight       trafficLight;
 	private final       LabeledComboBox    positionBox;
 	private final       LabeledComboBox    estimationBox;
@@ -85,6 +86,8 @@ public class TradePanel extends BasePanel implements TradeView {
 
 		goal = new LabeledDoubleField("Goal:", TEXT_FIELD_SIZE, spacing, fieldHeight, false, controller::onGoalChange);
 		goal.setEditable(false);
+
+		qtt = new LabeledDoubleField("Qtt:", TEXT_FIELD_SIZE, spacing, fieldHeight, false, controller::onQttChange);
 
 		techSL = new LabeledDoubleField("Tech. SL:",
 		                                TEXT_FIELD_SIZE,
@@ -136,10 +139,13 @@ public class TradePanel extends BasePanel implements TradeView {
 		panel.add(level);
 		panel.add(goal);
 		panel.add(techSL);
+		panel.add(qtt);
 		panel.add(messagePanel);
 		panel.add(orderPanel);
 		panel.add(positionPanel);
 		panel.add(info);
+
+		qtt.setEditable(false);
 
 		this.add(panel, BorderLayout.NORTH);
 
@@ -178,6 +184,11 @@ public class TradePanel extends BasePanel implements TradeView {
 	@Override
 	public LabeledLookup assetLookup() {
 		return assetLookup;
+	}
+
+	@Override
+	public LabeledDoubleField qtt() {
+		return qtt;
 	}
 
 	@Override

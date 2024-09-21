@@ -48,7 +48,7 @@ public class IbkrAccountSubscriber {
 
 			@Override
 			public void accountValue(String accountName, String key, String value, String currency) {
-				//log.info("Account value: {} {} {} {}", key, value, currency, accountName);
+				log.info("Account value: {} {} {} {}", key, value, currency, accountName);
 				if (key.equals("AvailableFunds")) {
 					AccountUpdate accountUpdate = new AccountUpdate(accountName, key, value, currency);
 					notifyListeners(accountName, accountUpdate);

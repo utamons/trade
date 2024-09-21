@@ -27,6 +27,9 @@ public interface TradeView {
 	LabeledDoubleField goal();
 	LabeledDoubleField level();
 	LabeledLookup assetLookup();
+
+	LabeledDoubleField qtt();
+
 	InfoPanel info();
 	LabeledComboBox exchangeBox();
 	LabeledComboBox positionTypeBox();

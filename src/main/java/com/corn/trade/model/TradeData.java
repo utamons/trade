@@ -23,6 +23,7 @@ import com.corn.trade.type.PositionType;
 @SuppressWarnings("unused")
 public class TradeData {
 	private final PositionType   positionType;
+	private final boolean        isMarket;
 	private final EstimationType estimationType;
 	private final Double         powerReserve;
 	private final Double         price;
@@ -45,6 +46,7 @@ public class TradeData {
 	private final Double         riskRewardRatioPercent;
 
 	private TradeData(Builder builder) {
+		this.isMarket = builder.isMarket;
 		this.positionType = builder.positionType;
 		this.estimationType = builder.estimationType;
 		this.powerReserve = builder.powerReserve;
@@ -70,6 +72,10 @@ public class TradeData {
 
 	public static Builder aTradeData() {
 		return new Builder();
+	}
+
+	public boolean isMarket() {
+		return isMarket;
 	}
 
 	public EstimationType getEstimationType() {
@@ -162,6 +168,7 @@ public class TradeData {
 
 	public Builder copy() {
 		return new Builder()
+				.withMarket(this.isMarket)
 				.withPositionType(this.positionType)
 				.withEstimationType(this.estimationType)
 				.withPowerReserve(this.powerReserve)
@@ -235,6 +242,7 @@ public class TradeData {
 	public static class Builder {
 		private PositionType   positionType;
 		private EstimationType estimationType;
+		private boolean        isMarket = false;
 		private Double         powerReserve;
 		private Double         price;
 		private Double         level;
@@ -257,6 +265,11 @@ public class TradeData {
 
 
 		private Builder() {
+		}
+
+		public Builder withMarket(boolean isMarket) {
+			this.isMarket = isMarket;
+			return this;
 		}
 
 		public Builder withRiskRewardRatioPercent(double riskRewardRatioPercent) {
