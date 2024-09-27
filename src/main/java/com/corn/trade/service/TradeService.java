@@ -44,10 +44,9 @@ import static com.corn.trade.util.Util.toBigDecimal;
  */
 public class TradeService extends BaseService {
 
-	private static final Logger log = LoggerFactory.getLogger(TradeService.class);
-	public static final double MAX_RANGE_COEFF_BEFORE_12 = 0.7;
-	public static final double MAX_RANGE_COEFF_AFTER_12  = 0.4;
-	private final        TradeRepo    tradeRepo;
+	private static final Logger log                       = LoggerFactory.getLogger(TradeService.class);
+	public static final double     MAX_RANGE_COEFF = 0.8;
+	private final        TradeRepo tradeRepo;
 	private final        AssetRepo    assetRepo;
 	private final        ExchangeRepo exchangeRepo;
 
@@ -79,15 +78,8 @@ public class TradeService extends BaseService {
 
 		double spread = ask - bid;
 
-		double adrUsed = range / adr * 100;
-
 		// Ideally all goals should be within this range
-		double maxRange = adrUsed > 100 ? range : adr;
-		if (exchangeTime.isBeforeHour(12)) {
-			maxRange = maxRange * MAX_RANGE_COEFF_BEFORE_12;
-		} else {
-			maxRange = maxRange * MAX_RANGE_COEFF_AFTER_12;
-		}
+		double maxRange = Math.max(range, adr * MAX_RANGE_COEFF);
 
 		double fromHigh             = high - price;
 		double fromLow              = price - low;

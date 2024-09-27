@@ -257,16 +257,21 @@ public class TradeCalc {
 		double max    = quantity * price / 100.0;
 		double min    = quantity * 0.005;
 		double amount = Math.min(max, min);
+		amount += amount * 0.08; // slippage + regulatory fees
 		return amount < 1 ? 1 : amount;
 	}
 
 	public double getBreakEven(double price) {
+		return getBreakEven(price, quantity, isLong());
+	}
+
+	public static double getBreakEven(double price, int quantity, boolean isLong) {
 		double openCommission  = estimatedCommissionIbkrUSD(quantity, price);
 		double priceClose      = price;
 		double closeCommission = openCommission;
 		double profit          = abs(priceClose - price) * quantity;
 		double taxes           = getTax(profit);
-		double increment       = isLong() ? 0.01 : -0.01;
+		double increment       = isLong ? 0.01 : -0.01;
 
 		while (profit < openCommission + closeCommission + taxes) {
 			priceClose = priceClose + increment;
@@ -274,7 +279,6 @@ public class TradeCalc {
 			profit = abs(priceClose - price) * quantity;
 			taxes = getTax(profit);
 		}
-
 		return priceClose;
 	}
 
@@ -385,32 +389,8 @@ public class TradeCalc {
 	}
 
 	public static void main(String[] args) {
-		double purchasePrice = 20.61;
-		long totalShares = 76;
-		double stopLossPrice = 20.76;
-		double takeProfitPrice = 19.92;
-		double breakEvenPrice = 20.58;
-		double currentPrice = 20.13;
-		long shares = calculateSharesToBE(purchasePrice, totalShares, stopLossPrice, currentPrice);
-
-		long remainingQtt = totalShares - shares;
-
-		double currentProfit = abs(currentPrice - purchasePrice) * shares;
-		currentProfit = currentProfit - TradeCalc.estimatedCommissionIbkrUSD(shares, currentPrice) - TradeCalc.getTax(currentProfit);
-
-		double profitDelta = abs(takeProfitPrice - purchasePrice);
-
-		double expectedProfit = profitDelta * totalShares;
-		expectedProfit = expectedProfit - TradeCalc.estimatedCommissionIbkrUSD(totalShares, purchasePrice) - TradeCalc.getTax(expectedProfit);
-		expectedProfit = expectedProfit - TradeCalc.estimatedCommissionIbkrUSD(totalShares, takeProfitPrice);
-
-		double remainingProfit = profitDelta * remainingQtt;
-		remainingProfit = remainingProfit - TradeCalc.estimatedCommissionIbkrUSD(remainingQtt, takeProfitPrice) - TradeCalc.getTax(remainingProfit);
-		remainingProfit = remainingProfit - TradeCalc.estimatedCommissionIbkrUSD(totalShares, purchasePrice) + currentProfit;
-
-		String risk = fmt((breakEvenPrice - stopLossPrice) * (totalShares-shares));
-		String percentage = fmt(100.0 - remainingProfit / expectedProfit * 100.0) + "%";
-
-		log.info("Shares: {}, risk: {}, sold profit: {}, expected profit: {}, remaining profit: {}, percentage: {}", shares, risk, fmt(currentProfit), fmt(expectedProfit), fmt(remainingProfit), percentage);
+		double com1 = estimatedCommissionIbkrUSD(338, 12.12);
+		double com2 = estimatedCommissionIbkrUSD(338, 12.19);
+		System.out.println(fmt(com1 + com2));
 	}
 }
